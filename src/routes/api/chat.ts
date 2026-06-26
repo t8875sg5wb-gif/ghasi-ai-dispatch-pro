@@ -269,8 +269,9 @@ ${buildKnowledgeSnapshot()}`;
           model: provider("google/gemini-2.5-flash"),
           system: kontext,
           messages: await convertToModelMessages(messages),
-          stopWhen: stepCountIs(6),
+          stopWhen: stepCountIs(8),
           tools: {
+            ...buildBusinessTools(role),
             web_suche: tool({
               description:
                 "Durchsucht das Internet in Echtzeit nach aktuellen Informationen (News, Wetter, Verkehr, Sport, Börse, Kryptokurse, Spritpreise, Feiertage, Adressen, allgemeine Fakten). Liefert Treffer mit Titel, URL und Auszug.",
