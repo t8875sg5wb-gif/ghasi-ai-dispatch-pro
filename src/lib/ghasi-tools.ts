@@ -270,7 +270,7 @@ export function buildBusinessTools(role: AppRole | null) {
       execute: async ({ kennzeichen, nurAlerts, nurVerspaetet }) => {
         const { buildFleet, FLEET_FARBEN } = await import("@/lib/fleet-live");
         const { LIVE_STATUS_META } = await import("@/lib/dispatch");
-        let fleet = buildFleet().filter(
+        const fleet = buildFleet().filter(
           (v) =>
             enthaelt(`${v.kennzeichen} ${v.fahrer ?? ""} ${v.nummer}`, kennzeichen) &&
             (!nurAlerts || v.alerts.length > 0) &&
