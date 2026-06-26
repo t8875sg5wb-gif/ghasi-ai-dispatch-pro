@@ -67,7 +67,7 @@ ${buildKnowledgeSnapshot()}`;
         const result = streamText({
           model: provider("google/gemini-2.5-flash"),
           system: kontext,
-          messages: convertToModelMessages(messages),
+          messages: await convertToModelMessages(messages),
           stopWhen: stepCountIs(4),
           tools: {
             gedaechtnis_speichern: tool({
