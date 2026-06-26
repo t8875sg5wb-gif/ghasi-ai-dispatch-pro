@@ -28,6 +28,8 @@ import {
   Lightbulb,
   ShieldAlert,
   LineChart,
+  Inbox,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
