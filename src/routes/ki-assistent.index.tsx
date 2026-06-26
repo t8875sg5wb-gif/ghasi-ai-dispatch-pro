@@ -62,7 +62,7 @@ function AssistantStart() {
                 className="flex items-start gap-3 rounded-2xl border border-border/60 bg-muted/30 p-4 text-left"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <f.icon className="h-4.5 w-4.5" />
+                  <f.icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">{f.titel}</p>
