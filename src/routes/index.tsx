@@ -117,7 +117,9 @@ const stufeStyle: Record<HinweisStufe, string> = {
 };
 
 function Dashboard() {
-  const hinweise = generateHinweise();
+  // Zeit-/datumsabhängige Hinweise erst nach Mount erzeugen (kein SSR-Mismatch).
+  const [hinweise, setHinweise] = useState<Hinweis[]>([]);
+  useEffect(() => setHinweise(generateHinweise()), []);
   const auslastungFahrzeuge = 63;
   const auslastungFahrer = 61;
   const prognose = "11.900 €";
