@@ -125,6 +125,12 @@ export const navGroups: NavGroup[] = [
         description: "Alle Krankentransporte erfassen, disponieren und verfolgen.",
       },
       {
+        label: "Daueraufträge",
+        to: "/dauerauftraege",
+        icon: Repeat,
+        description: "Wiederkehrende Serien (Dialyse, Pflege, Klinik) automatisch in Transporte umwandeln.",
+      },
+      {
         label: "Dispatch-Center",
         to: "/tourenplanung",
         icon: RouteIcon,
