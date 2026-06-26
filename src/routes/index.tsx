@@ -149,6 +149,10 @@ function Dashboard() {
         ))}
       </section>
 
+      {/* Executive Business Health */}
+      <ExecutiveHealth />
+
+
       {/* Schnellzugriffe */}
       <section className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         {schnellzugriffe.map((q) => (
