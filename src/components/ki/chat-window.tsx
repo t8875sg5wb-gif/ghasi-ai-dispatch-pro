@@ -26,7 +26,17 @@ function ChatInner({
 }) {
   const qc = useQueryClient();
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/chat", body: { threadId } }),
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+        body: { threadId },
+        // Bearer-Token mitsenden, damit der Server Rolle & Berechtigungen prüfen kann.
+        headers: async () => {
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
+      }),
     [threadId],
   );
   const { messages, sendMessage, status } = useChat({
