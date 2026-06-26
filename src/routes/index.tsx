@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { StatCard } from "@/components/dashboard/stat-card";
+import { ExecutiveHealth } from "@/components/dashboard/executive-health";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,16 +49,80 @@ export const Route = createFileRoute("/")({
 });
 
 const stats = [
-  { label: "Umsatz heute", value: "8.420 €", icon: Euro, tone: "primary" as const, trend: { value: "12 %", positive: true }, hint: "vs. gestern" },
-  { label: "Gewinn heute", value: "2.180 €", icon: TrendingUp, tone: "success" as const, trend: { value: "8 %", positive: true }, hint: "Marge 26 %" },
-  { label: "Offene Aufträge", value: "14", icon: ClipboardList, tone: "info" as const, hint: "5 dringend" },
-  { label: "Laufende Aufträge", value: "9", icon: Loader, tone: "accent" as const, hint: "in Bearbeitung" },
-  { label: "Fahrer unterwegs", value: "11", icon: UserCheck, tone: "primary" as const, hint: "von 18 aktiv" },
-  { label: "Freie Fahrer", value: "7", icon: UserPlus, tone: "success" as const, hint: "verfügbar" },
-  { label: "Fahrzeuge unterwegs", value: "10", icon: Truck, tone: "info" as const, hint: "von 16 Fahrzeugen" },
-  { label: "Freie Fahrzeuge", value: "6", icon: Car, tone: "accent" as const, hint: "einsatzbereit" },
-  { label: "Tankkosten", value: "612 €", icon: Fuel, tone: "warning" as const, trend: { value: "3 %", positive: false }, hint: "heute" },
-  { label: "Leerkilometer", value: "184 km", icon: Gauge, tone: "warning" as const, trend: { value: "5 %", positive: false }, hint: "Optimierung möglich" },
+  {
+    label: "Umsatz heute",
+    value: "8.420 €",
+    icon: Euro,
+    tone: "primary" as const,
+    trend: { value: "12 %", positive: true },
+    hint: "vs. gestern",
+  },
+  {
+    label: "Gewinn heute",
+    value: "2.180 €",
+    icon: TrendingUp,
+    tone: "success" as const,
+    trend: { value: "8 %", positive: true },
+    hint: "Marge 26 %",
+  },
+  {
+    label: "Offene Aufträge",
+    value: "14",
+    icon: ClipboardList,
+    tone: "info" as const,
+    hint: "5 dringend",
+  },
+  {
+    label: "Laufende Aufträge",
+    value: "9",
+    icon: Loader,
+    tone: "accent" as const,
+    hint: "in Bearbeitung",
+  },
+  {
+    label: "Fahrer unterwegs",
+    value: "11",
+    icon: UserCheck,
+    tone: "primary" as const,
+    hint: "von 18 aktiv",
+  },
+  {
+    label: "Freie Fahrer",
+    value: "7",
+    icon: UserPlus,
+    tone: "success" as const,
+    hint: "verfügbar",
+  },
+  {
+    label: "Fahrzeuge unterwegs",
+    value: "10",
+    icon: Truck,
+    tone: "info" as const,
+    hint: "von 16 Fahrzeugen",
+  },
+  {
+    label: "Freie Fahrzeuge",
+    value: "6",
+    icon: Car,
+    tone: "accent" as const,
+    hint: "einsatzbereit",
+  },
+  {
+    label: "Tankkosten",
+    value: "612 €",
+    icon: Fuel,
+    tone: "warning" as const,
+    trend: { value: "3 %", positive: false },
+    hint: "heute",
+  },
+  {
+    label: "Leerkilometer",
+    value: "184 km",
+    icon: Gauge,
+    tone: "warning" as const,
+    trend: { value: "5 %", positive: false },
+    hint: "Optimierung möglich",
+  },
 ];
 
 const warnings = [
@@ -149,6 +214,9 @@ function Dashboard() {
         ))}
       </section>
 
+      {/* Executive Business Health */}
+      <ExecutiveHealth />
+
       {/* Schnellzugriffe */}
       <section className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         {schnellzugriffe.map((q) => (
@@ -192,7 +260,9 @@ function Dashboard() {
               </Link>
             ))}
             {hinweise.length === 0 && (
-              <p className="text-sm text-muted-foreground">Aktuell keine Hinweise – alles im grünen Bereich.</p>
+              <p className="text-sm text-muted-foreground">
+                Aktuell keine Hinweise – alles im grünen Bereich.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -217,8 +287,8 @@ function Dashboard() {
               <Progress value={79} className="h-2" />
             </div>
             <p className="rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
-              Bei aktueller Auslastung ({auslastungFahrzeuge}% Fahrzeuge / {auslastungFahrer}% Fahrer)
-              wird das Wochenziel voraussichtlich erreicht.
+              Bei aktueller Auslastung ({auslastungFahrzeuge}% Fahrzeuge / {auslastungFahrer}%
+              Fahrer) wird das Wochenziel voraussichtlich erreicht.
             </p>
           </CardContent>
         </Card>
@@ -257,8 +327,6 @@ function Dashboard() {
           badge="Vorschlag"
         />
       </section>
-
-
 
       <section className="grid gap-4 lg:grid-cols-3">
         {/* Auslastung */}
@@ -332,7 +400,10 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2.5">
             {recommendations.map((r) => (
-              <div key={r} className="rounded-xl bg-white/10 p-3 text-sm leading-snug backdrop-blur">
+              <div
+                key={r}
+                className="rounded-xl bg-white/10 p-3 text-sm leading-snug backdrop-blur"
+              >
                 {r}
               </div>
             ))}
@@ -379,15 +450,21 @@ function Dashboard() {
           <CardContent className="space-y-2.5">
             <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
               <span className="text-muted-foreground">A100 Richtung Mitte</span>
-              <Badge variant="secondary" className="bg-warning/20 text-warning">Stau 8 km</Badge>
+              <Badge variant="secondary" className="bg-warning/20 text-warning">
+                Stau 8 km
+              </Badge>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
               <span className="text-muted-foreground">B96 Innenstadt</span>
-              <Badge variant="secondary" className="bg-success/15 text-success">Frei</Badge>
+              <Badge variant="secondary" className="bg-success/15 text-success">
+                Frei
+              </Badge>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
               <span className="text-muted-foreground">Klinikum West</span>
-              <Badge variant="secondary" className="bg-success/15 text-success">Flüssig</Badge>
+              <Badge variant="secondary" className="bg-success/15 text-success">
+                Flüssig
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -474,4 +551,3 @@ function DashboardListCard({
     </Card>
   );
 }
-

@@ -24,6 +24,17 @@ import {
 } from "@/lib/ai-brain";
 import { searchAll } from "@/lib/ghasi-knowledge";
 import { generateHinweise } from "@/lib/ghasi-hinweise";
+import {
+  INITIAL_RECHNUNGEN,
+  RECHNUNG_STATUS_META,
+  computeFinanzKpis,
+  detectFinanzAnomalien,
+  tageUeberfaellig,
+  formatDatum as formatRgDatum,
+  EUR as EURf,
+} from "@/lib/finance";
+import { searchDokumente, KATEGORIE_META, aktuelleVersion } from "@/lib/documents";
+import { BERICHT_LISTE, buildBericht, type BerichtTyp } from "@/lib/reporting";
 import { type AppRole, type Bereich, darfBereich } from "@/lib/roles";
 
 const heuteISO = () => new Date().toISOString().slice(0, 10);
@@ -48,9 +59,7 @@ export function buildBusinessTools(role: AppRole | null) {
       description:
         "Liefert echte Transporte/Aufträge. Filter nach Status (neu, disponiert, unterwegs, abgeschlossen, storniert), Transportart, Fahrer und Zeitraum (heute/morgen/alle). Nutze dies für Fragen zu heutigen/morgigen Fahrten, Verspätungen, Stornierungen, Auslastung der Touren.",
       inputSchema: z.object({
-        status: z
-          .enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"])
-          .optional(),
+        status: z.enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]).optional(),
         transportart: z
           .enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt", "Notfall"])
           .optional(),
@@ -97,10 +106,14 @@ export function buildBusinessTools(role: AppRole | null) {
         let liste = INITIAL_FAHRER.filter(
           (f) => enthaelt(f.name, name) && (!status || f.status === status),
         );
-        if (sortierung === "ueberstunden") liste = [...liste].sort((a, b) => b.ueberstunden - a.ueberstunden);
-        if (sortierung === "puenktlichkeit") liste = [...liste].sort((a, b) => b.puenktlichkeit - a.puenktlichkeit);
-        if (sortierung === "bewertung") liste = [...liste].sort((a, b) => b.bewertung - a.bewertung);
-        if (sortierung === "umsatz") liste = [...liste].sort((a, b) => b.umsatzHeute - a.umsatzHeute);
+        if (sortierung === "ueberstunden")
+          liste = [...liste].sort((a, b) => b.ueberstunden - a.ueberstunden);
+        if (sortierung === "puenktlichkeit")
+          liste = [...liste].sort((a, b) => b.puenktlichkeit - a.puenktlichkeit);
+        if (sortierung === "bewertung")
+          liste = [...liste].sort((a, b) => b.bewertung - a.bewertung);
+        if (sortierung === "umsatz")
+          liste = [...liste].sort((a, b) => b.umsatzHeute - a.umsatzHeute);
         return {
           quelle: "Fahrer",
           anzahl: liste.length,
@@ -139,9 +152,12 @@ export function buildBusinessTools(role: AppRole | null) {
             (!status || v.status === status) &&
             (!wartungNoetig || fahrzeugWarnungen(v).hatWarnung),
         );
-        if (sortierung === "verbrauch") liste = [...liste].sort((a, b) => b.verbrauch - a.verbrauch);
-        if (sortierung === "kilometerstand") liste = [...liste].sort((a, b) => b.kilometerstand - a.kilometerstand);
-        if (sortierung === "umsatz") liste = [...liste].sort((a, b) => b.monatsumsatz - a.monatsumsatz);
+        if (sortierung === "verbrauch")
+          liste = [...liste].sort((a, b) => b.verbrauch - a.verbrauch);
+        if (sortierung === "kilometerstand")
+          liste = [...liste].sort((a, b) => b.kilometerstand - a.kilometerstand);
+        if (sortierung === "umsatz")
+          liste = [...liste].sort((a, b) => b.monatsumsatz - a.monatsumsatz);
         return {
           quelle: "Flotte",
           anzahl: liste.length,
@@ -276,6 +292,135 @@ export function buildBusinessTools(role: AppRole | null) {
         };
       },
     });
+
+    tools.rechnungen_abrufen = tool({
+      description:
+        "Liefert echte Rechnungen & Gutschriften mit Status (offen, bezahlt, teilbezahlt, überfällig, storniert), Betrag, Fälligkeit, Abrechnungsart und Bezug zum Transport. Mit nurUeberfaellig=true nur überfällige. Beantwortet 'welche Rechnungen sind überfällig/offen'.",
+      inputSchema: z.object({
+        status: z
+          .enum(["entwurf", "offen", "bezahlt", "teilbezahlt", "ueberfaellig", "storniert"])
+          .optional(),
+        kunde: z.string().optional(),
+        nurUeberfaellig: z.boolean().optional(),
+      }),
+      execute: async ({ status, kunde, nurUeberfaellig }) => {
+        const liste = INITIAL_RECHNUNGEN.filter(
+          (r) =>
+            (!status || r.status === status) &&
+            enthaelt(r.kunde, kunde) &&
+            (!nurUeberfaellig || tageUeberfaellig(r) > 0),
+        ).map((r) => ({
+          nummer: r.nummer,
+          kunde: r.kunde,
+          abrechnungsart: r.abrechnungsart,
+          betrag: EURf(r.betrag),
+          status: RECHNUNG_STATUS_META[r.status].label,
+          faelligkeit: formatRgDatum(r.faelligkeit),
+          tageUeberfaellig: tageUeberfaellig(r),
+          bezugAuftrag: r.bezugAuftrag ?? "—",
+        }));
+        const k = computeFinanzKpis();
+        return {
+          quelle: "Buchhaltung · Rechnungen",
+          anzahl: liste.length,
+          summen: {
+            offenePosten: EURf(k.offenePosten),
+            ueberfaellig: EURf(k.ueberfaelligeSumme),
+            bezahlt: EURf(k.bezahltSumme),
+          },
+          rechnungen: liste,
+        };
+      },
+    });
+
+    tools.finanz_anomalien_abrufen = tool({
+      description:
+        "Liefert die KI-Rechnungsprüfung: erkannte überfällige, fehlende, doppelte und unbezahlte Rechnungen sowie Inkonsistenzen – jeweils mit Grund, Quelle, Wirkung, Konfidenz und Empfehlung. GHASI AI versendet nichts automatisch.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const list = detectFinanzAnomalien();
+        return {
+          quelle: "AI Brain · Finanzprüfung",
+          anzahl: list.length,
+          anomalien: list.map((a) => ({
+            typ: a.typ,
+            titel: a.titel,
+            grund: a.grund,
+            quelle: a.quelle,
+            wirkung: a.wirkung,
+            konfidenz: `${a.konfidenz} %`,
+            empfehlung: a.empfehlung,
+          })),
+        };
+      },
+    });
+
+    tools.kostenaufstellung_abrufen = tool({
+      description:
+        "Liefert die Kostenaufstellung des Monats: Fahrzeug-, Kraftstoff-, Wartungs-, Fahrer- und Leasingkosten sowie Gesamtkosten. Beantwortet 'wo entstehen die Kosten / wo können Kosten gesenkt werden'.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const k = computeFinanzKpis();
+        return {
+          quelle: "Buchhaltung · Kostenstellen",
+          fahrzeugkosten: EURf(k.kosten.fahrzeugkosten),
+          kraftstoffkosten: EURf(k.kosten.kraftstoffkosten),
+          wartungskosten: EURf(k.kosten.wartungskosten),
+          fahrerkosten: EURf(k.kosten.fahrerkosten),
+          leasingkosten: EURf(k.kosten.leasingkosten),
+          gesamt: EURf(k.kosten.gesamt),
+        };
+      },
+    });
+
+    tools.dokumente_abrufen = tool({
+      description:
+        "Durchsucht das Dokumentencenter (Rezepte, Aufträge, Verträge, Rechnungen, Fahrer-/Fahrzeugdokumente, Versicherungen, Wartungsbelege) inkl. OCR-Text, Tags und Verknüpfungen. Beantwortet 'finde Dokument/Verordnung/Vertrag zu …'.",
+      inputSchema: z.object({
+        query: z.string().optional().describe("Suchbegriff (Name, Tag, OCR-Inhalt, Bezug)"),
+      }),
+      execute: async ({ query }) => {
+        const liste = searchDokumente(query ?? "")
+          .slice(0, 12)
+          .map((d) => ({
+            name: d.name,
+            kategorie: KATEGORIE_META[d.kategorie].label,
+            ordner: d.ordner,
+            version: aktuelleVersion(d).version,
+            verknuepftMit: d.bezug?.label ?? "—",
+          }));
+        return { quelle: "Dokumentencenter", anzahl: liste.length, dokumente: liste };
+      },
+    });
+
+    tools.bericht_erstellen = tool({
+      description:
+        "Erstellt einen Enterprise-Report aus Live-Daten (Umsatz, Gewinn, Fahrzeugauslastung, Fahrerleistung, Kunden, Patienten, Transporte, Kraftstoff, Wartung). Liefert Spalten und Zeilen für eine kompakte Zusammenfassung.",
+      inputSchema: z.object({
+        typ: z.enum([
+          "umsatz",
+          "gewinn",
+          "fahrzeugauslastung",
+          "fahrerleistung",
+          "kunden",
+          "patienten",
+          "transporte",
+          "kraftstoff",
+          "wartung",
+        ]),
+      }),
+      execute: async ({ typ }) => {
+        const b = buildBericht(typ as BerichtTyp);
+        return {
+          quelle: "Reporting-Engine",
+          titel: b.titel,
+          spalten: b.spalten,
+          zeilen: b.zeilen.slice(0, 20),
+          summe: b.summe ?? null,
+          verfuegbareBerichte: BERICHT_LISTE.map((r) => r.typ),
+        };
+      },
+    });
   }
 
   if (erlaubt("kpis")) {
@@ -393,7 +538,7 @@ export function buildBusinessTools(role: AppRole | null) {
       inhalt: z.string().describe("Der vollständige Entwurfstext bzw. die vorgeschlagene Maßnahme"),
     }),
     execute: async ({ typ, titel, empfaenger, betreff, inhalt }) => {
-      if ((typ === "rechnung") && !finanzAktionen) {
+      if (typ === "rechnung" && !finanzAktionen) {
         return {
           vorbereitet: false,
           fehler: "Keine Berechtigung für Finanzaktionen in dieser Rolle.",
