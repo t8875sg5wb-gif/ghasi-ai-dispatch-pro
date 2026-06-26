@@ -31,6 +31,7 @@ import {
   Inbox,
   Sparkles,
   Workflow,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 
@@ -122,6 +123,12 @@ export const navGroups: NavGroup[] = [
         to: "/auftraege",
         icon: ClipboardList,
         description: "Alle Krankentransporte erfassen, disponieren und verfolgen.",
+      },
+      {
+        label: "Daueraufträge",
+        to: "/dauerauftraege",
+        icon: Repeat,
+        description: "Wiederkehrende Serien (Dialyse, Pflege, Klinik) automatisch in Transporte umwandeln.",
       },
       {
         label: "Dispatch-Center",
