@@ -25,8 +25,7 @@ export const generateExecutiveAnalysis = createServerFn({ method: "POST" }).hand
       };
     }
 
-    const { generateText, Output } = await import("ai");
-    const { z } = await import("zod");
+    const { generateText } = await import("ai");
     const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
     const { buildBrainSnapshot, computeInsights, computePrognosen } = await import("@/lib/ai-brain");
     const { buildKnowledgeSnapshot } = await import("@/lib/ghasi-knowledge");
@@ -50,38 +49,41 @@ Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
 
 ${buildKnowledgeSnapshot()}`;
 
-    const schema = z.object({
-      lageeinschaetzung: z
-        .string()
-        .describe("2–4 Sätze Gesamtlage des Unternehmens, sachlich wie ein Betriebsleiter, in Markdown."),
-      chancen: z.array(z.string()).max(5).describe("Konkrete Chancen/Gewinnpotenziale, je 1 Satz."),
-      risiken: z.array(z.string()).max(5).describe("Konkrete Risiken/Warnungen, je 1 Satz."),
-      naechsteSchritte: z.array(z.string()).max(5).describe("Empfohlene nächste Schritte, je 1 Satz, priorisiert."),
-    });
+    const toStrings = (v: unknown): string[] =>
+      Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean).slice(0, 5) : [];
 
     try {
       const provider = createLovableAiGatewayProvider(apiKey);
       const result = await generateText({
         model: provider("google/gemini-2.5-flash"),
-        experimental_output: Output.object({ schema }),
         system:
           "Du bist GHASI AI, der digitale Geschäftsführer eines Krankentransportunternehmens. " +
           "Analysiere die bereitgestellten Live-Daten und antworte ausschließlich auf Deutsch, präzise und unternehmerisch. " +
-          "Du gibst nur Empfehlungen – du führst nichts aus und versendest nichts.",
-        prompt: `Erstelle ein kompaktes Executive-Briefing auf Basis dieser aktuellen Unternehmensdaten:\n\n${kontext}`,
+          "Du gibst nur Empfehlungen – du führst nichts aus und versendest nichts. " +
+          "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Code-Fences, exakt in diesem Format: " +
+          '{"lageeinschaetzung": string, "chancen": string[], "risiken": string[], "naechsteSchritte": string[]}. ' +
+          "lageeinschaetzung sind 2–4 Sätze zur Gesamtlage. Die Arrays enthalten je 3–5 kurze, konkrete Einträge (je 1 Satz).",
+        prompt: `Erstelle ein kompaktes Executive-Briefing auf Basis dieser aktuellen Unternehmensdaten und gib es als JSON zurück:\n\n${kontext}`,
       });
 
-      const output = result.experimental_output;
+      // Tolerantes Parsen: Code-Fences entfernen, JSON-Block extrahieren.
+      const raw = result.text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end === -1) throw new Error("Keine JSON-Antwort erhalten.");
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+
       return {
-        lageeinschaetzung: output.lageeinschaetzung,
-        chancen: output.chancen ?? [],
-        risiken: output.risiken ?? [],
-        naechsteSchritte: output.naechsteSchritte ?? [],
+        lageeinschaetzung:
+          typeof parsed.lageeinschaetzung === "string" ? parsed.lageeinschaetzung : "",
+        chancen: toStrings(parsed.chancen),
+        risiken: toStrings(parsed.risiken),
+        naechsteSchritte: toStrings(parsed.naechsteSchritte),
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("[generateExecutiveAnalysis] error:", message, err);
-      let fehler = `DEBUG: ${message.slice(0, 300)}`;
+      console.error("[generateExecutiveAnalysis] error:", message);
+      let fehler = "Die KI-Analyse konnte nicht erstellt werden – bitte erneut versuchen.";
       if (/429|rate limit/i.test(message)) fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
       else if (/402|credit/i.test(message)) fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { lageeinschaetzung: "", chancen: [], risiken: [], naechsteSchritte: [], fehler };
