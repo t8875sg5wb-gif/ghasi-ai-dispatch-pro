@@ -90,6 +90,8 @@ export const navGroups: NavGroup[] = [
         to: "/aktivitaeten",
         icon: Activity,
         description: "Lückenloses Protokoll: wer hat wann was geändert.",
+      },
+    ],
   },
   {
     label: "Kommunikation",
@@ -106,8 +108,6 @@ export const navGroups: NavGroup[] = [
         icon: Sparkles,
         description: "KI-Nachrichten-Entwürfe warten auf Ihre Freigabe – kein automatischer Versand.",
       },
-    ],
-  },
     ],
   },
   {
