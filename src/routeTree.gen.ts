@@ -14,6 +14,7 @@ import { Route as VersicherungenRouteImport } from './routes/versicherungen'
 import { Route as TourenplanungRouteImport } from './routes/tourenplanung'
 import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
@@ -56,6 +57,11 @@ const TelefonRoute = TelefonRouteImport.update({
 const StatistikenRoute = StatistikenRouteImport.update({
   id: '/statistiken',
   path: '/statistiken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RechnungenRoute = RechnungenRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/rechnungen': typeof RechnungenRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/rechnungen': typeof RechnungenRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/rechnungen': typeof RechnungenRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/patienten'
     | '/pflegeheime'
     | '/rechnungen'
+    | '/sitemap.xml'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/patienten'
     | '/pflegeheime'
     | '/rechnungen'
+    | '/sitemap.xml'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/patienten'
     | '/pflegeheime'
     | '/rechnungen'
+    | '/sitemap.xml'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
   RechnungenRoute: typeof RechnungenRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatistikenRoute: typeof StatistikenRoute
   TelefonRoute: typeof TelefonRoute
   TourenplanungRoute: typeof TourenplanungRoute
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/statistiken'
       fullPath: '/statistiken'
       preLoaderRoute: typeof StatistikenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rechnungen': {
@@ -514,6 +534,7 @@ const rootRouteChildren: RootRouteChildren = {
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
   RechnungenRoute: RechnungenRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatistikenRoute: StatistikenRoute,
   TelefonRoute: TelefonRoute,
   TourenplanungRoute: TourenplanungRoute,
