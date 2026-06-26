@@ -24,6 +24,10 @@ import {
   Settings,
   ShieldUser,
   Plug,
+  Gauge,
+  Lightbulb,
+  ShieldAlert,
+  LineChart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,6 +52,30 @@ export const navGroups: NavGroup[] = [
         to: "/",
         icon: LayoutDashboard,
         description: "Zentrale Echtzeit-Übersicht über Ihr gesamtes Unternehmen.",
+      },
+      {
+        label: "Control Center",
+        to: "/control-center",
+        icon: Gauge,
+        description: "Executive-Kommandozentrale: Live-KPIs, Business Health Score & KI-Lageanalyse.",
+      },
+      {
+        label: "KI-Insights",
+        to: "/insights",
+        icon: Lightbulb,
+        description: "Autonome Optimierungschancen mit Begründung – Kosten, Gewinn, Auslastung.",
+      },
+      {
+        label: "Alert-Center",
+        to: "/warnungen",
+        icon: ShieldAlert,
+        description: "Smart Alert Center: alle Warnungen nach Priorität in Echtzeit.",
+      },
+      {
+        label: "Prognosen",
+        to: "/prognosen",
+        icon: LineChart,
+        description: "Predictive AI: Umsatz-, Auslastungs-, Personal- und Wartungsprognosen.",
       },
       {
         label: "KI-Assistent",
