@@ -216,7 +216,29 @@ function DispatchCenter() {
     [updateTransport],
   );
 
-  const offeneSpalten = useMemo(() => {
+  const verschiebe = useCallback(
+    (id: string, spalte: BoardSpalte) => {
+      const t = transporte.find((x) => x.id === id);
+      if (!t) return;
+      updateTransport(id, boardSpaltePatch(spalte));
+      toast.success(`${t.nummer}: ${boardSpalteLabel(spalte)}`);
+      logActivity({
+        bereich: "Dispatch",
+        entitaet: t.nummer,
+        aktion: "board-verschoben",
+        beschreibung: `${t.nummer} nach „${boardSpalteLabel(spalte)}" verschoben`,
+      });
+    },
+    [transporte, updateTransport],
+  );
+
+  const oeffneNummerId = useCallback(
+    (id: string) => {
+      const t = transporte.find((x) => x.id === id);
+      if (t) setAktiv(t);
+    },
+    [transporte],
+  );
     const map: Record<DispatchSpalte, DispatchTransport[]> = {
       warten: [],
       aktiv: [],
