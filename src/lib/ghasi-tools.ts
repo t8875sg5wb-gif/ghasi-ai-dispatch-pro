@@ -287,7 +287,135 @@ export function buildBusinessTools(role: AppRole | null) {
         };
       },
     });
+
+    tools.rechnungen_abrufen = tool({
+      description:
+        "Liefert echte Rechnungen & Gutschriften mit Status (offen, bezahlt, teilbezahlt, überfällig, storniert), Betrag, Fälligkeit, Abrechnungsart und Bezug zum Transport. Mit nurUeberfaellig=true nur überfällige. Beantwortet 'welche Rechnungen sind überfällig/offen'.",
+      inputSchema: z.object({
+        status: z
+          .enum(["entwurf", "offen", "bezahlt", "teilbezahlt", "ueberfaellig", "storniert"])
+          .optional(),
+        kunde: z.string().optional(),
+        nurUeberfaellig: z.boolean().optional(),
+      }),
+      execute: async ({ status, kunde, nurUeberfaellig }) => {
+        const liste = INITIAL_RECHNUNGEN.filter(
+          (r) =>
+            (!status || r.status === status) &&
+            enthaelt(r.kunde, kunde) &&
+            (!nurUeberfaellig || tageUeberfaellig(r) > 0),
+        ).map((r) => ({
+          nummer: r.nummer,
+          kunde: r.kunde,
+          abrechnungsart: r.abrechnungsart,
+          betrag: EURf(r.betrag),
+          status: RECHNUNG_STATUS_META[r.status].label,
+          faelligkeit: formatRgDatum(r.faelligkeit),
+          tageUeberfaellig: tageUeberfaellig(r),
+          bezugAuftrag: r.bezugAuftrag ?? "—",
+        }));
+        const k = computeFinanzKpis();
+        return {
+          quelle: "Buchhaltung · Rechnungen",
+          anzahl: liste.length,
+          summen: {
+            offenePosten: EURf(k.offenePosten),
+            ueberfaellig: EURf(k.ueberfaelligeSumme),
+            bezahlt: EURf(k.bezahltSumme),
+          },
+          rechnungen: liste,
+        };
+      },
+    });
+
+    tools.finanz_anomalien_abrufen = tool({
+      description:
+        "Liefert die KI-Rechnungsprüfung: erkannte überfällige, fehlende, doppelte und unbezahlte Rechnungen sowie Inkonsistenzen – jeweils mit Grund, Quelle, Wirkung, Konfidenz und Empfehlung. GHASI AI versendet nichts automatisch.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const list = detectFinanzAnomalien();
+        return {
+          quelle: "AI Brain · Finanzprüfung",
+          anzahl: list.length,
+          anomalien: list.map((a) => ({
+            typ: a.typ,
+            titel: a.titel,
+            grund: a.grund,
+            quelle: a.quelle,
+            wirkung: a.wirkung,
+            konfidenz: `${a.konfidenz} %`,
+            empfehlung: a.empfehlung,
+          })),
+        };
+      },
+    });
+
+    tools.kostenaufstellung_abrufen = tool({
+      description:
+        "Liefert die Kostenaufstellung des Monats: Fahrzeug-, Kraftstoff-, Wartungs-, Fahrer- und Leasingkosten sowie Gesamtkosten. Beantwortet 'wo entstehen die Kosten / wo können Kosten gesenkt werden'.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const k = computeFinanzKpis();
+        return {
+          quelle: "Buchhaltung · Kostenstellen",
+          fahrzeugkosten: EURf(k.kosten.fahrzeugkosten),
+          kraftstoffkosten: EURf(k.kosten.kraftstoffkosten),
+          wartungskosten: EURf(k.kosten.wartungskosten),
+          fahrerkosten: EURf(k.kosten.fahrerkosten),
+          leasingkosten: EURf(k.kosten.leasingkosten),
+          gesamt: EURf(k.kosten.gesamt),
+        };
+      },
+    });
+
+    tools.dokumente_abrufen = tool({
+      description:
+        "Durchsucht das Dokumentencenter (Rezepte, Aufträge, Verträge, Rechnungen, Fahrer-/Fahrzeugdokumente, Versicherungen, Wartungsbelege) inkl. OCR-Text, Tags und Verknüpfungen. Beantwortet 'finde Dokument/Verordnung/Vertrag zu …'.",
+      inputSchema: z.object({
+        query: z.string().optional().describe("Suchbegriff (Name, Tag, OCR-Inhalt, Bezug)"),
+      }),
+      execute: async ({ query }) => {
+        const liste = searchDokumente(query ?? "").slice(0, 12).map((d) => ({
+          name: d.name,
+          kategorie: KATEGORIE_META[d.kategorie].label,
+          ordner: d.ordner,
+          version: aktuelleVersion(d).version,
+          verknuepftMit: d.bezug?.label ?? "—",
+        }));
+        return { quelle: "Dokumentencenter", anzahl: liste.length, dokumente: liste };
+      },
+    });
+
+    tools.bericht_erstellen = tool({
+      description:
+        "Erstellt einen Enterprise-Report aus Live-Daten (Umsatz, Gewinn, Fahrzeugauslastung, Fahrerleistung, Kunden, Patienten, Transporte, Kraftstoff, Wartung). Liefert Spalten und Zeilen für eine kompakte Zusammenfassung.",
+      inputSchema: z.object({
+        typ: z.enum([
+          "umsatz",
+          "gewinn",
+          "fahrzeugauslastung",
+          "fahrerleistung",
+          "kunden",
+          "patienten",
+          "transporte",
+          "kraftstoff",
+          "wartung",
+        ]),
+      }),
+      execute: async ({ typ }) => {
+        const b = buildBericht(typ as BerichtTyp);
+        return {
+          quelle: "Reporting-Engine",
+          titel: b.titel,
+          spalten: b.spalten,
+          zeilen: b.zeilen.slice(0, 20),
+          summe: b.summe ?? null,
+          verfuegbareBerichte: BERICHT_LISTE.map((r) => r.typ),
+        };
+      },
+    });
   }
+
 
   if (erlaubt("kpis")) {
     tools.kennzahlen_abrufen = tool({
