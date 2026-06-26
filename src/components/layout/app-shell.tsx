@@ -62,6 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
           </Button>
           <ThemeToggle />
+          <UserMenu />
         </header>
         <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </SidebarInset>
