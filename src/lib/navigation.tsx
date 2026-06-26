@@ -28,6 +28,8 @@ import {
   Lightbulb,
   ShieldAlert,
   LineChart,
+  Inbox,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -88,6 +90,23 @@ export const navGroups: NavGroup[] = [
         to: "/aktivitaeten",
         icon: Activity,
         description: "Lückenloses Protokoll: wer hat wann was geändert.",
+      },
+    ],
+  },
+  {
+    label: "Kommunikation",
+    items: [
+      {
+        label: "Posteingang",
+        to: "/posteingang",
+        icon: Inbox,
+        description: "Vereinheitlichter Posteingang für alle Module – verknüpft mit dem Ursprungsobjekt.",
+      },
+      {
+        label: "Aktions-Center",
+        to: "/aktions-center",
+        icon: Sparkles,
+        description: "KI-Nachrichten-Entwürfe warten auf Ihre Freigabe – kein automatischer Versand.",
       },
     ],
   },

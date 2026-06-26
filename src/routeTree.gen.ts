@@ -19,6 +19,7 @@ import { Route as StatistikenRouteImport } from './routes/statistiken'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
+import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
@@ -37,6 +38,7 @@ import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
 import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
+import { Route as AktionsCenterRouteImport } from './routes/aktions-center'
 import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
@@ -91,6 +93,11 @@ const RechnungenRoute = RechnungenRouteImport.update({
 const PrognosenRoute = PrognosenRouteImport.update({
   id: '/prognosen',
   path: '/prognosen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosteingangRoute = PosteingangRouteImport.update({
+  id: '/posteingang',
+  path: '/posteingang',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PflegeheimeRoute = PflegeheimeRouteImport.update({
@@ -183,6 +190,11 @@ const AktivitaetenRoute = AktivitaetenRouteImport.update({
   path: '/aktivitaeten',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AktionsCenterRoute = AktionsCenterRouteImport.update({
+  id: '/aktions-center',
+  path: '/aktions-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdministrationRoute = AdministrationRouteImport.update({
   id: '/administration',
   path: '/administration',
@@ -212,6 +224,7 @@ const ApiChatRoute = ApiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
@@ -230,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -247,6 +261,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
@@ -264,6 +279,7 @@ export interface FileRoutesByTo {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -282,6 +298,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
@@ -300,6 +317,7 @@ export interface FileRoutesById {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -319,6 +337,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/administration'
+    | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
@@ -337,6 +356,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -354,6 +374,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/administration'
+    | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
@@ -371,6 +392,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -388,6 +410,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/administration'
+    | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
@@ -406,6 +429,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -424,6 +448,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdministrationRoute: typeof AdministrationRoute
+  AktionsCenterRoute: typeof AktionsCenterRoute
   AktivitaetenRoute: typeof AktivitaetenRoute
   AuftraegeRoute: typeof AuftraegeRoute
   BerichteRoute: typeof BerichteRoute
@@ -442,6 +467,7 @@ export interface RootRouteChildren {
   LiveGpsRoute: typeof LiveGpsRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
+  PosteingangRoute: typeof PosteingangRoute
   PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -525,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/prognosen'
       fullPath: '/prognosen'
       preLoaderRoute: typeof PrognosenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posteingang': {
+      id: '/posteingang'
+      path: '/posteingang'
+      fullPath: '/posteingang'
+      preLoaderRoute: typeof PosteingangRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pflegeheime': {
@@ -653,6 +686,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AktivitaetenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aktions-center': {
+      id: '/aktions-center'
+      path: '/aktions-center'
+      fullPath: '/aktions-center'
+      preLoaderRoute: typeof AktionsCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/administration': {
       id: '/administration'
       path: '/administration'
@@ -708,6 +748,7 @@ const KiAssistentRouteWithChildren = KiAssistentRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdministrationRoute: AdministrationRoute,
+  AktionsCenterRoute: AktionsCenterRoute,
   AktivitaetenRoute: AktivitaetenRoute,
   AuftraegeRoute: AuftraegeRoute,
   BerichteRoute: BerichteRoute,
@@ -726,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveGpsRoute: LiveGpsRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
+  PosteingangRoute: PosteingangRoute,
   PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
