@@ -98,6 +98,63 @@ function sammleQuellen(parts: UIMessage["parts"] | undefined): WebQuelle[] {
   return quellen.filter((q) => (q.url && !seen.has(q.url) ? (seen.add(q.url), true) : false));
 }
 
+/** Sammelt die Geschäfts-Datenquellen (Feld "quelle") aller Tool-Ergebnisse. */
+function sammleBusinessQuellen(parts: UIMessage["parts"] | undefined): string[] {
+  if (!Array.isArray(parts)) return [];
+  const set = new Set<string>();
+  for (const p of parts) {
+    if (
+      typeof p.type === "string" &&
+      p.type.startsWith("tool-") &&
+      "output" in p &&
+      p.output &&
+      typeof p.output === "object" &&
+      "quelle" in (p.output as Record<string, unknown>)
+    ) {
+      const q = (p.output as { quelle?: string }).quelle;
+      if (q) set.add(q);
+    }
+  }
+  return [...set];
+}
+
+/** Sammelt vorbereitete (nicht ausgeführte) Smart Actions aus den Tool-Ergebnissen. */
+function sammleVorbereiteteAktionen(parts: UIMessage["parts"] | undefined) {
+  if (!Array.isArray(parts)) return [];
+  const aktionen: Array<Record<string, unknown>> = [];
+  for (const p of parts) {
+    if (
+      typeof p.type === "string" &&
+      p.type.startsWith("tool-aktion_vorbereiten") &&
+      "output" in p &&
+      p.output &&
+      typeof p.output === "object" &&
+      (p.output as { vorbereitet?: boolean }).vorbereitet
+    ) {
+      aktionen.push(p.output as Record<string, unknown>);
+    }
+  }
+  return aktionen;
+}
+
+/** Verifiziert das Bearer-Token und ermittelt die höchste Rolle des Nutzers. */
+async function authentifiziere(
+  request: Request,
+  admin: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
+): Promise<{ userId: string | null; role: AppRole | null }> {
+  const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
+  const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
+  if (!token) return { userId: null, role: null };
+  const { data, error } = await admin.auth.getUser(token);
+  if (error || !data.user) return { userId: null, role: null };
+  const { data: rollen } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id);
+  const role = hoechsteRolle((rollen ?? []).map((r) => r.role) as AppRole[]);
+  return { userId: data.user.id, role };
+}
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
