@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Droplets } from "lucide-react";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { EinrichtungModul } from "@/components/einrichtungen/einrichtung-modul";
+import { DIALYSEZENTREN } from "@/lib/stammdaten";
 
 export const Route = createFileRoute("/dialysezentren")({
   head: () => ({
     meta: [
       { title: "Dialysezentren – GHASI AI" },
-      { name: "description", content: "Dialysepartner, Termine und wiederkehrende Fahrten verwalten." },
+      { name: "description", content: "Dialysezentren, Schichtzeiten und wiederkehrende Sammeltouren." },
     ],
   }),
   component: () => (
-    <PlaceholderPage
-      title="Dialysezentren"
-      description="Dialysepartner, Termine und wiederkehrende Fahrten verwalten."
-      icon={Droplets}
-      features={[
-    "Zentren-Verzeichnis",
-    "Behandlungszeiten",
-    "Sammeltouren",
-    "Wiederkehrende Termine",
-    "Kapazitäten",
-    "Abrechnung",
-      ]}
+    <EinrichtungModul
+      config={{
+        typ: "dialyse",
+        titel: "Dialysezentren",
+        einzahl: "Dialysezentrum",
+        beschreibung: "Zentren, Schichtzeiten, Behandlungsplätze und Sammeltouren.",
+        icon: Droplets,
+        idPrefix: "dz",
+        daten: DIALYSEZENTREN,
+        kapazitaetLabel: "Behandlungsplätze",
+      }}
     />
   ),
 });
