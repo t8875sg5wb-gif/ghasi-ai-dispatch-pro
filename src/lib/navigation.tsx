@@ -12,6 +12,7 @@ import {
   MapPin,
   Phone,
   Bot,
+  Activity,
   Calculator,
   FileText,
   Wrench,
