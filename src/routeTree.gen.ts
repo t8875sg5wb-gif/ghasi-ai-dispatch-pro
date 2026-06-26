@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WartungRouteImport } from './routes/wartung'
 import { Route as VersicherungenRouteImport } from './routes/versicherungen'
+import { Route as VerbindungenRouteImport } from './routes/verbindungen'
 import { Route as TourenplanungRouteImport } from './routes/tourenplanung'
 import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
@@ -46,6 +47,11 @@ const WartungRoute = WartungRouteImport.update({
 const VersicherungenRoute = VersicherungenRouteImport.update({
   id: '/versicherungen',
   path: '/versicherungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerbindungenRoute = VerbindungenRouteImport.update({
+  id: '/verbindungen',
+  path: '/verbindungen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TourenplanungRoute = TourenplanungRouteImport.update({
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
+  '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
+  '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
+  '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
+    | '/verbindungen'
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
+    | '/verbindungen'
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
+    | '/verbindungen'
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
@@ -385,6 +397,7 @@ export interface RootRouteChildren {
   StatistikenRoute: typeof StatistikenRoute
   TelefonRoute: typeof TelefonRoute
   TourenplanungRoute: typeof TourenplanungRoute
+  VerbindungenRoute: typeof VerbindungenRoute
   VersicherungenRoute: typeof VersicherungenRoute
   WartungRoute: typeof WartungRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/versicherungen'
       fullPath: '/versicherungen'
       preLoaderRoute: typeof VersicherungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verbindungen': {
+      id: '/verbindungen'
+      path: '/verbindungen'
+      fullPath: '/verbindungen'
+      preLoaderRoute: typeof VerbindungenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tourenplanung': {
@@ -629,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatistikenRoute: StatistikenRoute,
   TelefonRoute: TelefonRoute,
   TourenplanungRoute: TourenplanungRoute,
+  VerbindungenRoute: VerbindungenRoute,
   VersicherungenRoute: VersicherungenRoute,
   WartungRoute: WartungRoute,
   ApiChatRoute: ApiChatRoute,
