@@ -245,6 +245,21 @@ export function ChatMessage({ message }: { message: UIMessage }) {
     filename?: string;
   }[];
 
+  // Genutzte Geschäftsdaten-Quellen aus den Tool-Ergebnissen sammeln.
+  const businessQuellen = Array.from(
+    new Set(
+      message.parts.flatMap((p) => {
+        if (typeof p.type !== "string") return [];
+        if (!matchBusinessTool(p.type) && !p.type.startsWith("tool-unternehmenssuche")) return [];
+        const out =
+          "output" in p && p.output && typeof p.output === "object"
+            ? (p.output as { quelle?: string })
+            : undefined;
+        return out?.quelle ? [out.quelle] : [];
+      }),
+    ),
+  );
+
   return (
     <div className={cn("flex items-end gap-2.5", isUser && "flex-row-reverse")}>
       <div
