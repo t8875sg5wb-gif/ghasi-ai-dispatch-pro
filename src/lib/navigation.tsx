@@ -23,6 +23,7 @@ import {
   FolderArchive,
   Settings,
   ShieldUser,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 
