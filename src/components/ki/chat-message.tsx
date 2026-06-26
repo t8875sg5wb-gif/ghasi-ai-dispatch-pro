@@ -305,9 +305,30 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                 return (
                   <ToolHinweis key={i} icon={BrainCircuit} text="Ins Langzeitgedächtnis übernommen" />
                 );
+              return null;
+            }
+            if (p.type.startsWith("tool-aktion_vorbereiten")) {
+              const out =
+                "output" in p && p.output && typeof p.output === "object"
+                  ? (p.output as VorbereiteteAktion)
+                  : undefined;
+              if (!out)
+                return (
+                  <ToolHinweis key={i} icon={Loader2} text="Bereitet einen Entwurf vor …" />
+                );
+              return <SmartActionCard key={i} aktion={out} />;
+            }
+            const biz = matchBusinessTool(p.type);
+            if (biz) {
+              const hasOutput = "output" in p && p.output && typeof p.output === "object";
+              if (!hasOutput) return <ToolHinweis key={i} icon={Loader2} text={biz.laden} />;
+              return null; // Quelle wird unten als Chip angezeigt
             }
             return null;
           })}
+
+        {/* Datenquellen (Geschäftsdaten) */}
+        {!isUser && <QuellenChips quellen={businessQuellen} />}
 
         {/* Text */}
         {text && (
