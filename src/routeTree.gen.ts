@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WartungRouteImport } from './routes/wartung'
+import { Route as WarnungenRouteImport } from './routes/warnungen'
 import { Route as VersicherungenRouteImport } from './routes/versicherungen'
 import { Route as VerbindungenRouteImport } from './routes/verbindungen'
 import { Route as TourenplanungRouteImport } from './routes/tourenplanung'
@@ -17,6 +18,7 @@ import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
+import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
@@ -24,11 +26,13 @@ import { Route as LeasingRouteImport } from './routes/leasing'
 import { Route as KundenRouteImport } from './routes/kunden'
 import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
+import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrerRouteImport } from './routes/fahrer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
+import { Route as ControlCenterRouteImport } from './routes/control-center'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
@@ -42,6 +46,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const WartungRoute = WartungRouteImport.update({
   id: '/wartung',
   path: '/wartung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WarnungenRoute = WarnungenRouteImport.update({
+  id: '/warnungen',
+  path: '/warnungen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VersicherungenRoute = VersicherungenRouteImport.update({
@@ -79,6 +88,11 @@ const RechnungenRoute = RechnungenRouteImport.update({
   path: '/rechnungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrognosenRoute = PrognosenRouteImport.update({
+  id: '/prognosen',
+  path: '/prognosen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PflegeheimeRoute = PflegeheimeRouteImport.update({
   id: '/pflegeheime',
   path: '/pflegeheime',
@@ -114,6 +128,11 @@ const KiAssistentRoute = KiAssistentRouteImport.update({
   path: '/ki-assistent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FahrzeugeRoute = FahrzeugeRouteImport.update({
   id: '/fahrzeuge',
   path: '/fahrzeuge',
@@ -137,6 +156,11 @@ const DokumenteRoute = DokumenteRouteImport.update({
 const DialysezentrenRoute = DialysezentrenRouteImport.update({
   id: '/dialysezentren',
   path: '/dialysezentren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlCenterRoute = ControlCenterRouteImport.update({
+  id: '/control-center',
+  path: '/control-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuchhaltungRoute = BuchhaltungRouteImport.update({
@@ -192,11 +216,13 @@ export interface FileRoutesByFullPath {
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/control-center': typeof ControlCenterRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
+  '/insights': typeof InsightsRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -204,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
@@ -211,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/tourenplanung': typeof TourenplanungRoute
   '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
+  '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
@@ -223,17 +251,20 @@ export interface FileRoutesByTo {
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/control-center': typeof ControlCenterRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
+  '/insights': typeof InsightsRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
@@ -241,6 +272,7 @@ export interface FileRoutesByTo {
   '/tourenplanung': typeof TourenplanungRoute
   '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
+  '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
@@ -254,11 +286,13 @@ export interface FileRoutesById {
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/control-center': typeof ControlCenterRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
+  '/insights': typeof InsightsRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -266,6 +300,7 @@ export interface FileRoutesById {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/statistiken': typeof StatistikenRoute
@@ -273,6 +308,7 @@ export interface FileRoutesById {
   '/tourenplanung': typeof TourenplanungRoute
   '/verbindungen': typeof VerbindungenRoute
   '/versicherungen': typeof VersicherungenRoute
+  '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
@@ -287,11 +323,13 @@ export interface FileRouteTypes {
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
+    | '/control-center'
     | '/dialysezentren'
     | '/dokumente'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
+    | '/insights'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -299,6 +337,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
     | '/statistiken'
@@ -306,6 +345,7 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/verbindungen'
     | '/versicherungen'
+    | '/warnungen'
     | '/wartung'
     | '/api/chat'
     | '/ki-assistent/$threadId'
@@ -318,17 +358,20 @@ export interface FileRouteTypes {
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
+    | '/control-center'
     | '/dialysezentren'
     | '/dokumente'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
+    | '/insights'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
     | '/statistiken'
@@ -336,6 +379,7 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/verbindungen'
     | '/versicherungen'
+    | '/warnungen'
     | '/wartung'
     | '/api/chat'
     | '/ki-assistent/$threadId'
@@ -348,11 +392,13 @@ export interface FileRouteTypes {
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
+    | '/control-center'
     | '/dialysezentren'
     | '/dokumente'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
+    | '/insights'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -360,6 +406,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
     | '/statistiken'
@@ -367,6 +414,7 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/verbindungen'
     | '/versicherungen'
+    | '/warnungen'
     | '/wartung'
     | '/api/chat'
     | '/ki-assistent/$threadId'
@@ -380,11 +428,13 @@ export interface RootRouteChildren {
   AuftraegeRoute: typeof AuftraegeRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
+  ControlCenterRoute: typeof ControlCenterRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
   DokumenteRoute: typeof DokumenteRoute
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
+  InsightsRoute: typeof InsightsRoute
   KiAssistentRoute: typeof KiAssistentRouteWithChildren
   KrankenhaeuserRoute: typeof KrankenhaeuserRoute
   KundenRoute: typeof KundenRoute
@@ -392,6 +442,7 @@ export interface RootRouteChildren {
   LiveGpsRoute: typeof LiveGpsRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
+  PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatistikenRoute: typeof StatistikenRoute
@@ -399,6 +450,7 @@ export interface RootRouteChildren {
   TourenplanungRoute: typeof TourenplanungRoute
   VerbindungenRoute: typeof VerbindungenRoute
   VersicherungenRoute: typeof VersicherungenRoute
+  WarnungenRoute: typeof WarnungenRoute
   WartungRoute: typeof WartungRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -410,6 +462,13 @@ declare module '@tanstack/react-router' {
       path: '/wartung'
       fullPath: '/wartung'
       preLoaderRoute: typeof WartungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/warnungen': {
+      id: '/warnungen'
+      path: '/warnungen'
+      fullPath: '/warnungen'
+      preLoaderRoute: typeof WarnungenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/versicherungen': {
@@ -461,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RechnungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prognosen': {
+      id: '/prognosen'
+      path: '/prognosen'
+      fullPath: '/prognosen'
+      preLoaderRoute: typeof PrognosenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pflegeheime': {
       id: '/pflegeheime'
       path: '/pflegeheime'
@@ -510,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KiAssistentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fahrzeuge': {
       id: '/fahrzeuge'
       path: '/fahrzeuge'
@@ -543,6 +616,13 @@ declare module '@tanstack/react-router' {
       path: '/dialysezentren'
       fullPath: '/dialysezentren'
       preLoaderRoute: typeof DialysezentrenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control-center': {
+      id: '/control-center'
+      path: '/control-center'
+      fullPath: '/control-center'
+      preLoaderRoute: typeof ControlCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/buchhaltung': {
@@ -632,11 +712,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuftraegeRoute: AuftraegeRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
+  ControlCenterRoute: ControlCenterRoute,
   DialysezentrenRoute: DialysezentrenRoute,
   DokumenteRoute: DokumenteRoute,
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
   FahrzeugeRoute: FahrzeugeRoute,
+  InsightsRoute: InsightsRoute,
   KiAssistentRoute: KiAssistentRouteWithChildren,
   KrankenhaeuserRoute: KrankenhaeuserRoute,
   KundenRoute: KundenRoute,
@@ -644,6 +726,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveGpsRoute: LiveGpsRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
+  PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatistikenRoute: StatistikenRoute,
@@ -651,19 +734,10 @@ const rootRouteChildren: RootRouteChildren = {
   TourenplanungRoute: TourenplanungRoute,
   VerbindungenRoute: VerbindungenRoute,
   VersicherungenRoute: VersicherungenRoute,
+  WarnungenRoute: WarnungenRoute,
   WartungRoute: WartungRoute,
   ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
