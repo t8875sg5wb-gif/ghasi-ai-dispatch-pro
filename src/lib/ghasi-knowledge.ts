@@ -109,6 +109,26 @@ export function buildSearchIndex(): SearchItem[] {
       schlagworte: `${kk.name} ${kk.kuerzel} krankenkasse ${kk.vertragsstatus}`,
     });
   }
+  for (const r of INITIAL_RECHNUNGEN) {
+    items.push({
+      id: r.id,
+      bereich: "Rechnungen",
+      to: "/rechnungen",
+      titel: `${r.nummer} · ${r.kunde}`,
+      untertitel: `${EURf(r.betrag)} · ${RECHNUNG_STATUS_META[r.status].label}`,
+      schlagworte: `${r.nummer} ${r.kunde} ${r.abrechnungsart} ${r.bezugAuftrag ?? ""} rechnung`,
+    });
+  }
+  for (const d of INITIAL_DOKUMENTE) {
+    items.push({
+      id: d.id,
+      bereich: "Dokumente",
+      to: "/dokumente",
+      titel: d.name,
+      untertitel: `${KATEGORIE_META[d.kategorie].label} · ${d.ordner}`,
+      schlagworte: `${d.name} ${d.tags.join(" ")} ${d.bezug?.label ?? ""} ${d.ocrText ?? ""} dokument`,
+    });
+  }
 
   return items;
 }
