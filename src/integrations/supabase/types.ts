@@ -47,6 +47,68 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          inhalt: string
+          parts: Json | null
+          quellen: Json | null
+          rolle: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inhalt?: string
+          parts?: Json | null
+          quellen?: Json | null
+          rolle: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inhalt?: string
+          parts?: Json | null
+          quellen?: Json | null
+          rolle?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          archiviert: boolean
+          created_at: string
+          id: string
+          titel: string
+          updated_at: string
+        }
+        Insert: {
+          archiviert?: boolean
+          created_at?: string
+          id?: string
+          titel?: string
+          updated_at?: string
+        }
+        Update: {
+          archiviert?: boolean
+          created_at?: string
+          id?: string
+          titel?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ghasi_memory: {
         Row: {
           bezug: string | null
