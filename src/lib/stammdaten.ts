@@ -8,6 +8,16 @@ export interface Kunde {
   ansprechpartner: string;
   telefon: string;
   offeneRechnungen: number;
+  // Erweiterte, optionale Vertrags- und Abrechnungsdaten
+  email?: string;
+  adresse?: string;
+  vertragsstatus?: "Rahmenvertrag" | "Einzelvertrag" | "Kein Vertrag";
+  konditionen?: string;
+  zahlungszielTage?: number;
+  kreditlimit?: number;
+  umsatzJahr?: number;
+  notiz?: string;
+  aktiv?: boolean;
 }
 
 export interface Patient {
@@ -24,12 +34,25 @@ export interface Patient {
   patientennotiz?: string;
 }
 
+export type EinrichtungTyp = "krankenhaus" | "dialyse" | "pflegeheim";
+
 export interface Einrichtung {
   id: string;
   name: string;
   adresse: string;
   ansprechpartner: string;
   telefon: string;
+  // Erweiterte, optionale Felder
+  typ?: EinrichtungTyp;
+  email?: string;
+  fachbereiche?: string[];
+  /** Betten/Plätze bzw. Behandlungsplätze */
+  kapazitaet?: number;
+  oeffnungszeiten?: string;
+  /** Verknüpfter Kostenträger/Auftraggeber für Abrechnung */
+  kostentraeger?: string;
+  notiz?: string;
+  aktiv?: boolean;
 }
 
 export interface Krankenkasse {
@@ -40,11 +63,11 @@ export interface Krankenkasse {
 }
 
 export const KUNDEN: Kunde[] = [
-  { id: "k-1", name: "AOK Nordost", typ: "Krankenkasse", ansprechpartner: "Frau Berger", telefon: "030 1234500", offeneRechnungen: 2 },
-  { id: "k-2", name: "Techniker Krankenkasse", typ: "Krankenkasse", ansprechpartner: "Herr Daum", telefon: "030 1234501", offeneRechnungen: 1 },
-  { id: "k-3", name: "Klinikum West", typ: "Klinik", ansprechpartner: "Disposition Klinik", telefon: "030 1234502", offeneRechnungen: 0 },
-  { id: "k-4", name: "Pflegeheim Sonnenhof", typ: "Pflegeeinrichtung", ansprechpartner: "Frau Lang", telefon: "030 1234503", offeneRechnungen: 3 },
-  { id: "k-5", name: "Barmer", typ: "Krankenkasse", ansprechpartner: "Frau Roth", telefon: "030 1234504", offeneRechnungen: 0 },
+  { id: "k-1", name: "AOK Nordost", typ: "Krankenkasse", ansprechpartner: "Frau Berger", telefon: "030 1234500", offeneRechnungen: 2, email: "abrechnung@aok-nordost.de", adresse: "Wilhelmstr. 1, 10117 Berlin", vertragsstatus: "Rahmenvertrag", konditionen: "Festpreis je Transportart laut Rahmenvertrag", zahlungszielTage: 30, kreditlimit: 50000, umsatzJahr: 184500, aktiv: true },
+  { id: "k-2", name: "Techniker Krankenkasse", typ: "Krankenkasse", ansprechpartner: "Herr Daum", telefon: "030 1234501", offeneRechnungen: 1, email: "leistungen@tk.de", adresse: "Bramfelder Str. 140, 22305 Hamburg", vertragsstatus: "Rahmenvertrag", konditionen: "km-Pauschale + Grundgebühr", zahlungszielTage: 30, kreditlimit: 40000, umsatzJahr: 142300, aktiv: true },
+  { id: "k-3", name: "Klinikum West", typ: "Klinik", ansprechpartner: "Disposition Klinik", telefon: "030 1234502", offeneRechnungen: 0, email: "transport@klinikum-west.de", adresse: "Westring 5, 13627 Berlin", vertragsstatus: "Einzelvertrag", konditionen: "Verlegungsfahrten nach Aufwand", zahlungszielTage: 21, kreditlimit: 25000, umsatzJahr: 96800, aktiv: true },
+  { id: "k-4", name: "Pflegeheim Sonnenhof", typ: "Pflegeeinrichtung", ansprechpartner: "Frau Lang", telefon: "030 1234503", offeneRechnungen: 3, email: "verwaltung@sonnenhof-pflege.de", adresse: "Sonnenweg 3, 12351 Berlin", vertragsstatus: "Einzelvertrag", konditionen: "Sammelfahrten zu Festpreisen", zahlungszielTage: 14, kreditlimit: 15000, umsatzJahr: 54200, aktiv: true },
+  { id: "k-5", name: "Barmer", typ: "Krankenkasse", ansprechpartner: "Frau Roth", telefon: "030 1234504", offeneRechnungen: 0, email: "service@barmer.de", adresse: "Axel-Springer-Str. 44, 10969 Berlin", vertragsstatus: "Rahmenvertrag", konditionen: "Festpreis je Transportart laut Rahmenvertrag", zahlungszielTage: 30, kreditlimit: 35000, umsatzJahr: 121400, aktiv: true },
 ];
 
 export const PATIENTEN: Patient[] = [
@@ -56,19 +79,19 @@ export const PATIENTEN: Patient[] = [
 ];
 
 export const KRANKENHAEUSER: Einrichtung[] = [
-  { id: "kh-1", name: "Klinikum West", adresse: "Westring 5, Berlin", ansprechpartner: "Notaufnahme", telefon: "030 9000100" },
-  { id: "kh-2", name: "Augenklinik Mitte", adresse: "Mittelstr. 2, Berlin", ansprechpartner: "Anmeldung", telefon: "030 9000200" },
-  { id: "kh-3", name: "Reha-Klinik Grunewald", adresse: "Waldweg 11, Berlin", ansprechpartner: "Patientenaufnahme", telefon: "030 9000300" },
+  { id: "kh-1", name: "Klinikum West", adresse: "Westring 5, 13627 Berlin", ansprechpartner: "Notaufnahme", telefon: "030 9000100", typ: "krankenhaus", email: "aufnahme@klinikum-west.de", fachbereiche: ["Notaufnahme", "Innere Medizin", "Chirurgie"], kapazitaet: 620, oeffnungszeiten: "24 h", kostentraeger: "Klinikum West", notiz: "Anfahrt über Zufahrt Nord, Liegendanlieferung Rampe 2.", aktiv: true },
+  { id: "kh-2", name: "Augenklinik Mitte", adresse: "Mittelstr. 2, 10117 Berlin", ansprechpartner: "Anmeldung", telefon: "030 9000200", typ: "krankenhaus", email: "anmeldung@augenklinik-mitte.de", fachbereiche: ["Augenheilkunde", "Ambulante OP"], kapazitaet: 80, oeffnungszeiten: "Mo–Fr 7–19 Uhr", notiz: "Patienten nach OP oft sehbeeinträchtigt – Begleitung anbieten.", aktiv: true },
+  { id: "kh-3", name: "Reha-Klinik Grunewald", adresse: "Waldweg 11, 14193 Berlin", ansprechpartner: "Patientenaufnahme", telefon: "030 9000300", typ: "krankenhaus", email: "aufnahme@reha-grunewald.de", fachbereiche: ["Neurologische Reha", "Orthopädie"], kapazitaet: 210, oeffnungszeiten: "Mo–Sa 8–18 Uhr", notiz: "Aufnahme nur mit Kostenzusage.", aktiv: true },
 ];
 
 export const DIALYSEZENTREN: Einrichtung[] = [
-  { id: "dz-1", name: "Dialysezentrum Nord", adresse: "Nordstr. 8, Berlin", ansprechpartner: "Schichtleitung", telefon: "030 9100100" },
-  { id: "dz-2", name: "Dialysezentrum Süd", adresse: "Südallee 20, Berlin", ansprechpartner: "Disposition", telefon: "030 9100200" },
+  { id: "dz-1", name: "Dialysezentrum Nord", adresse: "Nordstr. 8, 13409 Berlin", ansprechpartner: "Schichtleitung", telefon: "030 9100100", typ: "dialyse", email: "planung@dialyse-nord.de", fachbereiche: ["Hämodialyse"], kapazitaet: 36, oeffnungszeiten: "Mo/Mi/Fr 6–22 Uhr", notiz: "Schichten: 06:30 / 11:30 / 16:30 – Sammeltouren bevorzugt.", aktiv: true },
+  { id: "dz-2", name: "Dialysezentrum Süd", adresse: "Südallee 20, 12099 Berlin", ansprechpartner: "Disposition", telefon: "030 9100200", typ: "dialyse", email: "disposition@dialyse-sued.de", fachbereiche: ["Hämodialyse", "Peritonealdialyse"], kapazitaet: 28, oeffnungszeiten: "Di/Do/Sa 6–20 Uhr", notiz: "Abholung pünktlich, Behandlung ca. 4–5 h.", aktiv: true },
 ];
 
 export const PFLEGEHEIME: Einrichtung[] = [
-  { id: "ph-1", name: "Pflegeheim Sonnenhof", adresse: "Sonnenweg 3, Berlin", ansprechpartner: "Frau Lang", telefon: "030 9200100" },
-  { id: "ph-2", name: "Pflegeheim Lindenhof", adresse: "Lindenstr. 14, Berlin", ansprechpartner: "Herr Vogel", telefon: "030 9200200" },
+  { id: "ph-1", name: "Pflegeheim Sonnenhof", adresse: "Sonnenweg 3, 12351 Berlin", ansprechpartner: "Frau Lang", telefon: "030 9200100", typ: "pflegeheim", email: "verwaltung@sonnenhof-pflege.de", fachbereiche: ["Vollstationär", "Kurzzeitpflege"], kapazitaet: 120, oeffnungszeiten: "24 h", kostentraeger: "Pflegeheim Sonnenhof", notiz: "Bewohner an Rezeption abmelden, Begleitpapiere mitgeben.", aktiv: true },
+  { id: "ph-2", name: "Pflegeheim Lindenhof", adresse: "Lindenstr. 14, 10969 Berlin", ansprechpartner: "Herr Vogel", telefon: "030 9200200", typ: "pflegeheim", email: "pflege@lindenhof.de", fachbereiche: ["Vollstationär", "Demenz-WG"], kapazitaet: 95, oeffnungszeiten: "24 h", notiz: "Aufzug vorhanden, Rollstuhltransporte unkompliziert.", aktiv: true },
 ];
 
 export const KRANKENKASSEN: Krankenkasse[] = [
@@ -76,4 +99,28 @@ export const KRANKENKASSEN: Krankenkasse[] = [
   { id: "kk-2", name: "Techniker Krankenkasse", kuerzel: "TK", vertragsstatus: "Rahmenvertrag" },
   { id: "kk-3", name: "Barmer", kuerzel: "BARMER", vertragsstatus: "Rahmenvertrag" },
   { id: "kk-4", name: "DAK Gesundheit", kuerzel: "DAK", vertragsstatus: "Einzelfall" },
+];
+
+/** Erzeugt eine fortlaufende ID mit Präfix (z. B. "k-6"). */
+export function nextStammId(prefix: string, vorhandene: { id: string }[]): string {
+  let max = 0;
+  for (const x of vorhandene) {
+    const n = Number(x.id.split("-").pop());
+    if (!Number.isNaN(n) && n > max) max = n;
+  }
+  return `${prefix}-${max + 1}`;
+}
+
+export const KUNDEN_TYPEN: Kunde["typ"][] = [
+  "Krankenkasse",
+  "Klinik",
+  "Pflegeeinrichtung",
+  "Privat",
+  "Sonstige",
+];
+
+export const VERTRAGS_STATI: NonNullable<Kunde["vertragsstatus"]>[] = [
+  "Rahmenvertrag",
+  "Einzelvertrag",
+  "Kein Vertrag",
 ];
