@@ -1,29 +1,257 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Euro,
+  TrendingUp,
+  ClipboardList,
+  Loader,
+  UserCheck,
+  UserPlus,
+  Truck,
+  Car,
+  Fuel,
+  Gauge,
+  Activity,
+  AlertTriangle,
+  CloudSun,
+  TrafficCone,
+  CalendarDays,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
+
+import { StatCard } from "@/components/dashboard/stat-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Dashboard – GHASI AI" },
+      {
+        name: "description",
+        content:
+          "Echtzeit-Dashboard für Ihr Krankentransportunternehmen: Umsatz, Aufträge, Flotte, Auslastung und KI-Empfehlungen auf einen Blick.",
+      },
     ],
   }),
-  component: Index,
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const stats = [
+  { label: "Umsatz heute", value: "8.420 €", icon: Euro, tone: "primary" as const, trend: { value: "12 %", positive: true }, hint: "vs. gestern" },
+  { label: "Gewinn heute", value: "2.180 €", icon: TrendingUp, tone: "success" as const, trend: { value: "8 %", positive: true }, hint: "Marge 26 %" },
+  { label: "Offene Aufträge", value: "14", icon: ClipboardList, tone: "info" as const, hint: "5 dringend" },
+  { label: "Laufende Aufträge", value: "9", icon: Loader, tone: "accent" as const, hint: "in Bearbeitung" },
+  { label: "Fahrer unterwegs", value: "11", icon: UserCheck, tone: "primary" as const, hint: "von 18 aktiv" },
+  { label: "Freie Fahrer", value: "7", icon: UserPlus, tone: "success" as const, hint: "verfügbar" },
+  { label: "Fahrzeuge unterwegs", value: "10", icon: Truck, tone: "info" as const, hint: "von 16 Fahrzeugen" },
+  { label: "Freie Fahrzeuge", value: "6", icon: Car, tone: "accent" as const, hint: "einsatzbereit" },
+  { label: "Tankkosten", value: "612 €", icon: Fuel, tone: "warning" as const, trend: { value: "3 %", positive: false }, hint: "heute" },
+  { label: "Leerkilometer", value: "184 km", icon: Gauge, tone: "warning" as const, trend: { value: "5 %", positive: false }, hint: "Optimierung möglich" },
+];
+
+const warnings = [
+  { text: "Fahrzeug B-KT 142 – TÜV in 6 Tagen fällig", level: "Hoch" },
+  { text: "Fahrer M. Keller – Führerschein-Prüfung überfällig", level: "Hoch" },
+  { text: "3 Rechnungen über Zahlungsziel", level: "Mittel" },
+];
+
+const recommendations = [
+  "Tour #A-204 kann mit #A-209 zusammengelegt werden – spart ca. 22 km Leerfahrt.",
+  "2 freie Fahrer für die Dialyse-Frühschicht morgen 06:00 einplanen.",
+  "Kraftstoffpreise heute günstig – Tankvorgänge vorziehen empfohlen.",
+];
+
+const appointments = [
+  { time: "08:30", text: "Dialyse-Sammeltour Zentrum Nord", tag: "Tour" },
+  { time: "11:00", text: "Wartungstermin B-KT 097", tag: "Werkstatt" },
+  { time: "14:15", text: "Kunde Klinikum West – Vertragsgespräch", tag: "Termin" },
+  { time: "16:45", text: "Rückfahrt Pflegeheim Sonnenhof", tag: "Auftrag" },
+];
+
+function Dashboard() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="animate-fade-in space-y-6">
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Guten Tag 👋</h1>
+            <p className="text-sm text-muted-foreground">
+              Hier ist die Echtzeit-Übersicht Ihres Unternehmens.
+            </p>
+          </div>
+          <Button asChild className="rounded-full">
+            <Link to="/ki-assistent">
+              <Sparkles className="h-4 w-4" />
+              GHASI AI fragen
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
+        {stats.map((s) => (
+          <StatCard key={s.label} {...s} />
+        ))}
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        {/* Auslastung */}
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Activity className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Auslastung</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="mb-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Fahrzeuge</span>
+                <span className="font-semibold">63 %</span>
+              </div>
+              <Progress value={63} className="h-2" />
+            </div>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Fahrer</span>
+                <span className="font-semibold">61 %</span>
+              </div>
+              <Progress value={61} className="h-2" />
+            </div>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Tagesplan</span>
+                <span className="font-semibold">78 %</span>
+              </div>
+              <Progress value={78} className="h-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Warnungen */}
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/20 text-warning">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">Warnungen</CardTitle>
+            </div>
+            <Badge variant="secondary">{warnings.length}</Badge>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {warnings.map((w) => (
+              <div
+                key={w.text}
+                className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/30 p-3"
+              >
+                <span
+                  className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                    w.level === "Hoch" ? "bg-destructive" : "bg-warning"
+                  }`}
+                />
+                <p className="text-sm leading-snug">{w.text}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* KI-Empfehlungen */}
+        <Card className="bg-gradient-primary border-0 text-primary-foreground shadow-glow">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base text-primary-foreground">KI-Empfehlungen</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {recommendations.map((r) => (
+              <div key={r} className="rounded-xl bg-white/10 p-3 text-sm leading-snug backdrop-blur">
+                {r}
+              </div>
+            ))}
+            <Button asChild variant="secondary" size="sm" className="mt-1 w-full rounded-full">
+              <Link to="/ki-assistent">
+                Mehr mit GHASI AI <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        {/* Wetter */}
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info/15 text-info">
+              <CloudSun className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Wetter</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold tabular-nums">14°</p>
+                <p className="text-sm text-muted-foreground">Leicht bewölkt · Berlin</p>
+              </div>
+              <CloudSun className="h-12 w-12 text-info/70" />
+            </div>
+            <p className="mt-3 rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
+              Gute Fahrbedingungen – keine Einschränkungen erwartet.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Verkehr */}
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/20 text-warning">
+              <TrafficCone className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Verkehr</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
+              <span className="text-muted-foreground">A100 Richtung Mitte</span>
+              <Badge variant="secondary" className="bg-warning/20 text-warning">Stau 8 km</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
+              <span className="text-muted-foreground">B96 Innenstadt</span>
+              <Badge variant="secondary" className="bg-success/15 text-success">Frei</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
+              <span className="text-muted-foreground">Klinikum West</span>
+              <Badge variant="secondary" className="bg-success/15 text-success">Flüssig</Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Kalender */}
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Kalender heute</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {appointments.map((a) => (
+              <div key={a.time} className="flex items-center gap-3 rounded-xl bg-muted/30 p-2.5">
+                <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-primary">
+                  {a.time}
+                </span>
+                <p className="min-w-0 flex-1 truncate text-sm">{a.text}</p>
+                <Badge variant="outline" className="shrink-0 text-[10px]">
+                  {a.tag}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

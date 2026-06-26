@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ThemeProvider } from "../components/theme-provider";
+import { AppShell } from "../components/layout/app-shell";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +80,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte" },
+      {
+        name: "description",
+        content:
+          "GHASI AI ist Ihr intelligenter digitaler Geschäftsführer für Krankentransportunternehmen – Aufträge, Flotte, Touren, Finanzen und KI-Assistent in einer App.",
+      },
+      { name: "author", content: "GHASI AI" },
+      { property: "og:title", content: "GHASI AI – Digitaler Geschäftsführer" },
+      {
+        property: "og:description",
+        content:
+          "Intelligente Steuerung für Krankentransportunternehmen: Dashboard, Disposition, Live-GPS und KI-Assistent.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -118,8 +129,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <ThemeProvider>
+        <AppShell>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </AppShell>
+        <Toaster position="top-right" />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
