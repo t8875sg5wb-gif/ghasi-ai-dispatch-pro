@@ -80,11 +80,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte" },
+      {
+        name: "description",
+        content:
+          "GHASI AI ist Ihr intelligenter digitaler Geschäftsführer für Krankentransportunternehmen – Aufträge, Flotte, Touren, Finanzen und KI-Assistent in einer App.",
+      },
+      { name: "author", content: "GHASI AI" },
+      { property: "og:title", content: "GHASI AI – Digitaler Geschäftsführer" },
+      {
+        property: "og:description",
+        content:
+          "Intelligente Steuerung für Krankentransportunternehmen: Dashboard, Disposition, Live-GPS und KI-Assistent.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
