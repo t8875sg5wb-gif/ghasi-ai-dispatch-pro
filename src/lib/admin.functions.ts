@@ -15,27 +15,16 @@ export interface BenutzerEintrag {
 
 const GUELTIGE_ROLLEN: AppRole[] = ["admin", "disposition", "finanz", "fahrer"];
 
-type AuthSupabase = Parameters<Parameters<typeof requireSupabaseAuth.server>[0]>[0] extends never
-  ? never
-  : never;
-
-async function sichereAdmin(
-  supabase: { rpc: typeof import("@supabase/supabase-js").SupabaseClient.prototype.rpc },
-  userId: string,
-): Promise<void> {
-  const { data, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (error || data !== true) {
-    throw new Error("Kein Zugriff: Diese Aktion ist Administratoren vorbehalten.");
-  }
-}
-
 export const listeBenutzer = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<BenutzerEintrag[]> => {
-    await sichereAdmin(context.supabase, context.userId);
+    const { data: istAdmin, error: rollenFehler } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (rollenFehler || istAdmin !== true) {
+      throw new Error("Kein Zugriff: Diese Aktion ist Administratoren vorbehalten.");
+    }
 
     const [{ data: profile }, { data: rollen }] = await Promise.all([
       context.supabase.from("profiles").select("id, email, name, created_at"),
