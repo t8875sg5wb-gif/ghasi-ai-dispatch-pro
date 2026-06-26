@@ -146,6 +146,117 @@ function Dashboard() {
         ))}
       </section>
 
+      {/* Schnellzugriffe */}
+      <section className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {schnellzugriffe.map((q) => (
+          <Link
+            key={q.label}
+            to={q.to}
+            className="group flex flex-col items-center gap-2 rounded-2xl border border-border/70 bg-card p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <q.icon className="h-5 w-5" />
+            </span>
+            <span className="text-xs font-medium leading-tight">{q.label}</span>
+          </Link>
+        ))}
+      </section>
+
+      {/* Proaktive Hinweise + Gewinnprognose */}
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Card className="border-border/70 shadow-sm lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
+                <Bot className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base">Proaktive Hinweise von GHASI AI</CardTitle>
+            </div>
+            <Badge variant="secondary">{hinweise.length}</Badge>
+          </CardHeader>
+          <CardContent className="grid gap-2.5 sm:grid-cols-2">
+            {hinweise.slice(0, 6).map((h) => (
+              <Link
+                key={h.id}
+                to={h.to}
+                className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/30 p-3 transition-colors hover:bg-muted/60"
+              >
+                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${stufeStyle[h.stufe]}`} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium leading-snug">{h.titel}</p>
+                  <p className="text-xs leading-snug text-muted-foreground">{h.text}</p>
+                </div>
+              </Link>
+            ))}
+            {hinweise.length === 0 && (
+              <p className="text-sm text-muted-foreground">Aktuell keine Hinweise – alles im grünen Bereich.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Gewinnprognose</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-3xl font-bold tabular-nums">{prognose}</p>
+              <p className="text-sm text-muted-foreground">erwarteter Gewinn diese Woche</p>
+            </div>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Wochenziel</span>
+                <span className="font-semibold">79 %</span>
+              </div>
+              <Progress value={79} className="h-2" />
+            </div>
+            <p className="rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
+              Bei aktueller Auslastung ({auslastungFahrzeuge}% Fahrzeuge / {auslastungFahrer}% Fahrer)
+              wird das Wochenziel voraussichtlich erreicht.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Offene Aufgaben / Nachrichten / Genehmigungen / KI-Aufgaben */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardListCard
+          title="Offene Aufgaben"
+          icon={ListTodo}
+          tone="text-primary bg-primary/10"
+          count={aufgaben.length}
+          items={aufgaben.map((a) => ({ to: a.to, primary: a.text }))}
+        />
+        <DashboardListCard
+          title="Neue Nachrichten"
+          icon={Inbox}
+          tone="text-info bg-info/15"
+          count={nachrichten.length}
+          items={nachrichten.map((n) => ({ to: n.to, primary: n.text, secondary: n.von }))}
+        />
+        <DashboardListCard
+          title="Offene Genehmigungen"
+          icon={BadgeCheck}
+          tone="text-warning bg-warning/20"
+          count={genehmigungen.length}
+          items={genehmigungen.map((g) => ({ to: g.to, primary: g.text }))}
+          badge="Bestätigung nötig"
+        />
+        <DashboardListCard
+          title="KI-Aufgaben"
+          icon={Zap}
+          tone="text-accent bg-accent/15"
+          count={kiAufgaben.length}
+          items={kiAufgaben.map((k) => ({ to: k.to, primary: k.text }))}
+          badge="Vorschlag"
+        />
+      </section>
+
+
+
       <section className="grid gap-4 lg:grid-cols-3">
         {/* Auslastung */}
         <Card className="border-border/70 shadow-sm">
