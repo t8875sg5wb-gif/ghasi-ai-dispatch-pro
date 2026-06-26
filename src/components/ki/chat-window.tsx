@@ -43,7 +43,9 @@ function ChatInner({
   const busy = status === "submitted" || status === "streaming";
 
   const send = (text: string, files: Attachment[]) => {
-    void sendMessage({ text: text || undefined, files: files.length ? files : undefined });
+    const fileParts = files.length ? files : undefined;
+    if (text) void sendMessage({ text, files: fileParts });
+    else if (fileParts) void sendMessage({ files: fileParts });
   };
 
   // Erste Nachricht von der Startseite übernehmen.
