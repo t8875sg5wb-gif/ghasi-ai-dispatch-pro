@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { GlobalSearch, useGlobalSearchHotkey } from "@/components/global-search";
+import { UserMenu } from "@/components/layout/user-menu";
 import { allNavItems } from "@/lib/navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
