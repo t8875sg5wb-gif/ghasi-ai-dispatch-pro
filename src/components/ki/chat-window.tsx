@@ -9,6 +9,7 @@ import { ChatComposer, type Attachment } from "@/components/ki/chat-composer";
 import { useThreadMessages } from "@/hooks/use-threads";
 import { takePending } from "@/lib/chat-pending";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 const quickPrompts = [
   "Wie ist die Auslastung heute?",
