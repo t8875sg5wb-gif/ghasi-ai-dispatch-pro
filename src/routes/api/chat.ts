@@ -317,14 +317,33 @@ ${buildKnowledgeSnapshot()}`;
         return result.toUIMessageStreamResponse({
           originalMessages: messages,
           onFinish: async ({ responseMessage }) => {
-            if (!threadId || !responseMessage) return;
-            const quellen = sammleQuellen(responseMessage.parts);
+            if (!responseMessage) return;
+            const webQuellen = sammleQuellen(responseMessage.parts);
+            const businessQuellen = sammleBusinessQuellen(responseMessage.parts);
+            const vorbereiteteAktionen = sammleVorbereiteteAktionen(responseMessage.parts);
+
+            // AUDIT: jede KI-Anfrage protokollieren (ohne private Inhalte).
+            await supabaseAdmin.from("ai_audit_log").insert({
+              user_id: userId,
+              rolle: role,
+              frage: (frage || "—").slice(0, 2000),
+              modell: "google/gemini-2.5-flash",
+              thread_id: threadId ?? null,
+              quellen: ([...businessQuellen, ...webQuellen.map((q) => q.url)].length > 0
+                ? { datenquellen: businessQuellen, web: webQuellen.map((q) => q.url) }
+                : null) as never,
+              vorbereitete_aktionen: (vorbereiteteAktionen.length > 0
+                ? vorbereiteteAktionen.map((a) => ({ typ: a.typ, titel: a.titel }))
+                : null) as never,
+            });
+
+            if (!threadId) return;
             await supabaseAdmin.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "assistant",
               inhalt: textOf(responseMessage.parts),
               parts: responseMessage.parts as never,
-              quellen: (quellen.length > 0 ? quellen : null) as never,
+              quellen: (webQuellen.length > 0 ? webQuellen : null) as never,
             });
             await supabaseAdmin
               .from("chat_threads")
