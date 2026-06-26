@@ -45,6 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { logActivity } from "@/lib/protokoll";
 
 export const Route = createFileRoute("/auftraege")({
   head: () => ({
