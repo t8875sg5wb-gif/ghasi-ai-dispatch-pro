@@ -24,6 +24,17 @@ import {
 } from "@/lib/ai-brain";
 import { searchAll } from "@/lib/ghasi-knowledge";
 import { generateHinweise } from "@/lib/ghasi-hinweise";
+import {
+  INITIAL_RECHNUNGEN,
+  RECHNUNG_STATUS_META,
+  computeFinanzKpis,
+  detectFinanzAnomalien,
+  tageUeberfaellig,
+  formatDatum as formatRgDatum,
+  EUR as EURf,
+} from "@/lib/finance";
+import { searchDokumente, KATEGORIE_META, aktuelleVersion } from "@/lib/documents";
+import { BERICHT_LISTE, buildBericht, type BerichtTyp } from "@/lib/reporting";
 import { type AppRole, type Bereich, darfBereich } from "@/lib/roles";
 
 const heuteISO = () => new Date().toISOString().slice(0, 10);
