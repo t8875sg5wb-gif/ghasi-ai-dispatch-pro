@@ -27,6 +27,7 @@ import {
   EUR as EURf,
 } from "@/lib/finance";
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
+import { buildGpsSnapshot } from "@/lib/fleet-live";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
@@ -230,6 +231,9 @@ export function buildKnowledgeSnapshot(): string {
       `Fahrer ${EURf(fk.kosten.fahrerkosten)}, Leasing ${EURf(fk.kosten.leasingkosten)}, Fahrzeug ${EURf(fk.kosten.fahrzeugkosten)}.`,
   );
   lines.push(`Dokumente im Archiv: ${INITIAL_DOKUMENTE.length}.`);
+
+  // Live-GPS & Transport-Execution (Fahrzeugpositionen, Status, ETA, Alerts)
+  lines.push(`\n${buildGpsSnapshot()}`);
 
   return lines.join("\n");
 }
