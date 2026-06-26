@@ -66,7 +66,7 @@ async function ladeProtokoll(): Promise<LogRow[]> {
 }
 
 function AktivitaetenPage() {
-  const { data, isLoading, refetch, isფetching } = useQuery({
+  const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["activity_log"],
     queryFn: ladeProtokoll,
     refetchInterval: 15000,
@@ -84,7 +84,7 @@ function AktivitaetenPage() {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="shrink-0 gap-2">
-          <RefreshCw className={isფetching ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          <RefreshCw className={isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
           Aktualisieren
         </Button>
       </div>

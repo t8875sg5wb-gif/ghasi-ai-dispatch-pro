@@ -31,6 +31,7 @@ import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
+import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -145,6 +146,11 @@ const AuftraegeRoute = AuftraegeRouteImport.update({
   path: '/auftraege',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AktivitaetenRoute = AktivitaetenRouteImport.update({
+  id: '/aktivitaeten',
+  path: '/aktivitaeten',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdministrationRoute = AdministrationRouteImport.update({
   id: '/administration',
   path: '/administration',
@@ -164,6 +170,7 @@ const ApiChatRoute = ApiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -330,6 +342,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdministrationRoute: typeof AdministrationRoute
+  AktivitaetenRoute: typeof AktivitaetenRoute
   AuftraegeRoute: typeof AuftraegeRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuftraegeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aktivitaeten': {
+      id: '/aktivitaeten'
+      path: '/aktivitaeten'
+      fullPath: '/aktivitaeten'
+      preLoaderRoute: typeof AktivitaetenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/administration': {
       id: '/administration'
       path: '/administration'
@@ -538,6 +558,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdministrationRoute: AdministrationRoute,
+  AktivitaetenRoute: AktivitaetenRoute,
   AuftraegeRoute: AuftraegeRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
