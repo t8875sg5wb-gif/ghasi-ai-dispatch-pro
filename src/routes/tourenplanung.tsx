@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Route } from "lucide-react";
+import { Route as RouteIcon } from "lucide-react";
 
 import { PlaceholderPage } from "@/components/placeholder-page";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/tourenplanung")({
     <PlaceholderPage
       title="Tourenplanung"
       description="Optimierte Routen, Schichten und intelligente Fahrzeugzuteilung."
-      icon={Route}
+      icon={RouteIcon}
       features={[
     "Routen-Optimierung",
     "Drag & Drop Planung",
