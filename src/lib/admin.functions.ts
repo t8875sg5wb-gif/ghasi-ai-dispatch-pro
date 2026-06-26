@@ -15,9 +15,14 @@ export interface BenutzerEintrag {
 
 const GUELTIGE_ROLLEN: AppRole[] = ["admin", "disposition", "finanz", "fahrer"];
 
-async function sichereAdmin(supabase: {
-  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
-}, userId: string): Promise<void> {
+type AuthSupabase = Parameters<Parameters<typeof requireSupabaseAuth.server>[0]>[0] extends never
+  ? never
+  : never;
+
+async function sichereAdmin(
+  supabase: { rpc: typeof import("@supabase/supabase-js").SupabaseClient.prototype.rpc },
+  userId: string,
+): Promise<void> {
   const { data, error } = await supabase.rpc("has_role", {
     _user_id: userId,
     _role: "admin",
