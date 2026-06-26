@@ -34,6 +34,7 @@ import { Route as AuftraegeRouteImport } from './routes/auftraege'
 import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const WartungRoute = WartungRouteImport.update({
@@ -161,6 +162,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KiAssistentIndexRoute = KiAssistentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KiAssistentRoute,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -179,7 +185,7 @@ export interface FileRoutesByFullPath {
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
-  '/ki-assistent': typeof KiAssistentRoute
+  '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent/': typeof KiAssistentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,7 +214,6 @@ export interface FileRoutesByTo {
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
-  '/ki-assistent': typeof KiAssistentRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
@@ -222,6 +228,7 @@ export interface FileRoutesByTo {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent': typeof KiAssistentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -236,7 +243,7 @@ export interface FileRoutesById {
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
-  '/ki-assistent': typeof KiAssistentRoute
+  '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
@@ -251,6 +258,7 @@ export interface FileRoutesById {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent/': typeof KiAssistentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -281,6 +289,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -294,7 +303,6 @@ export interface FileRouteTypes {
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
-    | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
@@ -309,6 +317,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent'
   id:
     | '__root__'
     | '/'
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -351,7 +361,7 @@ export interface RootRouteChildren {
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
-  KiAssistentRoute: typeof KiAssistentRoute
+  KiAssistentRoute: typeof KiAssistentRouteWithChildren
   KrankenhaeuserRoute: typeof KrankenhaeuserRoute
   KundenRoute: typeof KundenRoute
   LeasingRoute: typeof LeasingRoute
@@ -545,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ki-assistent/': {
+      id: '/ki-assistent/'
+      path: '/'
+      fullPath: '/ki-assistent/'
+      preLoaderRoute: typeof KiAssistentIndexRouteImport
+      parentRoute: typeof KiAssistentRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -554,6 +571,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface KiAssistentRouteChildren {
+  KiAssistentIndexRoute: typeof KiAssistentIndexRoute
+}
+
+const KiAssistentRouteChildren: KiAssistentRouteChildren = {
+  KiAssistentIndexRoute: KiAssistentIndexRoute,
+}
+
+const KiAssistentRouteWithChildren = KiAssistentRoute._addFileChildren(
+  KiAssistentRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -567,7 +596,7 @@ const rootRouteChildren: RootRouteChildren = {
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
   FahrzeugeRoute: FahrzeugeRoute,
-  KiAssistentRoute: KiAssistentRoute,
+  KiAssistentRoute: KiAssistentRouteWithChildren,
   KrankenhaeuserRoute: KrankenhaeuserRoute,
   KundenRoute: KundenRoute,
   LeasingRoute: LeasingRoute,
