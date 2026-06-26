@@ -54,7 +54,7 @@ export const protokolliere = createServerFn({ method: "POST" })
       aktion: data.aktion.slice(0, 60),
       beschreibung: data.beschreibung.slice(0, 500),
       akteur: (data.akteur ?? "Unternehmer").slice(0, 80),
-      metadaten: data.metadaten ?? null,
+      metadaten: (data.metadaten ?? null) as never,
     };
   })
   .handler(async ({ data }) => {
