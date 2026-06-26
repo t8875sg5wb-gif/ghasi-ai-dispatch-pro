@@ -9,12 +9,138 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WartungRouteImport } from './routes/wartung'
+import { Route as VersicherungenRouteImport } from './routes/versicherungen'
+import { Route as TourenplanungRouteImport } from './routes/tourenplanung'
+import { Route as TelefonRouteImport } from './routes/telefon'
+import { Route as StatistikenRouteImport } from './routes/statistiken'
+import { Route as RechnungenRouteImport } from './routes/rechnungen'
+import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
+import { Route as PatientenRouteImport } from './routes/patienten'
+import { Route as LiveGpsRouteImport } from './routes/live-gps'
+import { Route as LeasingRouteImport } from './routes/leasing'
+import { Route as KundenRouteImport } from './routes/kunden'
+import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
+import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
+import { Route as FahrerRouteImport } from './routes/fahrer'
+import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as DokumenteRouteImport } from './routes/dokumente'
+import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
+import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
+import { Route as BerichteRouteImport } from './routes/berichte'
+import { Route as AuftraegeRouteImport } from './routes/auftraege'
+import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WartungRoute = WartungRouteImport.update({
+  id: '/wartung',
+  path: '/wartung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VersicherungenRoute = VersicherungenRouteImport.update({
+  id: '/versicherungen',
+  path: '/versicherungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TourenplanungRoute = TourenplanungRouteImport.update({
+  id: '/tourenplanung',
+  path: '/tourenplanung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TelefonRoute = TelefonRouteImport.update({
+  id: '/telefon',
+  path: '/telefon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatistikenRoute = StatistikenRouteImport.update({
+  id: '/statistiken',
+  path: '/statistiken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RechnungenRoute = RechnungenRouteImport.update({
+  id: '/rechnungen',
+  path: '/rechnungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PflegeheimeRoute = PflegeheimeRouteImport.update({
+  id: '/pflegeheime',
+  path: '/pflegeheime',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientenRoute = PatientenRouteImport.update({
+  id: '/patienten',
+  path: '/patienten',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveGpsRoute = LiveGpsRouteImport.update({
+  id: '/live-gps',
+  path: '/live-gps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeasingRoute = LeasingRouteImport.update({
+  id: '/leasing',
+  path: '/leasing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KundenRoute = KundenRouteImport.update({
+  id: '/kunden',
+  path: '/kunden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KrankenhaeuserRoute = KrankenhaeuserRouteImport.update({
+  id: '/krankenhaeuser',
+  path: '/krankenhaeuser',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KiAssistentRoute = KiAssistentRouteImport.update({
   id: '/ki-assistent',
   path: '/ki-assistent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FahrzeugeRoute = FahrzeugeRouteImport.update({
+  id: '/fahrzeuge',
+  path: '/fahrzeuge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FahrerRoute = FahrerRouteImport.update({
+  id: '/fahrer',
+  path: '/fahrer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EinstellungenRoute = EinstellungenRouteImport.update({
+  id: '/einstellungen',
+  path: '/einstellungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DokumenteRoute = DokumenteRouteImport.update({
+  id: '/dokumente',
+  path: '/dokumente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DialysezentrenRoute = DialysezentrenRouteImport.update({
+  id: '/dialysezentren',
+  path: '/dialysezentren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuchhaltungRoute = BuchhaltungRouteImport.update({
+  id: '/buchhaltung',
+  path: '/buchhaltung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BerichteRoute = BerichteRouteImport.update({
+  id: '/berichte',
+  path: '/berichte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuftraegeRoute = AuftraegeRouteImport.update({
+  id: '/auftraege',
+  path: '/auftraege',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdministrationRoute = AdministrationRouteImport.update({
+  id: '/administration',
+  path: '/administration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,37 +151,338 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/administration': typeof AdministrationRoute
+  '/auftraege': typeof AuftraegeRoute
+  '/berichte': typeof BerichteRoute
+  '/buchhaltung': typeof BuchhaltungRoute
+  '/dialysezentren': typeof DialysezentrenRoute
+  '/dokumente': typeof DokumenteRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/fahrer': typeof FahrerRoute
+  '/fahrzeuge': typeof FahrzeugeRoute
   '/ki-assistent': typeof KiAssistentRoute
+  '/krankenhaeuser': typeof KrankenhaeuserRoute
+  '/kunden': typeof KundenRoute
+  '/leasing': typeof LeasingRoute
+  '/live-gps': typeof LiveGpsRoute
+  '/patienten': typeof PatientenRoute
+  '/pflegeheime': typeof PflegeheimeRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/statistiken': typeof StatistikenRoute
+  '/telefon': typeof TelefonRoute
+  '/tourenplanung': typeof TourenplanungRoute
+  '/versicherungen': typeof VersicherungenRoute
+  '/wartung': typeof WartungRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/administration': typeof AdministrationRoute
+  '/auftraege': typeof AuftraegeRoute
+  '/berichte': typeof BerichteRoute
+  '/buchhaltung': typeof BuchhaltungRoute
+  '/dialysezentren': typeof DialysezentrenRoute
+  '/dokumente': typeof DokumenteRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/fahrer': typeof FahrerRoute
+  '/fahrzeuge': typeof FahrzeugeRoute
   '/ki-assistent': typeof KiAssistentRoute
+  '/krankenhaeuser': typeof KrankenhaeuserRoute
+  '/kunden': typeof KundenRoute
+  '/leasing': typeof LeasingRoute
+  '/live-gps': typeof LiveGpsRoute
+  '/patienten': typeof PatientenRoute
+  '/pflegeheime': typeof PflegeheimeRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/statistiken': typeof StatistikenRoute
+  '/telefon': typeof TelefonRoute
+  '/tourenplanung': typeof TourenplanungRoute
+  '/versicherungen': typeof VersicherungenRoute
+  '/wartung': typeof WartungRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/administration': typeof AdministrationRoute
+  '/auftraege': typeof AuftraegeRoute
+  '/berichte': typeof BerichteRoute
+  '/buchhaltung': typeof BuchhaltungRoute
+  '/dialysezentren': typeof DialysezentrenRoute
+  '/dokumente': typeof DokumenteRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/fahrer': typeof FahrerRoute
+  '/fahrzeuge': typeof FahrzeugeRoute
   '/ki-assistent': typeof KiAssistentRoute
+  '/krankenhaeuser': typeof KrankenhaeuserRoute
+  '/kunden': typeof KundenRoute
+  '/leasing': typeof LeasingRoute
+  '/live-gps': typeof LiveGpsRoute
+  '/patienten': typeof PatientenRoute
+  '/pflegeheime': typeof PflegeheimeRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/statistiken': typeof StatistikenRoute
+  '/telefon': typeof TelefonRoute
+  '/tourenplanung': typeof TourenplanungRoute
+  '/versicherungen': typeof VersicherungenRoute
+  '/wartung': typeof WartungRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ki-assistent'
+  fullPaths:
+    | '/'
+    | '/administration'
+    | '/auftraege'
+    | '/berichte'
+    | '/buchhaltung'
+    | '/dialysezentren'
+    | '/dokumente'
+    | '/einstellungen'
+    | '/fahrer'
+    | '/fahrzeuge'
+    | '/ki-assistent'
+    | '/krankenhaeuser'
+    | '/kunden'
+    | '/leasing'
+    | '/live-gps'
+    | '/patienten'
+    | '/pflegeheime'
+    | '/rechnungen'
+    | '/statistiken'
+    | '/telefon'
+    | '/tourenplanung'
+    | '/versicherungen'
+    | '/wartung'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ki-assistent'
-  id: '__root__' | '/' | '/ki-assistent'
+  to:
+    | '/'
+    | '/administration'
+    | '/auftraege'
+    | '/berichte'
+    | '/buchhaltung'
+    | '/dialysezentren'
+    | '/dokumente'
+    | '/einstellungen'
+    | '/fahrer'
+    | '/fahrzeuge'
+    | '/ki-assistent'
+    | '/krankenhaeuser'
+    | '/kunden'
+    | '/leasing'
+    | '/live-gps'
+    | '/patienten'
+    | '/pflegeheime'
+    | '/rechnungen'
+    | '/statistiken'
+    | '/telefon'
+    | '/tourenplanung'
+    | '/versicherungen'
+    | '/wartung'
+  id:
+    | '__root__'
+    | '/'
+    | '/administration'
+    | '/auftraege'
+    | '/berichte'
+    | '/buchhaltung'
+    | '/dialysezentren'
+    | '/dokumente'
+    | '/einstellungen'
+    | '/fahrer'
+    | '/fahrzeuge'
+    | '/ki-assistent'
+    | '/krankenhaeuser'
+    | '/kunden'
+    | '/leasing'
+    | '/live-gps'
+    | '/patienten'
+    | '/pflegeheime'
+    | '/rechnungen'
+    | '/statistiken'
+    | '/telefon'
+    | '/tourenplanung'
+    | '/versicherungen'
+    | '/wartung'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdministrationRoute: typeof AdministrationRoute
+  AuftraegeRoute: typeof AuftraegeRoute
+  BerichteRoute: typeof BerichteRoute
+  BuchhaltungRoute: typeof BuchhaltungRoute
+  DialysezentrenRoute: typeof DialysezentrenRoute
+  DokumenteRoute: typeof DokumenteRoute
+  EinstellungenRoute: typeof EinstellungenRoute
+  FahrerRoute: typeof FahrerRoute
+  FahrzeugeRoute: typeof FahrzeugeRoute
   KiAssistentRoute: typeof KiAssistentRoute
+  KrankenhaeuserRoute: typeof KrankenhaeuserRoute
+  KundenRoute: typeof KundenRoute
+  LeasingRoute: typeof LeasingRoute
+  LiveGpsRoute: typeof LiveGpsRoute
+  PatientenRoute: typeof PatientenRoute
+  PflegeheimeRoute: typeof PflegeheimeRoute
+  RechnungenRoute: typeof RechnungenRoute
+  StatistikenRoute: typeof StatistikenRoute
+  TelefonRoute: typeof TelefonRoute
+  TourenplanungRoute: typeof TourenplanungRoute
+  VersicherungenRoute: typeof VersicherungenRoute
+  WartungRoute: typeof WartungRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wartung': {
+      id: '/wartung'
+      path: '/wartung'
+      fullPath: '/wartung'
+      preLoaderRoute: typeof WartungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/versicherungen': {
+      id: '/versicherungen'
+      path: '/versicherungen'
+      fullPath: '/versicherungen'
+      preLoaderRoute: typeof VersicherungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tourenplanung': {
+      id: '/tourenplanung'
+      path: '/tourenplanung'
+      fullPath: '/tourenplanung'
+      preLoaderRoute: typeof TourenplanungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/telefon': {
+      id: '/telefon'
+      path: '/telefon'
+      fullPath: '/telefon'
+      preLoaderRoute: typeof TelefonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statistiken': {
+      id: '/statistiken'
+      path: '/statistiken'
+      fullPath: '/statistiken'
+      preLoaderRoute: typeof StatistikenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rechnungen': {
+      id: '/rechnungen'
+      path: '/rechnungen'
+      fullPath: '/rechnungen'
+      preLoaderRoute: typeof RechnungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pflegeheime': {
+      id: '/pflegeheime'
+      path: '/pflegeheime'
+      fullPath: '/pflegeheime'
+      preLoaderRoute: typeof PflegeheimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patienten': {
+      id: '/patienten'
+      path: '/patienten'
+      fullPath: '/patienten'
+      preLoaderRoute: typeof PatientenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-gps': {
+      id: '/live-gps'
+      path: '/live-gps'
+      fullPath: '/live-gps'
+      preLoaderRoute: typeof LiveGpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leasing': {
+      id: '/leasing'
+      path: '/leasing'
+      fullPath: '/leasing'
+      preLoaderRoute: typeof LeasingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kunden': {
+      id: '/kunden'
+      path: '/kunden'
+      fullPath: '/kunden'
+      preLoaderRoute: typeof KundenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/krankenhaeuser': {
+      id: '/krankenhaeuser'
+      path: '/krankenhaeuser'
+      fullPath: '/krankenhaeuser'
+      preLoaderRoute: typeof KrankenhaeuserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ki-assistent': {
       id: '/ki-assistent'
       path: '/ki-assistent'
       fullPath: '/ki-assistent'
       preLoaderRoute: typeof KiAssistentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fahrzeuge': {
+      id: '/fahrzeuge'
+      path: '/fahrzeuge'
+      fullPath: '/fahrzeuge'
+      preLoaderRoute: typeof FahrzeugeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fahrer': {
+      id: '/fahrer'
+      path: '/fahrer'
+      fullPath: '/fahrer'
+      preLoaderRoute: typeof FahrerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/einstellungen': {
+      id: '/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof EinstellungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dokumente': {
+      id: '/dokumente'
+      path: '/dokumente'
+      fullPath: '/dokumente'
+      preLoaderRoute: typeof DokumenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dialysezentren': {
+      id: '/dialysezentren'
+      path: '/dialysezentren'
+      fullPath: '/dialysezentren'
+      preLoaderRoute: typeof DialysezentrenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buchhaltung': {
+      id: '/buchhaltung'
+      path: '/buchhaltung'
+      fullPath: '/buchhaltung'
+      preLoaderRoute: typeof BuchhaltungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/berichte': {
+      id: '/berichte'
+      path: '/berichte'
+      fullPath: '/berichte'
+      preLoaderRoute: typeof BerichteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auftraege': {
+      id: '/auftraege'
+      path: '/auftraege'
+      fullPath: '/auftraege'
+      preLoaderRoute: typeof AuftraegeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/administration': {
+      id: '/administration'
+      path: '/administration'
+      fullPath: '/administration'
+      preLoaderRoute: typeof AdministrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,7 +497,28 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdministrationRoute: AdministrationRoute,
+  AuftraegeRoute: AuftraegeRoute,
+  BerichteRoute: BerichteRoute,
+  BuchhaltungRoute: BuchhaltungRoute,
+  DialysezentrenRoute: DialysezentrenRoute,
+  DokumenteRoute: DokumenteRoute,
+  EinstellungenRoute: EinstellungenRoute,
+  FahrerRoute: FahrerRoute,
+  FahrzeugeRoute: FahrzeugeRoute,
   KiAssistentRoute: KiAssistentRoute,
+  KrankenhaeuserRoute: KrankenhaeuserRoute,
+  KundenRoute: KundenRoute,
+  LeasingRoute: LeasingRoute,
+  LiveGpsRoute: LiveGpsRoute,
+  PatientenRoute: PatientenRoute,
+  PflegeheimeRoute: PflegeheimeRoute,
+  RechnungenRoute: RechnungenRoute,
+  StatistikenRoute: StatistikenRoute,
+  TelefonRoute: TelefonRoute,
+  TourenplanungRoute: TourenplanungRoute,
+  VersicherungenRoute: VersicherungenRoute,
+  WartungRoute: WartungRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
