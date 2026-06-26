@@ -393,12 +393,30 @@ function DispatchCenter() {
         </Card>
       </div>
 
-      <Tabs defaultValue="plantafel">
+      <Tabs defaultValue="live-board">
         <TabsList>
+          <TabsTrigger value="live-board">Live-Board</TabsTrigger>
+          <TabsTrigger value="alarme">Alarm-Center</TabsTrigger>
           <TabsTrigger value="plantafel">Plantafel</TabsTrigger>
           <TabsTrigger value="disposition">Disposition</TabsTrigger>
           <TabsTrigger value="flotte">Flotte</TabsTrigger>
         </TabsList>
+
+        {/* Live-Board: 12-Spalten Enterprise-Dispatch mit Filter & Bulk */}
+        <TabsContent value="live-board" className="mt-4">
+          <LiveBoard
+            transporte={transporte}
+            konfliktIds={konfliktIds}
+            onOpen={setAktiv}
+            onMove={verschiebe}
+          />
+        </TabsContent>
+
+        {/* Alarm-Center: vereinte Konflikte & Flotten-Alerts */}
+        <TabsContent value="alarme" className="mt-4">
+          <AlarmCenter konflikte={konflikte} transporte={transporte} onOpen={oeffneNummerId} />
+        </TabsContent>
+
 
         {/* Plantafel: Kanban by status */}
         <TabsContent value="plantafel" className="mt-4">
