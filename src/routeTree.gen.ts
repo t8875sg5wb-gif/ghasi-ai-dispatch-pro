@@ -19,6 +19,7 @@ import { Route as StatistikenRouteImport } from './routes/statistiken'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
+import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
@@ -91,6 +92,11 @@ const RechnungenRoute = RechnungenRouteImport.update({
 const PrognosenRoute = PrognosenRouteImport.update({
   id: '/prognosen',
   path: '/prognosen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosteingangRoute = PosteingangRouteImport.update({
+  id: '/posteingang',
+  path: '/posteingang',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PflegeheimeRoute = PflegeheimeRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/live-gps': typeof LiveGpsRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
+  '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/patienten'
     | '/pflegeheime'
+    | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
@@ -442,6 +454,7 @@ export interface RootRouteChildren {
   LiveGpsRoute: typeof LiveGpsRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
+  PosteingangRoute: typeof PosteingangRoute
   PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/prognosen'
       fullPath: '/prognosen'
       preLoaderRoute: typeof PrognosenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posteingang': {
+      id: '/posteingang'
+      path: '/posteingang'
+      fullPath: '/posteingang'
+      preLoaderRoute: typeof PosteingangRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pflegeheime': {
@@ -726,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveGpsRoute: LiveGpsRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
+  PosteingangRoute: PosteingangRoute,
   PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
