@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Home } from "lucide-react";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { EinrichtungModul } from "@/components/einrichtungen/einrichtung-modul";
+import { PFLEGEHEIME } from "@/lib/stammdaten";
 
 export const Route = createFileRoute("/pflegeheime")({
   head: () => ({
     meta: [
       { title: "Pflegeheime – GHASI AI" },
-      { name: "description", content: "Einrichtungen, Bewohner und regelmäßige Transporte verwalten." },
+      { name: "description", content: "Pflegeeinrichtungen, Bewohner-Transporte und Ansprechpartner." },
     ],
   }),
   component: () => (
-    <PlaceholderPage
-      title="Pflegeheime"
-      description="Einrichtungen, Bewohner und regelmäßige Transporte verwalten."
-      icon={Home}
-      features={[
-    "Einrichtungen",
-    "Bewohner",
-    "Regeltransporte",
-    "Ansprechpartner",
-    "Verträge",
-    "Tourenanbindung",
-      ]}
+    <EinrichtungModul
+      config={{
+        typ: "pflegeheim",
+        titel: "Pflegeheime",
+        einzahl: "Pflegeheim",
+        beschreibung: "Einrichtungen, Plätze, Ansprechpartner und Transporte.",
+        icon: Home,
+        idPrefix: "ph",
+        daten: PFLEGEHEIME,
+        kapazitaetLabel: "Plätze",
+      }}
     />
   ),
 });
