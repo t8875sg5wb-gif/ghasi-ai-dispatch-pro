@@ -255,6 +255,59 @@ export function buildBusinessTools(role: AppRole | null) {
         return { quelle: "Wartung", anzahl: liste.length, fahrzeuge: liste };
       },
     });
+
+    tools.live_gps_abrufen = tool({
+      description:
+        "Liefert ECHTE Live-GPS- & Transport-Execution-Daten: aktuelle Fahrzeugposition, Status (frei/fährt/wartet/Notfall/offline), Geschwindigkeit, Tankstand, letzte Aktualisierung, zugewiesener Transport mit Phase/ETA, Mobilität, Verordnungsstatus, Begleitperson, Fahrzeug-Eignung sowie aktive Alerts. Beantwortet Fragen wie 'Wo ist Fahrzeug B-KT 142?', 'Hat der Fahrer die Verordnung erhalten?', 'Ist der Patient Rollstuhl oder liegend?', 'Welche Transporte sind verspätet?', 'Welche Verordnungen fehlen?', 'Welches Fahrzeug ist offline?'.",
+      inputSchema: z.object({
+        kennzeichen: z
+          .string()
+          .optional()
+          .describe("Kennzeichen, Fahrername oder Fahrzeug-Nummer (Teiltreffer)"),
+        nurAlerts: z.boolean().optional().describe("nur Fahrzeuge mit aktiven Alerts"),
+        nurVerspaetet: z.boolean().optional().describe("nur verspätete Transporte"),
+      }),
+      execute: async ({ kennzeichen, nurAlerts, nurVerspaetet }) => {
+        const { buildFleet, FLEET_FARBEN } = await import("@/lib/fleet-live");
+        const { LIVE_STATUS_META } = await import("@/lib/dispatch");
+        let fleet = buildFleet().filter(
+          (v) =>
+            enthaelt(`${v.kennzeichen} ${v.fahrer ?? ""} ${v.nummer}`, kennzeichen) &&
+            (!nurAlerts || v.alerts.length > 0) &&
+            (!nurVerspaetet || (v.assignment?.transport.verspaetungMin ?? 0) >= 10),
+        );
+        return {
+          quelle: "Live-GPS · Transport-Execution",
+          anzahl: fleet.length,
+          fahrzeuge: fleet.map((v) => ({
+            kennzeichen: v.kennzeichen,
+            typ: v.typ,
+            fahrer: v.fahrer ?? "—",
+            status: FLEET_FARBEN[v.farbe].label,
+            standort: v.standort,
+            position: `${v.gps.lat}, ${v.gps.lng}`,
+            geschwindigkeit: `${v.geschwindigkeit} km/h`,
+            tankstand: `${v.tankstand} %`,
+            letzteAktualisierung: v.letzteAktualisierung,
+            transport: v.assignment
+              ? {
+                  nummer: v.assignment.transport.nummer,
+                  patient: v.assignment.transport.patient,
+                  phase: LIVE_STATUS_META[v.assignment.liveStatus].label,
+                  von: v.assignment.transport.abholort,
+                  nach: v.assignment.transport.zielort,
+                  eta: v.assignment.eta,
+                  mobilitaet: MOBILITAET_META[v.assignment.mobilitaet].label,
+                  verordnung: v.assignment.verordnungFehlt ? "FEHLT" : "vorhanden",
+                  begleitperson: v.assignment.begleitperson ? "Ja" : "Nein",
+                  fahrzeugPasst: v.assignment.fahrzeugPasst ? "Ja" : "NEIN",
+                }
+              : null,
+            alerts: v.alerts.map((a) => `[${a.schwere}] ${a.titel}: ${a.details}`),
+          })),
+        };
+      },
+    });
   }
 
   if (erlaubt("patienten")) {
