@@ -244,6 +244,12 @@ export const navGroups: NavGroup[] = [
         description: "Zentrales Dokumentenarchiv und Vorlagen.",
       },
       {
+        label: "Automatisierung",
+        to: "/automatisierung",
+        icon: Workflow,
+        description: "Wiederkehrende Aufgaben & Abrechnungen – nur mit Freigabe.",
+      },
+      {
         label: "Verbindungen",
         to: "/verbindungen",
         icon: Plug,
