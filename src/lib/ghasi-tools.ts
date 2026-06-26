@@ -40,7 +40,8 @@ function enthaelt(haystack: string, needle?: string) {
  */
 export function buildBusinessTools(role: AppRole | null) {
   const erlaubt = (b: Bereich) => darfBereich(role, b);
-  const tools: Record<string, ReturnType<typeof tool>> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tools: Record<string, any> = {};
 
   if (erlaubt("transporte")) {
     tools.transporte_abrufen = tool({
