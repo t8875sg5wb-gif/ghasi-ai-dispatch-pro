@@ -415,3 +415,60 @@ function Dashboard() {
     </div>
   );
 }
+
+interface ListItem {
+  to: string;
+  primary: string;
+  secondary?: string;
+}
+
+function DashboardListCard({
+  title,
+  icon: Icon,
+  tone,
+  count,
+  items,
+  badge,
+}: {
+  title: string;
+  icon: typeof Inbox;
+  tone: string;
+  count: number;
+  items: ListItem[];
+  badge?: string;
+}) {
+  return (
+    <Card className="border-border/70 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone}`}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <CardTitle className="text-base">{title}</CardTitle>
+        </div>
+        <Badge variant="secondary">{count}</Badge>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {badge && (
+          <Badge variant="outline" className="mb-1 text-[10px]">
+            <ClipboardCheck className="mr-1 h-3 w-3" />
+            {badge}
+          </Badge>
+        )}
+        {items.map((item) => (
+          <Link
+            key={item.primary}
+            to={item.to}
+            className="block rounded-xl bg-muted/30 p-2.5 transition-colors hover:bg-muted/60"
+          >
+            {item.secondary && (
+              <p className="text-[11px] font-medium text-muted-foreground">{item.secondary}</p>
+            )}
+            <p className="text-sm leading-snug">{item.primary}</p>
+          </Link>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
