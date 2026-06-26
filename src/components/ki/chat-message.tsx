@@ -1,13 +1,198 @@
-import { Bot, User, Globe, BrainCircuit, FileText, ExternalLink, Search } from "lucide-react";
+import { useState } from "react";
+import {
+  Bot,
+  User,
+  Globe,
+  BrainCircuit,
+  FileText,
+  ExternalLink,
+  Search,
+  Database,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Mail,
+  MessageSquare,
+  Phone,
+  Receipt,
+  Wrench,
+  Route as RouteIcon,
+  UserCheck,
+  ShieldAlert,
+} from "lucide-react";
 import type { UIMessage } from "ai";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ki/markdown";
+import { Button } from "@/components/ui/button";
 
 interface WebQuelle {
   titel: string;
   url: string;
   auszug: string;
+}
+
+// Anzeige-Metadaten für die Geschäftsdaten-Werkzeuge (Quellenangabe & Ladehinweis).
+const BUSINESS_TOOLS: Record<string, { label: string; laden: string }> = {
+  "tool-transporte_abrufen": { label: "Dispatch", laden: "Liest Transporte/Dispatch …" },
+  "tool-fahrer_abrufen": { label: "Fahrer", laden: "Liest Fahrerdaten …" },
+  "tool-fahrzeuge_abrufen": { label: "Flotte", laden: "Liest Fahrzeugdaten …" },
+  "tool-wartung_abrufen": { label: "Wartung", laden: "Prüft Wartungsbedarf …" },
+  "tool-patienten_abrufen": { label: "Patienten", laden: "Liest Patientendaten …" },
+  "tool-kunden_abrufen": { label: "Kunden", laden: "Liest Kundendaten …" },
+  "tool-finanzen_abrufen": { label: "Buchhaltung", laden: "Liest Finanzkennzahlen …" },
+  "tool-kennzahlen_abrufen": { label: "Executive Dashboard", laden: "Berechnet Kennzahlen …" },
+  "tool-insights_abrufen": { label: "AI Brain", laden: "Analysiert Optimierungspotenziale …" },
+  "tool-prognosen_abrufen": { label: "Prognosen", laden: "Erstellt Prognosen …" },
+  "tool-alarme_abrufen": { label: "Alert-Center", laden: "Prüft Warnungen …" },
+  "tool-unternehmenssuche": { label: "Enterprise-Suche", laden: "Durchsucht das Unternehmen …" },
+};
+
+function matchBusinessTool(type: string) {
+  const key = Object.keys(BUSINESS_TOOLS).find((k) => type.startsWith(k));
+  return key ? BUSINESS_TOOLS[key] : undefined;
+}
+
+function QuellenChips({ quellen }: { quellen: string[] }) {
+  if (quellen.length === 0) return null;
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+      <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+        <Database className="h-3.5 w-3.5 text-info" /> Quellen
+      </span>
+      {quellen.map((q) => (
+        <span
+          key={q}
+          className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+        >
+          {q}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+interface VorbereiteteAktion {
+  vorbereitet?: boolean;
+  typ?: string;
+  titel?: string;
+  empfaenger?: string | null;
+  betreff?: string | null;
+  inhalt?: string;
+  hinweis?: string;
+  fehler?: string;
+}
+
+const AKTION_META: Record<string, { label: string; icon: typeof Mail }> = {
+  rechnung: { label: "Rechnungsentwurf", icon: Receipt },
+  email: { label: "E-Mail-Entwurf", icon: Mail },
+  sms: { label: "SMS-Entwurf", icon: MessageSquare },
+  whatsapp: { label: "WhatsApp-Entwurf", icon: Phone },
+  fahrer_zuweisung: { label: "Fahrer-Zuweisung (Entwurf)", icon: UserCheck },
+  wartungserinnerung: { label: "Wartungserinnerung (Entwurf)", icon: Wrench },
+  dokument: { label: "Dokument (Entwurf)", icon: FileText },
+  routenoptimierung: { label: "Routenoptimierung (Entwurf)", icon: RouteIcon },
+};
+
+function SmartActionCard({ aktion }: { aktion: VorbereiteteAktion }) {
+  const [entschieden, setEntschieden] = useState<"offen" | "freigegeben" | "verworfen">("offen");
+
+  if (aktion.fehler) {
+    return (
+      <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{aktion.fehler}</span>
+      </div>
+    );
+  }
+
+  const meta = (aktion.typ && AKTION_META[aktion.typ]) || { label: "Aktionsentwurf", icon: FileText };
+  const Icon = meta.icon;
+
+  return (
+    <div className="space-y-2.5 rounded-2xl border border-accent/40 bg-accent/5 p-3.5">
+      <div className="flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{aktion.titel ?? meta.label}</p>
+          <p className="text-[11px] text-muted-foreground">{meta.label}</p>
+        </div>
+      </div>
+
+      {(aktion.empfaenger || aktion.betreff) && (
+        <div className="space-y-0.5 text-xs text-muted-foreground">
+          {aktion.empfaenger && (
+            <p>
+              <span className="font-medium text-foreground">An: </span>
+              {aktion.empfaenger}
+            </p>
+          )}
+          {aktion.betreff && (
+            <p>
+              <span className="font-medium text-foreground">Betreff: </span>
+              {aktion.betreff}
+            </p>
+          )}
+        </div>
+      )}
+
+      {aktion.inhalt && (
+        <p className="whitespace-pre-wrap rounded-lg bg-background/60 p-2.5 text-xs leading-relaxed">
+          {aktion.inhalt}
+        </p>
+      )}
+
+      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <ShieldAlert className="h-3.5 w-3.5 text-warning" />
+        Entwurf – wird nicht automatisch ausgeführt oder versendet.
+      </p>
+
+      {entschieden === "offen" ? (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="h-8 flex-1 gap-1.5"
+            onClick={() => {
+              setEntschieden("freigegeben");
+              toast.success("Entwurf freigegeben", {
+                description: "Die Maßnahme kann nun manuell ausgeführt werden.",
+              });
+            }}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" /> Bestätigen
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 flex-1 gap-1.5"
+            onClick={() => {
+              setEntschieden("verworfen");
+              toast("Entwurf verworfen");
+            }}
+          >
+            <XCircle className="h-3.5 w-3.5" /> Verwerfen
+          </Button>
+        </div>
+      ) : (
+        <p
+          className={cn(
+            "flex items-center gap-1.5 text-xs font-medium",
+            entschieden === "freigegeben" ? "text-success" : "text-muted-foreground",
+          )}
+        >
+          {entschieden === "freigegeben" ? (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          ) : (
+            <XCircle className="h-3.5 w-3.5" />
+          )}
+          {entschieden === "freigegeben" ? "Freigegeben" : "Verworfen"}
+        </p>
+      )}
+    </div>
+  );
 }
 
 function QuellenListe({ treffer }: { treffer: WebQuelle[] }) {
@@ -59,6 +244,21 @@ export function ChatMessage({ message }: { message: UIMessage }) {
     url: string;
     filename?: string;
   }[];
+
+  // Genutzte Geschäftsdaten-Quellen aus den Tool-Ergebnissen sammeln.
+  const businessQuellen = Array.from(
+    new Set(
+      message.parts.flatMap((p) => {
+        if (typeof p.type !== "string") return [];
+        if (!matchBusinessTool(p.type) && !p.type.startsWith("tool-unternehmenssuche")) return [];
+        const out =
+          "output" in p && p.output && typeof p.output === "object"
+            ? (p.output as { quelle?: string })
+            : undefined;
+        return out?.quelle ? [out.quelle] : [];
+      }),
+    ),
+  );
 
   return (
     <div className={cn("flex items-end gap-2.5", isUser && "flex-row-reverse")}>
@@ -120,9 +320,30 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                 return (
                   <ToolHinweis key={i} icon={BrainCircuit} text="Ins Langzeitgedächtnis übernommen" />
                 );
+              return null;
+            }
+            if (p.type.startsWith("tool-aktion_vorbereiten")) {
+              const out =
+                "output" in p && p.output && typeof p.output === "object"
+                  ? (p.output as VorbereiteteAktion)
+                  : undefined;
+              if (!out)
+                return (
+                  <ToolHinweis key={i} icon={Loader2} text="Bereitet einen Entwurf vor …" />
+                );
+              return <SmartActionCard key={i} aktion={out} />;
+            }
+            const biz = matchBusinessTool(p.type);
+            if (biz) {
+              const hasOutput = "output" in p && p.output && typeof p.output === "object";
+              if (!hasOutput) return <ToolHinweis key={i} icon={Loader2} text={biz.laden} />;
+              return null; // Quelle wird unten als Chip angezeigt
             }
             return null;
           })}
+
+        {/* Datenquellen (Geschäftsdaten) */}
+        {!isUser && <QuellenChips quellen={businessQuellen} />}
 
         {/* Text */}
         {text && (

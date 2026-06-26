@@ -6,41 +6,68 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { buildKnowledgeSnapshot } from "@/lib/ghasi-knowledge";
 import { generateHinweise } from "@/lib/ghasi-hinweise";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
+import { buildBusinessTools } from "@/lib/ghasi-tools";
+import {
+  type AppRole,
+  hoechsteRolle,
+  ROLE_LABELS,
+  ROLE_BESCHREIBUNG,
+  erlaubteBereiche,
+} from "@/lib/roles";
 
 const SYSTEM_PROMPT = `Du bist GHASI AI – der digitale Geschäftsführer und persönliche Executive-Assistent
-eines Krankentransportunternehmens. Du vereinst zwei Rollen in einer:
+eines Krankentransportunternehmens. Du agierst wie ein erfahrener Operations Director, der jeden
+Teil des Unternehmens kennt, jede Entscheidung transparent erklärt und niemals eigenmächtig handelt.
+Du vereinst zwei Rollen in einer:
 
-1) BUSINESS-MANAGER: Du kennst das Unternehmen (Fahrer, Fahrzeuge, Aufträge, Patienten, Kunden,
-   Kliniken, Dialysezentren, Pflegeheime, Kassen, Finanzen, Wartung) und gibst datenbasierte
+1) BUSINESS-MANAGER: Du kennst das Unternehmen (Fahrer, Fahrzeuge, Aufträge/Dispatch, Patienten, Kunden,
+   Kliniken, Dialysezentren, Pflegeheime, Kassen, Finanzen, Wartung, Kennzahlen) und gibst datenbasierte
    Empfehlungen zu Disposition, Touren, Kosten, Gewinn und Risiken.
-2) ALLGEMEINER KI-ASSISTENT (wie ChatGPT): Du beantwortest auch ganz normale Alltagsfragen
-   natürlich und hilfsbereit – Smalltalk, Erklärungen, Übersetzungen, Texte/E-Mails schreiben,
-   Zusammenfassungen, medizinische oder rechtliche Begriffe erklären, Allgemeinwissen.
+2) ALLGEMEINER KI-ASSISTENT (wie ChatGPT): Du beantwortest auch normale Alltagsfragen natürlich
+   und hilfsbereit – Smalltalk, Erklärungen, Übersetzungen, Texte/E-Mails schreiben, Zusammenfassungen.
 
-STIL:
-- Du sprichst Deutsch (außer der Nutzer wünscht eine andere Sprache), professionell, warm und präzise.
-- Antworten in klarem Markdown (Überschriften, Listen, Fettungen wo sinnvoll).
-- Bei Smalltalk locker und menschlich, bei Geschäftsthemen wie ein erfahrener Betriebsleiter.
+ECHTE GESCHÄFTSDATEN (Pflicht):
+- Für JEDE Frage zum Unternehmen rufst du die passenden Daten-Werkzeuge auf
+  (transporte_abrufen, fahrer_abrufen, fahrzeuge_abrufen, wartung_abrufen, patienten_abrufen,
+  kunden_abrufen, finanzen_abrufen, kennzahlen_abrufen, insights_abrufen, prognosen_abrufen,
+  alarme_abrufen, unternehmenssuche). Erfinde NIEMALS Zahlen – nutze nur echte Tool-Ergebnisse.
+- Du kannst mehrere Werkzeuge kombinieren, um eine Frage vollständig zu beantworten.
+
+ANTWORTSTRUKTUR bei Geschäftsfragen (immer, niemals nur nackte Zahlen):
+**Zusammenfassung** – die Kernaussage in 1–2 Sätzen.
+**Erklärung** – die wichtigsten Zahlen/Fakten konkret benannt.
+**Grund** – warum die Lage so ist.
+**Auswirkung** – was das für Umsatz, Gewinn, Auslastung oder Risiko bedeutet.
+**Empfehlung** – ein konkreter, umsetzbarer nächster Schritt.
+
+KONTEXT-GEDÄCHTNIS:
+- Du behältst den Verlauf der laufenden Unterhaltung. Folgefragen wie „nur Rollstuhltransporte",
+  „nur Fahrer Thomas", „nur die verspäteten", „vergleiche mit letztem Monat", „warum?" beziehst du
+  selbstständig auf die vorherige Antwort, ohne nach dem Kontext zu fragen.
+
+QUELLEN:
+- Nenne am Ende jeder geschäftlichen Antwort die genutzten Datenquellen, z.B.:
+  „Quellen: Dispatch, Flotte, Buchhaltung". Die Quelle ergibt sich aus dem Feld "quelle" der Tool-Ergebnisse.
 
 ECHTZEIT-WISSEN:
-- Für aktuelle Informationen (News, Wetter, Verkehr, Sport, Börse, Kryptokurse, Spritpreise,
-  Feiertage, Behörden, Gesundheits-/Klinik-Infos, Adressen, allgemeine Fakten von heute) nutzt du
-  das Werkzeug "web_suche". Zum Auslesen/Zusammenfassen einer konkreten Seite nutzt du "web_seite_lesen".
-- Wenn Informationen aus dem Internet stammen, sage das klar dazu (z.B. „Laut aktuellen Online-Quellen …")
-  und nenne die Quellen.
-- Ist kein Web-Zugriff verfügbar, sage es ehrlich und antworte mit deinem vorhandenen Wissen.
+- Für aktuelle externe Infos (News, Wetter, Verkehr, Börse, Spritpreise, Feiertage, Fakten von heute)
+  nutzt du "web_suche"; zum Auslesen einer konkreten Seite "web_seite_lesen". Kennzeichne Online-Quellen klar.
 
 GEDÄCHTNIS:
-- Wichtige Entscheidungen, bestätigte Korrekturen, wiederkehrende Abläufe oder Vorlieben des
-  Unternehmers speicherst du mit "gedaechtnis_speichern", damit du langfristig dazulernst.
+- Wichtige Entscheidungen, bestätigte Korrekturen oder Vorlieben speicherst du mit "gedaechtnis_speichern".
 
-SICHERHEIT (unbedingt einhalten):
-- Du DARFST analysieren, recherchieren, Vorschläge machen sowie E-Mails, WhatsApp-Nachrichten und
-  Berichte als ENTWURF formulieren.
-- Du DARFST NIEMALS eigenmächtig: E-Mails/Nachrichten senden, Rechnungen freigeben, wichtige Daten
-  löschen, Finanzdaten ändern, rechtliche oder personelle Entscheidungen treffen.
-- Vor jeder wichtigen oder verbindlichen Aktion holst du ausdrücklich die Bestätigung des
-  Unternehmers ein („Soll ich das so vorbereiten?").`;
+SMART ACTIONS & SICHERHEIT (unbedingt einhalten):
+- Du DARFST analysieren, recherchieren und Aktionen als ENTWURF vorbereiten – ausschließlich über das
+  Werkzeug "aktion_vorbereiten" (Rechnung, E-Mail, SMS, WhatsApp, Fahrer-Zuweisung, Wartungserinnerung,
+  Dokument, Routenoptimierung).
+- Du DARFST NIEMALS eigenmächtig: senden, freigeben, löschen, Finanzdaten oder Dispo ändern, oder
+  rechtliche/personelle Entscheidungen treffen. Jeder Entwurf braucht die ausdrückliche Bestätigung
+  des Nutzers („Soll ich das so vorbereiten?").
+- Halte dich strikt an die Berechtigungen der aktuellen Rolle. Frage nicht nach Daten, die außerhalb
+  der erlaubten Bereiche liegen, und weise höflich darauf hin, wenn etwas nicht erlaubt ist.
+
+STIL:
+- Deutsch (außer anders gewünscht), professionell, warm und präzise. Klares Markdown.`;
 
 function textOf(parts: UIMessage["parts"] | undefined): string {
   if (!Array.isArray(parts)) return "";
@@ -71,6 +98,63 @@ function sammleQuellen(parts: UIMessage["parts"] | undefined): WebQuelle[] {
   return quellen.filter((q) => (q.url && !seen.has(q.url) ? (seen.add(q.url), true) : false));
 }
 
+/** Sammelt die Geschäfts-Datenquellen (Feld "quelle") aller Tool-Ergebnisse. */
+function sammleBusinessQuellen(parts: UIMessage["parts"] | undefined): string[] {
+  if (!Array.isArray(parts)) return [];
+  const set = new Set<string>();
+  for (const p of parts) {
+    if (
+      typeof p.type === "string" &&
+      p.type.startsWith("tool-") &&
+      "output" in p &&
+      p.output &&
+      typeof p.output === "object" &&
+      "quelle" in (p.output as Record<string, unknown>)
+    ) {
+      const q = (p.output as { quelle?: string }).quelle;
+      if (q) set.add(q);
+    }
+  }
+  return [...set];
+}
+
+/** Sammelt vorbereitete (nicht ausgeführte) Smart Actions aus den Tool-Ergebnissen. */
+function sammleVorbereiteteAktionen(parts: UIMessage["parts"] | undefined) {
+  if (!Array.isArray(parts)) return [];
+  const aktionen: Array<Record<string, unknown>> = [];
+  for (const p of parts) {
+    if (
+      typeof p.type === "string" &&
+      p.type.startsWith("tool-aktion_vorbereiten") &&
+      "output" in p &&
+      p.output &&
+      typeof p.output === "object" &&
+      (p.output as { vorbereitet?: boolean }).vorbereitet
+    ) {
+      aktionen.push(p.output as Record<string, unknown>);
+    }
+  }
+  return aktionen;
+}
+
+/** Verifiziert das Bearer-Token und ermittelt die höchste Rolle des Nutzers. */
+async function authentifiziere(
+  request: Request,
+  admin: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
+): Promise<{ userId: string | null; role: AppRole | null }> {
+  const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
+  const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
+  if (!token) return { userId: null, role: null };
+  const { data, error } = await admin.auth.getUser(token);
+  if (error || !data.user) return { userId: null, role: null };
+  const { data: rollen } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id);
+  const role = hoechsteRolle((rollen ?? []).map((r) => r.role) as AppRole[]);
+  return { userId: data.user.id, role };
+}
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
@@ -90,11 +174,24 @@ export const Route = createFileRoute("/api/chat")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // SICHERHEIT: Authentifizierung & Rolle ermitteln. Ohne gültige Session kein Zugriff.
+        const { userId, role } = await authentifiziere(request, supabaseAdmin);
+        if (!userId) {
+          return new Response(JSON.stringify({ error: "Nicht angemeldet" }), {
+            status: 401,
+            headers: { "content-type": "application/json" },
+          });
+        }
+
+        // Frage für das Audit-Protokoll festhalten.
+        let frage = "";
+
         // Eingehende Nutzer-Nachricht sofort sichern (geht bei Fehlern nicht verloren).
         if (threadId && messages.length > 0) {
           const last = messages[messages.length - 1];
           if (last?.role === "user") {
             const userText = textOf(last.parts);
+            frage = userText;
             await supabaseAdmin.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "user",
@@ -114,6 +211,10 @@ export const Route = createFileRoute("/api/chat")({
                 .eq("id", threadId);
             }
           }
+        }
+        if (!frage) {
+          const lastUser = [...messages].reverse().find((m) => m.role === "user");
+          frage = textOf(lastUser?.parts);
         }
 
         const { data: memory } = await supabaseAdmin
@@ -140,10 +241,19 @@ export const Route = createFileRoute("/api/chat")({
           day: "numeric",
         });
 
+        const rollenLabel = role ? ROLE_LABELS[role] : "Unbekannt";
+        const bereiche = erlaubteBereiche(role).join(", ");
+        const rollenKontext = `## Aktuelle Rolle des Nutzers
+Rolle: ${rollenLabel} – ${role ? ROLE_BESCHREIBUNG[role] : "Keine Rolle zugewiesen."}
+Erlaubte Datenbereiche (nur diese Werkzeuge stehen zur Verfügung): ${bereiche}
+Beachte diese Berechtigungen strikt. Stehen für einen Bereich keine Werkzeuge bereit, darf die Rolle ihn nicht einsehen.`;
+
         const kontext = `${SYSTEM_PROMPT}
 
 ## Heutiges Datum
 ${heute}
+
+${rollenKontext}
 
 ## Langzeitgedächtnis (gemerkte Entscheidungen & Vorlieben)
 ${erinnerungen}
@@ -159,8 +269,9 @@ ${buildKnowledgeSnapshot()}`;
           model: provider("google/gemini-2.5-flash"),
           system: kontext,
           messages: await convertToModelMessages(messages),
-          stopWhen: stepCountIs(6),
+          stopWhen: stepCountIs(8),
           tools: {
+            ...buildBusinessTools(role),
             web_suche: tool({
               description:
                 "Durchsucht das Internet in Echtzeit nach aktuellen Informationen (News, Wetter, Verkehr, Sport, Börse, Kryptokurse, Spritpreise, Feiertage, Adressen, allgemeine Fakten). Liefert Treffer mit Titel, URL und Auszug.",
@@ -206,14 +317,33 @@ ${buildKnowledgeSnapshot()}`;
         return result.toUIMessageStreamResponse({
           originalMessages: messages,
           onFinish: async ({ responseMessage }) => {
-            if (!threadId || !responseMessage) return;
-            const quellen = sammleQuellen(responseMessage.parts);
+            if (!responseMessage) return;
+            const webQuellen = sammleQuellen(responseMessage.parts);
+            const businessQuellen = sammleBusinessQuellen(responseMessage.parts);
+            const vorbereiteteAktionen = sammleVorbereiteteAktionen(responseMessage.parts);
+
+            // AUDIT: jede KI-Anfrage protokollieren (ohne private Inhalte).
+            await supabaseAdmin.from("ai_audit_log").insert({
+              user_id: userId,
+              rolle: role,
+              frage: (frage || "—").slice(0, 2000),
+              modell: "google/gemini-2.5-flash",
+              thread_id: threadId ?? null,
+              quellen: ([...businessQuellen, ...webQuellen.map((q) => q.url)].length > 0
+                ? { datenquellen: businessQuellen, web: webQuellen.map((q) => q.url) }
+                : null) as never,
+              vorbereitete_aktionen: (vorbereiteteAktionen.length > 0
+                ? vorbereiteteAktionen.map((a) => ({ typ: a.typ, titel: a.titel }))
+                : null) as never,
+            });
+
+            if (!threadId) return;
             await supabaseAdmin.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "assistant",
               inhalt: textOf(responseMessage.parts),
               parts: responseMessage.parts as never,
-              quellen: (quellen.length > 0 ? quellen : null) as never,
+              quellen: (webQuellen.length > 0 ? webQuellen : null) as never,
             });
             await supabaseAdmin
               .from("chat_threads")
