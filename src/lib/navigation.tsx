@@ -73,10 +73,10 @@ export const navGroups: NavGroup[] = [
         description: "Alle Krankentransporte erfassen, disponieren und verfolgen.",
       },
       {
-        label: "Tourenplanung",
+        label: "Dispatch-Center",
         to: "/tourenplanung",
         icon: RouteIcon,
-        description: "Optimierte Routen, Schichten und Fahrzeugzuteilung.",
+        description: "Intelligente Disposition: Plantafel, Drag & Drop und KI-Zuteilung.",
       },
       {
         label: "Live-GPS",
