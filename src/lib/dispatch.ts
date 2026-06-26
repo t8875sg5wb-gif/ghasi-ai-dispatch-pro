@@ -228,6 +228,10 @@ export interface DispatchTransport extends Auftrag {
   rollstuhl: boolean;
   liegend: boolean;
   istNotfall: boolean;
+  /** Fahrer hat den Auftrag bestätigt (Live-Board-Spalte „Fahrer akzeptiert"). */
+  fahrerAkzeptiert?: boolean;
+  /** Transport ist abgerechnet/abrechnungsbereit (Spalte „Abrechnung bereit"). */
+  abrechnungBereit?: boolean;
 }
 
 export function formatEUR(value: number): string {
