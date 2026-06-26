@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Euro,
   TrendingUp,
@@ -30,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { generateHinweise, type HinweisStufe } from "@/lib/ghasi-hinweise";
+import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -116,7 +117,9 @@ const stufeStyle: Record<HinweisStufe, string> = {
 };
 
 function Dashboard() {
-  const hinweise = generateHinweise();
+  // Zeit-/datumsabhängige Hinweise erst nach Mount erzeugen (kein SSR-Mismatch).
+  const [hinweise, setHinweise] = useState<Hinweis[]>([]);
+  useEffect(() => setHinweise(generateHinweise()), []);
   const auslastungFahrzeuge = 63;
   const auslastungFahrer = 61;
   const prognose = "11.900 €";

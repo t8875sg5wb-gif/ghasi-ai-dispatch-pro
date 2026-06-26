@@ -23,6 +23,7 @@ import {
   FolderArchive,
   Settings,
   ShieldUser,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 
@@ -193,6 +194,12 @@ export const navGroups: NavGroup[] = [
         to: "/dokumente",
         icon: FolderArchive,
         description: "Zentrales Dokumentenarchiv und Vorlagen.",
+      },
+      {
+        label: "Verbindungen",
+        to: "/verbindungen",
+        icon: Plug,
+        description: "WhatsApp, E-Mail, Kalender, Maps & Web-Zugriff für GHASI AI.",
       },
       {
         label: "Einstellungen",
