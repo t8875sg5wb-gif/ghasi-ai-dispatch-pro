@@ -1,0 +1,207 @@
+import {
+  ArrowRight,
+  Calendar,
+  CreditCard,
+  MapPin,
+  Pencil,
+  Truck,
+  User,
+} from "lucide-react";
+
+import {
+  type Auftrag,
+  type AuftragStatus,
+  PRIORITAET_META,
+  STATUS_META,
+  STATUS_PIPELINE,
+  STATUS_TRANSITIONS,
+  formatTermin,
+} from "@/lib/auftraege";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+interface AuftragDetailProps {
+  auftrag: Auftrag | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onStatusChange: (id: string, status: AuftragStatus) => void;
+  onEdit: (auftrag: Auftrag) => void;
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+export function AuftragDetail({
+  auftrag,
+  open,
+  onOpenChange,
+  onStatusChange,
+  onEdit,
+}: AuftragDetailProps) {
+  if (!auftrag) return null;
+
+  const status = STATUS_META[auftrag.status];
+  const prio = PRIORITAET_META[auftrag.prioritaet];
+  const transitions = STATUS_TRANSITIONS[auftrag.status];
+  const activeIndex = STATUS_PIPELINE.indexOf(auftrag.status);
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
+        <SheetHeader className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={cn("gap-1", status.badge)}>
+              <status.icon className="h-3 w-3" />
+              {status.label}
+            </Badge>
+            <Badge variant="outline" className={prio.badge}>
+              {prio.label}
+            </Badge>
+          </div>
+          <SheetTitle className="text-xl">{auftrag.patient}</SheetTitle>
+          <SheetDescription>
+            {auftrag.nummer} · {auftrag.transportart}
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="space-y-6 py-6">
+          {/* Workflow pipeline */}
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Status-Workflow
+            </p>
+            <div className="flex items-center justify-between">
+              {STATUS_PIPELINE.map((s, i) => {
+                const meta = STATUS_META[s];
+                const reached =
+                  auftrag.status !== "storniert" && i <= activeIndex;
+                return (
+                  <div key={s} className="flex flex-1 flex-col items-center text-center">
+                    <div
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors",
+                        reached
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <meta.icon className="h-4 w-4" />
+                    </div>
+                    <span
+                      className={cn(
+                        "mt-1.5 text-[10px] leading-tight",
+                        reached ? "font-medium text-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {meta.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {auftrag.status === "storniert" && (
+              <p className="mt-3 text-center text-xs font-medium text-destructive">
+                Dieser Auftrag wurde storniert.
+              </p>
+            )}
+          </div>
+
+          {/* Status actions */}
+          {transitions.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {transitions.map((next) => {
+                const meta = STATUS_META[next];
+                const destructive = next === "storniert";
+                return (
+                  <Button
+                    key={next}
+                    size="sm"
+                    variant={destructive ? "outline" : "default"}
+                    className={cn(
+                      "gap-1.5",
+                      destructive && "border-destructive/30 text-destructive hover:bg-destructive/10",
+                    )}
+                    onClick={() => onStatusChange(auftrag.id, next)}
+                  >
+                    <meta.icon className="h-3.5 w-3.5" />
+                    {next === "storniert"
+                      ? "Stornieren"
+                      : next === "neu"
+                        ? "Reaktivieren"
+                        : `Auf "${meta.label}" setzen`}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+
+          <Separator />
+
+          <div className="space-y-4">
+            <InfoRow icon={MapPin} label="Abholort" value={auftrag.abholort} />
+            <InfoRow icon={ArrowRight} label="Zielort" value={auftrag.zielort} />
+            <InfoRow icon={Calendar} label="Termin" value={formatTermin(auftrag.termin)} />
+            <InfoRow
+              icon={User}
+              label="Fahrer"
+              value={auftrag.fahrer ?? "Nicht zugewiesen"}
+            />
+            <InfoRow
+              icon={Truck}
+              label="Fahrzeug"
+              value={auftrag.fahrzeug ?? "Nicht zugewiesen"}
+            />
+            <InfoRow icon={CreditCard} label="Kostenträger" value={auftrag.kostentraeger || "—"} />
+          </div>
+
+          {auftrag.notiz && (
+            <>
+              <Separator />
+              <div>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Notiz
+                </p>
+                <p className="text-sm text-muted-foreground">{auftrag.notiz}</p>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="mt-auto">
+          <Button variant="outline" className="w-full gap-2" onClick={() => onEdit(auftrag)}>
+            <Pencil className="h-4 w-4" />
+            Auftrag bearbeiten
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
