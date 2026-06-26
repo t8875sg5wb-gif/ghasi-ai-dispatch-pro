@@ -30,6 +30,7 @@ import {
   LineChart,
   Inbox,
   Sparkles,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 

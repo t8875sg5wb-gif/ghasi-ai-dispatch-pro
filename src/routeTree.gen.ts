@@ -36,6 +36,7 @@ import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as ControlCenterRouteImport } from './routes/control-center'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
+import { Route as AutomatisierungRouteImport } from './routes/automatisierung'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
 import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AktionsCenterRouteImport } from './routes/aktions-center'
@@ -180,6 +181,11 @@ const BerichteRoute = BerichteRouteImport.update({
   path: '/berichte',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AutomatisierungRoute = AutomatisierungRouteImport.update({
+  id: '/automatisierung',
+  path: '/automatisierung',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuftraegeRoute = AuftraegeRouteImport.update({
   id: '/auftraege',
   path: '/auftraege',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/control-center': typeof ControlCenterRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/control-center': typeof ControlCenterRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/control-center': typeof ControlCenterRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/control-center'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/control-center'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/control-center'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   AktionsCenterRoute: typeof AktionsCenterRoute
   AktivitaetenRoute: typeof AktivitaetenRoute
   AuftraegeRoute: typeof AuftraegeRoute
+  AutomatisierungRoute: typeof AutomatisierungRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
   ControlCenterRoute: typeof ControlCenterRoute
@@ -672,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BerichteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/automatisierung': {
+      id: '/automatisierung'
+      path: '/automatisierung'
+      fullPath: '/automatisierung'
+      preLoaderRoute: typeof AutomatisierungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auftraege': {
       id: '/auftraege'
       path: '/auftraege'
@@ -751,6 +771,7 @@ const rootRouteChildren: RootRouteChildren = {
   AktionsCenterRoute: AktionsCenterRoute,
   AktivitaetenRoute: AktivitaetenRoute,
   AuftraegeRoute: AuftraegeRoute,
+  AutomatisierungRoute: AutomatisierungRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
   ControlCenterRoute: ControlCenterRoute,
