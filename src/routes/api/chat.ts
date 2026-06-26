@@ -241,10 +241,19 @@ export const Route = createFileRoute("/api/chat")({
           day: "numeric",
         });
 
+        const rollenLabel = role ? ROLE_LABELS[role] : "Unbekannt";
+        const bereiche = erlaubteBereiche(role).join(", ");
+        const rollenKontext = `## Aktuelle Rolle des Nutzers
+Rolle: ${rollenLabel} – ${role ? ROLE_BESCHREIBUNG[role] : "Keine Rolle zugewiesen."}
+Erlaubte Datenbereiche (nur diese Werkzeuge stehen zur Verfügung): ${bereiche}
+Beachte diese Berechtigungen strikt. Stehen für einen Bereich keine Werkzeuge bereit, darf die Rolle ihn nicht einsehen.`;
+
         const kontext = `${SYSTEM_PROMPT}
 
 ## Heutiges Datum
 ${heute}
+
+${rollenKontext}
 
 ## Langzeitgedächtnis (gemerkte Entscheidungen & Vorlieben)
 ${erinnerungen}
