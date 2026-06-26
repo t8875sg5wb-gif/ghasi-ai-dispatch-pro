@@ -191,7 +191,7 @@ function PatientProfil({ patient }: { patient: Patient }) {
                 </p>
                 <MedizinBadges auftrag={a} className="mt-2" />
                 <div className="mt-2 flex items-center gap-1 text-xs">
-                  <ver.icon className={cn("h-3.5 w-3.5", ver.text)} />
+                  <ver.icon className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">Verordnung:</span>
                   <span className="font-medium">{ver.label}</span>
                 </div>
