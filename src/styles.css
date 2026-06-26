@@ -237,3 +237,20 @@
   background-color: color-mix(in oklab, var(--card) 72%, transparent);
   backdrop-filter: blur(18px) saturate(160%);
 }
+
+/* Leaflet Fleet-Map: Marker-Reset + Puls-Animation */
+.ghasi-fleet-marker {
+  background: transparent;
+  border: none;
+}
+.leaflet-container {
+  font-family: inherit;
+  background: var(--muted);
+}
+@keyframes ghasi-ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
