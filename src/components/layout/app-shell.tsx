@@ -15,6 +15,9 @@ import { allNavItems } from "@/lib/navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [searchOpen, setSearchOpen] = useState(false);
+  useGlobalSearchHotkey(setSearchOpen);
+
   const current =
     allNavItems.find((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to))) ??
     allNavItems[0];
@@ -33,13 +36,26 @@ export function AppShell({ children }: { children: ReactNode }) {
               {current.description}
             </p>
           </div>
-          <div className="relative hidden w-64 md:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Suchen …"
-              className="h-9 rounded-full border-border/70 bg-muted/50 pl-9"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="relative hidden h-9 w-64 items-center gap-2 rounded-full border border-border/70 bg-muted/50 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted md:flex"
+          >
+            <Search className="h-4 w-4" />
+            <span className="flex-1 truncate">Suchen …</span>
+            <kbd className="rounded border border-border/70 bg-background px-1.5 text-[10px] font-medium">
+              ⌘K
+            </kbd>
+          </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full md:hidden"
+            aria-label="Suchen"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
           <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Benachrichtigungen">
             <Bell className="h-5 w-5" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
@@ -48,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </SidebarInset>
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </SidebarProvider>
   );
 }
