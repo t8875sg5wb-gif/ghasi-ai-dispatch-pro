@@ -232,5 +232,8 @@ export function buildKnowledgeSnapshot(): string {
   );
   lines.push(`Dokumente im Archiv: ${INITIAL_DOKUMENTE.length}.`);
 
+  // Live-GPS & Transport-Execution (Fahrzeugpositionen, Status, ETA, Alerts)
+  lines.push(`\n${buildGpsSnapshot()}`);
+
   return lines.join("\n");
 }
