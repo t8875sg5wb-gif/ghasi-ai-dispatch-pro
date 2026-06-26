@@ -27,6 +27,7 @@ import {
   EUR as EURf,
 } from "@/lib/finance";
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
+import { buildGpsSnapshot } from "@/lib/fleet-live";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
