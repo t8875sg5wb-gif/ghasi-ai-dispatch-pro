@@ -16,6 +16,12 @@ export interface Patient {
   mobilitaet: "Gehfähig" | "Rollstuhl" | "Liegend";
   kostentraeger: string;
   hinweis: string;
+  /** Benötigt der Patient standardmäßig eine Begleitperson? */
+  begleitperson?: boolean;
+  /** Dauerhafte medizinische Hinweise für Fahrer/Disposition. */
+  medizinischeNotiz?: string;
+  /** Hinweise zum Patienten (z. B. Kommunikation, Verhalten). */
+  patientennotiz?: string;
 }
 
 export interface Einrichtung {
