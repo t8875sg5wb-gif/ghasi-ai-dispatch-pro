@@ -791,6 +791,31 @@ function TransportDialog({
             </div>
           </div>
 
+          {/* Live-Position & Abrechnung */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-lg border border-border/70 p-2.5">
+              <p className="text-xs text-muted-foreground">Aktuelle Position (GPS)</p>
+              <p className="mt-0.5 font-medium tabular-nums">
+                {(() => {
+                  const g = geocode(t.liveStatus === "patient_an_bord" || t.liveStatus === "in_fahrt" ? t.zielort : t.abholort);
+                  return `${g.lat}, ${g.lng}`;
+                })()}
+              </p>
+              <p className="text-xs text-muted-foreground">ETA {t.ankunftzeit}</p>
+            </div>
+            <div className="rounded-lg border border-border/70 p-2.5">
+              <p className="text-xs text-muted-foreground">Abrechnung</p>
+              <p className="mt-0.5 font-medium">
+                {t.abrechnungBereit
+                  ? "Abrechnung bereit"
+                  : t.liveStatus === "abgeschlossen"
+                    ? "Abgeschlossen"
+                    : "In Bearbeitung"}
+              </p>
+              <p className="text-xs text-muted-foreground">{formatEUR(t.erloes)} · {t.kostentraeger}</p>
+            </div>
+          </div>
+
           {/* medizinische Transportdetails */}
           <MedizinDetails auftrag={t} rolle="dispo" />
 
