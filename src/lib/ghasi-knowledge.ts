@@ -11,6 +11,13 @@ import {
   PFLEGEHEIME,
   KRANKENKASSEN,
 } from "@/lib/stammdaten";
+import {
+  INITIAL_RECHNUNGEN,
+  RECHNUNG_STATUS_META,
+  computeFinanzKpis,
+  EUR as EURf,
+} from "@/lib/finance";
+import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
