@@ -26,6 +26,16 @@ import {
 } from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
 import {
+  DAUERAUFTRAEGE,
+  WOCHENTAGE,
+  RHYTHMUS_LABEL,
+  KATEGORIE_META as DAUER_KATEGORIE_META,
+  STATUS_META as DAUER_STATUS_META,
+  abgeleiteterStatus,
+  transportFaelltAn,
+  naechsteTermine,
+} from "@/lib/dauerauftraege";
+import {
   computeKpis,
   computeBusinessHealth,
   computeInsights,
