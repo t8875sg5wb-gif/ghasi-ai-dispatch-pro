@@ -202,5 +202,17 @@ export function buildKnowledgeSnapshot(): string {
   lines.push(`Dialysezentren: ${DIALYSEZENTREN.map((e) => e.name).join(", ")}`);
   lines.push(`Pflegeheime: ${PFLEGEHEIME.map((e) => e.name).join(", ")}`);
 
+  const fk = computeFinanzKpis();
+  lines.push(`\n## Finanzen (Monat)`);
+  lines.push(
+    `Umsatz ${EURf(fk.umsatzMonat)}, Ausgaben ${EURf(fk.ausgabenMonat)}, Gewinn ${EURf(fk.gewinnMonat)} (Marge ${fk.margeProzent} %). ` +
+      `Offene Posten ${EURf(fk.offenePosten)} (${fk.anzahlOffen}), überfällig ${EURf(fk.ueberfaelligeSumme)} (${fk.anzahlUeberfaellig}).`,
+  );
+  lines.push(
+    `Kostenstellen: Kraftstoff ${EURf(fk.kosten.kraftstoffkosten)}, Wartung ${EURf(fk.kosten.wartungskosten)}, ` +
+      `Fahrer ${EURf(fk.kosten.fahrerkosten)}, Leasing ${EURf(fk.kosten.leasingkosten)}, Fahrzeug ${EURf(fk.kosten.fahrzeugkosten)}.`,
+  );
+  lines.push(`Dokumente im Archiv: ${INITIAL_DOKUMENTE.length}.`);
+
   return lines.join("\n");
 }
