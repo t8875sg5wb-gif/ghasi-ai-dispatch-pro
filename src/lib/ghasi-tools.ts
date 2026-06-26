@@ -13,7 +13,17 @@ import {
   reparaturkostenGesamt,
   laeuftAb,
 } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import {
+  INITIAL_AUFTRAEGE,
+  STATUS_META,
+  formatTermin,
+  VERORDNUNG_META,
+  MOBILITAET_META,
+  effektiveVerordnung,
+  effektiveMobilitaet,
+  verordnungFehlt,
+  empfohlenerFahrzeugtyp,
+} from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
 import {
   computeKpis,
@@ -85,8 +95,42 @@ export function buildBusinessTools(role: AppRole | null) {
           fahrer: a.fahrer ?? "—",
           fahrzeug: a.fahrzeug ?? "—",
           kostentraeger: a.kostentraeger,
+          verordnung: VERORDNUNG_META[effektiveVerordnung(a)].label,
+          verordnungFehlt: verordnungFehlt(effektiveVerordnung(a)),
+          mobilitaet: MOBILITAET_META[effektiveMobilitaet(a)].label,
+          begleitperson: a.begleitperson ? "Ja" : "Nein",
+          empfohlenesFahrzeug: empfohlenerFahrzeugtyp(effektiveMobilitaet(a)),
         }));
         return { quelle: "Dispatch", anzahl: treffer.length, transporte: treffer };
+      },
+    });
+
+    tools.transport_medizin_abrufen = tool({
+      description:
+        "Beantwortet medizinische/logistische Detailfragen zu einem Transport: Hat der Fahrer die Verordnung? Braucht der Patient Rollstuhl oder Tragestuhl? Ist eine Begleitperson dabei? Welches Fahrzeug passt? Liefert Verordnungsstatus, Mobilität, Begleitperson, Abhol-/Zielanforderungen, Patienten-/medizinische Notizen und empfohlenen Fahrzeugtyp. Suche per Auftragsnummer oder Patientenname.",
+      inputSchema: z.object({
+        suche: z.string().describe("Auftragsnummer oder Patientenname"),
+      }),
+      execute: async ({ suche }) => {
+        const treffer = INITIAL_AUFTRAEGE.filter(
+          (a) => enthaelt(a.nummer, suche) || enthaelt(a.patient, suche),
+        ).map((a) => ({
+          nummer: a.nummer,
+          patient: a.patient,
+          status: STATUS_META[a.status].label,
+          fahrer: a.fahrer ?? "—",
+          fahrzeug: a.fahrzeug ?? "—",
+          verordnung: VERORDNUNG_META[effektiveVerordnung(a)].label,
+          verordnungVorhanden: !verordnungFehlt(effektiveVerordnung(a)),
+          mobilitaet: MOBILITAET_META[effektiveMobilitaet(a)].label,
+          begleitperson: a.begleitperson ? "Ja" : "Nein",
+          empfohlenesFahrzeug: empfohlenerFahrzeugtyp(effektiveMobilitaet(a)),
+          abholanforderung: a.abholanforderung ?? "—",
+          zielanforderung: a.zielanforderung ?? "—",
+          patientennotiz: a.patientennotiz ?? "—",
+          medizinischeNotiz: a.medizinischeNotiz ?? "—",
+        }));
+        return { quelle: "Dispatch · Medizin", anzahl: treffer.length, transporte: treffer };
       },
     });
   }

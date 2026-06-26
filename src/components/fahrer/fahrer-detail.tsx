@@ -52,6 +52,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import {
+  INITIAL_AUFTRAEGE,
+  effektiveVerordnung,
+  verordnungFehlt,
+} from "@/lib/auftraege";
+import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
+import { AlertTriangle } from "lucide-react";
 
 interface FahrerDetailProps {
   fahrer: Fahrer | null;
@@ -255,6 +262,64 @@ export function FahrerDetail({
           </div>
 
           <Separator />
+
+          {/* Fahrer-App: heutige Touren mit medizinischen Details */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Meine Touren (Fahrer-App)
+            </p>
+            {(() => {
+              const touren = INITIAL_AUFTRAEGE.filter(
+                (a) => a.fahrer === fahrer.name && a.status !== "storniert",
+              );
+              if (touren.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Aktuell keine zugewiesenen Touren.
+                  </p>
+                );
+              }
+              return touren.map((a) => {
+                const fehlt = verordnungFehlt(effektiveVerordnung(a));
+                const mismatch = fahrzeugMismatch(a);
+                return (
+                  <div key={a.id} className="rounded-xl border border-border/70 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">{a.patient}</span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {a.nummer}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {a.abholort} → {a.zielort}
+                    </p>
+                    <MedizinBadges auftrag={a} className="mt-2" />
+                    {fehlt && (
+                      <p className="mt-2 flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Verordnung fehlt – nicht ohne Verordnung starten.
+                      </p>
+                    )}
+                    {mismatch && (
+                      <p className="mt-1 flex items-center gap-1 rounded-md bg-warning/10 px-2 py-1 text-xs font-medium text-warning">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Fahrzeugtyp passt nicht zur Mobilität.
+                      </p>
+                    )}
+                    {a.medizinischeNotiz && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Medizinisch: {a.medizinischeNotiz}
+                      </p>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+
+          <Separator />
+
+
 
           {/* Contact */}
           <div className="space-y-4">

@@ -35,7 +35,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { logActivity } from "@/lib/protokoll";
 
-import { PRIORITAET_META } from "@/lib/auftraege";
+import { PRIORITAET_META, verordnungFehlt, effektiveVerordnung } from "@/lib/auftraege";
+import {
+  MedizinBadges,
+  MedizinDetails,
+  fahrzeugMismatch,
+} from "@/components/auftraege/medizin-details";
 import { INITIAL_FAHRER, FAHRER_STATUS_META, initials } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, FAHRZEUG_STATUS_META } from "@/lib/fahrzeuge";
 import {
@@ -639,6 +644,21 @@ function TransportCard({
           </Badge>
         )}
       </div>
+      <MedizinBadges auftrag={t} className="mt-1.5" />
+      {(verordnungFehlt(effektiveVerordnung(t)) || fahrzeugMismatch(t)) && (
+        <div className="mt-1.5 space-y-0.5">
+          {verordnungFehlt(effektiveVerordnung(t)) && (
+            <p className="flex items-center gap-1 text-[10px] font-medium text-destructive">
+              <AlertTriangle className="h-3 w-3" /> Verordnung fehlt
+            </p>
+          )}
+          {fahrzeugMismatch(t) && (
+            <p className="flex items-center gap-1 text-[10px] font-medium text-warning">
+              <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+            </p>
+          )}
+        </div>
+      )}
     </button>
   );
 }
@@ -720,6 +740,9 @@ function TransportDialog({
               <span>{formatEUR(t.erloes)}</span>
             </div>
           </div>
+
+          {/* medizinische Transportdetails */}
+          <MedizinDetails auftrag={t} rolle="dispo" />
 
           {/* status pipeline */}
           <div>

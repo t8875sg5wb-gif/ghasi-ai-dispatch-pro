@@ -4,6 +4,13 @@ import {
   Truck,
   CheckCircle2,
   XCircle,
+  AlertTriangle,
+  FileCheck,
+  Clock,
+  Footprints,
+  Accessibility,
+  Armchair,
+  BedDouble,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,6 +30,24 @@ export type Transportart =
   | "Dialysefahrt"
   | "Notfall";
 
+/* ------------------------------------------------------------------ *
+ * Medizinische Transportdetails (additiv)
+ * ------------------------------------------------------------------ */
+
+/** Status der ärztlichen Verordnung (Yes / No / Missing / Uploaded). */
+export type VerordnungStatus =
+  | "erhalten" // Yes
+  | "nicht_erhalten" // No
+  | "fehlt" // Missing
+  | "hochgeladen"; // Uploaded
+
+/** Mobilität des Patienten beim Transport. */
+export type Mobilitaet =
+  | "gehfaehig" // normal walker
+  | "rollstuhl" // wheelchair
+  | "tragestuhl" // carrying chair
+  | "liegend"; // lying transport
+
 export interface Auftrag {
   id: string;
   nummer: string;
@@ -37,6 +62,23 @@ export interface Auftrag {
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;
+  // --- Medizinische Transportdetails (optional, additiv) ---
+  /** Status der ärztlichen Verordnung */
+  verordnung?: VerordnungStatus;
+  /** Verknüpftes Verordnungsdokument im Dokumentencenter */
+  verordnungDokumentId?: string | null;
+  /** Mobilitätsart des Patienten */
+  mobilitaet?: Mobilitaet;
+  /** Begleitperson dabei? */
+  begleitperson?: boolean;
+  /** Anforderungen am Abholort (z. B. 3. OG ohne Aufzug) */
+  abholanforderung?: string;
+  /** Anforderungen am Zielort (z. B. Station 4, Aufnahme) */
+  zielanforderung?: string;
+  /** Hinweise zum Patienten (nicht-medizinisch) */
+  patientennotiz?: string;
+  /** Medizinische Hinweise (Sauerstoff, Infektion, etc.) */
+  medizinischeNotiz?: string;
 }
 
 export interface StatusMeta {
@@ -80,6 +122,153 @@ export const STATUS_META: Record<AuftragStatus, StatusMeta> = {
     dot: "bg-destructive",
   },
 };
+
+/* ------------------------------------------------------------------ *
+ * Meta für Verordnung & Mobilität
+ * ------------------------------------------------------------------ */
+
+export interface VerordnungMeta {
+  label: string;
+  kurz: string;
+  badge: string;
+  icon: LucideIcon;
+}
+
+export const VERORDNUNG_META: Record<VerordnungStatus, VerordnungMeta> = {
+  erhalten: {
+    label: "Verordnung erhalten",
+    kurz: "Erhalten",
+    badge: "border-success/30 bg-success/10 text-success",
+    icon: CheckCircle2,
+  },
+  hochgeladen: {
+    label: "Verordnung hochgeladen",
+    kurz: "Hochgeladen",
+    badge: "border-info/30 bg-info/10 text-info",
+    icon: FileCheck,
+  },
+  nicht_erhalten: {
+    label: "Verordnung nicht erhalten",
+    kurz: "Nicht erhalten",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    icon: Clock,
+  },
+  fehlt: {
+    label: "Verordnung fehlt",
+    kurz: "Fehlt",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    icon: AlertTriangle,
+  },
+};
+
+export type FahrzeugBedarf = "standard" | "rollstuhl" | "liegend";
+
+export interface MobilitaetMeta {
+  label: string;
+  kurz: string;
+  badge: string;
+  icon: LucideIcon;
+  /** Welches Fahrzeug wird für diese Mobilität benötigt? */
+  benoetigtFahrzeug: FahrzeugBedarf;
+}
+
+export const MOBILITAET_META: Record<Mobilitaet, MobilitaetMeta> = {
+  gehfaehig: {
+    label: "Gehfähig",
+    kurz: "Gehfähig",
+    badge: "border-success/30 bg-success/10 text-success",
+    icon: Footprints,
+    benoetigtFahrzeug: "standard",
+  },
+  rollstuhl: {
+    label: "Rollstuhl",
+    kurz: "Rollstuhl",
+    badge: "border-info/30 bg-info/10 text-info",
+    icon: Accessibility,
+    benoetigtFahrzeug: "rollstuhl",
+  },
+  tragestuhl: {
+    label: "Tragestuhl",
+    kurz: "Tragestuhl",
+    badge: "border-accent/30 bg-accent/10 text-accent",
+    icon: Armchair,
+    benoetigtFahrzeug: "rollstuhl",
+  },
+  liegend: {
+    label: "Liegendtransport",
+    kurz: "Liegend",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    icon: BedDouble,
+    benoetigtFahrzeug: "liegend",
+  },
+};
+
+export const VERORDNUNG_OPTIONEN: VerordnungStatus[] = [
+  "erhalten",
+  "hochgeladen",
+  "nicht_erhalten",
+  "fehlt",
+];
+
+export const MOBILITAET_OPTIONEN: Mobilitaet[] = [
+  "gehfaehig",
+  "rollstuhl",
+  "tragestuhl",
+  "liegend",
+];
+
+/** Liegt eine gültige Verordnung vor? */
+export function verordnungVorhanden(s?: VerordnungStatus): boolean {
+  return s === "erhalten" || s === "hochgeladen";
+}
+
+/** Fehlt die Verordnung (Fahrer-Warnung)? */
+export function verordnungFehlt(s?: VerordnungStatus): boolean {
+  return s === "fehlt" || s === "nicht_erhalten" || s === undefined;
+}
+
+/** Wenn keine explizite Mobilität gesetzt ist, aus der Transportart ableiten. */
+export function effektiveMobilitaet(a: Pick<Auftrag, "mobilitaet" | "transportart">): Mobilitaet {
+  if (a.mobilitaet) return a.mobilitaet;
+  switch (a.transportart) {
+    case "Liegendtransport":
+    case "Notfall":
+      return "liegend";
+    case "Rollstuhl":
+      return "rollstuhl";
+    default:
+      return "gehfaehig";
+  }
+}
+
+/** Effektiver Verordnungsstatus (Default: nicht erhalten). */
+export function effektiveVerordnung(a: Pick<Auftrag, "verordnung">): VerordnungStatus {
+  return a.verordnung ?? "nicht_erhalten";
+}
+
+export interface FahrzeugEignung {
+  rollstuhlGeeignet: boolean;
+  liegendGeeignet: boolean;
+}
+
+/** Passt das Fahrzeug zur Mobilität des Patienten? */
+export function fahrzeugPasstZuMobilitaet(
+  m: Mobilitaet | undefined,
+  f: FahrzeugEignung,
+): boolean {
+  const bedarf = MOBILITAET_META[m ?? "gehfaehig"].benoetigtFahrzeug;
+  if (bedarf === "liegend") return f.liegendGeeignet;
+  if (bedarf === "rollstuhl") return f.rollstuhlGeeignet;
+  return true;
+}
+
+/** Empfohlener Fahrzeugtyp in Klartext für die KI / Disposition. */
+export function empfohlenerFahrzeugtyp(m: Mobilitaet | undefined): string {
+  const bedarf = MOBILITAET_META[m ?? "gehfaehig"].benoetigtFahrzeug;
+  if (bedarf === "liegend") return "Liegend-/KTW-Fahrzeug (Trage)";
+  if (bedarf === "rollstuhl") return "Rollstuhl-/Tragestuhl-taugliches Fahrzeug";
+  return "Standard-Sitzendtransport";
+}
 
 /** Ordered list of statuses used for the workflow pipeline (excludes storniert). */
 export const STATUS_PIPELINE: AuftragStatus[] = [
@@ -158,6 +347,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: null,
     kostentraeger: "AOK Nordost",
     notiz: "Patientin benötigt Rollstuhl-Unterstützung.",
+    verordnung: "erhalten",
+    verordnungDokumentId: "d-1",
+    mobilitaet: "rollstuhl",
+    begleitperson: false,
+    abholanforderung: "Abholung im Zimmer 12, Erdgeschoss. Personal informiert.",
+    zielanforderung: "Anmeldung Schicht 1, Rollstuhl bereitstellen.",
+    patientennotiz: "Spricht wenig, etwas schwerhörig.",
+    medizinischeNotiz: "Dialyse 3× pro Woche, Fistel rechter Arm – Arm schonen.",
   },
   {
     id: "a-2",
@@ -173,6 +370,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: "B-KT 142",
     kostentraeger: "Techniker Krankenkasse",
     notiz: "Sauerstoffgerät erforderlich.",
+    verordnung: "hochgeladen",
+    verordnungDokumentId: "d-9",
+    mobilitaet: "liegend",
+    begleitperson: true,
+    abholanforderung: "Station 4B, Bett 2. Übergabe durch Pflege.",
+    zielanforderung: "Patientenaufnahme, Trage bis ins Zimmer.",
+    patientennotiz: "Ehefrau begleitet den Transport.",
+    medizinischeNotiz: "Sauerstoff 2 l/min, Monitor während Fahrt beobachten.",
   },
   {
     id: "a-3",
@@ -188,6 +393,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: "B-KT 097",
     kostentraeger: "Barmer",
     notiz: "",
+    verordnung: "erhalten",
+    verordnungDokumentId: null,
+    mobilitaet: "gehfaehig",
+    begleitperson: true,
+    abholanforderung: "2. OG mit Aufzug, am Eingang klingeln.",
+    zielanforderung: "Augenklinik Anmeldung, Wartebereich.",
+    patientennotiz: "Nach Eingriff sehbehindert – Begleitung nötig.",
+    medizinischeNotiz: "Nach Augen-OP, darf sich nicht bücken.",
   },
   {
     id: "a-4",
@@ -203,6 +416,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: "B-KT 204",
     kostentraeger: "DAK Gesundheit",
     notiz: "Rückfahrt separat gebucht.",
+    verordnung: "erhalten",
+    verordnungDokumentId: null,
+    mobilitaet: "rollstuhl",
+    begleitperson: false,
+    abholanforderung: "Eigener Rollstuhl mitnehmen.",
+    zielanforderung: "Praxis im EG, barrierefrei.",
+    patientennotiz: "",
+    medizinischeNotiz: "Leichte Demenz – ruhig ansprechen.",
   },
   {
     id: "a-5",
@@ -218,6 +439,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: null,
     kostentraeger: "Selbstzahler",
     notiz: "Sofortige Disposition erforderlich.",
+    verordnung: "fehlt",
+    verordnungDokumentId: null,
+    mobilitaet: "liegend",
+    begleitperson: false,
+    abholanforderung: "3. OG ohne Aufzug – Tragestuhl/Trage erforderlich.",
+    zielanforderung: "Direkt Notaufnahme, Anmeldung vorab telefonisch.",
+    patientennotiz: "Patientin allein zu Hause, Nachbarin öffnet.",
+    medizinischeNotiz: "Verdacht Sturzverletzung – Verordnung wird nachgereicht.",
   },
   {
     id: "a-6",
@@ -233,6 +462,14 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     fahrzeug: null,
     kostentraeger: "AOK Nordost",
     notiz: "Termin vom Patienten abgesagt.",
+    verordnung: "nicht_erhalten",
+    verordnungDokumentId: null,
+    mobilitaet: "gehfaehig",
+    begleitperson: false,
+    abholanforderung: "",
+    zielanforderung: "",
+    patientennotiz: "",
+    medizinischeNotiz: "",
   },
 ];
 

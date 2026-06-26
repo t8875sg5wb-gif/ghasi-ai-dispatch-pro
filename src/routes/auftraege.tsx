@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, ClipboardList, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import {
   type Auftrag,
@@ -18,6 +18,10 @@ import {
   type AuftragFormValues,
 } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
+import {
+  MedizinBadges,
+  fahrzeugMismatch,
+} from "@/components/auftraege/medizin-details";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -292,8 +296,14 @@ function AuftraegePage() {
                             <p className="text-xs text-muted-foreground">
                               {a.nummer} · {a.transportart}
                             </p>
+                            <MedizinBadges auftrag={a} className="mt-1.5" />
                           </div>
                         </div>
+                        {fahrzeugMismatch(a) && (
+                          <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
+                            <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="hidden max-w-[260px] md:table-cell">
                         <p className="truncate text-sm">{a.abholort}</p>

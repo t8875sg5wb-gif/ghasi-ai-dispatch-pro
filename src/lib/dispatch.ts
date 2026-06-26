@@ -25,7 +25,15 @@ import {
 } from "lucide-react";
 
 import type { Auftrag, Transportart, AuftragPrioritaet } from "@/lib/auftraege";
-import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
+import {
+  INITIAL_AUFTRAEGE,
+  MOBILITAET_META,
+  effektiveMobilitaet,
+  effektiveVerordnung,
+  empfohlenerFahrzeugtyp,
+  fahrzeugPasstZuMobilitaet,
+  verordnungFehlt,
+} from "@/lib/auftraege";
 import {
   type Fahrer,
   FAHRER_STATUS_META,
@@ -587,6 +595,15 @@ export function erkenneKonflikte(
 
   // Fahrer-/Fahrzeug-Verfügbarkeit & Eignung
   for (const t of offene) {
+    if (verordnungFehlt(effektiveVerordnung(t))) {
+      konflikte.push({
+        id: `verord-${t.id}`,
+        typ: "dokument",
+        schwere: "warnung",
+        text: `${t.nummer}: Verordnung fehlt – Fahrer darf nicht ohne gültige Verordnung starten.`,
+        transportId: t.id,
+      });
+    }
     if (t.fahrer) {
       const f = fahrer.find((x) => x.name === t.fahrer);
       if (f && !FAHRER_STATUS_META[f.status].einsetzbar) {
@@ -636,6 +653,15 @@ export function erkenneKonflikte(
             typ: "ungeeignet",
             schwere: "kritisch",
             text: `${t.nummer}: ${v.kennzeichen} ist nicht für Liegendtransport geeignet.`,
+            transportId: t.id,
+          });
+        }
+        if (!fahrzeugPasstZuMobilitaet(effektiveMobilitaet(t), v)) {
+          konflikte.push({
+            id: `mob-${t.id}`,
+            typ: "ungeeignet",
+            schwere: "kritisch",
+            text: `${t.nummer}: ${v.kennzeichen} passt nicht zur Mobilität „${MOBILITAET_META[effektiveMobilitaet(t)].label}" – benötigt ${empfohlenerFahrzeugtyp(effektiveMobilitaet(t))}.`,
             transportId: t.id,
           });
         }
