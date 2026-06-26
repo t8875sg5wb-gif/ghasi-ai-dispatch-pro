@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { MedizinDetails } from "@/components/auftraege/medizin-details";
 import {
   Sheet,
   SheetContent,
@@ -181,6 +182,17 @@ export function AuftragDetail({
             />
             <InfoRow icon={CreditCard} label="Kostenträger" value={auftrag.kostentraeger || "—"} />
           </div>
+
+          <Separator />
+
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Medizinische Transportdetails
+            </p>
+            <MedizinDetails auftrag={auftrag} rolle="dispo" />
+          </div>
+
+
 
           {auftrag.notiz && (
             <>

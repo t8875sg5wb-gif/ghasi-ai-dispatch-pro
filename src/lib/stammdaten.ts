@@ -16,6 +16,12 @@ export interface Patient {
   mobilitaet: "Gehfähig" | "Rollstuhl" | "Liegend";
   kostentraeger: string;
   hinweis: string;
+  /** Benötigt der Patient standardmäßig eine Begleitperson? */
+  begleitperson?: boolean;
+  /** Dauerhafte medizinische Hinweise für Fahrer/Disposition. */
+  medizinischeNotiz?: string;
+  /** Hinweise zum Patienten (z. B. Kommunikation, Verhalten). */
+  patientennotiz?: string;
 }
 
 export interface Einrichtung {
@@ -42,11 +48,11 @@ export const KUNDEN: Kunde[] = [
 ];
 
 export const PATIENTEN: Patient[] = [
-  { id: "p-1", name: "Margarete Hoffmann", mobilitaet: "Rollstuhl", kostentraeger: "AOK Nordost", hinweis: "Regelmäßige Dialyse, 3× pro Woche" },
-  { id: "p-2", name: "Johann Bauer", mobilitaet: "Liegend", kostentraeger: "Techniker Krankenkasse", hinweis: "Sauerstoffgerät erforderlich" },
-  { id: "p-3", name: "Elisabeth Wagner", mobilitaet: "Gehfähig", kostentraeger: "Barmer", hinweis: "Begleitperson erlaubt" },
-  { id: "p-4", name: "Friedrich Schulz", mobilitaet: "Rollstuhl", kostentraeger: "DAK Gesundheit", hinweis: "Rückfahrt meist separat" },
-  { id: "p-5", name: "Anna Klein", mobilitaet: "Liegend", kostentraeger: "Selbstzahler", hinweis: "Notfallpatientin" },
+  { id: "p-1", name: "Margarete Hoffmann", mobilitaet: "Rollstuhl", kostentraeger: "AOK Nordost", hinweis: "Regelmäßige Dialyse, 3× pro Woche", begleitperson: true, medizinischeNotiz: "Diabetikerin, Unterzuckerung möglich – Traubenzucker im Fahrzeug bereithalten.", patientennotiz: "Spricht leise, etwas schwerhörig links." },
+  { id: "p-2", name: "Johann Bauer", mobilitaet: "Liegend", kostentraeger: "Techniker Krankenkasse", hinweis: "Sauerstoffgerät erforderlich", begleitperson: false, medizinischeNotiz: "Mobiles Sauerstoffgerät muss mitgeführt werden.", patientennotiz: "Benötigt ruhige Fahrweise." },
+  { id: "p-3", name: "Elisabeth Wagner", mobilitaet: "Gehfähig", kostentraeger: "Barmer", hinweis: "Begleitperson erlaubt", begleitperson: true, medizinischeNotiz: "", patientennotiz: "Wird häufig von Tochter begleitet." },
+  { id: "p-4", name: "Friedrich Schulz", mobilitaet: "Rollstuhl", kostentraeger: "DAK Gesundheit", hinweis: "Rückfahrt meist separat", begleitperson: false, medizinischeNotiz: "Faltrollstuhl, passt in jedes geeignete Fahrzeug.", patientennotiz: "" },
+  { id: "p-5", name: "Anna Klein", mobilitaet: "Liegend", kostentraeger: "Selbstzahler", hinweis: "Notfallpatientin", begleitperson: true, medizinischeNotiz: "Tragestuhl für Treppenhaus erforderlich.", patientennotiz: "Wohnung im 3. OG ohne Aufzug." },
 ];
 
 export const KRANKENHAEUSER: Einrichtung[] = [

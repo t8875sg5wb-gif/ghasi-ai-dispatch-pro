@@ -2,7 +2,16 @@
 // kompakten Snapshot (für die KI) und einem Suchindex (für die globale Suche).
 import { INITIAL_FAHRER } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import {
+  INITIAL_AUFTRAEGE,
+  STATUS_META,
+  formatTermin,
+  VERORDNUNG_META,
+  MOBILITAET_META,
+  effektiveVerordnung,
+  effektiveMobilitaet,
+  empfohlenerFahrzeugtyp,
+} from "@/lib/auftraege";
 import {
   KUNDEN,
   PATIENTEN,
@@ -45,7 +54,7 @@ export function buildSearchIndex(): SearchItem[] {
       to: "/auftraege",
       titel: `${a.nummer} · ${a.patient}`,
       untertitel: `${a.transportart} · ${STATUS_META[a.status].label}`,
-      schlagworte: `${a.nummer} ${a.patient} ${a.abholort} ${a.zielort} ${a.kostentraeger}`,
+      schlagworte: `${a.nummer} ${a.patient} ${a.abholort} ${a.zielort} ${a.kostentraeger} ${VERORDNUNG_META[effektiveVerordnung(a)].label} verordnung ${MOBILITAET_META[effektiveMobilitaet(a)].label} ${a.begleitperson ? "begleitperson begleitung" : ""}`,
     });
   }
   for (const f of INITIAL_FAHRER) {
@@ -190,7 +199,9 @@ export function buildKnowledgeSnapshot(): string {
   for (const a of INITIAL_AUFTRAEGE) {
     lines.push(
       `- ${a.nummer} ${a.patient}: ${a.transportart}, ${STATUS_META[a.status].label}, ` +
-        `${a.abholort} → ${a.zielort}, ${formatTermin(a.termin)}, Fahrer ${a.fahrer ?? "—"}.`,
+        `${a.abholort} → ${a.zielort}, ${formatTermin(a.termin)}, Fahrer ${a.fahrer ?? "—"}. ` +
+        `Verordnung: ${VERORDNUNG_META[effektiveVerordnung(a)].label}, Mobilität: ${MOBILITAET_META[effektiveMobilitaet(a)].label}, ` +
+        `Begleitperson: ${a.begleitperson ? "Ja" : "Nein"}, passendes Fahrzeug: ${empfohlenerFahrzeugtyp(effektiveMobilitaet(a))}.`,
     );
   }
   lines.push(`Offene/disponierte Aufträge: ${offene.length}.`);

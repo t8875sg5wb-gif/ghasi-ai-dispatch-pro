@@ -3,13 +3,20 @@ import { useEffect, useState } from "react";
 import {
   type Auftrag,
   type AuftragPrioritaet,
+  type Mobilitaet,
   type Transportart,
+  type VerordnungStatus,
   FAHRER_OPTIONEN,
   FAHRZEUG_OPTIONEN,
+  MOBILITAET_META,
+  MOBILITAET_OPTIONEN,
   PRIORITAETEN,
   PRIORITAET_META,
   TRANSPORTARTEN,
+  VERORDNUNG_META,
+  VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +52,14 @@ function emptyValues(): AuftragFormValues {
     fahrzeug: null,
     kostentraeger: "",
     notiz: "",
+    verordnung: "nicht_erhalten",
+    verordnungDokumentId: null,
+    mobilitaet: "gehfaehig",
+    begleitperson: false,
+    abholanforderung: "",
+    zielanforderung: "",
+    patientennotiz: "",
+    medizinischeNotiz: "",
   };
 }
 
@@ -218,6 +233,108 @@ export function AuftragForm({
         </div>
       </div>
 
+      {/* Medizinische Transportdetails */}
+      <div className="rounded-xl border border-border/70 p-4 space-y-4">
+        <p className="text-sm font-semibold">Medizinische Transportdetails</p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Verordnung</Label>
+            <Select
+              value={values.verordnung ?? "nicht_erhalten"}
+              onValueChange={(v) => set("verordnung", v as VerordnungStatus)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {VERORDNUNG_OPTIONEN.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {VERORDNUNG_META[v].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Mobilität</Label>
+            <Select
+              value={values.mobilitaet ?? "gehfaehig"}
+              onValueChange={(v) => set("mobilitaet", v as Mobilitaet)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MOBILITAET_OPTIONEN.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {MOBILITAET_META[m].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+          <div>
+            <Label htmlFor="begleitperson">Begleitperson</Label>
+            <p className="text-xs text-muted-foreground">Begleitet eine Person den Patienten?</p>
+          </div>
+          <Switch
+            id="begleitperson"
+            checked={values.begleitperson ?? false}
+            onCheckedChange={(c) => set("begleitperson", c)}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="abholanforderung">Anforderungen Abholort</Label>
+            <Textarea
+              id="abholanforderung"
+              value={values.abholanforderung ?? ""}
+              onChange={(e) => set("abholanforderung", e.target.value)}
+              placeholder="z. B. 3. OG ohne Aufzug, Tragestuhl nötig"
+              rows={2}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="zielanforderung">Anforderungen Zielort</Label>
+            <Textarea
+              id="zielanforderung"
+              value={values.zielanforderung ?? ""}
+              onChange={(e) => set("zielanforderung", e.target.value)}
+              placeholder="z. B. Station 4, Anmeldung vorab"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="patientennotiz">Patientennotiz</Label>
+            <Textarea
+              id="patientennotiz"
+              value={values.patientennotiz ?? ""}
+              onChange={(e) => set("patientennotiz", e.target.value)}
+              placeholder="Hinweise zum Patienten"
+              rows={2}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="medizinischeNotiz">Medizinische Notiz</Label>
+            <Textarea
+              id="medizinischeNotiz"
+              value={values.medizinischeNotiz ?? ""}
+              onChange={(e) => set("medizinischeNotiz", e.target.value)}
+              placeholder="z. B. Sauerstoff, Infektionsschutz"
+              rows={2}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="notiz">Notiz</Label>
         <Textarea
@@ -228,6 +345,7 @@ export function AuftragForm({
           rows={3}
         />
       </div>
+
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>
