@@ -80,7 +80,8 @@ ${buildKnowledgeSnapshot()}`;
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      let fehler = "Die KI-Analyse konnte nicht erstellt werden.";
+      console.error("[generateExecutiveAnalysis] error:", message, err);
+      let fehler = `DEBUG: ${message.slice(0, 300)}`;
       if (/429|rate limit/i.test(message)) fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
       else if (/402|credit/i.test(message)) fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { lageeinschaetzung: "", chancen: [], risiken: [], naechsteSchritte: [], fehler };
