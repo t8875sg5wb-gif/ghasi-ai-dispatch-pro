@@ -112,10 +112,19 @@ function AuftraegePage() {
   }
 
   function handleStatusChange(id: string, status: AuftragStatus) {
+    const ziel = auftraege.find((a) => a.id === id);
     setAuftraege((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status } : a)),
     );
     toast.success(`Status geändert: ${STATUS_META[status].label}`);
+    if (ziel) {
+      logActivity({
+        bereich: "Aufträge",
+        entitaet: `${ziel.nummer} · ${ziel.patient}`,
+        aktion: "Status geändert",
+        beschreibung: `Status auf „${STATUS_META[status].label}" gesetzt.`,
+      });
+    }
   }
 
   function openCreate() {
@@ -135,6 +144,12 @@ function AuftraegePage() {
         prev.map((a) => (a.id === editTarget.id ? { ...a, ...values } : a)),
       );
       toast.success("Auftrag aktualisiert");
+      logActivity({
+        bereich: "Aufträge",
+        entitaet: `${editTarget.nummer} · ${values.patient}`,
+        aktion: "Auftrag bearbeitet",
+        beschreibung: `Auftrag ${editTarget.nummer} wurde aktualisiert.`,
+      });
     } else {
       const id = nextAuftragId();
       const nummer = `A-${2045 + auftraege.length}`;
@@ -143,6 +158,12 @@ function AuftraegePage() {
         ...prev,
       ]);
       toast.success(`Auftrag ${nummer} erstellt`);
+      logActivity({
+        bereich: "Aufträge",
+        entitaet: `${nummer} · ${values.patient}`,
+        aktion: "Auftrag erstellt",
+        beschreibung: `Neuer Transport für ${values.patient} angelegt.`,
+      });
     }
     setFormOpen(false);
     setEditTarget(null);
