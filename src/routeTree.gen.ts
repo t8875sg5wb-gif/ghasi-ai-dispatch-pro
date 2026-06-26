@@ -35,6 +35,7 @@ import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
+import { Route as KiAssistentThreadIdRouteImport } from './routes/ki-assistent.$threadId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const WartungRoute = WartungRouteImport.update({
@@ -167,6 +168,11 @@ const KiAssistentIndexRoute = KiAssistentIndexRouteImport.update({
   path: '/',
   getParentRoute: () => KiAssistentRoute,
 } as any)
+const KiAssistentThreadIdRoute = KiAssistentThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => KiAssistentRoute,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
 }
 export interface FileRoutesByTo {
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent': typeof KiAssistentIndexRoute
 }
 export interface FileRoutesById {
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
   '/api/chat': typeof ApiChatRoute
+  '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
 }
 export interface FileRouteTypes {
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent/$threadId'
     | '/ki-assistent/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent/$threadId'
     | '/ki-assistent'
   id:
     | '__root__'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/wartung'
     | '/api/chat'
+    | '/ki-assistent/$threadId'
     | '/ki-assistent/'
   fileRoutesById: FileRoutesById
 }
@@ -562,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KiAssistentIndexRouteImport
       parentRoute: typeof KiAssistentRoute
     }
+    '/ki-assistent/$threadId': {
+      id: '/ki-assistent/$threadId'
+      path: '/$threadId'
+      fullPath: '/ki-assistent/$threadId'
+      preLoaderRoute: typeof KiAssistentThreadIdRouteImport
+      parentRoute: typeof KiAssistentRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -573,10 +592,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface KiAssistentRouteChildren {
+  KiAssistentThreadIdRoute: typeof KiAssistentThreadIdRoute
   KiAssistentIndexRoute: typeof KiAssistentIndexRoute
 }
 
 const KiAssistentRouteChildren: KiAssistentRouteChildren = {
+  KiAssistentThreadIdRoute: KiAssistentThreadIdRoute,
   KiAssistentIndexRoute: KiAssistentIndexRoute,
 }
 
