@@ -196,6 +196,12 @@ export const navGroups: NavGroup[] = [
         description: "Zentrales Dokumentenarchiv und Vorlagen.",
       },
       {
+        label: "Verbindungen",
+        to: "/verbindungen",
+        icon: Plug,
+        description: "WhatsApp, E-Mail, Kalender, Maps & Web-Zugriff für GHASI AI.",
+      },
+      {
         label: "Einstellungen",
         to: "/einstellungen",
         icon: Settings,
