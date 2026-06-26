@@ -174,11 +174,24 @@ export const Route = createFileRoute("/api/chat")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // SICHERHEIT: Authentifizierung & Rolle ermitteln. Ohne gültige Session kein Zugriff.
+        const { userId, role } = await authentifiziere(request, supabaseAdmin);
+        if (!userId) {
+          return new Response(JSON.stringify({ error: "Nicht angemeldet" }), {
+            status: 401,
+            headers: { "content-type": "application/json" },
+          });
+        }
+
+        // Frage für das Audit-Protokoll festhalten.
+        let frage = "";
+
         // Eingehende Nutzer-Nachricht sofort sichern (geht bei Fehlern nicht verloren).
         if (threadId && messages.length > 0) {
           const last = messages[messages.length - 1];
           if (last?.role === "user") {
             const userText = textOf(last.parts);
+            frage = userText;
             await supabaseAdmin.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "user",
@@ -198,6 +211,10 @@ export const Route = createFileRoute("/api/chat")({
                 .eq("id", threadId);
             }
           }
+        }
+        if (!frage) {
+          const lastUser = [...messages].reverse().find((m) => m.role === "user");
+          frage = textOf(lastUser?.parts);
         }
 
         const { data: memory } = await supabaseAdmin
