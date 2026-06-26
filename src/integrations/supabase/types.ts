@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_log: {
+        Row: {
+          akteur: string
+          aktion: string
+          bereich: string
+          beschreibung: string
+          created_at: string
+          entitaet: string | null
+          id: string
+          metadaten: Json | null
+        }
+        Insert: {
+          akteur?: string
+          aktion: string
+          bereich: string
+          beschreibung: string
+          created_at?: string
+          entitaet?: string | null
+          id?: string
+          metadaten?: Json | null
+        }
+        Update: {
+          akteur?: string
+          aktion?: string
+          bereich?: string
+          beschreibung?: string
+          created_at?: string
+          entitaet?: string | null
+          id?: string
+          metadaten?: Json | null
+        }
+        Relationships: []
+      }
+      ghasi_memory: {
+        Row: {
+          bezug: string | null
+          created_at: string
+          id: string
+          inhalt: string
+          kategorie: string
+          quelle: string
+          updated_at: string
+          wichtigkeit: number
+        }
+        Insert: {
+          bezug?: string | null
+          created_at?: string
+          id?: string
+          inhalt: string
+          kategorie?: string
+          quelle?: string
+          updated_at?: string
+          wichtigkeit?: number
+        }
+        Update: {
+          bezug?: string | null
+          created_at?: string
+          id?: string
+          inhalt?: string
+          kategorie?: string
+          quelle?: string
+          updated_at?: string
+          wichtigkeit?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
