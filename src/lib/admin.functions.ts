@@ -57,7 +57,13 @@ export const setzeRolle = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ context, data }): Promise<{ ok: true }> => {
-    await sichereAdmin(context.supabase, context.userId);
+    const { data: istAdmin, error: rollenFehler } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (rollenFehler || istAdmin !== true) {
+      throw new Error("Kein Zugriff: Diese Aktion ist Administratoren vorbehalten.");
+    }
 
     // Letzte Admin-Rolle darf nicht entfernt werden.
     if (data.aktion === "entfernen" && data.role === "admin") {
