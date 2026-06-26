@@ -31,6 +31,7 @@ import {
   Inbox,
   Sparkles,
   Workflow,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 
