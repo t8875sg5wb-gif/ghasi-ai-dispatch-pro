@@ -78,7 +78,49 @@ const appointments = [
   { time: "16:45", text: "Rückfahrt Pflegeheim Sonnenhof", tag: "Auftrag" },
 ];
 
+const aufgaben = [
+  { text: "3 Rechnungen über Zahlungsziel prüfen", to: "/rechnungen" },
+  { text: "Dialyse-Frühschicht morgen disponieren", to: "/tourenplanung" },
+  { text: "TÜV-Termin für B-KT 142 vereinbaren", to: "/wartung" },
+];
+
+const nachrichten = [
+  { von: "Klinikum West", text: "Rückfahrt 16:45 bestätigt", to: "/telefon" },
+  { von: "Fahrer M. Keller", text: "Verspätung 10 Min – Stau A100", to: "/fahrer" },
+];
+
+const genehmigungen = [
+  { text: "Überstundenfreigabe S. Aydin (12 h)", to: "/fahrer" },
+  { text: "Reparaturfreigabe B-KT 097 (480 €)", to: "/wartung" },
+];
+
+const kiAufgaben = [
+  { text: "Tour A-204 + A-209 zusammenlegen", to: "/tourenplanung" },
+  { text: "Tankstopp B-KT 211 vorschlagen", to: "/fahrzeuge" },
+];
+
+const schnellzugriffe = [
+  { label: "Neuer Auftrag", to: "/auftraege", icon: ClipboardList },
+  { label: "Fahrer", to: "/fahrer", icon: UserCheck },
+  { label: "Fahrzeuge", to: "/fahrzeuge", icon: Truck },
+  { label: "Tourenplanung", to: "/tourenplanung", icon: Activity },
+  { label: "Rechnungen", to: "/rechnungen", icon: Euro },
+  { label: "GHASI AI", to: "/ki-assistent", icon: Bot },
+];
+
+const stufeStyle: Record<HinweisStufe, string> = {
+  kritisch: "bg-destructive",
+  warnung: "bg-warning",
+  info: "bg-info",
+  positiv: "bg-success",
+};
+
 function Dashboard() {
+  const hinweise = generateHinweise();
+  const auslastungFahrzeuge = 63;
+  const auslastungFahrer = 61;
+  const prognose = "11.900 €";
+
   return (
     <div className="animate-fade-in space-y-6">
       <section>
