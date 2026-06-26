@@ -54,6 +54,12 @@ export const navGroups: NavGroup[] = [
         icon: Bot,
         description: "GHASI AI – Ihr digitaler Geschäftsführer im Dialog.",
       },
+      {
+        label: "Aktivitäten",
+        to: "/aktivitaeten",
+        icon: Activity,
+        description: "Lückenloses Protokoll: wer hat wann was geändert.",
+      },
     ],
   },
   {
