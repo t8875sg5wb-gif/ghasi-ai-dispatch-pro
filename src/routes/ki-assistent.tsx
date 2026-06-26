@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Sparkles, User } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { Bot, Send, Sparkles, User, BrainCircuit } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,39 +23,35 @@ export const Route = createFileRoute("/ki-assistent")({
   component: AssistantPage,
 });
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-}
-
-const greeting: Message = {
-  id: "intro",
-  role: "assistant",
-  text: "Guten Tag, ich bin GHASI AI – Ihr digitaler Geschäftsführer. Ich kann Aufträge analysieren, Touren optimieren, Kennzahlen erklären und Empfehlungen geben. Womit darf ich starten?",
-};
+const greeting =
+  "Guten Tag, ich bin GHASI AI – Ihr digitaler Geschäftsführer. Ich kenne Ihre Fahrer, Fahrzeuge, Aufträge, Patienten und Kunden, erinnere mich an frühere Entscheidungen und gebe Ihnen datenbasierte Empfehlungen. Wichtige Aktionen führe ich nie eigenmächtig aus – ich frage Sie vorher. Womit darf ich starten?";
 
 const quickPrompts = [
   "Wie ist die Auslastung heute?",
-  "Optimiere die Touren für morgen",
-  "Welche Rechnungen sind überfällig?",
+  "Welcher Fahrer passt zu einem neuen Dialyse-Transport?",
+  "Welche Fristen laufen demnächst ab?",
   "Wo kann ich Leerkilometer sparen?",
 ];
 
-function buildReply(prompt: string): string {
-  return `Verstanden – ich analysiere Ihre Anfrage „${prompt.trim()}". Sobald die Datenmodule angebunden sind, liefere ich hier eine konkrete Auswertung mit Zahlen, Empfehlungen und nächsten Schritten. (GHASI AI Vorschau)`;
+function textOf(parts: { type: string; text?: string }[]): string {
+  return parts
+    .filter((p) => p.type === "text")
+    .map((p) => p.text ?? "")
+    .join("");
 }
 
 function AssistantPage() {
-  const [messages, setMessages] = useState<Message[]>([greeting]);
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
+  const { messages, sendMessage, status } = useChat({ transport });
   const [input, setInput] = useState("");
-  const [thinking, setThinking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const busy = status === "submitted" || status === "streaming";
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, thinking]);
+  }, [messages, busy]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -61,19 +59,9 @@ function AssistantPage() {
 
   const send = (value: string) => {
     const text = value.trim();
-    if (!text || thinking) return;
-    const userMsg: Message = { id: crypto.randomUUID(), role: "user", text };
-    setMessages((m) => [...m, userMsg]);
+    if (!text || busy) return;
+    void sendMessage({ text });
     setInput("");
-    setThinking(true);
-    window.setTimeout(() => {
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "assistant", text: buildReply(text) },
-      ]);
-      setThinking(false);
-      inputRef.current?.focus();
-    }, 900);
   };
 
   return (
@@ -92,35 +80,33 @@ function AssistantPage() {
         </div>
 
         <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={cn("flex items-end gap-2.5", m.role === "user" && "flex-row-reverse")}
-            >
-              <div
-                className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                  m.role === "assistant"
-                    ? "bg-gradient-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground",
-                )}
-              >
-                {m.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
-              </div>
-              <div
-                className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                  m.role === "assistant"
-                    ? "rounded-bl-md bg-muted text-foreground"
-                    : "bg-primary text-primary-foreground rounded-br-md",
-                )}
-              >
-                {m.text}
-              </div>
-            </div>
-          ))}
+          {/* Begrüßung */}
+          <Bubble role="assistant" text={greeting} />
 
-          {thinking && (
+          {messages.map((m) => {
+            const merkte =
+              m.role === "assistant" &&
+              m.parts.some(
+                (p) =>
+                  p.type === "tool-gedaechtnis_speichern" &&
+                  "output" in p &&
+                  (p.output as { gespeichert?: boolean } | undefined)?.gespeichert,
+              );
+            const text = textOf(m.parts as { type: string; text?: string }[]);
+            if (!text && !merkte) return null;
+            return (
+              <div key={m.id} className="space-y-1.5">
+                {text && <Bubble role={m.role === "user" ? "user" : "assistant"} text={text} />}
+                {merkte && (
+                  <p className="ml-11 flex items-center gap-1.5 text-xs text-accent">
+                    <BrainCircuit className="h-3.5 w-3.5" /> Ins Langzeitgedächtnis übernommen
+                  </p>
+                )}
+              </div>
+            );
+          })}
+
+          {status === "submitted" && (
             <div className="flex items-end gap-2.5">
               <div className="bg-gradient-primary flex h-8 w-8 items-center justify-center rounded-full text-primary-foreground">
                 <Bot className="h-4 w-4" />
@@ -131,6 +117,12 @@ function AssistantPage() {
                 <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60" />
               </div>
             </div>
+          )}
+
+          {status === "error" && (
+            <p className="text-center text-sm text-destructive">
+              GHASI AI ist gerade nicht erreichbar. Bitte erneut versuchen.
+            </p>
           )}
         </div>
 
@@ -164,7 +156,7 @@ function AssistantPage() {
             />
             <Button
               onClick={() => send(input)}
-              disabled={!input.trim() || thinking}
+              disabled={!input.trim() || busy}
               size="icon"
               className="h-11 w-11 shrink-0 rounded-2xl"
               aria-label="Senden"
@@ -174,6 +166,33 @@ function AssistantPage() {
           </div>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function Bubble({ role, text }: { role: "user" | "assistant"; text: string }) {
+  return (
+    <div className={cn("flex items-end gap-2.5", role === "user" && "flex-row-reverse")}>
+      <div
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+          role === "assistant"
+            ? "bg-gradient-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground",
+        )}
+      >
+        {role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+      </div>
+      <div
+        className={cn(
+          "max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+          role === "assistant"
+            ? "rounded-bl-md bg-muted text-foreground"
+            : "bg-primary text-primary-foreground rounded-br-md",
+        )}
+      >
+        {text}
+      </div>
     </div>
   );
 }

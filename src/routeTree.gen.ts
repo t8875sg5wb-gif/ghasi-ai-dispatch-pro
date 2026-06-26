@@ -31,8 +31,10 @@ import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
+import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const WartungRoute = WartungRouteImport.update({
   id: '/wartung',
@@ -144,6 +146,11 @@ const AuftraegeRoute = AuftraegeRouteImport.update({
   path: '/auftraege',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AktivitaetenRoute = AktivitaetenRouteImport.update({
+  id: '/aktivitaeten',
+  path: '/aktivitaeten',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdministrationRoute = AdministrationRouteImport.update({
   id: '/administration',
   path: '/administration',
@@ -154,10 +161,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -180,10 +193,12 @@ export interface FileRoutesByFullPath {
   '/tourenplanung': typeof TourenplanungRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -206,11 +221,13 @@ export interface FileRoutesByTo {
   '/tourenplanung': typeof TourenplanungRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/administration': typeof AdministrationRoute
+  '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
@@ -233,12 +250,14 @@ export interface FileRoutesById {
   '/tourenplanung': typeof TourenplanungRoute
   '/versicherungen': typeof VersicherungenRoute
   '/wartung': typeof WartungRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -261,10 +280,12 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/versicherungen'
     | '/wartung'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -287,10 +308,12 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/versicherungen'
     | '/wartung'
+    | '/api/chat'
   id:
     | '__root__'
     | '/'
     | '/administration'
+    | '/aktivitaeten'
     | '/auftraege'
     | '/berichte'
     | '/buchhaltung'
@@ -313,11 +336,13 @@ export interface FileRouteTypes {
     | '/tourenplanung'
     | '/versicherungen'
     | '/wartung'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdministrationRoute: typeof AdministrationRoute
+  AktivitaetenRoute: typeof AktivitaetenRoute
   AuftraegeRoute: typeof AuftraegeRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
@@ -340,6 +365,7 @@ export interface RootRouteChildren {
   TourenplanungRoute: typeof TourenplanungRoute
   VersicherungenRoute: typeof VersicherungenRoute
   WartungRoute: typeof WartungRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -498,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuftraegeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aktivitaeten': {
+      id: '/aktivitaeten'
+      path: '/aktivitaeten'
+      fullPath: '/aktivitaeten'
+      preLoaderRoute: typeof AktivitaetenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/administration': {
       id: '/administration'
       path: '/administration'
@@ -512,12 +545,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdministrationRoute: AdministrationRoute,
+  AktivitaetenRoute: AktivitaetenRoute,
   AuftraegeRoute: AuftraegeRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
@@ -540,17 +581,8 @@ const rootRouteChildren: RootRouteChildren = {
   TourenplanungRoute: TourenplanungRoute,
   VersicherungenRoute: VersicherungenRoute,
   WartungRoute: WartungRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
