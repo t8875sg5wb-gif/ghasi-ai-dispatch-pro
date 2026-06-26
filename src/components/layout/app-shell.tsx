@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { Search, Bell } from "lucide-react";
 
@@ -8,9 +8,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { GlobalSearch, useGlobalSearchHotkey } from "@/components/global-search";
 import { allNavItems } from "@/lib/navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
