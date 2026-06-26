@@ -133,7 +133,57 @@ export function buildBusinessTools(role: AppRole | null) {
         return { quelle: "Dispatch · Medizin", anzahl: treffer.length, transporte: treffer };
       },
     });
+
+    tools.dauerauftraege_abrufen = tool({
+      description:
+        "Liefert echte Daueraufträge / wiederkehrende Transportserien (Dialyse, Pflegeheim, Klinik). Beantwortet: welche wiederkehrenden Transporte morgen/heute anstehen, welche Dialyse-Serien fehlen, welche Daueraufträge heute Transporte erzeugt haben, welche Patienten wöchentliche Fahrten haben und welche Serie pausiert ist. Filter nach Status (aktiv/pausiert/beendet), Kategorie, Patient und Zeitraum (heute/morgen).",
+      inputSchema: z.object({
+        status: z.enum(["aktiv", "pausiert", "beendet"]).optional(),
+        kategorie: z.enum(["dialyse", "pflegeheim", "krankenhaus", "sonstige"]).optional(),
+        patient: z.string().optional().describe("Name oder Teil des Patientennamens"),
+        zeitraum: z
+          .enum(["heute", "morgen"])
+          .optional()
+          .describe("Nur Serien, die an diesem Tag einen Transport erzeugen"),
+      }),
+      execute: async ({ status, kategorie, patient, zeitraum }) => {
+        const tag = zeitraum === "heute" ? heuteISO() : zeitraum === "morgen" ? morgenISO() : null;
+        const treffer = DAUERAUFTRAEGE.filter((d) => {
+          if (status && abgeleiteterStatus(d) !== status) return false;
+          if (kategorie && d.kategorie !== kategorie) return false;
+          if (!enthaelt(d.patient, patient)) return false;
+          if (tag && !transportFaelltAn(d, tag)) return false;
+          return true;
+        }).map((d) => ({
+          kennung: d.kennung,
+          patient: d.patient,
+          kategorie: DAUER_KATEGORIE_META[d.kategorie].label,
+          status: DAUER_STATUS_META[abgeleiteterStatus(d)].label,
+          rhythmus: RHYTHMUS_LABEL[d.rhythmus],
+          wochentage:
+            d.rhythmus === "woechentlich"
+              ? d.wochentage
+                  .slice()
+                  .sort()
+                  .map((w) => WOCHENTAGE.find((x) => x.wert === w)?.kurz)
+                  .join(", ")
+              : "täglich",
+          uhrzeit: d.terminzeit,
+          rueckfahrt: d.rueckfahrt ? "Ja" : "Nein",
+          route: `${d.abholort} → ${d.zielort}`,
+          mobilitaet: MOBILITAET_META[d.mobilitaet].label,
+          begleitperson: d.begleitperson ? "Ja" : "Nein",
+          kostentraeger: d.kostentraeger,
+          krankenkasse: d.krankenkasse,
+          naechsterTermin: naechsteTermine(d, 1)[0] ?? "—",
+          heuteErzeugt: tag ? d.generierteTermine.includes(tag) : undefined,
+          erzeugteTermineGesamt: d.generierteTermine.length,
+        }));
+        return { quelle: "Daueraufträge", anzahl: treffer.length, serien: treffer };
+      },
+    });
   }
+
 
   if (erlaubt("fahrer")) {
     tools.fahrer_abrufen = tool({
