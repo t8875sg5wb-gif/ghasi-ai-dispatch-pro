@@ -17,6 +17,12 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
+  Inbox,
+  ListTodo,
+  BadgeCheck,
+  Zap,
+  Bot,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -24,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { generateHinweise, type HinweisStufe } from "@/lib/ghasi-hinweise";
 
 export const Route = createFileRoute("/")({
   head: () => ({
