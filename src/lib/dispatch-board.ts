@@ -143,7 +143,12 @@ export function boardSpaltePatch(spalte: BoardSpalte): Partial<DispatchTransport
     case "patient_an_bord":
       return live("patient_an_bord");
     case "fahrt_ziel":
-      return { liveStatus: "in_fahrt", fahrerAkzeptiert: true, abrechnungBereit: false, verspaetungMin: 0 };
+      return {
+        liveStatus: "in_fahrt",
+        fahrerAkzeptiert: true,
+        abrechnungBereit: false,
+        verspaetungMin: 0,
+      };
     case "am_ziel":
       return live("am_ziel");
     case "abgeschlossen":
@@ -321,7 +326,8 @@ export const SCHNELLBEFEHLE: Schnellbefehl[] = [
  * ------------------------------------------------------------------ */
 
 export const KONFLIKT_LOESUNG: Record<KonfliktTyp, string> = {
-  doppelbuchung: "Einen der Transporte auf einen freien Fahrer umdisponieren oder Zeitfenster anpassen.",
+  doppelbuchung:
+    "Einen der Transporte auf einen freien Fahrer umdisponieren oder Zeitfenster anpassen.",
   fahrer_nicht_verfuegbar: "Verfügbaren Fahrer per KI-Vorschlag zuweisen.",
   fahrzeug_nicht_verfuegbar: "Einsatzbereites Ersatzfahrzeug zuteilen.",
   ueberstunden: "Transport auf einen Fahrer mit freier Kapazität verteilen.",
@@ -364,17 +370,12 @@ function escapeCsv(value: string): string {
 
 export function transporteAlsCsv(transporte: DispatchTransport[]): string {
   const kopf = EXPORT_SPALTEN.map((s) => s.titel).join(";");
-  const zeilen = transporte.map((t) =>
-    EXPORT_SPALTEN.map((s) => escapeCsv(s.wert(t))).join(";"),
-  );
+  const zeilen = transporte.map((t) => EXPORT_SPALTEN.map((s) => escapeCsv(s.wert(t))).join(";"));
   return [kopf, ...zeilen].join("\r\n");
 }
 
 function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function ladeDatei(name: string, inhalt: string, mime: string) {
@@ -401,8 +402,7 @@ export function exportiereExcel(transporte: DispatchTransport[]) {
   const kopf = EXPORT_SPALTEN.map((s) => `<th>${escapeHtml(s.titel)}</th>`).join("");
   const zeilen = transporte
     .map(
-      (t) =>
-        `<tr>${EXPORT_SPALTEN.map((s) => `<td>${escapeHtml(s.wert(t))}</td>`).join("")}</tr>`,
+      (t) => `<tr>${EXPORT_SPALTEN.map((s) => `<td>${escapeHtml(s.wert(t))}</td>`).join("")}</tr>`,
     )
     .join("");
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8" /></head><body><table border="1"><thead><tr>${kopf}</tr></thead><tbody>${zeilen}</tbody></table></body></html>`;

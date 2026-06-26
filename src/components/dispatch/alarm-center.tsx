@@ -16,11 +16,7 @@ import { cn } from "@/lib/utils";
 
 import type { DispatchTransport, Konflikt } from "@/lib/dispatch";
 import { KONFLIKT_LOESUNG } from "@/lib/dispatch-board";
-import {
-  ALERT_SCHWERE_META,
-  computeFleetAlerts,
-  type AlertSchwere,
-} from "@/lib/fleet-live";
+import { ALERT_SCHWERE_META, computeFleetAlerts, type AlertSchwere } from "@/lib/fleet-live";
 
 type Stufe = "kritisch" | "hoch" | "mittel";
 
@@ -107,9 +103,7 @@ export function AlarmCenter({
           )}
         </CardTitle>
         {kritisch > 0 && (
-          <span className="ml-auto text-xs font-medium text-destructive">
-            {kritisch} kritisch
-          </span>
+          <span className="ml-auto text-xs font-medium text-destructive">{kritisch} kritisch</span>
         )}
       </CardHeader>
       <CardContent>

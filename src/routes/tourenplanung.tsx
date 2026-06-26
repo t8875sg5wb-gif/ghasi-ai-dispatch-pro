@@ -61,11 +61,7 @@ import {
 } from "@/lib/dispatch";
 import { LiveBoard } from "@/components/dispatch/live-board";
 import { AlarmCenter } from "@/components/dispatch/alarm-center";
-import {
-  boardSpaltePatch,
-  boardSpalteLabel,
-  type BoardSpalte,
-} from "@/lib/dispatch-board";
+import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
 
 export const Route = createFileRoute("/tourenplanung")({
@@ -119,13 +115,10 @@ function DispatchCenter() {
     [konflikte],
   );
 
-  const updateTransport = useCallback(
-    (id: string, patch: Partial<DispatchTransport>) => {
-      setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-      setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
-    },
-    [],
-  );
+  const updateTransport = useCallback((id: string, patch: Partial<DispatchTransport>) => {
+    setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
+  }, []);
 
   const zuweisen = useCallback(
     (id: string, fahrerName: string) => {
@@ -417,7 +410,6 @@ function DispatchCenter() {
           <AlarmCenter konflikte={konflikte} transporte={transporte} onOpen={oeffneNummerId} />
         </TabsContent>
 
-
         {/* Plantafel: Kanban by status */}
         <TabsContent value="plantafel" className="mt-4">
           <div className="grid gap-4 lg:grid-cols-4">
@@ -646,7 +638,10 @@ function TransportCard({
   draggable?: boolean;
   onDragStart?: () => void;
 }) {
-  const meta = LIVE_STATUS_META[t.verspaetungMin >= 10 && t.liveStatus !== "abgeschlossen" ? "verspaetet" : t.liveStatus];
+  const meta =
+    LIVE_STATUS_META[
+      t.verspaetungMin >= 10 && t.liveStatus !== "abgeschlossen" ? "verspaetet" : t.liveStatus
+    ];
   const prio = PRIORITAET_META[t.prioritaet];
   return (
     <button
@@ -662,16 +657,10 @@ function TransportCard({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          {draggable && (
-            <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-          )}
+          {draggable && <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />}
           <span className="truncate text-xs font-semibold tabular-nums">{t.nummer}</span>
-          {t.istNotfall && (
-            <Siren className="h-3.5 w-3.5 shrink-0 text-destructive" />
-          )}
-          {hatKonflikt && (
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
-          )}
+          {t.istNotfall && <Siren className="h-3.5 w-3.5 shrink-0 text-destructive" />}
+          {hatKonflikt && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
         </div>
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t.abholzeit}</span>
       </div>
@@ -797,7 +786,11 @@ function TransportDialog({
               <p className="text-xs text-muted-foreground">Aktuelle Position (GPS)</p>
               <p className="mt-0.5 font-medium tabular-nums">
                 {(() => {
-                  const g = geocode(t.liveStatus === "patient_an_bord" || t.liveStatus === "in_fahrt" ? t.zielort : t.abholort);
+                  const g = geocode(
+                    t.liveStatus === "patient_an_bord" || t.liveStatus === "in_fahrt"
+                      ? t.zielort
+                      : t.abholort,
+                  );
                   return `${g.lat}, ${g.lng}`;
                 })()}
               </p>
@@ -812,7 +805,9 @@ function TransportDialog({
                     ? "Abgeschlossen"
                     : "In Bearbeitung"}
               </p>
-              <p className="text-xs text-muted-foreground">{formatEUR(t.erloes)} · {t.kostentraeger}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatEUR(t.erloes)} · {t.kostentraeger}
+              </p>
             </div>
           </div>
 
@@ -830,9 +825,7 @@ function TransportDialog({
                     key={s}
                     className={cn(
                       "rounded-md px-2 py-0.5 text-[10px]",
-                      done
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground",
+                      done ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
                     )}
                   >
                     {LIVE_STATUS_META[s].label}

@@ -171,7 +171,10 @@ export function LiveBoard({
             value={filter.mobilitaet}
             onChange={(v) => setF({ mobilitaet: v as DispatchFilter["mobilitaet"] })}
             placeholder="Mobilität"
-            options={MOBILITAET_OPTIONEN.map((m) => ({ value: m, label: MOBILITAET_META[m].label }))}
+            options={MOBILITAET_OPTIONEN.map((m) => ({
+              value: m,
+              label: MOBILITAET_META[m].label,
+            }))}
           />
           <FilterSelect
             value={filter.verordnung}
@@ -241,9 +244,7 @@ export function LiveBoard({
       {/* Bulk-Leiste */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/70 bg-card p-3">
         <span className="text-sm font-medium">
-          {auswahl.size > 0
-            ? `${auswahl.size} ausgewählt`
-            : `${gefiltert.length} Transporte`}
+          {auswahl.size > 0 ? `${auswahl.size} ausgewählt` : `${gefiltert.length} Transporte`}
         </span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {auswahl.size > 0 && (
@@ -384,10 +385,7 @@ function FilterSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <Select
-      value={value ?? ALLE}
-      onValueChange={(v) => onChange(v === ALLE ? null : v)}
-    >
+    <Select value={value ?? ALLE} onValueChange={(v) => onChange(v === ALLE ? null : v)}>
       <SelectTrigger className="h-9 w-[150px]">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
