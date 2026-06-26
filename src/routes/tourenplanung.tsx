@@ -239,6 +239,8 @@ function DispatchCenter() {
     },
     [transporte],
   );
+
+  const offeneSpalten = useMemo(() => {
     const map: Record<DispatchSpalte, DispatchTransport[]> = {
       warten: [],
       aktiv: [],
