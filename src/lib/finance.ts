@@ -14,10 +14,7 @@
 import { Receipt, FileMinus, type LucideIcon } from "lucide-react";
 
 import { INITIAL_FAHRER } from "@/lib/fahrer";
-import {
-  INITIAL_FAHRZEUGE,
-  reparaturkostenGesamt,
-} from "@/lib/fahrzeuge";
+import { INITIAL_FAHRZEUGE, reparaturkostenGesamt } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import { KUNDEN } from "@/lib/stammdaten";
 
@@ -94,12 +91,32 @@ export interface RechnungStatusMeta {
 }
 
 export const RECHNUNG_STATUS_META: Record<RechnungStatus, RechnungStatusMeta> = {
-  entwurf: { label: "Entwurf", badge: "border-border bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+  entwurf: {
+    label: "Entwurf",
+    badge: "border-border bg-muted text-muted-foreground",
+    dot: "bg-muted-foreground",
+  },
   offen: { label: "Offen", badge: "border-info/30 bg-info/10 text-info", dot: "bg-info" },
-  bezahlt: { label: "Bezahlt", badge: "border-success/30 bg-success/10 text-success", dot: "bg-success" },
-  teilbezahlt: { label: "Teilbezahlt", badge: "border-accent/30 bg-accent/10 text-accent", dot: "bg-accent" },
-  ueberfaellig: { label: "Überfällig", badge: "border-destructive/30 bg-destructive/10 text-destructive", dot: "bg-destructive" },
-  storniert: { label: "Storniert", badge: "border-border bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+  bezahlt: {
+    label: "Bezahlt",
+    badge: "border-success/30 bg-success/10 text-success",
+    dot: "bg-success",
+  },
+  teilbezahlt: {
+    label: "Teilbezahlt",
+    badge: "border-accent/30 bg-accent/10 text-accent",
+    dot: "bg-accent",
+  },
+  ueberfaellig: {
+    label: "Überfällig",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    dot: "bg-destructive",
+  },
+  storniert: {
+    label: "Storniert",
+    badge: "border-border bg-muted text-muted-foreground",
+    dot: "bg-muted-foreground",
+  },
 };
 
 export const RECHNUNG_STATI: RechnungStatus[] = [
@@ -176,7 +193,11 @@ export const INITIAL_RECHNUNGEN: Rechnung[] = [
     datum: "2026-06-10",
     faelligkeit: "2026-06-24",
     bezugAuftrag: "A-2042",
-    positionen: [pos("Liegendtransport Klinikum → Reha", 1, 410), pos("Sauerstoff-Zuschlag", 1, 45), pos("Begleitung", 1, 405)],
+    positionen: [
+      pos("Liegendtransport Klinikum → Reha", 1, 410),
+      pos("Sauerstoff-Zuschlag", 1, 45),
+      pos("Begleitung", 1, 405),
+    ],
   },
   {
     id: "r-3",
@@ -222,7 +243,10 @@ export const INITIAL_RECHNUNGEN: Rechnung[] = [
     status: "offen",
     datum: "2026-06-15",
     faelligkeit: "2026-06-29",
-    positionen: [pos("Rahmenvertrag Krankentransporte Juni", 28, 110), pos("Bereitschaftspauschale", 1, 180)],
+    positionen: [
+      pos("Rahmenvertrag Krankentransporte Juni", 28, 110),
+      pos("Bereitschaftspauschale", 1, 180),
+    ],
   },
   {
     id: "r-6",
@@ -340,8 +364,10 @@ export function computeKostenaufstellung(): Kostenaufstellung {
   // Fuel: monthly distance estimate × consumption × price (non-electric only).
   const kmMonat = INITIAL_FAHRER.reduce((s, f) => s + f.kmHeute, 0) * ARBEITSTAGE_MONAT;
   const avgVerbrauch =
-    INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").reduce((s, v) => s + v.verbrauch, 0) /
-    Math.max(1, INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").length);
+    INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").reduce(
+      (s, v) => s + v.verbrauch,
+      0,
+    ) / Math.max(1, INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").length);
   const kraftstoffkosten = round((kmMonat / 100) * avgVerbrauch * DIESELPREIS);
 
   // Maintenance: accumulated repairs across the fleet.
@@ -352,12 +378,16 @@ export function computeKostenaufstellung(): Kostenaufstellung {
 
   // Vehicle running cost (per-km cost × monthly distance), excl. fuel/leasing.
   const fahrzeugkosten = round(
-    INITIAL_FAHRZEUGE.reduce((s, v) => s + v.kostenProKm, 0) / INITIAL_FAHRZEUGE.length * kmMonat * 0.4,
+    (INITIAL_FAHRZEUGE.reduce((s, v) => s + v.kostenProKm, 0) / INITIAL_FAHRZEUGE.length) *
+      kmMonat *
+      0.4,
   );
 
   // Driver cost: profit-vs-revenue gap as a proxy for personnel + overheads.
   const fahrerkosten = round(
-    INITIAL_FAHRER.reduce((s, f) => s + (f.umsatzHeute - f.gewinnHeute), 0) * ARBEITSTAGE_MONAT * 0.55,
+    INITIAL_FAHRER.reduce((s, f) => s + (f.umsatzHeute - f.gewinnHeute), 0) *
+      ARBEITSTAGE_MONAT *
+      0.55,
   );
 
   const gesamt = fahrzeugkosten + kraftstoffkosten + wartungskosten + fahrerkosten + leasingkosten;
@@ -386,13 +416,18 @@ export interface FinanzKpis {
 export function computeFinanzKpis(rechnungen: Rechnung[] = INITIAL_RECHNUNGEN): FinanzKpis {
   const aktiv = rechnungen.filter((r) => r.status !== "storniert");
 
-  const offen = aktiv.filter((r) => r.status === "offen" || r.status === "teilbezahlt" || r.status === "ueberfaellig");
+  const offen = aktiv.filter(
+    (r) => r.status === "offen" || r.status === "teilbezahlt" || r.status === "ueberfaellig",
+  );
   const bezahlt = aktiv.filter((r) => r.status === "bezahlt");
   const ueberfaellig = aktiv.filter((r) => istUeberfaellig(r) || r.status === "ueberfaellig");
   const gutschriften = aktiv.filter((r) => r.typ === "gutschrift");
 
   const offenePosten = offen.reduce((s, r) => s + (r.betrag - (r.bezahlterBetrag ?? 0)), 0);
-  const ueberfaelligeSumme = ueberfaellig.reduce((s, r) => s + (r.betrag - (r.bezahlterBetrag ?? 0)), 0);
+  const ueberfaelligeSumme = ueberfaellig.reduce(
+    (s, r) => s + (r.betrag - (r.bezahlterBetrag ?? 0)),
+    0,
+  );
   const bezahltSumme = bezahlt.reduce((s, r) => s + (r.bezahlterBetrag ?? r.betrag), 0);
   const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(r.betrag), 0);
 
@@ -480,10 +515,16 @@ export interface FinanzAnomalie {
 }
 
 export const ANOMALIE_META: Record<AnomalieTyp, { label: string; badge: string }> = {
-  ueberfaellig: { label: "Überfällig", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+  ueberfaellig: {
+    label: "Überfällig",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+  },
   fehlend: { label: "Fehlende Rechnung", badge: "border-warning/30 bg-warning/10 text-warning" },
   duplikat: { label: "Mögliches Duplikat", badge: "border-accent/30 bg-accent/10 text-accent" },
-  unbezahlter_transport: { label: "Unbezahlter Transport", badge: "border-warning/30 bg-warning/10 text-warning" },
+  unbezahlter_transport: {
+    label: "Unbezahlter Transport",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+  },
   inkonsistenz: { label: "Inkonsistenz", badge: "border-info/30 bg-info/10 text-info" },
 };
 
@@ -611,7 +652,10 @@ export function offeneRechnungenGesamt(rechnungen: Rechnung[] = INITIAL_RECHNUNG
 }
 
 /** Lightweight enriched accessor for the customer module. */
-export function rechnungenJeKunde(kundeId: string, rechnungen: Rechnung[] = INITIAL_RECHNUNGEN): Rechnung[] {
+export function rechnungenJeKunde(
+  kundeId: string,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+): Rechnung[] {
   return rechnungen.filter((r) => r.kundeId === kundeId);
 }
 

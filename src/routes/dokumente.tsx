@@ -35,7 +35,11 @@ export const Route = createFileRoute("/dokumente")({
   head: () => ({
     meta: [
       { title: "Dokumente – GHASI AI" },
-      { name: "description", content: "Zentrales Dokumentenarchiv: Upload, Vorschau, Versionen, Tags, OCR-Suche und Verknüpfungen." },
+      {
+        name: "description",
+        content:
+          "Zentrales Dokumentenarchiv: Upload, Vorschau, Versionen, Tags, OCR-Suche und Verknüpfungen.",
+      },
     ],
   }),
   component: DokumentePage,
@@ -72,7 +76,11 @@ function DokumentePage() {
         icon={FolderArchive}
         badge="Enterprise DMS"
         right={
-          <Button className="rounded-full" variant="secondary" onClick={() => fileRef.current?.click()}>
+          <Button
+            className="rounded-full"
+            variant="secondary"
+            onClick={() => fileRef.current?.click()}
+          >
             <Upload className="h-4 w-4" /> Hochladen
           </Button>
         }
@@ -89,9 +97,14 @@ function DokumentePage() {
             </CardHeader>
             <CardContent className="space-y-1.5">
               {ordner.map((o) => (
-                <div key={o.ordner} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm hover:bg-muted/50">
+                <div
+                  key={o.ordner}
+                  className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm hover:bg-muted/50"
+                >
                   <span className="truncate text-muted-foreground">{o.ordner}</span>
-                  <Badge variant="secondary" className="text-[10px]">{o.anzahl}</Badge>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {o.anzahl}
+                  </Badge>
                 </div>
               ))}
             </CardContent>
@@ -102,7 +115,11 @@ function DokumentePage() {
               <CardTitle className="text-base">Kategorien</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1.5">
-              <CatButton active={kategorie === "alle"} onClick={() => setKategorie("alle")} label="Alle Kategorien" />
+              <CatButton
+                active={kategorie === "alle"}
+                onClick={() => setKategorie("alle")}
+                label="Alle Kategorien"
+              />
               {DOKUMENT_KATEGORIEN.map((k) => (
                 <CatButton
                   key={k}
@@ -142,19 +159,29 @@ function DokumentePage() {
                   key={d.id}
                   className="flex flex-wrap items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/40"
                 >
-                  <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", kat.badge)}>
+                  <span
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                      kat.badge,
+                    )}
+                  >
                     <KatIcon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-medium">{d.name}</p>
-                      <Badge variant="outline" className={cn("text-[10px]", kat.badge)}>{kat.label}</Badge>
+                      <Badge variant="outline" className={cn("text-[10px]", kat.badge)}>
+                        {kat.label}
+                      </Badge>
                       <Badge variant="outline" className="text-[10px]">
                         <fmt.icon className="mr-1 h-3 w-3" />
                         {fmt.label}
                       </Badge>
                       {d.ocrText && (
-                        <Badge variant="outline" className="border-success/30 bg-success/10 text-[10px] text-success">
+                        <Badge
+                          variant="outline"
+                          className="border-success/30 bg-success/10 text-[10px] text-success"
+                        >
                           <ScanLine className="mr-1 h-3 w-3" /> OCR
                         </Badge>
                       )}
@@ -162,19 +189,29 @@ function DokumentePage() {
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{d.ordner}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                       {d.tags.map((t) => (
-                        <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        <span
+                          key={t}
+                          className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                        >
                           #{t}
                         </span>
                       ))}
                     </div>
                     <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      v{ver.version} · {formatDatum(ver.datum)} · {ver.von} · {formatGroesse(ver.groesseKb)}
-                      {d.versionen.length > 1 && <span className="ml-1">· {d.versionen.length} Versionen</span>}
+                      <Clock className="h-3 w-3" />v{ver.version} · {formatDatum(ver.datum)} ·{" "}
+                      {ver.von} · {formatGroesse(ver.groesseKb)}
+                      {d.versionen.length > 1 && (
+                        <span className="ml-1">· {d.versionen.length} Versionen</span>
+                      )}
                     </p>
                   </div>
                   {d.bezug && (
-                    <Button asChild variant="ghost" size="sm" className="shrink-0 rounded-full text-primary">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 rounded-full text-primary"
+                    >
                       <Link to={d.bezug.to}>
                         {d.bezug.label} <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
@@ -184,7 +221,9 @@ function DokumentePage() {
               );
             })}
             {ergebnisse.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">Keine Dokumente gefunden.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Keine Dokumente gefunden.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -193,7 +232,15 @@ function DokumentePage() {
   );
 }
 
-function CatButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function CatButton({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       type="button"

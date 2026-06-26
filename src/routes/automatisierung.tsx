@@ -23,7 +23,11 @@ export const Route = createFileRoute("/automatisierung")({
   head: () => ({
     meta: [
       { title: "Automatisierung – GHASI AI" },
-      { name: "description", content: "Wiederkehrende Aufgaben, Abrechnung, Wartung und Erinnerungen – nichts wird ohne Freigabe ausgeführt." },
+      {
+        name: "description",
+        content:
+          "Wiederkehrende Aufgaben, Abrechnung, Wartung und Erinnerungen – nichts wird ohne Freigabe ausgeführt.",
+      },
     ],
   }),
   component: AutomationPage,
@@ -75,17 +79,28 @@ function AutomationPage() {
         <CardContent className="flex items-center gap-3 py-4">
           <ShieldCheck className="h-5 w-5 shrink-0 text-success" />
           <p className="text-sm">
-            <span className="font-semibold">Sicherheit:</span> Keine Automatisierung versendet oder bucht etwas automatisch.
-            Jeder Lauf erzeugt Entwürfe, die manuell bestätigt werden müssen.
+            <span className="font-semibold">Sicherheit:</span> Keine Automatisierung versendet oder
+            bucht etwas automatisch. Jeder Lauf erzeugt Entwürfe, die manuell bestätigt werden
+            müssen.
           </p>
         </CardContent>
       </Card>
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Automatisierungen" value={`${autos.length}`} icon={Workflow} tone="primary" />
+        <StatCard
+          label="Automatisierungen"
+          value={`${autos.length}`}
+          icon={Workflow}
+          tone="primary"
+        />
         <StatCard label="Aktiv" value={`${aktiv}`} icon={Play} tone="success" />
         <StatCard label="Pausiert" value={`${autos.length - aktiv}`} icon={Pause} tone="warning" />
-        <StatCard label="Offene Freigaben" value={`${freigaben}`} icon={CheckCircle2} tone="accent" />
+        <StatCard
+          label="Offene Freigaben"
+          value={`${freigaben}`}
+          icon={CheckCircle2}
+          tone="accent"
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -98,7 +113,12 @@ function AutomationPage() {
               <CardHeader className="space-y-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", kat.badge)}>
+                    <span
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        kat.badge,
+                      )}
+                    >
                       <KatIcon className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
@@ -113,24 +133,44 @@ function AutomationPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <Badge variant="outline" className={cn("text-[10px]", kat.badge)}>{kat.label}</Badge>
-                  <Badge variant="secondary" className="text-[10px]">{a.rhythmus}</Badge>
-                  <Badge variant="outline" className="text-[10px]">Nächster Lauf: {a.naechsteAusfuehrung}</Badge>
+                  <Badge variant="outline" className={cn("text-[10px]", kat.badge)}>
+                    {kat.label}
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {a.rhythmus}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    Nächster Lauf: {a.naechsteAusfuehrung}
+                  </Badge>
                 </div>
 
                 <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                  <p className="text-xs font-medium text-muted-foreground">Vorbereiteter Vorschlag</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Vorbereiteter Vorschlag
+                  </p>
                   <p className="mt-0.5 text-sm">{a.vorschlag}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => toggle(a.id)}>
-                    {a.status === "aktiv" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => toggle(a.id)}
+                  >
+                    {a.status === "aktiv" ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
                     {a.status === "aktiv" ? "Pausieren" : "Aktivieren"}
                   </Button>
                   <div className="flex items-center gap-2">
                     {a.offeneFreigaben > 0 && (
-                      <Badge variant="outline" className="border-accent/30 bg-accent/10 text-[10px] text-accent">
+                      <Badge
+                        variant="outline"
+                        className="border-accent/30 bg-accent/10 text-[10px] text-accent"
+                      >
                         {a.offeneFreigaben} Freigabe(n)
                       </Badge>
                     )}

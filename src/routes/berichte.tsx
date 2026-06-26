@@ -27,7 +27,11 @@ export const Route = createFileRoute("/berichte")({
   head: () => ({
     meta: [
       { title: "Berichte – GHASI AI" },
-      { name: "description", content: "Operative und finanzielle Reports auf Knopfdruck – Export als PDF, Excel und CSV." },
+      {
+        name: "description",
+        content:
+          "Operative und finanzielle Reports auf Knopfdruck – Export als PDF, Excel und CSV.",
+      },
     ],
   }),
   component: BerichtePage,
@@ -125,7 +129,10 @@ function BerichtePage() {
                   {bericht.zeilen.map((z, i) => (
                     <TableRow key={i}>
                       {z.map((c, j) => (
-                        <TableCell key={j} className={j === 0 ? "font-medium" : "text-muted-foreground"}>
+                        <TableCell
+                          key={j}
+                          className={j === 0 ? "font-medium" : "text-muted-foreground"}
+                        >
                           {c}
                         </TableCell>
                       ))}

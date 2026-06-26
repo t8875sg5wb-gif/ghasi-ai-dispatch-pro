@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  HeartPulse,
-  Wallet,
-  Activity,
-  Truck,
-  Users,
-  Wrench,
-  ArrowRight,
-} from "lucide-react";
+import { HeartPulse, Wallet, Activity, Truck, Users, Wrench, ArrowRight } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -43,16 +35,39 @@ export function ExecutiveHealth() {
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
   const metriken: HealthMetric[] = [
-    { label: "Finanzen", wert: clamp((finanz.margeProzent / 30) * 100), icon: Wallet, to: "/buchhaltung" },
+    {
+      label: "Finanzen",
+      wert: clamp((finanz.margeProzent / 30) * 100),
+      icon: Wallet,
+      to: "/buchhaltung",
+    },
     {
       label: "Betrieb",
-      wert: clamp((kpis.flottenauslastung + kpis.fahrerauslastung) / 2 * 0.6 + kpis.durchschnittPuenktlichkeit * 0.4),
+      wert: clamp(
+        ((kpis.flottenauslastung + kpis.fahrerauslastung) / 2) * 0.6 +
+          kpis.durchschnittPuenktlichkeit * 0.4,
+      ),
       icon: Activity,
       to: "/control-center",
     },
-    { label: "Flotte", wert: clamp(kpis.flottenauslastung - kpis.kritischeAlarme * 6), icon: Truck, to: "/fahrzeuge" },
-    { label: "Fahrer", wert: clamp(kpis.fahrerauslastung * 0.6 + (kpis.durchschnittBewertung / 5) * 40), icon: Users, to: "/fahrer" },
-    { label: "Wartung", wert: clamp(100 - kpis.wartungOffen * 12 - kpis.kritischeAlarme * 8), icon: Wrench, to: "/wartung" },
+    {
+      label: "Flotte",
+      wert: clamp(kpis.flottenauslastung - kpis.kritischeAlarme * 6),
+      icon: Truck,
+      to: "/fahrzeuge",
+    },
+    {
+      label: "Fahrer",
+      wert: clamp(kpis.fahrerauslastung * 0.6 + (kpis.durchschnittBewertung / 5) * 40),
+      icon: Users,
+      to: "/fahrer",
+    },
+    {
+      label: "Wartung",
+      wert: clamp(100 - kpis.wartungOffen * 12 - kpis.kritischeAlarme * 8),
+      icon: Wrench,
+      to: "/wartung",
+    },
   ];
 
   return (
@@ -64,7 +79,9 @@ export function ExecutiveHealth() {
           </div>
           <CardTitle className="text-base">Business Health</CardTitle>
         </div>
-        <Badge variant="secondary" className="capitalize">{health.stufe}</Badge>
+        <Badge variant="secondary" className="capitalize">
+          {health.stufe}
+        </Badge>
       </CardHeader>
       <CardContent className="grid gap-5 lg:grid-cols-3">
         {/* Overall score */}

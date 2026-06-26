@@ -44,7 +44,10 @@ export const Route = createFileRoute("/rechnungen")({
   head: () => ({
     meta: [
       { title: "Rechnungen – GHASI AI" },
-      { name: "description", content: "Abrechnung, Mahnwesen, offene Posten und KI-Rechnungsprüfung." },
+      {
+        name: "description",
+        content: "Abrechnung, Mahnwesen, offene Posten und KI-Rechnungsprüfung.",
+      },
     ],
   }),
   component: RechnungenPage,
@@ -78,7 +81,13 @@ function RechnungenPage() {
       />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Offene Posten" value={EUR(kpis.offenePosten)} icon={Clock} tone="info" hint={`${kpis.anzahlOffen} Rechnungen`} />
+        <StatCard
+          label="Offene Posten"
+          value={EUR(kpis.offenePosten)}
+          icon={Clock}
+          tone="info"
+          hint={`${kpis.anzahlOffen} Rechnungen`}
+        />
         <StatCard
           label="Überfällig"
           value={mounted ? EUR(kpis.ueberfaelligeSumme) : "—"}
@@ -86,8 +95,20 @@ function RechnungenPage() {
           tone="warning"
           hint={mounted ? `${kpis.anzahlUeberfaellig} überfällig` : "wird geprüft"}
         />
-        <StatCard label="Bezahlt" value={EUR(kpis.bezahltSumme)} icon={CheckCircle2} tone="success" hint={`${kpis.anzahlBezahlt} beglichen`} />
-        <StatCard label="Gutschriften" value={EUR(kpis.gutschriftenSumme)} icon={Euro} tone="accent" hint="erstattet" />
+        <StatCard
+          label="Bezahlt"
+          value={EUR(kpis.bezahltSumme)}
+          icon={CheckCircle2}
+          tone="success"
+          hint={`${kpis.anzahlBezahlt} beglichen`}
+        />
+        <StatCard
+          label="Gutschriften"
+          value={EUR(kpis.gutschriftenSumme)}
+          icon={Euro}
+          tone="accent"
+          hint="erstattet"
+        />
       </section>
 
       {/* KI-Rechnungsprüfung */}
@@ -104,7 +125,9 @@ function RechnungenPage() {
         <CardContent className="grid gap-2.5 lg:grid-cols-2">
           {!mounted && <p className="text-sm text-muted-foreground">GHASI AI prüft Rechnungen …</p>}
           {mounted && anomalien.length === 0 && (
-            <p className="text-sm text-muted-foreground">Keine Auffälligkeiten – alle Rechnungen sind konsistent.</p>
+            <p className="text-sm text-muted-foreground">
+              Keine Auffälligkeiten – alle Rechnungen sind konsistent.
+            </p>
           )}
           {anomalien.slice(0, 6).map((a) => (
             <Link
@@ -116,16 +139,22 @@ function RechnungenPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-medium leading-snug">{a.titel}</p>
-                  <Badge variant="outline" className={cn("text-[10px]", ANOMALIE_META[a.typ].badge)}>
+                  <Badge
+                    variant="outline"
+                    className={cn("text-[10px]", ANOMALIE_META[a.typ].badge)}
+                  >
                     {ANOMALIE_META[a.typ].label}
                   </Badge>
                 </div>
                 <p className="text-xs leading-snug text-muted-foreground">{a.grund}</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  <span className="font-medium">Quelle:</span> {a.quelle} · <span className="font-medium">Wirkung:</span> {a.wirkung} ·{" "}
+                  <span className="font-medium">Quelle:</span> {a.quelle} ·{" "}
+                  <span className="font-medium">Wirkung:</span> {a.wirkung} ·{" "}
                   <span className="font-medium">Konfidenz:</span> {a.konfidenz}%
                 </p>
-                <p className="mt-0.5 text-[11px] font-medium text-accent">Empfehlung: {a.empfehlung}</p>
+                <p className="mt-0.5 text-[11px] font-medium text-accent">
+                  Empfehlung: {a.empfehlung}
+                </p>
               </div>
             </Link>
           ))}
@@ -181,11 +210,18 @@ function RechnungenPage() {
                       <TableCell className="text-muted-foreground">{r.abrechnungsart}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDatum(r.faelligkeit)}
-                        {tage > 0 && <span className="ml-1 text-xs text-destructive">+{tage}T</span>}
+                        {tage > 0 && (
+                          <span className="ml-1 text-xs text-destructive">+{tage}T</span>
+                        )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums font-medium">{EUR(r.betrag)}</TableCell>
+                      <TableCell className="text-right tabular-nums font-medium">
+                        {EUR(r.betrag)}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("text-[10px]", RECHNUNG_STATUS_META[r.status].badge)}>
+                        <Badge
+                          variant="outline"
+                          className={cn("text-[10px]", RECHNUNG_STATUS_META[r.status].badge)}
+                        >
                           {RECHNUNG_STATUS_META[r.status].label}
                         </Badge>
                       </TableCell>
@@ -194,7 +230,10 @@ function RechnungenPage() {
                 })}
                 {rechnungen.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
                       Keine Rechnungen gefunden.
                     </TableCell>
                   </TableRow>

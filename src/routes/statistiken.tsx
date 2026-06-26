@@ -14,7 +14,11 @@ export const Route = createFileRoute("/statistiken")({
   head: () => ({
     meta: [
       { title: "Statistiken – GHASI AI" },
-      { name: "description", content: "Kennzahlen, Trends und Analysen im Zeitverlauf – Umsatz, Auslastung und Transporte." },
+      {
+        name: "description",
+        content:
+          "Kennzahlen, Trends und Analysen im Zeitverlauf – Umsatz, Auslastung und Transporte.",
+      },
     ],
   }),
   component: StatistikenPage,
@@ -55,10 +59,30 @@ function StatistikenPage() {
       />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Umsatz/Monat" value={EUR(finanz.umsatzMonat)} icon={TrendingUp} tone="primary" />
-        <StatCard label="Flottenauslastung" value={`${kpis.flottenauslastung} %`} icon={Truck} tone="info" />
-        <StatCard label="Fahrerauslastung" value={`${kpis.fahrerauslastung} %`} icon={Users} tone="accent" />
-        <StatCard label="Pünktlichkeit" value={`${kpis.durchschnittPuenktlichkeit} %`} icon={Activity} tone="success" />
+        <StatCard
+          label="Umsatz/Monat"
+          value={EUR(finanz.umsatzMonat)}
+          icon={TrendingUp}
+          tone="primary"
+        />
+        <StatCard
+          label="Flottenauslastung"
+          value={`${kpis.flottenauslastung} %`}
+          icon={Truck}
+          tone="info"
+        />
+        <StatCard
+          label="Fahrerauslastung"
+          value={`${kpis.fahrerauslastung} %`}
+          icon={Users}
+          tone="accent"
+        />
+        <StatCard
+          label="Pünktlichkeit"
+          value={`${kpis.durchschnittPuenktlichkeit} %`}
+          icon={Activity}
+          tone="success"
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

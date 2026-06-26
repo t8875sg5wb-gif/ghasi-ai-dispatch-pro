@@ -10,11 +10,7 @@
 // modules stay untouched.
 // ============================================================
 import { INITIAL_FAHRER } from "@/lib/fahrer";
-import {
-  INITIAL_FAHRZEUGE,
-  reparaturkostenGesamt,
-  fahrzeugWarnungen,
-} from "@/lib/fahrzeuge";
+import { INITIAL_FAHRZEUGE, reparaturkostenGesamt, fahrzeugWarnungen } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, STATUS_META } from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
 import {
@@ -54,13 +50,37 @@ const round = (n: number, d = 0) => {
 export const BERICHT_LISTE: { typ: BerichtTyp; titel: string; beschreibung: string }[] = [
   { typ: "umsatz", titel: "Umsatzbericht", beschreibung: "Umsatz je Kunde inkl. Netto & MwSt." },
   { typ: "gewinn", titel: "Gewinnbericht", beschreibung: "Umsatz, Kosten und Gewinn der Flotte." },
-  { typ: "fahrzeugauslastung", titel: "Fahrzeugauslastung", beschreibung: "Status, Umsatz & Gewinn je Fahrzeug." },
-  { typ: "fahrerleistung", titel: "Fahrerleistung", beschreibung: "Pünktlichkeit, Bewertung & Umsatz je Fahrer." },
+  {
+    typ: "fahrzeugauslastung",
+    titel: "Fahrzeugauslastung",
+    beschreibung: "Status, Umsatz & Gewinn je Fahrzeug.",
+  },
+  {
+    typ: "fahrerleistung",
+    titel: "Fahrerleistung",
+    beschreibung: "Pünktlichkeit, Bewertung & Umsatz je Fahrer.",
+  },
   { typ: "kunden", titel: "Kundenstatistik", beschreibung: "Umsatz & offene Posten je Kunde." },
-  { typ: "patienten", titel: "Patientenstatistik", beschreibung: "Mobilität & Kostenträger der Patienten." },
-  { typ: "transporte", titel: "Transportstatistik", beschreibung: "Transporte nach Art und Status." },
-  { typ: "kraftstoff", titel: "Kraftstoffbericht", beschreibung: "Verbrauch & Reichweite der Flotte." },
-  { typ: "wartung", titel: "Wartungsbericht", beschreibung: "Fristen & aufgelaufene Reparaturkosten." },
+  {
+    typ: "patienten",
+    titel: "Patientenstatistik",
+    beschreibung: "Mobilität & Kostenträger der Patienten.",
+  },
+  {
+    typ: "transporte",
+    titel: "Transportstatistik",
+    beschreibung: "Transporte nach Art und Status.",
+  },
+  {
+    typ: "kraftstoff",
+    titel: "Kraftstoffbericht",
+    beschreibung: "Verbrauch & Reichweite der Flotte.",
+  },
+  {
+    typ: "wartung",
+    titel: "Wartungsbericht",
+    beschreibung: "Fristen & aufgelaufene Reparaturkosten.",
+  },
 ];
 
 export function buildBericht(typ: BerichtTyp): Bericht {
@@ -100,7 +120,14 @@ export function buildBericht(typ: BerichtTyp): Bericht {
         beschreibung: "Umsatz, Kosten und Gewinn je Fahrzeug (Monat).",
         spalten: ["Kennzeichen", "Fahrzeug", "Umsatz €", "Kosten €", "Gewinn €", "Marge"],
         zeilen,
-        summe: ["Gesamt", "", k.umsatzMonat, k.umsatzMonat - k.gewinnMonat, k.gewinnMonat, `${k.margeProzent} %`],
+        summe: [
+          "Gesamt",
+          "",
+          k.umsatzMonat,
+          k.umsatzMonat - k.gewinnMonat,
+          k.gewinnMonat,
+          `${k.margeProzent} %`,
+        ],
       };
     }
     case "fahrzeugauslastung": {
@@ -133,16 +160,22 @@ export function buildBericht(typ: BerichtTyp): Bericht {
         typ,
         titel: "Fahrerleistung",
         beschreibung: "Pünktlichkeit, Bewertung, Überstunden & Umsatz je Fahrer.",
-        spalten: ["Fahrer", "Nummer", "Pünktlichkeit", "Bewertung", "Überstunden", "Umsatz heute €"],
+        spalten: [
+          "Fahrer",
+          "Nummer",
+          "Pünktlichkeit",
+          "Bewertung",
+          "Überstunden",
+          "Umsatz heute €",
+        ],
         zeilen,
       };
     }
     case "kunden": {
       const zeilen = KUNDEN.map((c) => {
-        const umsatz = INITIAL_RECHNUNGEN.filter((r) => r.kundeId === c.id && r.typ === "rechnung").reduce(
-          (s, r) => s + r.betrag,
-          0,
-        );
+        const umsatz = INITIAL_RECHNUNGEN.filter(
+          (r) => r.kundeId === c.id && r.typ === "rechnung",
+        ).reduce((s, r) => s + r.betrag, 0);
         return [c.name, c.typ, umsatz, c.offeneRechnungen];
       });
       return {
@@ -214,7 +247,14 @@ export function buildBericht(typ: BerichtTyp): Bericht {
         typ,
         titel: "Wartungsbericht",
         beschreibung: "Fristen, Reifen & aufgelaufene Reparaturkosten.",
-        spalten: ["Kennzeichen", "Nächste Wartung", "TÜV bis", "Reifen", "Reparaturkosten €", "Warnung"],
+        spalten: [
+          "Kennzeichen",
+          "Nächste Wartung",
+          "TÜV bis",
+          "Reifen",
+          "Reparaturkosten €",
+          "Warnung",
+        ],
         zeilen,
       };
     }
@@ -262,7 +302,8 @@ export function druckeBericht(bericht: Bericht): void {
   const summe = bericht.summe
     ? `<tfoot><tr>${bericht.summe.map((c) => `<th>${c}</th>`).join("")}</tr></tfoot>`
     : "";
-  w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${bericht.titel} – GHASI AI</title>
+  w.document
+    .write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${bericht.titel} – GHASI AI</title>
     <style>
       body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;padding:32px}
       h1{font-size:20px;margin:0 0 4px} p{color:#64748b;margin:0 0 20px;font-size:13px}

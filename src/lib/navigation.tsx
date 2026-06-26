@@ -60,7 +60,8 @@ export const navGroups: NavGroup[] = [
         label: "Control Center",
         to: "/control-center",
         icon: Gauge,
-        description: "Executive-Kommandozentrale: Live-KPIs, Business Health Score & KI-Lageanalyse.",
+        description:
+          "Executive-Kommandozentrale: Live-KPIs, Business Health Score & KI-Lageanalyse.",
       },
       {
         label: "KI-Insights",
@@ -101,13 +102,15 @@ export const navGroups: NavGroup[] = [
         label: "Posteingang",
         to: "/posteingang",
         icon: Inbox,
-        description: "Vereinheitlichter Posteingang für alle Module – verknüpft mit dem Ursprungsobjekt.",
+        description:
+          "Vereinheitlichter Posteingang für alle Module – verknüpft mit dem Ursprungsobjekt.",
       },
       {
         label: "Aktions-Center",
         to: "/aktions-center",
         icon: Sparkles,
-        description: "KI-Nachrichten-Entwürfe warten auf Ihre Freigabe – kein automatischer Versand.",
+        description:
+          "KI-Nachrichten-Entwürfe warten auf Ihre Freigabe – kein automatischer Versand.",
       },
     ],
   },

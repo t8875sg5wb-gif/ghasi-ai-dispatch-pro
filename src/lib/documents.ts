@@ -87,16 +87,56 @@ export interface KategorieMeta {
 }
 
 export const KATEGORIE_META: Record<DokumentKategorie, KategorieMeta> = {
-  rezept: { label: "Rezept / Verordnung", icon: Stethoscope, badge: "border-info/30 bg-info/10 text-info" },
-  transportauftrag: { label: "Transportauftrag", icon: ClipboardList, badge: "border-accent/30 bg-accent/10 text-accent" },
-  patientendokument: { label: "Patientendokument", icon: FileText, badge: "border-info/30 bg-info/10 text-info" },
-  vertrag: { label: "Vertrag", icon: ScrollText, badge: "border-primary/30 bg-primary/10 text-primary" },
-  rechnung: { label: "Rechnung", icon: Receipt, badge: "border-success/30 bg-success/10 text-success" },
-  gutschrift: { label: "Gutschrift", icon: FileMinus, badge: "border-warning/30 bg-warning/10 text-warning" },
-  fahrerdokument: { label: "Fahrerdokument", icon: IdCard, badge: "border-accent/30 bg-accent/10 text-accent" },
-  fahrzeugdokument: { label: "Fahrzeugdokument", icon: Car, badge: "border-info/30 bg-info/10 text-info" },
-  versicherung: { label: "Versicherung", icon: ShieldCheck, badge: "border-primary/30 bg-primary/10 text-primary" },
-  wartungsbeleg: { label: "Wartungsbeleg", icon: Wrench, badge: "border-warning/30 bg-warning/10 text-warning" },
+  rezept: {
+    label: "Rezept / Verordnung",
+    icon: Stethoscope,
+    badge: "border-info/30 bg-info/10 text-info",
+  },
+  transportauftrag: {
+    label: "Transportauftrag",
+    icon: ClipboardList,
+    badge: "border-accent/30 bg-accent/10 text-accent",
+  },
+  patientendokument: {
+    label: "Patientendokument",
+    icon: FileText,
+    badge: "border-info/30 bg-info/10 text-info",
+  },
+  vertrag: {
+    label: "Vertrag",
+    icon: ScrollText,
+    badge: "border-primary/30 bg-primary/10 text-primary",
+  },
+  rechnung: {
+    label: "Rechnung",
+    icon: Receipt,
+    badge: "border-success/30 bg-success/10 text-success",
+  },
+  gutschrift: {
+    label: "Gutschrift",
+    icon: FileMinus,
+    badge: "border-warning/30 bg-warning/10 text-warning",
+  },
+  fahrerdokument: {
+    label: "Fahrerdokument",
+    icon: IdCard,
+    badge: "border-accent/30 bg-accent/10 text-accent",
+  },
+  fahrzeugdokument: {
+    label: "Fahrzeugdokument",
+    icon: Car,
+    badge: "border-info/30 bg-info/10 text-info",
+  },
+  versicherung: {
+    label: "Versicherung",
+    icon: ShieldCheck,
+    badge: "border-primary/30 bg-primary/10 text-primary",
+  },
+  wartungsbeleg: {
+    label: "Wartungsbeleg",
+    icon: Wrench,
+    badge: "border-warning/30 bg-warning/10 text-warning",
+  },
 };
 
 export const DOKUMENT_KATEGORIEN: DokumentKategorie[] = [
@@ -121,7 +161,11 @@ export const FORMAT_META: Record<DokumentFormat, { label: string; icon: LucideIc
 
 export function formatDatum(iso: string): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 export function aktuelleVersion(d: Dokument): DokumentVersion {
@@ -132,7 +176,13 @@ export function formatGroesse(kb: number): string {
   return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
 }
 
-const v = (version: number, datum: string, von: string, notiz: string, groesseKb: number): DokumentVersion => ({
+const v = (
+  version: number,
+  datum: string,
+  von: string,
+  notiz: string,
+  groesseKb: number,
+): DokumentVersion => ({
   version,
   datum,
   von,
@@ -151,7 +201,8 @@ export const INITIAL_DOKUMENTE: Dokument[] = [
     bezug: { typ: "patient", label: "Margarete Hoffmann", to: "/patienten" },
     hochgeladenVon: "Disposition",
     hochgeladenAm: "2026-06-02",
-    ocrText: "Verordnung einer Krankenbeförderung, Dialyse, 3× wöchentlich, Kostenträger AOK Nordost.",
+    ocrText:
+      "Verordnung einer Krankenbeförderung, Dialyse, 3× wöchentlich, Kostenträger AOK Nordost.",
     versionen: [v(1, "2026-06-02", "Disposition", "Erstupload", 240)],
   },
   {
@@ -284,7 +335,8 @@ export function searchDokumente(
   return dokumente.filter((d) => {
     if (kategorie !== "alle" && d.kategorie !== kategorie) return false;
     if (!q) return true;
-    const hay = `${d.name} ${d.ordner} ${d.tags.join(" ")} ${d.bezug?.label ?? ""} ${d.ocrText ?? ""}`.toLowerCase();
+    const hay =
+      `${d.name} ${d.ordner} ${d.tags.join(" ")} ${d.bezug?.label ?? ""} ${d.ocrText ?? ""}`.toLowerCase();
     return q.split(/\s+/).every((t) => hay.includes(t));
   });
 }
@@ -300,5 +352,7 @@ export function ordnerStruktur(dokumente: Dokument[] = INITIAL_DOKUMENTE): Ordne
     const top = d.ordner.split("/")[0];
     map.set(top, (map.get(top) ?? 0) + 1);
   }
-  return [...map.entries()].map(([ordner, anzahl]) => ({ ordner, anzahl })).sort((a, b) => b.anzahl - a.anzahl);
+  return [...map.entries()]
+    .map(([ordner, anzahl]) => ({ ordner, anzahl }))
+    .sort((a, b) => b.anzahl - a.anzahl);
 }

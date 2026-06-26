@@ -59,9 +59,7 @@ export function buildBusinessTools(role: AppRole | null) {
       description:
         "Liefert echte Transporte/Aufträge. Filter nach Status (neu, disponiert, unterwegs, abgeschlossen, storniert), Transportart, Fahrer und Zeitraum (heute/morgen/alle). Nutze dies für Fragen zu heutigen/morgigen Fahrten, Verspätungen, Stornierungen, Auslastung der Touren.",
       inputSchema: z.object({
-        status: z
-          .enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"])
-          .optional(),
+        status: z.enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]).optional(),
         transportart: z
           .enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt", "Notfall"])
           .optional(),
@@ -108,10 +106,14 @@ export function buildBusinessTools(role: AppRole | null) {
         let liste = INITIAL_FAHRER.filter(
           (f) => enthaelt(f.name, name) && (!status || f.status === status),
         );
-        if (sortierung === "ueberstunden") liste = [...liste].sort((a, b) => b.ueberstunden - a.ueberstunden);
-        if (sortierung === "puenktlichkeit") liste = [...liste].sort((a, b) => b.puenktlichkeit - a.puenktlichkeit);
-        if (sortierung === "bewertung") liste = [...liste].sort((a, b) => b.bewertung - a.bewertung);
-        if (sortierung === "umsatz") liste = [...liste].sort((a, b) => b.umsatzHeute - a.umsatzHeute);
+        if (sortierung === "ueberstunden")
+          liste = [...liste].sort((a, b) => b.ueberstunden - a.ueberstunden);
+        if (sortierung === "puenktlichkeit")
+          liste = [...liste].sort((a, b) => b.puenktlichkeit - a.puenktlichkeit);
+        if (sortierung === "bewertung")
+          liste = [...liste].sort((a, b) => b.bewertung - a.bewertung);
+        if (sortierung === "umsatz")
+          liste = [...liste].sort((a, b) => b.umsatzHeute - a.umsatzHeute);
         return {
           quelle: "Fahrer",
           anzahl: liste.length,
@@ -150,9 +152,12 @@ export function buildBusinessTools(role: AppRole | null) {
             (!status || v.status === status) &&
             (!wartungNoetig || fahrzeugWarnungen(v).hatWarnung),
         );
-        if (sortierung === "verbrauch") liste = [...liste].sort((a, b) => b.verbrauch - a.verbrauch);
-        if (sortierung === "kilometerstand") liste = [...liste].sort((a, b) => b.kilometerstand - a.kilometerstand);
-        if (sortierung === "umsatz") liste = [...liste].sort((a, b) => b.monatsumsatz - a.monatsumsatz);
+        if (sortierung === "verbrauch")
+          liste = [...liste].sort((a, b) => b.verbrauch - a.verbrauch);
+        if (sortierung === "kilometerstand")
+          liste = [...liste].sort((a, b) => b.kilometerstand - a.kilometerstand);
+        if (sortierung === "umsatz")
+          liste = [...liste].sort((a, b) => b.monatsumsatz - a.monatsumsatz);
         return {
           quelle: "Flotte",
           anzahl: liste.length,
@@ -375,13 +380,15 @@ export function buildBusinessTools(role: AppRole | null) {
         query: z.string().optional().describe("Suchbegriff (Name, Tag, OCR-Inhalt, Bezug)"),
       }),
       execute: async ({ query }) => {
-        const liste = searchDokumente(query ?? "").slice(0, 12).map((d) => ({
-          name: d.name,
-          kategorie: KATEGORIE_META[d.kategorie].label,
-          ordner: d.ordner,
-          version: aktuelleVersion(d).version,
-          verknuepftMit: d.bezug?.label ?? "—",
-        }));
+        const liste = searchDokumente(query ?? "")
+          .slice(0, 12)
+          .map((d) => ({
+            name: d.name,
+            kategorie: KATEGORIE_META[d.kategorie].label,
+            ordner: d.ordner,
+            version: aktuelleVersion(d).version,
+            verknuepftMit: d.bezug?.label ?? "—",
+          }));
         return { quelle: "Dokumentencenter", anzahl: liste.length, dokumente: liste };
       },
     });
@@ -415,7 +422,6 @@ export function buildBusinessTools(role: AppRole | null) {
       },
     });
   }
-
 
   if (erlaubt("kpis")) {
     tools.kennzahlen_abrufen = tool({
@@ -532,7 +538,7 @@ export function buildBusinessTools(role: AppRole | null) {
       inhalt: z.string().describe("Der vollständige Entwurfstext bzw. die vorgeschlagene Maßnahme"),
     }),
     execute: async ({ typ, titel, empfaenger, betreff, inhalt }) => {
-      if ((typ === "rechnung") && !finanzAktionen) {
+      if (typ === "rechnung" && !finanzAktionen) {
         return {
           vorbereitet: false,
           fehler: "Keine Berechtigung für Finanzaktionen in dieser Rolle.",

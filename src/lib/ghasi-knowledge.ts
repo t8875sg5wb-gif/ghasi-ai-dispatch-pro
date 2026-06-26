@@ -20,7 +20,11 @@ import {
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
 
 const EUR = (n: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export interface SearchItem {
   id: string;
@@ -192,10 +196,12 @@ export function buildKnowledgeSnapshot(): string {
   lines.push(`Offene/disponierte Aufträge: ${offene.length}.`);
 
   lines.push(`\n## Patienten (${PATIENTEN.length})`);
-  for (const p of PATIENTEN) lines.push(`- ${p.name}: ${p.mobilitaet}, ${p.kostentraeger}, ${p.hinweis}`);
+  for (const p of PATIENTEN)
+    lines.push(`- ${p.name}: ${p.mobilitaet}, ${p.kostentraeger}, ${p.hinweis}`);
 
   lines.push(`\n## Kunden & Kassen`);
-  for (const k of KUNDEN) lines.push(`- ${k.name} (${k.typ}), offene Rechnungen: ${k.offeneRechnungen}`);
+  for (const k of KUNDEN)
+    lines.push(`- ${k.name} (${k.typ}), offene Rechnungen: ${k.offeneRechnungen}`);
 
   lines.push(`\n## Einrichtungen`);
   lines.push(`Krankenhäuser: ${KRANKENHAEUSER.map((e) => e.name).join(", ")}`);
