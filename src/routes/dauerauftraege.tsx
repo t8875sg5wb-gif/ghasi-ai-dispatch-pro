@@ -948,7 +948,10 @@ function DauerauftragForm({
         <Button variant="outline" onClick={onCancel}>
           Abbrechen
         </Button>
-        <Button onClick={submit}>{istEdit ? "Speichern" : "Anlegen"}</Button>
+        <Button onClick={submit} disabled={saving}>
+          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+          {istEdit ? "Speichern" : "Anlegen"}
+        </Button>
       </DialogFooter>
     </>
   );
