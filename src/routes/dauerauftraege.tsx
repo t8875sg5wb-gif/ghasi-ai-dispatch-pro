@@ -325,14 +325,28 @@ function DauerauftraegePage() {
             Fahrer-App, GPS &amp; Abrechnung.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="size-4" /> Neuer Dauerauftrag
-        </Button>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            {daten.length === 0 && !isLoading && (
+              <Button variant="outline" onClick={handleSeed} disabled={seedMut.isPending}>
+                {seedMut.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Database className="size-4" />
+                )}
+                Beispieldaten laden
+              </Button>
+            )}
+            <Button
+              onClick={() => {
+                setEditTarget(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> Neuer Dauerauftrag
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* KPI-Karten */}
