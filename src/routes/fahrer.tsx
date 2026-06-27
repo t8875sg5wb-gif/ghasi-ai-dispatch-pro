@@ -57,6 +57,10 @@ export const Route = createFileRoute("/fahrer")({
 type StatusFilter = FahrerStatus | "alle";
 
 function FahrerPage() {
+  const { data: dbFahrer } = useDrivers();
+  const createMut = useCreateDriver();
+  const updateMut = useUpdateDriver();
+
   const [fahrer, setFahrer] = useState<Fahrer[]>(INITIAL_FAHRER);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
@@ -67,7 +71,12 @@ function FahrerPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Fahrer | null>(null);
 
-  // Simulated realtime: drivers "unterwegs" accumulate km / revenue.
+  // Keep the local list in sync with persisted drivers (live updates).
+  useEffect(() => {
+    if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
+  }, [dbFahrer]);
+
+  // Simulated realtime: drivers "unterwegs" accumulate km / revenue locally.
   useEffect(() => {
     const interval = setInterval(() => {
       setFahrer((prev) =>
@@ -86,6 +95,7 @@ function FahrerPage() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
 
