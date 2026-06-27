@@ -50,7 +50,6 @@ import {
   LIVE_STATUS_META,
   LIVE_PIPELINE,
   DISPATCH_SPALTEN,
-  generateDispatchTransporte,
   dispatchAusAuftraege,
   dispatchPatchToWrite,
   spalteVon,
