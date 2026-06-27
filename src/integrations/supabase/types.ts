@@ -178,6 +178,165 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          abrechnungsart: string
+          betrag: number
+          bezahlt_am: string | null
+          bezahlter_betrag: number | null
+          bezug_auftrag: string | null
+          created_at: string
+          datum: string
+          faelligkeit: string
+          id: string
+          kunde: string
+          kunde_id: string
+          mwst_satz: number
+          notiz: string | null
+          nummer: string
+          positionen: Json
+          status: string
+          typ: string
+          updated_at: string
+        }
+        Insert: {
+          abrechnungsart?: string
+          betrag?: number
+          bezahlt_am?: string | null
+          bezahlter_betrag?: number | null
+          bezug_auftrag?: string | null
+          created_at?: string
+          datum?: string
+          faelligkeit?: string
+          id?: string
+          kunde?: string
+          kunde_id?: string
+          mwst_satz?: number
+          notiz?: string | null
+          nummer: string
+          positionen?: Json
+          status?: string
+          typ?: string
+          updated_at?: string
+        }
+        Update: {
+          abrechnungsart?: string
+          betrag?: number
+          bezahlt_am?: string | null
+          bezahlter_betrag?: number | null
+          bezug_auftrag?: string | null
+          created_at?: string
+          datum?: string
+          faelligkeit?: string
+          id?: string
+          kunde?: string
+          kunde_id?: string
+          mwst_satz?: number
+          notiz?: string | null
+          nummer?: string
+          positionen?: Json
+          status?: string
+          typ?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          abholanforderung: string
+          abholort: string
+          abrechnung_status: string
+          begleitperson: boolean
+          created_at: string
+          dauerauftrag_id: string | null
+          detail_status: string | null
+          fahrer: string | null
+          fahrer_user_id: string | null
+          fahrzeug: string | null
+          id: string
+          kostentraeger: string
+          lifecycle: Json
+          medizinische_notiz: string
+          mobilitaet: string | null
+          notiz: string
+          nummer: string
+          patient: string
+          patientennotiz: string
+          prioritaet: string
+          status: string
+          termin: string
+          transportart: string
+          unterschrift: string | null
+          updated_at: string
+          verordnung: string
+          verordnung_dokument_id: string | null
+          zielanforderung: string
+          zielort: string
+        }
+        Insert: {
+          abholanforderung?: string
+          abholort?: string
+          abrechnung_status?: string
+          begleitperson?: boolean
+          created_at?: string
+          dauerauftrag_id?: string | null
+          detail_status?: string | null
+          fahrer?: string | null
+          fahrer_user_id?: string | null
+          fahrzeug?: string | null
+          id?: string
+          kostentraeger?: string
+          lifecycle?: Json
+          medizinische_notiz?: string
+          mobilitaet?: string | null
+          notiz?: string
+          nummer: string
+          patient?: string
+          patientennotiz?: string
+          prioritaet?: string
+          status?: string
+          termin?: string
+          transportart?: string
+          unterschrift?: string | null
+          updated_at?: string
+          verordnung?: string
+          verordnung_dokument_id?: string | null
+          zielanforderung?: string
+          zielort?: string
+        }
+        Update: {
+          abholanforderung?: string
+          abholort?: string
+          abrechnung_status?: string
+          begleitperson?: boolean
+          created_at?: string
+          dauerauftrag_id?: string | null
+          detail_status?: string | null
+          fahrer?: string | null
+          fahrer_user_id?: string | null
+          fahrzeug?: string | null
+          id?: string
+          kostentraeger?: string
+          lifecycle?: Json
+          medizinische_notiz?: string
+          mobilitaet?: string | null
+          notiz?: string
+          nummer?: string
+          patient?: string
+          patientennotiz?: string
+          prioritaet?: string
+          status?: string
+          termin?: string
+          transportart?: string
+          unterschrift?: string | null
+          updated_at?: string
+          verordnung?: string
+          verordnung_dokument_id?: string | null
+          zielanforderung?: string
+          zielort?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -199,6 +358,105 @@ export type Database = {
           id?: string
           name?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      recurring_orders: {
+        Row: {
+          abholort: string
+          begleitperson: boolean
+          bevorzugter_fahrer: string | null
+          bevorzugtes_fahrzeug: string | null
+          created_at: string
+          end_datum: string | null
+          feiertage_ueberspringen: boolean
+          generierte_termine: string[]
+          id: string
+          kategorie: string
+          kennung: string
+          kostentraeger: string
+          krankenkasse: string
+          medizinische_notiz: string
+          mobilitaet: string
+          notiz: string
+          patient: string
+          pause_bis: string | null
+          pause_von: string | null
+          pausiert: boolean
+          rhythmus: string
+          rueckfahrt: boolean
+          rueckfahrtzeit: string | null
+          start_datum: string
+          terminzeit: string
+          uebersprungene_termine: string[]
+          updated_at: string
+          verordnung_erforderlich: boolean
+          wochentage: number[]
+          zielort: string
+        }
+        Insert: {
+          abholort?: string
+          begleitperson?: boolean
+          bevorzugter_fahrer?: string | null
+          bevorzugtes_fahrzeug?: string | null
+          created_at?: string
+          end_datum?: string | null
+          feiertage_ueberspringen?: boolean
+          generierte_termine?: string[]
+          id?: string
+          kategorie?: string
+          kennung: string
+          kostentraeger?: string
+          krankenkasse?: string
+          medizinische_notiz?: string
+          mobilitaet?: string
+          notiz?: string
+          patient?: string
+          pause_bis?: string | null
+          pause_von?: string | null
+          pausiert?: boolean
+          rhythmus?: string
+          rueckfahrt?: boolean
+          rueckfahrtzeit?: string | null
+          start_datum?: string
+          terminzeit?: string
+          uebersprungene_termine?: string[]
+          updated_at?: string
+          verordnung_erforderlich?: boolean
+          wochentage?: number[]
+          zielort?: string
+        }
+        Update: {
+          abholort?: string
+          begleitperson?: boolean
+          bevorzugter_fahrer?: string | null
+          bevorzugtes_fahrzeug?: string | null
+          created_at?: string
+          end_datum?: string | null
+          feiertage_ueberspringen?: boolean
+          generierte_termine?: string[]
+          id?: string
+          kategorie?: string
+          kennung?: string
+          kostentraeger?: string
+          krankenkasse?: string
+          medizinische_notiz?: string
+          mobilitaet?: string
+          notiz?: string
+          patient?: string
+          pause_bis?: string | null
+          pause_von?: string | null
+          pausiert?: boolean
+          rhythmus?: string
+          rueckfahrt?: boolean
+          rueckfahrtzeit?: string | null
+          start_datum?: string
+          terminzeit?: string
+          uebersprungene_termine?: string[]
+          updated_at?: string
+          verordnung_erforderlich?: boolean
+          wochentage?: number[]
+          zielort?: string
         }
         Relationships: []
       }
