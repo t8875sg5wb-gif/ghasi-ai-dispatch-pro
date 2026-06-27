@@ -222,7 +222,7 @@ function DispatchCenter() {
       aktion: "auto-dispatch",
       beschreibung: `GHASI AI hat ${count} Transporte automatisch disponiert`,
     });
-  }, [fahrer, fahrzeuge]);
+  }, [fahrer, fahrzeuge, persist]);
 
   const statusVor = useCallback(
     (t: DispatchTransport) => {
