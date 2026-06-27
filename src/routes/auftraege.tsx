@@ -444,6 +444,8 @@ function AuftraegePage() {
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}
         onEdit={openEdit}
+        canManage={canManage}
+        canChangeStatus={canChangeStatus}
       />
 
       {/* Create / Edit form */}
