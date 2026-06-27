@@ -142,7 +142,7 @@ export function AuftragDetail({
           </div>
 
           {/* Status actions */}
-          {transitions.length > 0 && (
+          {canChangeStatus && transitions.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {transitions.map((next) => {
                 const meta = STATUS_META[next];
@@ -168,6 +168,11 @@ export function AuftragDetail({
                 );
               })}
             </div>
+          )}
+          {!canChangeStatus && (
+            <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              Sie haben nur Lesezugriff auf diesen Auftrag.
+            </p>
           )}
 
           <Separator />
