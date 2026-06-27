@@ -278,27 +278,52 @@ function plus(iso: string, minuten: number): string {
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
+/** Set of all valid fine-grained live statuses (for safe parsing of DB values). */
+const LIVE_STATUS_SET = new Set<string>(Object.keys(LIVE_STATUS_META));
+
+/** Resolve the live status of a persisted order: prefer detailStatus, else map coarse status. */
+function liveStatusVonAuftrag(a: Auftrag): LiveStatus {
+  if (a.detailStatus && LIVE_STATUS_SET.has(a.detailStatus)) {
+    return a.detailStatus as LiveStatus;
+  }
+  return STATUS_MAP[a.status];
+}
+
+/** Map a single persisted order into a DispatchTransport (no demo data). */
+function auftragZuTransport(a: Auftrag, idx: number): DispatchTransport {
+  const abgeleitet = abgeleiteteFelder(a);
+  const distanz = 8 + ((idx * 7) % 22);
+  const fahrtMin = Math.round(distanz * 2.4);
+  return {
+    ...a,
+    ...abgeleitet,
+    liveStatus: liveStatusVonAuftrag(a),
+    abholzeit: uhrzeit(a.termin),
+    ankunftzeit: plus(a.termin, fahrtMin),
+    distanzKm: distanz,
+    leerKm: 2 + (idx % 5),
+    verspaetungMin: 0,
+    wiederkehrend: a.transportart === "Dialysefahrt" || !!a.dauerauftragId,
+    serie: a.transportart === "Dialysefahrt" ? "Dialyse" : undefined,
+    erloes: 95 + distanz * 6,
+    istNotfall: abgeleitet.istNotfall,
+    abrechnungBereit: a.abrechnungStatus === "bereit" || a.abrechnungStatus === "abgerechnet",
+  };
+}
+
+/**
+ * Build the dispatch board purely from persisted orders (database-connected).
+ * Used by the Dispatch-Center so every assignment/status reflects the DB.
+ */
+export function dispatchAusAuftraege(auftraege: Auftrag[]): DispatchTransport[] {
+  return auftraege.map((a, idx) => auftragZuTransport(a, idx));
+}
+
 /** Build the dispatch dataset: existing orders + generated recurring trips. */
 export function generateDispatchTransporte(): DispatchTransport[] {
-  const basis: DispatchTransport[] = INITIAL_AUFTRAEGE.map((a, idx) => {
-    const abgeleitet = abgeleiteteFelder(a);
-    const distanz = 8 + ((idx * 7) % 22);
-    const fahrtMin = Math.round(distanz * 2.4);
-    return {
-      ...a,
-      ...abgeleitet,
-      liveStatus: STATUS_MAP[a.status],
-      abholzeit: uhrzeit(a.termin),
-      ankunftzeit: plus(a.termin, fahrtMin),
-      distanzKm: distanz,
-      leerKm: 2 + (idx % 5),
-      verspaetungMin: 0,
-      wiederkehrend: a.transportart === "Dialysefahrt",
-      serie: a.transportart === "Dialysefahrt" ? "Dialyse" : undefined,
-      erloes: 95 + distanz * 6,
-      istNotfall: abgeleitet.istNotfall,
-    };
-  });
+  const basis: DispatchTransport[] = INITIAL_AUFTRAEGE.map((a, idx) =>
+    auftragZuTransport(a, idx),
+  );
 
   // Make one active trip delayed for demonstration.
   const verspaetet = basis.find((t) => t.liveStatus === "in_fahrt");
