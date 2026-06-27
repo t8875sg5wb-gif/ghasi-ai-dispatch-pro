@@ -192,7 +192,7 @@ function DispatchCenter() {
   );
 
   const autoDispatch = useCallback(() => {
-    let count = 0;
+    const updates: { id: string; patch: Partial<DispatchTransport> }[] = [];
     setTransporte((prev) =>
       prev.map((t) => {
         if (
@@ -203,15 +203,17 @@ function DispatchCenter() {
           return t;
         const empf = empfehleDisposition(t, fahrer, fahrzeuge);
         if (!empf.fahrer) return t;
-        count += 1;
-        return {
-          ...t,
+        const patch: Partial<DispatchTransport> = {
           fahrer: empf.fahrer.name,
           fahrzeug: empf.fahrzeug?.kennzeichen ?? t.fahrzeug,
           liveStatus: t.liveStatus === "geplant" ? "fahrzeug_zugewiesen" : t.liveStatus,
         };
+        updates.push({ id: t.id, patch });
+        return { ...t, ...patch };
       }),
     );
+    for (const u of updates) persist(u.id, u.patch);
+    const count = updates.length;
     toast.success("GHASI AI Auto-Dispatch abgeschlossen", {
       description: `${count} Transporte automatisch disponiert.`,
     });
