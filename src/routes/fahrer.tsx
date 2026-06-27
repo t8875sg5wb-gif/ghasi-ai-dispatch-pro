@@ -147,8 +147,11 @@ function FahrerPage() {
     setDetailOpen(true);
   }
 
+  const isPersisted = (id: string) => !!dbFahrer?.some((f) => f.id === id);
+
   function handleStatusChange(id: string, status: FahrerStatus) {
     setFahrer((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
+    if (isPersisted(id)) updateMut.mutate({ id, values: { status } });
     toast.success(`Status geändert: ${FAHRER_STATUS_META[status].label}`);
   }
 
@@ -168,8 +171,14 @@ function FahrerPage() {
       setFahrer((prev) =>
         prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)),
       );
+      if (isPersisted(editTarget.id)) {
+        updateMut.mutate({ id: editTarget.id, values });
+      }
       toast.success("Fahrer aktualisiert");
     } else {
+      createMut.mutate(values, {
+        onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
+      });
       const id = nextFahrerId();
       const nummer = `F-${String(fahrer.length + 1).padStart(3, "0")}`;
       setFahrer((prev) => [{ id, nummer, ...values }, ...prev]);
@@ -178,6 +187,7 @@ function FahrerPage() {
     setFormOpen(false);
     setEditTarget(null);
   }
+
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
