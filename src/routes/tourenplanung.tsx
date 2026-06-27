@@ -51,6 +51,8 @@ import {
   LIVE_PIPELINE,
   DISPATCH_SPALTEN,
   generateDispatchTransporte,
+  dispatchAusAuftraege,
+  dispatchPatchToWrite,
   spalteVon,
   naechsterStatus,
   empfehleDisposition,
