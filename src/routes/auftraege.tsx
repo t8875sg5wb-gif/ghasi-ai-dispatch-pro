@@ -351,10 +351,12 @@ function AuftraegePage() {
               <p className="text-base font-semibold">Keine Aufträge gefunden</p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 {auftraege.length === 0
-                  ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
-                  : "Passen Sie Filter oder Suche an, oder erstellen Sie einen neuen Auftrag."}
+                  ? canManage
+                    ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
+                    : "Noch keine Aufträge erfasst."
+                  : "Passen Sie Filter oder Suche an."}
               </p>
-              {auftraege.length === 0 && (
+              {auftraege.length === 0 && canManage && (
                 <Button
                   variant="outline"
                   onClick={handleSeed}
