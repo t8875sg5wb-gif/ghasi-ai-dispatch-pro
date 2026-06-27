@@ -84,6 +84,10 @@ export const Route = createFileRoute("/auftraege")({
 type StatusFilter = AuftragStatus | "alle";
 
 function AuftraegePage() {
+  const { role } = useAuth();
+  const canManage = darfAuftragVerwalten(role);
+  const canChangeStatus = darfAuftragStatusAendern(role);
+
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } =
     useOrders();
   const createMut = useCreateOrder();
