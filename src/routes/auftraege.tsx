@@ -64,6 +64,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { logActivity } from "@/lib/protokoll";
+import { useAuth } from "@/hooks/use-auth";
+import { darfAuftragVerwalten, darfAuftragStatusAendern } from "@/lib/roles";
 
 export const Route = createFileRoute("/auftraege")({
   head: () => ({
