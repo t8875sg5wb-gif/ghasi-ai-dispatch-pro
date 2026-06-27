@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import type { Auftrag, Transportart, AuftragPrioritaet } from "@/lib/auftraege";
+import type { OrderWrite } from "@/lib/orders-shared";
 import {
   INITIAL_AUFTRAEGE,
   MOBILITAET_META,
