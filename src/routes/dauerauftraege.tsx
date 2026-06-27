@@ -695,11 +695,13 @@ function Feld({ label, wert }: { label: string; wert: string }) {
 function DauerauftragForm({
   initial,
   istEdit,
+  saving,
   onSubmit,
   onCancel,
 }: {
   initial: Dauerauftrag;
   istEdit: boolean;
+  saving?: boolean;
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
