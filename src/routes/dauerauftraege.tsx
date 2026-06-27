@@ -536,6 +536,7 @@ function DauerauftraegePage() {
           <DauerauftragForm
             initial={editTarget ?? leereVorlage()}
             istEdit={!!editTarget}
+            saving={saving}
             onSubmit={speichern}
             onCancel={() => {
               setFormOpen(false);
