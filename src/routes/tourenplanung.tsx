@@ -280,7 +280,26 @@ function DispatchCenter() {
     [transporte],
   );
 
-  return (
+  if (isLoading && transporte.length === 0) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        Lade Dispatch-Daten …
+      </div>
+    );
+  }
+
+  if (isError && transporte.length === 0) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center gap-2 text-center">
+        <AlertTriangle className="h-6 w-6 text-destructive" />
+        <p className="text-sm text-muted-foreground">
+          Dispatch-Daten konnten nicht geladen werden. Bitte melde dich an oder lade die Seite neu.
+        </p>
+      </div>
+    );
+  }
+
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
