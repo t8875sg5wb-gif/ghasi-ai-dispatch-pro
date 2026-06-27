@@ -29,12 +29,10 @@ import {
   WOCHENTAGE,
   abgeleiteterStatus,
   formatDatumDe,
-  generiereTransporte,
   heuteISO,
   isoPlusTage,
   naechsteKennung,
   naechsteTermine,
-  nextDauerId,
   offeneTermineImZeitraum,
 } from "@/lib/dauerauftraege";
 import {
