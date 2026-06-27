@@ -250,10 +250,12 @@ function AuftraegePage() {
           >
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Neuer Auftrag
-          </Button>
+          {canManage && (
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Neuer Auftrag
+            </Button>
+          )}
         </div>
       </section>
 
