@@ -226,7 +226,6 @@ export function AuftragDetail({
             </Button>
           </div>
         )}
-        </div>
       </SheetContent>
     </Sheet>
   );
