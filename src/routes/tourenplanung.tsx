@@ -89,9 +89,10 @@ const spaltenTon: Record<DispatchSpalte, string> = {
 };
 
 function DispatchCenter() {
-  const [transporte, setTransporte] = useState<DispatchTransport[]>(() =>
-    generateDispatchTransporte(),
-  );
+  const { data: orders, isLoading, isError } = useOrders();
+  const updateMut = useUpdateOrder();
+
+  const [transporte, setTransporte] = useState<DispatchTransport[]>([]);
   const [fahrer] = useState(() => INITIAL_FAHRER);
   const [fahrzeuge] = useState(() => INITIAL_FAHRZEUGE);
   const [mounted, setMounted] = useState(false);
@@ -99,6 +100,11 @@ function DispatchCenter() {
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
+
+  // Keep the board in sync with the persisted orders (single source of truth).
+  useEffect(() => {
+    if (orders) setTransporte(dispatchAusAuftraege(orders));
+  }, [orders]);
 
   const kpis = useMemo(
     () => berechneKpis(transporte, fahrer, fahrzeuge),
@@ -118,10 +124,24 @@ function DispatchCenter() {
     [konflikte],
   );
 
-  const updateTransport = useCallback((id: string, patch: Partial<DispatchTransport>) => {
-    setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-    setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
-  }, []);
+  // Optimistically update the board and persist the change to the database.
+  const persist = useCallback(
+    (id: string, patch: Partial<DispatchTransport>) => {
+      const values = dispatchPatchToWrite(patch);
+      if (Object.keys(values).length > 0) updateMut.mutate({ id, values });
+    },
+    [updateMut],
+  );
+
+  const updateTransport = useCallback(
+    (id: string, patch: Partial<DispatchTransport>) => {
+      setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+      setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
+      persist(id, patch);
+    },
+    [persist],
+  );
+
 
   const zuweisen = useCallback(
     (id: string, fahrerName: string) => {
