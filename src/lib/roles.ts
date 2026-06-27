@@ -63,3 +63,16 @@ export function hoechsteRolle(rollen: AppRole[]): AppRole | null {
   if (rollen.length === 0) return null;
   return [...rollen].sort((a, b) => RANG[a] - RANG[b])[0];
 }
+
+// ── Auftrags-Berechtigungen (spiegeln die RLS-Policies der orders-Tabelle) ──
+// INSERT/DELETE: admin + disposition · UPDATE: admin + disposition + fahrer
+
+/** Darf neue Aufträge anlegen oder bestehende vollständig bearbeiten? */
+export function darfAuftragVerwalten(role: AppRole | null | undefined): boolean {
+  return role === "admin" || role === "disposition";
+}
+
+/** Darf den Status eines Auftrags ändern (inkl. Fahrer für eigene Touren)? */
+export function darfAuftragStatusAendern(role: AppRole | null | undefined): boolean {
+  return role === "admin" || role === "disposition" || role === "fahrer";
+}

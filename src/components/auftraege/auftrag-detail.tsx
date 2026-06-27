@@ -36,6 +36,10 @@ interface AuftragDetailProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: AuftragStatus) => void;
   onEdit: (auftrag: Auftrag) => void;
+  /** Darf der aktuelle Nutzer Aufträge bearbeiten (admin/disposition)? */
+  canManage?: boolean;
+  /** Darf der aktuelle Nutzer den Status ändern (inkl. fahrer)? */
+  canChangeStatus?: boolean;
 }
 
 function InfoRow({
@@ -66,6 +70,8 @@ export function AuftragDetail({
   onOpenChange,
   onStatusChange,
   onEdit,
+  canManage = true,
+  canChangeStatus = true,
 }: AuftragDetailProps) {
   if (!auftrag) return null;
 
@@ -136,7 +142,7 @@ export function AuftragDetail({
           </div>
 
           {/* Status actions */}
-          {transitions.length > 0 && (
+          {canChangeStatus && transitions.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {transitions.map((next) => {
                 const meta = STATUS_META[next];
@@ -162,6 +168,11 @@ export function AuftragDetail({
                 );
               })}
             </div>
+          )}
+          {!canChangeStatus && (
+            <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              Sie haben nur Lesezugriff auf diesen Auftrag.
+            </p>
           )}
 
           <Separator />
@@ -207,12 +218,14 @@ export function AuftragDetail({
           )}
         </div>
 
-        <div className="mt-auto">
-          <Button variant="outline" className="w-full gap-2" onClick={() => onEdit(auftrag)}>
-            <Pencil className="h-4 w-4" />
-            Auftrag bearbeiten
-          </Button>
-        </div>
+        {canManage && (
+          <div className="mt-auto">
+            <Button variant="outline" className="w-full gap-2" onClick={() => onEdit(auftrag)}>
+              <Pencil className="h-4 w-4" />
+              Auftrag bearbeiten
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -64,6 +64,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { logActivity } from "@/lib/protokoll";
+import { useAuth } from "@/hooks/use-auth";
+import { darfAuftragVerwalten, darfAuftragStatusAendern } from "@/lib/roles";
 
 export const Route = createFileRoute("/auftraege")({
   head: () => ({
@@ -82,6 +84,10 @@ export const Route = createFileRoute("/auftraege")({
 type StatusFilter = AuftragStatus | "alle";
 
 function AuftraegePage() {
+  const { role } = useAuth();
+  const canManage = darfAuftragVerwalten(role);
+  const canChangeStatus = darfAuftragStatusAendern(role);
+
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } =
     useOrders();
   const createMut = useCreateOrder();
@@ -231,7 +237,11 @@ function AuftraegePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Aufträge</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Krankentransporte erfassen, disponieren und im Status-Workflow verfolgen.
+            {canManage
+              ? "Krankentransporte erfassen, disponieren und im Status-Workflow verfolgen."
+              : canChangeStatus
+                ? "Ihre Touren einsehen und den Transportstatus aktualisieren."
+                : "Aufträge einsehen (nur Lesezugriff)."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -244,10 +254,12 @@ function AuftraegePage() {
           >
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Neuer Auftrag
-          </Button>
+          {canManage && (
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Neuer Auftrag
+            </Button>
+          )}
         </div>
       </section>
 
@@ -339,10 +351,12 @@ function AuftraegePage() {
               <p className="text-base font-semibold">Keine Aufträge gefunden</p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 {auftraege.length === 0
-                  ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
-                  : "Passen Sie Filter oder Suche an, oder erstellen Sie einen neuen Auftrag."}
+                  ? canManage
+                    ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
+                    : "Noch keine Aufträge erfasst."
+                  : "Passen Sie Filter oder Suche an."}
               </p>
-              {auftraege.length === 0 && (
+              {auftraege.length === 0 && canManage && (
                 <Button
                   variant="outline"
                   onClick={handleSeed}
@@ -430,6 +444,8 @@ function AuftraegePage() {
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}
         onEdit={openEdit}
+        canManage={canManage}
+        canChangeStatus={canChangeStatus}
       />
 
       {/* Create / Edit form */}
