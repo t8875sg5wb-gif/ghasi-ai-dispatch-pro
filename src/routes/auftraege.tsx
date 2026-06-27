@@ -237,7 +237,11 @@ function AuftraegePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Aufträge</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Krankentransporte erfassen, disponieren und im Status-Workflow verfolgen.
+            {canManage
+              ? "Krankentransporte erfassen, disponieren und im Status-Workflow verfolgen."
+              : canChangeStatus
+                ? "Ihre Touren einsehen und den Transportstatus aktualisieren."
+                : "Aufträge einsehen (nur Lesezugriff)."}
           </p>
         </div>
         <div className="flex items-center gap-2">
