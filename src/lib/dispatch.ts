@@ -419,6 +419,41 @@ export function generateDispatchTransporte(): DispatchTransport[] {
   return [...basis, ...extra];
 }
 
+/** Reverse map: fine-grained LiveStatus → coarse persisted Auftrag status. */
+const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
+  geplant: "neu",
+  fahrer_zugewiesen: "disponiert",
+  fahrzeug_zugewiesen: "disponiert",
+  anfahrt: "unterwegs",
+  am_abholort: "unterwegs",
+  patient_an_bord: "unterwegs",
+  in_fahrt: "unterwegs",
+  am_ziel: "unterwegs",
+  abgeschlossen: "abgeschlossen",
+  storniert: "storniert",
+  verspaetet: "unterwegs",
+};
+
+/**
+ * Translate an optimistic DispatchTransport patch into a persisted order write
+ * payload, so every Dispatch-Center action is stored in the database.
+ */
+export function dispatchPatchToWrite(
+  patch: Partial<DispatchTransport>,
+): Partial<OrderWrite> {
+  const w: Partial<OrderWrite> = {};
+  if (patch.fahrer !== undefined) w.fahrer = patch.fahrer;
+  if (patch.fahrzeug !== undefined) w.fahrzeug = patch.fahrzeug;
+  if (patch.liveStatus !== undefined) {
+    w.detailStatus = patch.liveStatus;
+    w.status = COARSE_STATUS[patch.liveStatus];
+  }
+  if (patch.abrechnungBereit !== undefined) {
+    w.abrechnungStatus = patch.abrechnungBereit ? "bereit" : "offen";
+  }
+  return w;
+}
+
 interface MkInput {
   nummer: string;
   patient: string;
