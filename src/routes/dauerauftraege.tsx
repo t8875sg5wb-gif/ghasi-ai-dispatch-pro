@@ -414,10 +414,29 @@ function DauerauftraegePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {gefiltert.length === 0 && (
+              {isLoading && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                    Keine Daueraufträge gefunden.
+                    <Loader2 className="mx-auto size-5 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              )}
+              {isError && !isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-destructive">
+                    Fehler beim Laden: {(error as Error)?.message}{" "}
+                    <Button size="sm" variant="outline" className="ml-2" onClick={() => refetch()}>
+                      Erneut versuchen
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && !isError && gefiltert.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                    {daten.length === 0
+                      ? "Noch keine Daueraufträge angelegt."
+                      : "Keine Daueraufträge gefunden."}
                   </TableCell>
                 </TableRow>
               )}
