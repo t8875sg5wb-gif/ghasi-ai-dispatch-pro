@@ -300,6 +300,7 @@ function DispatchCenter() {
     );
   }
 
+  return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
