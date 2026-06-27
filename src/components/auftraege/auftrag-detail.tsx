@@ -36,6 +36,10 @@ interface AuftragDetailProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: AuftragStatus) => void;
   onEdit: (auftrag: Auftrag) => void;
+  /** Darf der aktuelle Nutzer Aufträge bearbeiten (admin/disposition)? */
+  canManage?: boolean;
+  /** Darf der aktuelle Nutzer den Status ändern (inkl. fahrer)? */
+  canChangeStatus?: boolean;
 }
 
 function InfoRow({
