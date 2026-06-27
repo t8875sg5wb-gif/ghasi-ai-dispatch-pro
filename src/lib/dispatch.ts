@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import type { Auftrag, Transportart, AuftragPrioritaet } from "@/lib/auftraege";
+import type { OrderWrite } from "@/lib/orders-shared";
 import {
   INITIAL_AUFTRAEGE,
   MOBILITAET_META,
@@ -278,27 +279,52 @@ function plus(iso: string, minuten: number): string {
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
+/** Set of all valid fine-grained live statuses (for safe parsing of DB values). */
+const LIVE_STATUS_SET = new Set<string>(Object.keys(LIVE_STATUS_META));
+
+/** Resolve the live status of a persisted order: prefer detailStatus, else map coarse status. */
+function liveStatusVonAuftrag(a: Auftrag): LiveStatus {
+  if (a.detailStatus && LIVE_STATUS_SET.has(a.detailStatus)) {
+    return a.detailStatus as LiveStatus;
+  }
+  return STATUS_MAP[a.status];
+}
+
+/** Map a single persisted order into a DispatchTransport (no demo data). */
+function auftragZuTransport(a: Auftrag, idx: number): DispatchTransport {
+  const abgeleitet = abgeleiteteFelder(a);
+  const distanz = 8 + ((idx * 7) % 22);
+  const fahrtMin = Math.round(distanz * 2.4);
+  return {
+    ...a,
+    ...abgeleitet,
+    liveStatus: liveStatusVonAuftrag(a),
+    abholzeit: uhrzeit(a.termin),
+    ankunftzeit: plus(a.termin, fahrtMin),
+    distanzKm: distanz,
+    leerKm: 2 + (idx % 5),
+    verspaetungMin: 0,
+    wiederkehrend: a.transportart === "Dialysefahrt" || !!a.dauerauftragId,
+    serie: a.transportart === "Dialysefahrt" ? "Dialyse" : undefined,
+    erloes: 95 + distanz * 6,
+    istNotfall: abgeleitet.istNotfall,
+    abrechnungBereit: a.abrechnungStatus === "bereit" || a.abrechnungStatus === "abgerechnet",
+  };
+}
+
+/**
+ * Build the dispatch board purely from persisted orders (database-connected).
+ * Used by the Dispatch-Center so every assignment/status reflects the DB.
+ */
+export function dispatchAusAuftraege(auftraege: Auftrag[]): DispatchTransport[] {
+  return auftraege.map((a, idx) => auftragZuTransport(a, idx));
+}
+
 /** Build the dispatch dataset: existing orders + generated recurring trips. */
 export function generateDispatchTransporte(): DispatchTransport[] {
-  const basis: DispatchTransport[] = INITIAL_AUFTRAEGE.map((a, idx) => {
-    const abgeleitet = abgeleiteteFelder(a);
-    const distanz = 8 + ((idx * 7) % 22);
-    const fahrtMin = Math.round(distanz * 2.4);
-    return {
-      ...a,
-      ...abgeleitet,
-      liveStatus: STATUS_MAP[a.status],
-      abholzeit: uhrzeit(a.termin),
-      ankunftzeit: plus(a.termin, fahrtMin),
-      distanzKm: distanz,
-      leerKm: 2 + (idx % 5),
-      verspaetungMin: 0,
-      wiederkehrend: a.transportart === "Dialysefahrt",
-      serie: a.transportart === "Dialysefahrt" ? "Dialyse" : undefined,
-      erloes: 95 + distanz * 6,
-      istNotfall: abgeleitet.istNotfall,
-    };
-  });
+  const basis: DispatchTransport[] = INITIAL_AUFTRAEGE.map((a, idx) =>
+    auftragZuTransport(a, idx),
+  );
 
   // Make one active trip delayed for demonstration.
   const verspaetet = basis.find((t) => t.liveStatus === "in_fahrt");
@@ -392,6 +418,41 @@ export function generateDispatchTransporte(): DispatchTransport[] {
   ];
 
   return [...basis, ...extra];
+}
+
+/** Reverse map: fine-grained LiveStatus → coarse persisted Auftrag status. */
+const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
+  geplant: "neu",
+  fahrer_zugewiesen: "disponiert",
+  fahrzeug_zugewiesen: "disponiert",
+  anfahrt: "unterwegs",
+  am_abholort: "unterwegs",
+  patient_an_bord: "unterwegs",
+  in_fahrt: "unterwegs",
+  am_ziel: "unterwegs",
+  abgeschlossen: "abgeschlossen",
+  storniert: "storniert",
+  verspaetet: "unterwegs",
+};
+
+/**
+ * Translate an optimistic DispatchTransport patch into a persisted order write
+ * payload, so every Dispatch-Center action is stored in the database.
+ */
+export function dispatchPatchToWrite(
+  patch: Partial<DispatchTransport>,
+): Partial<OrderWrite> {
+  const w: Partial<OrderWrite> = {};
+  if (patch.fahrer !== undefined) w.fahrer = patch.fahrer;
+  if (patch.fahrzeug !== undefined) w.fahrzeug = patch.fahrzeug;
+  if (patch.liveStatus !== undefined) {
+    w.detailStatus = patch.liveStatus;
+    w.status = COARSE_STATUS[patch.liveStatus];
+  }
+  if (patch.abrechnungBereit !== undefined) {
+    w.abrechnungStatus = patch.abrechnungBereit ? "bereit" : "offen";
+  }
+  return w;
 }
 
 interface MkInput {

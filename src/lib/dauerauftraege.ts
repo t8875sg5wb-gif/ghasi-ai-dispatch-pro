@@ -395,6 +395,65 @@ export function offeneTermineImZeitraum(
   return treffer;
 }
 
+/* ------------------------------------------------------------------ *
+ * Persistente Transport-Erzeugung (DB-tauglich, client-safe)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Baut OrderWrite-Payloads für alle im Zeitraum [vonISO, bisISO] noch nicht
+ * generierten Termine einer Serie. Mutiert NICHTS – gibt die neuen Termine und
+ * die zugehörigen Schreib-Payloads zurück, damit der Aufrufer sie persistieren
+ * kann (Aufträge-Tabelle) und anschließend generierteTermine fortschreiben.
+ */
+export function transportWritesFuer(
+  d: Dauerauftrag,
+  vonISO: string,
+  bisISO: string,
+): { neueTermine: string[]; writes: import("@/lib/orders-shared").OrderWrite[] } {
+  const neueTermine: string[] = [];
+  const writes: import("@/lib/orders-shared").OrderWrite[] = [];
+  let cursor = vonISO < d.startDatum ? d.startDatum : vonISO;
+  let sicherung = 0;
+  const bauen = (iso: string, richtung: "hin" | "rueck") => {
+    const hin = richtung === "hin";
+    const w: import("@/lib/orders-shared").OrderWrite = {
+      patient: d.patient,
+      transportart: transportartVon(d),
+      prioritaet: "normal",
+      status: "neu",
+      abholort: hin ? d.abholort : d.zielort,
+      zielort: hin ? d.zielort : d.abholort,
+      termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
+      fahrer: d.bevorzugterFahrer,
+      fahrzeug: d.bevorzugtesFahrzeug,
+      kostentraeger: d.kostentraeger,
+      notiz: `${hin ? "Hinfahrt" : "Rückfahrt"} aus Dauerauftrag ${d.kennung}${
+        d.notiz ? " · " + d.notiz : ""
+      }`,
+      verordnung: verordnungVon(d),
+      verordnungDokumentId: null,
+      mobilitaet: d.mobilitaet,
+      begleitperson: d.begleitperson,
+      abholanforderung: "",
+      zielanforderung: "",
+      patientennotiz: "",
+      medizinischeNotiz: d.medizinischeNotiz,
+      dauerauftragId: d.id,
+    };
+    writes.push(w);
+  };
+  while (cursor <= bisISO && sicherung < 800) {
+    if (transportFaelltAn(d, cursor) && !d.generierteTermine.includes(cursor)) {
+      neueTermine.push(cursor);
+      bauen(cursor, "hin");
+      if (d.rueckfahrt) bauen(cursor, "rueck");
+    }
+    cursor = isoPlusTage(cursor, 1);
+    sicherung += 1;
+  }
+  return { neueTermine, writes };
+}
+
 export function nextDauerId(vorhandene: Dauerauftrag[]): string {
   let max = 0;
   for (const x of vorhandene) {
@@ -417,6 +476,8 @@ export function naechsteKennung(vorhandene: Dauerauftrag[]): string {
  * Seed: reale wiederkehrende Serien des Betriebs (Konfigurationsdaten)
  * ------------------------------------------------------------------ */
 
+// Live in-memory array (mirrors the persisted recurring_orders via the store).
+// Modules that read recurring series synchronously (AI tools, dispatch) use this.
 export const DAUERAUFTRAEGE: Dauerauftrag[] = [
   {
     id: "da-1",
@@ -542,3 +603,15 @@ export const DAUERAUFTRAEGE: Dauerauftrag[] = [
     erstellt: "2026-04-28T14:00",
   },
 ];
+
+/**
+ * Immutable snapshot of the originally configured series. Used to seed the
+ * persisted `recurring_orders` table once; the live array above is replaced
+ * in place by the store after the first DB fetch.
+ */
+export const SEED_DAUERAUFTRAEGE: Dauerauftrag[] = DAUERAUFTRAEGE.map((d) => ({
+  ...d,
+  wochentage: [...d.wochentage],
+  uebersprungeneTermine: [...d.uebersprungeneTermine],
+  generierteTermine: [...d.generierteTermine],
+}));

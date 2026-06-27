@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   CalendarPlus,
+  Database,
+  Loader2,
   PauseCircle,
   PlayCircle,
   Plus,
@@ -27,12 +29,10 @@ import {
   WOCHENTAGE,
   abgeleiteterStatus,
   formatDatumDe,
-  generiereTransporte,
   heuteISO,
   isoPlusTage,
   naechsteKennung,
   naechsteTermine,
-  nextDauerId,
   offeneTermineImZeitraum,
 } from "@/lib/dauerauftraege";
 import {
@@ -75,6 +75,16 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { logActivity } from "@/lib/protokoll";
+import {
+  useRecurring,
+  useCreateRecurring,
+  useUpdateRecurring,
+  useSeedRecurring,
+  useGenerateRecurring,
+} from "@/lib/recurring-store";
+import { dauerauftragToWrite } from "@/lib/recurring-shared";
+import { useAuth } from "@/hooks/use-auth";
+import { darfAuftragVerwalten } from "@/lib/roles";
 
 export const Route = createFileRoute("/dauerauftraege")({
   head: () => ({
@@ -125,7 +135,15 @@ const leereVorlage = (): Dauerauftrag => ({
 });
 
 function DauerauftraegePage() {
-  const [daten, setDaten] = useState<Dauerauftrag[]>(() => [...DAUERAUFTRAEGE]);
+  const { role } = useAuth();
+  const canManage = darfAuftragVerwalten(role);
+
+  const { data: daten = [], isLoading, isError, error, refetch } = useRecurring();
+  const createMut = useCreateRecurring();
+  const updateMut = useUpdateRecurring();
+  const seedMut = useSeedRecurring();
+  const generateMut = useGenerateRecurring();
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
   const [kategorieFilter, setKategorieFilter] = useState<SerienKategorie | "alle">("alle");
@@ -133,12 +151,6 @@ function DauerauftraegePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
-
-  /** Schreibt in den Modul-Store (In-Memory-Persistenz über Navigation hinweg). */
-  const commit = (next: Dauerauftrag[]) => {
-    DAUERAUFTRAEGE.splice(0, DAUERAUFTRAEGE.length, ...next);
-    setDaten([...next]);
-  };
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = { alle: daten.length, aktiv: 0, pausiert: 0, beendet: 0 };
@@ -165,88 +177,137 @@ function DauerauftraegePage() {
 
   /* --------------------------- Aktionen --------------------------- */
 
+  const handleSeed = () => {
+    seedMut.mutate(undefined, {
+      onSuccess: (res) =>
+        res.seeded > 0
+          ? toast.success(`${res.seeded} Daueraufträge geladen`)
+          : toast.info("Es sind bereits Daueraufträge vorhanden"),
+      onError: (e) => toast.error(`Laden fehlgeschlagen: ${(e as Error).message}`),
+    });
+  };
+
   const generieren = (d: Dauerauftrag, tage: number) => {
     const von = heuteISO();
     const bis = isoPlusTage(von, tage);
-    const neu = generiereTransporte(d, von, bis);
-    commit(daten.map((x) => (x.id === d.id ? { ...d } : x)));
-    if (neu.length === 0) {
-      toast.info("Keine neuen Transporte", {
-        description: `Für ${d.kennung} sind im Zeitraum keine offenen Termine vorhanden.`,
-      });
-      return;
-    }
-    toast.success(`${neu.length} Transporte erzeugt`, {
-      description: `${d.kennung} · ${d.patient} → Aufträge & Dispatch-Center`,
-    });
-    logActivity({
-      bereich: "Daueraufträge",
-      aktion: "transporte_generiert",
-      beschreibung: `${neu.length} Transporte aus Dauerauftrag ${d.kennung} (${d.patient}) für die nächsten ${tage} Tage erzeugt.`,
-      entitaet: d.kennung,
-    });
+    generateMut.mutate(
+      { id: d.id, vonISO: von, bisISO: bis },
+      {
+        onSuccess: (res) => {
+          if (res.created === 0) {
+            toast.info("Keine neuen Transporte", {
+              description: `Für ${d.kennung} sind im Zeitraum keine offenen Termine vorhanden.`,
+            });
+            return;
+          }
+          toast.success(`${res.created} Transporte erzeugt`, {
+            description: `${d.kennung} · ${d.patient} → Aufträge & Dispatch-Center`,
+          });
+          logActivity({
+            bereich: "Daueraufträge",
+            aktion: "transporte_generiert",
+            beschreibung: `${res.created} Transporte aus Dauerauftrag ${d.kennung} (${d.patient}) für die nächsten ${tage} Tage erzeugt.`,
+            entitaet: d.kennung,
+          });
+        },
+        onError: (e) => toast.error(`Erzeugen fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
   };
 
   const pauseUmschalten = (d: Dauerauftrag) => {
-    const next = { ...d, pausiert: !d.pausiert };
-    commit(daten.map((x) => (x.id === d.id ? next : x)));
-    toast.success(next.pausiert ? "Serie pausiert" : "Serie aktiviert");
-    logActivity({
-      bereich: "Daueraufträge",
-      aktion: next.pausiert ? "pausiert" : "aktiviert",
-      beschreibung: `Dauerauftrag ${d.kennung} (${d.patient}) ${next.pausiert ? "pausiert" : "wieder aktiviert"}.`,
-      entitaet: d.kennung,
-    });
+    const pausiert = !d.pausiert;
+    updateMut.mutate(
+      { id: d.id, values: { pausiert } },
+      {
+        onSuccess: () => {
+          toast.success(pausiert ? "Serie pausiert" : "Serie aktiviert");
+          logActivity({
+            bereich: "Daueraufträge",
+            aktion: pausiert ? "pausiert" : "aktiviert",
+            beschreibung: `Dauerauftrag ${d.kennung} (${d.patient}) ${pausiert ? "pausiert" : "wieder aktiviert"}.`,
+            entitaet: d.kennung,
+          });
+        },
+        onError: (e) => toast.error(`Aktion fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
   };
 
   const beenden = (d: Dauerauftrag) => {
-    const next = { ...d, endDatum: heuteISO() };
-    commit(daten.map((x) => (x.id === d.id ? next : x)));
-    toast.success("Serie beendet");
-    logActivity({
-      bereich: "Daueraufträge",
-      aktion: "beendet",
-      beschreibung: `Dauerauftrag ${d.kennung} (${d.patient}) zum ${formatDatumDe(heuteISO())} beendet.`,
-      entitaet: d.kennung,
-    });
+    updateMut.mutate(
+      { id: d.id, values: { endDatum: heuteISO() } },
+      {
+        onSuccess: () => {
+          toast.success("Serie beendet");
+          logActivity({
+            bereich: "Daueraufträge",
+            aktion: "beendet",
+            beschreibung: `Dauerauftrag ${d.kennung} (${d.patient}) zum ${formatDatumDe(heuteISO())} beendet.`,
+            entitaet: d.kennung,
+          });
+        },
+        onError: (e) => toast.error(`Aktion fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
   };
 
   const terminUeberspringen = (d: Dauerauftrag, iso: string) => {
-    const next = { ...d, uebersprungeneTermine: [...d.uebersprungeneTermine, iso] };
-    commit(daten.map((x) => (x.id === d.id ? next : x)));
-    toast.success("Termin übersprungen", { description: formatDatumDe(iso) });
-    logActivity({
-      bereich: "Daueraufträge",
-      aktion: "termin_uebersprungen",
-      beschreibung: `Termin ${formatDatumDe(iso)} der Serie ${d.kennung} (${d.patient}) übersprungen (Absage/Skip).`,
-      entitaet: d.kennung,
-    });
+    updateMut.mutate(
+      { id: d.id, values: { uebersprungeneTermine: [...d.uebersprungeneTermine, iso] } },
+      {
+        onSuccess: () => {
+          toast.success("Termin übersprungen", { description: formatDatumDe(iso) });
+          logActivity({
+            bereich: "Daueraufträge",
+            aktion: "termin_uebersprungen",
+            beschreibung: `Termin ${formatDatumDe(iso)} der Serie ${d.kennung} (${d.patient}) übersprungen (Absage/Skip).`,
+            entitaet: d.kennung,
+          });
+        },
+        onError: (e) => toast.error(`Aktion fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
   };
 
   const speichern = (werte: Dauerauftrag) => {
     if (editTarget) {
-      commit(daten.map((x) => (x.id === editTarget.id ? { ...werte, id: editTarget.id } : x)));
-      toast.success("Dauerauftrag aktualisiert", { description: werte.kennung });
-      logActivity({
-        bereich: "Daueraufträge",
-        aktion: "bearbeitet",
-        beschreibung: `Dauerauftrag ${werte.kennung} (${werte.patient}) bearbeitet.`,
-        entitaet: werte.kennung,
-      });
+      updateMut.mutate(
+        { id: editTarget.id, values: dauerauftragToWrite(werte) },
+        {
+          onSuccess: () => {
+            toast.success("Dauerauftrag aktualisiert", { description: werte.kennung });
+            logActivity({
+              bereich: "Daueraufträge",
+              aktion: "bearbeitet",
+              beschreibung: `Dauerauftrag ${werte.kennung} (${werte.patient}) bearbeitet.`,
+              entitaet: werte.kennung,
+            });
+            setFormOpen(false);
+            setEditTarget(null);
+          },
+          onError: (e) => toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`),
+        },
+      );
     } else {
-      const neu = { ...werte, id: nextDauerId(daten) };
-      commit([neu, ...daten]);
-      toast.success("Dauerauftrag angelegt", { description: neu.kennung });
-      logActivity({
-        bereich: "Daueraufträge",
-        aktion: "angelegt",
-        beschreibung: `Neuer Dauerauftrag ${neu.kennung} (${neu.patient}, ${RHYTHMUS_LABEL[neu.rhythmus]}) angelegt.`,
-        entitaet: neu.kennung,
+      createMut.mutate(werte, {
+        onSuccess: (neu) => {
+          toast.success("Dauerauftrag angelegt", { description: neu.kennung });
+          logActivity({
+            bereich: "Daueraufträge",
+            aktion: "angelegt",
+            beschreibung: `Neuer Dauerauftrag ${neu.kennung} (${neu.patient}, ${RHYTHMUS_LABEL[neu.rhythmus]}) angelegt.`,
+            entitaet: neu.kennung,
+          });
+          setFormOpen(false);
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(`Anlegen fehlgeschlagen: ${(e as Error).message}`),
       });
     }
-    setFormOpen(false);
-    setEditTarget(null);
   };
+
+  const saving = createMut.isPending || updateMut.isPending;
 
   /* ----------------------------- View ----------------------------- */
 
@@ -262,14 +323,28 @@ function DauerauftraegePage() {
             Fahrer-App, GPS &amp; Abrechnung.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="size-4" /> Neuer Dauerauftrag
-        </Button>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            {daten.length === 0 && !isLoading && (
+              <Button variant="outline" onClick={handleSeed} disabled={seedMut.isPending}>
+                {seedMut.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Database className="size-4" />
+                )}
+                Beispieldaten laden
+              </Button>
+            )}
+            <Button
+              onClick={() => {
+                setEditTarget(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> Neuer Dauerauftrag
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* KPI-Karten */}
@@ -337,10 +412,29 @@ function DauerauftraegePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {gefiltert.length === 0 && (
+              {isLoading && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                    Keine Daueraufträge gefunden.
+                    <Loader2 className="mx-auto size-5 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              )}
+              {isError && !isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-destructive">
+                    Fehler beim Laden: {(error as Error)?.message}{" "}
+                    <Button size="sm" variant="outline" className="ml-2" onClick={() => refetch()}>
+                      Erneut versuchen
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && !isError && gefiltert.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                    {daten.length === 0
+                      ? "Noch keine Daueraufträge angelegt."
+                      : "Keine Daueraufträge gefunden."}
                   </TableCell>
                 </TableRow>
               )}
@@ -440,6 +534,7 @@ function DauerauftraegePage() {
           <DauerauftragForm
             initial={editTarget ?? leereVorlage()}
             istEdit={!!editTarget}
+            saving={saving}
             onSubmit={speichern}
             onCancel={() => {
               setFormOpen(false);
@@ -598,11 +693,13 @@ function Feld({ label, wert }: { label: string; wert: string }) {
 function DauerauftragForm({
   initial,
   istEdit,
+  saving,
   onSubmit,
   onCancel,
 }: {
   initial: Dauerauftrag;
   istEdit: boolean;
+  saving?: boolean;
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
@@ -849,7 +946,10 @@ function DauerauftragForm({
         <Button variant="outline" onClick={onCancel}>
           Abbrechen
         </Button>
-        <Button onClick={submit}>{istEdit ? "Speichern" : "Anlegen"}</Button>
+        <Button onClick={submit} disabled={saving}>
+          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+          {istEdit ? "Speichern" : "Anlegen"}
+        </Button>
       </DialogFooter>
     </>
   );

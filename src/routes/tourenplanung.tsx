@@ -50,7 +50,8 @@ import {
   LIVE_STATUS_META,
   LIVE_PIPELINE,
   DISPATCH_SPALTEN,
-  generateDispatchTransporte,
+  dispatchAusAuftraege,
+  dispatchPatchToWrite,
   spalteVon,
   naechsterStatus,
   empfehleDisposition,
@@ -63,6 +64,8 @@ import { LiveBoard } from "@/components/dispatch/live-board";
 import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
+import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/tourenplanung")({
   head: () => ({
@@ -86,9 +89,10 @@ const spaltenTon: Record<DispatchSpalte, string> = {
 };
 
 function DispatchCenter() {
-  const [transporte, setTransporte] = useState<DispatchTransport[]>(() =>
-    generateDispatchTransporte(),
-  );
+  const { data: orders, isLoading, isError } = useOrders();
+  const updateMut = useUpdateOrder();
+
+  const [transporte, setTransporte] = useState<DispatchTransport[]>([]);
   const [fahrer] = useState(() => INITIAL_FAHRER);
   const [fahrzeuge] = useState(() => INITIAL_FAHRZEUGE);
   const [mounted, setMounted] = useState(false);
@@ -96,6 +100,11 @@ function DispatchCenter() {
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
+
+  // Keep the board in sync with the persisted orders (single source of truth).
+  useEffect(() => {
+    if (orders) setTransporte(dispatchAusAuftraege(orders));
+  }, [orders]);
 
   const kpis = useMemo(
     () => berechneKpis(transporte, fahrer, fahrzeuge),
@@ -115,10 +124,24 @@ function DispatchCenter() {
     [konflikte],
   );
 
-  const updateTransport = useCallback((id: string, patch: Partial<DispatchTransport>) => {
-    setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-    setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
-  }, []);
+  // Optimistically update the board and persist the change to the database.
+  const persist = useCallback(
+    (id: string, patch: Partial<DispatchTransport>) => {
+      const values = dispatchPatchToWrite(patch);
+      if (Object.keys(values).length > 0) updateMut.mutate({ id, values });
+    },
+    [updateMut],
+  );
+
+  const updateTransport = useCallback(
+    (id: string, patch: Partial<DispatchTransport>) => {
+      setTransporte((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+      setAktiv((prev) => (prev && prev.id === id ? { ...prev, ...patch } : prev));
+      persist(id, patch);
+    },
+    [persist],
+  );
+
 
   const zuweisen = useCallback(
     (id: string, fahrerName: string) => {
@@ -169,7 +192,7 @@ function DispatchCenter() {
   );
 
   const autoDispatch = useCallback(() => {
-    let count = 0;
+    const updates: { id: string; patch: Partial<DispatchTransport> }[] = [];
     setTransporte((prev) =>
       prev.map((t) => {
         if (
@@ -180,15 +203,17 @@ function DispatchCenter() {
           return t;
         const empf = empfehleDisposition(t, fahrer, fahrzeuge);
         if (!empf.fahrer) return t;
-        count += 1;
-        return {
-          ...t,
+        const patch: Partial<DispatchTransport> = {
           fahrer: empf.fahrer.name,
           fahrzeug: empf.fahrzeug?.kennzeichen ?? t.fahrzeug,
           liveStatus: t.liveStatus === "geplant" ? "fahrzeug_zugewiesen" : t.liveStatus,
         };
+        updates.push({ id: t.id, patch });
+        return { ...t, ...patch };
       }),
     );
+    for (const u of updates) persist(u.id, u.patch);
+    const count = updates.length;
     toast.success("GHASI AI Auto-Dispatch abgeschlossen", {
       description: `${count} Transporte automatisch disponiert.`,
     });
@@ -197,7 +222,7 @@ function DispatchCenter() {
       aktion: "auto-dispatch",
       beschreibung: `GHASI AI hat ${count} Transporte automatisch disponiert`,
     });
-  }, [fahrer, fahrzeuge]);
+  }, [fahrer, fahrzeuge, persist]);
 
   const statusVor = useCallback(
     (t: DispatchTransport) => {
@@ -254,6 +279,26 @@ function DispatchCenter() {
       ),
     [transporte],
   );
+
+  if (isLoading && transporte.length === 0) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        Lade Dispatch-Daten …
+      </div>
+    );
+  }
+
+  if (isError && transporte.length === 0) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center gap-2 text-center">
+        <AlertTriangle className="h-6 w-6 text-destructive" />
+        <p className="text-sm text-muted-foreground">
+          Dispatch-Daten konnten nicht geladen werden. Bitte melde dich an oder lade die Seite neu.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

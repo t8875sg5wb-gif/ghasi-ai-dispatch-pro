@@ -145,6 +145,105 @@ export type Database = {
         }
         Relationships: []
       }
+      drivers: {
+        Row: {
+          adresse: string
+          arbeitszeiten: string
+          beschwerden: number
+          bewertung: number
+          created_at: string
+          email: string
+          erste_hilfe: Json
+          fahrzeug: string | null
+          foto: string | null
+          fuehrerschein: Json
+          gewinn_heute: number
+          gps: Json
+          id: string
+          km_heute: number
+          krankheitstage: number
+          lob: number
+          name: string
+          nummer: string
+          p_schein: Json
+          puenktlichkeit: number
+          schicht: string
+          standort: string
+          status: string
+          telefon: string
+          ueberstunden: number
+          umsatz_heute: number
+          updated_at: string
+          urlaubstage: number
+          user_id: string | null
+          vertragsart: string
+        }
+        Insert: {
+          adresse?: string
+          arbeitszeiten?: string
+          beschwerden?: number
+          bewertung?: number
+          created_at?: string
+          email?: string
+          erste_hilfe?: Json
+          fahrzeug?: string | null
+          foto?: string | null
+          fuehrerschein?: Json
+          gewinn_heute?: number
+          gps?: Json
+          id?: string
+          km_heute?: number
+          krankheitstage?: number
+          lob?: number
+          name?: string
+          nummer: string
+          p_schein?: Json
+          puenktlichkeit?: number
+          schicht?: string
+          standort?: string
+          status?: string
+          telefon?: string
+          ueberstunden?: number
+          umsatz_heute?: number
+          updated_at?: string
+          urlaubstage?: number
+          user_id?: string | null
+          vertragsart?: string
+        }
+        Update: {
+          adresse?: string
+          arbeitszeiten?: string
+          beschwerden?: number
+          bewertung?: number
+          created_at?: string
+          email?: string
+          erste_hilfe?: Json
+          fahrzeug?: string | null
+          foto?: string | null
+          fuehrerschein?: Json
+          gewinn_heute?: number
+          gps?: Json
+          id?: string
+          km_heute?: number
+          krankheitstage?: number
+          lob?: number
+          name?: string
+          nummer?: string
+          p_schein?: Json
+          puenktlichkeit?: number
+          schicht?: string
+          standort?: string
+          status?: string
+          telefon?: string
+          ueberstunden?: number
+          umsatz_heute?: number
+          updated_at?: string
+          urlaubstage?: number
+          user_id?: string | null
+          vertragsart?: string
+        }
+        Relationships: []
+      }
       ghasi_memory: {
         Row: {
           bezug: string | null

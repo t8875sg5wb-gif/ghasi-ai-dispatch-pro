@@ -79,6 +79,13 @@ export interface Auftrag {
   patientennotiz?: string;
   /** Medizinische Hinweise (Sauerstoff, Infektion, etc.) */
   medizinischeNotiz?: string;
+  // --- Dispatch-/Abrechnungs-Persistenz (optional, additiv) ---
+  /** Persistierter feingranularer Dispatch-LiveStatus (z. B. "anfahrt"). */
+  detailStatus?: string | null;
+  /** Abrechnungsstatus (offen, bereit, abgerechnet …). */
+  abrechnungStatus?: string;
+  /** Verknüpfter Dauerauftrag (Serie). */
+  dauerauftragId?: string | null;
 }
 
 export interface StatusMeta {

@@ -26,6 +26,7 @@ import {
 } from "@/lib/fahrer";
 import { FahrerForm, type FahrerFormValues } from "@/components/fahrer/fahrer-form";
 import { FahrerDetail } from "@/components/fahrer/fahrer-detail";
+import { useDrivers, useCreateDriver, useUpdateDriver } from "@/lib/drivers-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,10 @@ export const Route = createFileRoute("/fahrer")({
 type StatusFilter = FahrerStatus | "alle";
 
 function FahrerPage() {
+  const { data: dbFahrer } = useDrivers();
+  const createMut = useCreateDriver();
+  const updateMut = useUpdateDriver();
+
   const [fahrer, setFahrer] = useState<Fahrer[]>(INITIAL_FAHRER);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
@@ -67,7 +72,12 @@ function FahrerPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Fahrer | null>(null);
 
-  // Simulated realtime: drivers "unterwegs" accumulate km / revenue.
+  // Keep the local list in sync with persisted drivers (live updates).
+  useEffect(() => {
+    if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
+  }, [dbFahrer]);
+
+  // Simulated realtime: drivers "unterwegs" accumulate km / revenue locally.
   useEffect(() => {
     const interval = setInterval(() => {
       setFahrer((prev) =>
@@ -86,6 +96,7 @@ function FahrerPage() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
 
@@ -136,8 +147,11 @@ function FahrerPage() {
     setDetailOpen(true);
   }
 
+  const isPersisted = (id: string) => !!dbFahrer?.some((f) => f.id === id);
+
   function handleStatusChange(id: string, status: FahrerStatus) {
     setFahrer((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
+    if (isPersisted(id)) updateMut.mutate({ id, values: { status } });
     toast.success(`Status geändert: ${FAHRER_STATUS_META[status].label}`);
   }
 
@@ -157,8 +171,14 @@ function FahrerPage() {
       setFahrer((prev) =>
         prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)),
       );
+      if (isPersisted(editTarget.id)) {
+        updateMut.mutate({ id: editTarget.id, values });
+      }
       toast.success("Fahrer aktualisiert");
     } else {
+      createMut.mutate(values, {
+        onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
+      });
       const id = nextFahrerId();
       const nummer = `F-${String(fahrer.length + 1).padStart(3, "0")}`;
       setFahrer((prev) => [{ id, nummer, ...values }, ...prev]);
@@ -167,6 +187,7 @@ function FahrerPage() {
     setFormOpen(false);
     setEditTarget(null);
   }
+
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
