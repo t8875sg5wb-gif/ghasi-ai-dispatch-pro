@@ -70,6 +70,8 @@ export function AuftragDetail({
   onOpenChange,
   onStatusChange,
   onEdit,
+  canManage = true,
+  canChangeStatus = true,
 }: AuftragDetailProps) {
   if (!auftrag) return null;
 
