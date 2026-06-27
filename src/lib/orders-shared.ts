@@ -88,6 +88,9 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     zielanforderung: r.zielanforderung ?? "",
     patientennotiz: r.patientennotiz ?? "",
     medizinischeNotiz: r.medizinische_notiz ?? "",
+    detailStatus: r.detail_status ?? null,
+    abrechnungStatus: r.abrechnung_status ?? "offen",
+    dauerauftragId: r.dauerauftrag_id ?? null,
   };
 }
 
