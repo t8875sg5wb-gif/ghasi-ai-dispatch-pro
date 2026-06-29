@@ -38,9 +38,7 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="flex flex-col gap-1">
           <span className="truncate text-sm font-semibold">{name}</span>
-          <span className="truncate text-xs font-normal text-muted-foreground">
-            {user?.email}
-          </span>
+          <span className="truncate text-xs font-normal text-muted-foreground">{user?.email}</span>
           {role && (
             <Badge variant="secondary" className="mt-1 w-fit text-[11px]">
               {ROLE_LABELS[role]}
@@ -48,7 +46,10 @@ export function UserMenu() {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void signOut()} className="text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onClick={() => void signOut()}
+          className="text-destructive focus:text-destructive"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Abmelden
         </DropdownMenuItem>

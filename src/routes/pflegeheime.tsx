@@ -8,7 +8,10 @@ export const Route = createFileRoute("/pflegeheime")({
   head: () => ({
     meta: [
       { title: "Pflegeheime – GHASI AI" },
-      { name: "description", content: "Pflegeeinrichtungen, Bewohner-Transporte und Ansprechpartner." },
+      {
+        name: "description",
+        content: "Pflegeeinrichtungen, Bewohner-Transporte und Ansprechpartner.",
+      },
     ],
   }),
   component: () => (

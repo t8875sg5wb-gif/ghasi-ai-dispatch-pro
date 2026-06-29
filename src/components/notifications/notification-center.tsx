@@ -5,11 +5,7 @@ import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   useNotifications,
   markGelesen,
@@ -102,18 +98,17 @@ export function NotificationCenter() {
                       !n.gelesen && "bg-muted/30",
                     )}
                   >
-                    <Link
-                      to={n.to}
-                      onClick={() => markGelesen(n.id)}
-                      className="block pr-6"
-                    >
+                    <Link to={n.to} onClick={() => markGelesen(n.id)} className="block pr-6">
                       <div className="flex items-start gap-2.5">
                         <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", meta.dot)} />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium leading-tight">{n.titel}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">{n.text}</p>
                           <div className="mt-1 flex items-center gap-2">
-                            <Badge variant="outline" className={cn("h-4 px-1.5 text-[10px]", meta.badge)}>
+                            <Badge
+                              variant="outline"
+                              className={cn("h-4 px-1.5 text-[10px]", meta.badge)}
+                            >
                               {meta.label}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">

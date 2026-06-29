@@ -64,15 +64,7 @@ interface FahrzeugDetailProps {
   onEdit: (fahrzeug: Fahrzeug) => void;
 }
 
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
+function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -143,7 +135,9 @@ function Metric({
   } as const;
   return (
     <div className="rounded-xl border border-border/70 bg-card p-3">
-      <div className={cn("mb-2 flex h-8 w-8 items-center justify-center rounded-lg", toneMap[tone])}>
+      <div
+        className={cn("mb-2 flex h-8 w-8 items-center justify-center rounded-lg", toneMap[tone])}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-lg font-bold tabular-nums leading-none">{value}</p>
@@ -166,7 +160,8 @@ export function FahrzeugDetail({
   const empf = flottenEmpfehlung(fahrzeug);
   const reifen = REIFEN_META[fahrzeug.reifenstatus];
   const repkosten = reparaturkostenGesamt(fahrzeug);
-  const tankTone = fahrzeug.tankstand <= 20 ? "destructive" : fahrzeug.tankstand <= 40 ? "warning" : "success";
+  const tankTone =
+    fahrzeug.tankstand <= 20 ? "destructive" : fahrzeug.tankstand <= 40 ? "warning" : "success";
   const aktion = AKTION_META[empf.aktion];
 
   const empfToneCard = {
@@ -204,10 +199,14 @@ export function FahrzeugDetail({
               {status.label}
             </Badge>
             {fahrzeug.rollstuhlGeeignet && (
-              <Badge variant="outline" className="border-info/30 bg-info/10 text-info">Rollstuhl</Badge>
+              <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
+                Rollstuhl
+              </Badge>
             )}
             {fahrzeug.liegendGeeignet && (
-              <Badge variant="outline" className="border-info/30 bg-info/10 text-info">Liegend</Badge>
+              <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
+                Liegend
+              </Badge>
             )}
             <Badge variant="outline" className="border-border bg-muted text-muted-foreground">
               {fahrzeug.sitzplaetze} Sitze
@@ -255,7 +254,9 @@ export function FahrzeugDetail({
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 <Fuel className="h-3.5 w-3.5" /> Tankstand
               </p>
-              <span className={cn("text-sm font-bold tabular-nums", warn.tank && "text-destructive")}>
+              <span
+                className={cn("text-sm font-bold tabular-nums", warn.tank && "text-destructive")}
+              >
                 {fahrzeug.tankstand}% · {fahrzeug.reichweite} km
               </span>
             </div>
@@ -273,12 +274,42 @@ export function FahrzeugDetail({
               Kosten & Erlöse
             </p>
             <div className="grid grid-cols-3 gap-2">
-              <Metric icon={Euro} label="Umsatz heute" value={formatEUR(fahrzeug.tagesumsatz)} tone="success" />
-              <Metric icon={Gauge} label="Gewinn heute" value={formatEUR(fahrzeug.tagesgewinn)} tone="success" />
-              <Metric icon={RouteIcon} label="€ / km" value={fahrzeug.kostenProKm.toFixed(2)} tone="info" />
-              <Metric icon={Euro} label="Umsatz Monat" value={formatEUR(fahrzeug.monatsumsatz)} tone="success" />
-              <Metric icon={Gauge} label="Gewinn Monat" value={formatEUR(fahrzeug.monatsgewinn)} tone="success" />
-              <Metric icon={Receipt} label="Reparaturen" value={formatEUR(repkosten)} tone={repkosten > 5000 ? "destructive" : "muted"} />
+              <Metric
+                icon={Euro}
+                label="Umsatz heute"
+                value={formatEUR(fahrzeug.tagesumsatz)}
+                tone="success"
+              />
+              <Metric
+                icon={Gauge}
+                label="Gewinn heute"
+                value={formatEUR(fahrzeug.tagesgewinn)}
+                tone="success"
+              />
+              <Metric
+                icon={RouteIcon}
+                label="€ / km"
+                value={fahrzeug.kostenProKm.toFixed(2)}
+                tone="info"
+              />
+              <Metric
+                icon={Euro}
+                label="Umsatz Monat"
+                value={formatEUR(fahrzeug.monatsumsatz)}
+                tone="success"
+              />
+              <Metric
+                icon={Gauge}
+                label="Gewinn Monat"
+                value={formatEUR(fahrzeug.monatsgewinn)}
+                tone="success"
+              />
+              <Metric
+                icon={Receipt}
+                label="Reparaturen"
+                value={formatEUR(repkosten)}
+                tone={repkosten > 5000 ? "destructive" : "muted"}
+              />
             </div>
           </div>
 
@@ -304,9 +335,21 @@ export function FahrzeugDetail({
 
           {/* Vehicle data */}
           <div className="space-y-4">
-            <InfoRow icon={User} label="Aktueller Fahrer" value={fahrzeug.fahrer ?? "Nicht zugeordnet"} />
-            <InfoRow icon={RouteIcon} label="Kilometerstand" value={formatKm(fahrzeug.kilometerstand)} />
-            <InfoRow icon={Fuel} label="Kraftstoff" value={`${fahrzeug.kraftstoff} · Ø ${fahrzeug.verbrauch}`} />
+            <InfoRow
+              icon={User}
+              label="Aktueller Fahrer"
+              value={fahrzeug.fahrer ?? "Nicht zugeordnet"}
+            />
+            <InfoRow
+              icon={RouteIcon}
+              label="Kilometerstand"
+              value={formatKm(fahrzeug.kilometerstand)}
+            />
+            <InfoRow
+              icon={Fuel}
+              label="Kraftstoff"
+              value={`${fahrzeug.kraftstoff} · Ø ${fahrzeug.verbrauch}`}
+            />
           </div>
 
           <Separator />
@@ -323,7 +366,9 @@ export function FahrzeugDetail({
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                   <Droplets className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-medium">Ölwechsel bei {formatKm(fahrzeug.oelwechselBei)}</p>
+                <p className="text-sm font-medium">
+                  Ölwechsel bei {formatKm(fahrzeug.oelwechselBei)}
+                </p>
               </div>
               <Badge
                 variant="outline"
@@ -333,7 +378,11 @@ export function FahrzeugDetail({
                     : "border-success/30 bg-success/10 text-success",
                 )}
               >
-                in {Math.max(0, fahrzeug.oelwechselBei - fahrzeug.kilometerstand).toLocaleString("de-DE")} km
+                in{" "}
+                {Math.max(0, fahrzeug.oelwechselBei - fahrzeug.kilometerstand).toLocaleString(
+                  "de-DE",
+                )}{" "}
+                km
               </Badge>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2.5">
@@ -343,7 +392,9 @@ export function FahrzeugDetail({
                 </div>
                 <p className="text-sm font-medium">Reifenstatus</p>
               </div>
-              <Badge variant="outline" className={reifen.badge}>{reifen.label}</Badge>
+              <Badge variant="outline" className={reifen.badge}>
+                {reifen.label}
+              </Badge>
             </div>
           </div>
 
@@ -354,7 +405,10 @@ export function FahrzeugDetail({
                 Reparaturen
               </p>
               {fahrzeug.reparaturen.map((r, i) => (
-                <div key={i} className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2.5">
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2.5"
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{r.beschreibung}</p>
                     <p className="text-xs text-muted-foreground">{formatDatum(r.datum)}</p>
@@ -373,11 +427,25 @@ export function FahrzeugDetail({
               Versicherung & Leasing
             </p>
             <InfoRow icon={ShieldCheck} label="Versicherung" value={fahrzeug.versicherung || "—"} />
-            <FristRow icon={ShieldCheck} label="Versicherung bis" iso={fahrzeug.versicherungBis} tage={45} />
+            <FristRow
+              icon={ShieldCheck}
+              label="Versicherung bis"
+              iso={fahrzeug.versicherungBis}
+              tage={45}
+            />
             {fahrzeug.leasingrate > 0 ? (
               <>
-                <InfoRow icon={CreditCard} label="Leasingrate" value={`${formatEUR(fahrzeug.leasingrate)} / Monat`} />
-                <FristRow icon={CalendarClock} label="Leasingende" iso={fahrzeug.leasingEnde} tage={60} />
+                <InfoRow
+                  icon={CreditCard}
+                  label="Leasingrate"
+                  value={`${formatEUR(fahrzeug.leasingrate)} / Monat`}
+                />
+                <FristRow
+                  icon={CalendarClock}
+                  label="Leasingende"
+                  iso={fahrzeug.leasingEnde}
+                  tage={60}
+                />
               </>
             ) : (
               <InfoRow icon={CreditCard} label="Leasing" value="Kein Leasing (Eigentum)" />
@@ -392,7 +460,11 @@ export function FahrzeugDetail({
             {fahrzeug.dokumente.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {fahrzeug.dokumente.map((d) => (
-                  <Badge key={d} variant="outline" className="gap-1 border-border bg-muted text-muted-foreground">
+                  <Badge
+                    key={d}
+                    variant="outline"
+                    className="gap-1 border-border bg-muted text-muted-foreground"
+                  >
                     <FileText className="h-3 w-3" />
                     {d}
                   </Badge>
@@ -403,7 +475,9 @@ export function FahrzeugDetail({
             )}
             <div className="flex items-center gap-2 rounded-xl border border-dashed border-border/70 px-3 py-3 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />
-              {fahrzeug.fotos.length > 0 ? `${fahrzeug.fotos.length} Foto(s)` : "Keine Fotos hinterlegt"}
+              {fahrzeug.fotos.length > 0
+                ? `${fahrzeug.fotos.length} Foto(s)`
+                : "Keine Fotos hinterlegt"}
             </div>
           </div>
 

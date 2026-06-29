@@ -8,7 +8,10 @@ export const Route = createFileRoute("/krankenhaeuser")({
   head: () => ({
     meta: [
       { title: "Krankenhäuser – GHASI AI" },
-      { name: "description", content: "Kliniken, Fachbereiche und Anfahrtshinweise zentral verwalten." },
+      {
+        name: "description",
+        content: "Kliniken, Fachbereiche und Anfahrtshinweise zentral verwalten.",
+      },
     ],
   }),
   component: () => (

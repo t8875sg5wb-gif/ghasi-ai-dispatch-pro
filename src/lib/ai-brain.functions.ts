@@ -27,7 +27,8 @@ export const generateExecutiveAnalysis = createServerFn({ method: "POST" }).hand
 
     const { generateText } = await import("ai");
     const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const { buildBrainSnapshot, computeInsights, computePrognosen } = await import("@/lib/ai-brain");
+    const { buildBrainSnapshot, computeInsights, computePrognosen } =
+      await import("@/lib/ai-brain");
     const { buildKnowledgeSnapshot } = await import("@/lib/ghasi-knowledge");
     const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
 
@@ -55,7 +56,12 @@ Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
 ${buildKnowledgeSnapshot()}`;
 
     const toStrings = (v: unknown): string[] =>
-      Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean).slice(0, 5) : [];
+      Array.isArray(v)
+        ? v
+            .map((x) => String(x))
+            .filter(Boolean)
+            .slice(0, 5)
+        : [];
 
     try {
       const provider = createLovableAiGatewayProvider(apiKey);
@@ -72,7 +78,11 @@ ${buildKnowledgeSnapshot()}`;
       });
 
       // Tolerantes Parsen: Code-Fences entfernen, JSON-Block extrahieren.
-      const raw = result.text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+      const raw = result.text
+        .trim()
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .trim();
       const start = raw.indexOf("{");
       const end = raw.lastIndexOf("}");
       if (start === -1 || end === -1) throw new Error("Keine JSON-Antwort erhalten.");
@@ -89,8 +99,10 @@ ${buildKnowledgeSnapshot()}`;
       const message = err instanceof Error ? err.message : String(err);
       console.error("[generateExecutiveAnalysis] error:", message);
       let fehler = "Die KI-Analyse konnte nicht erstellt werden – bitte erneut versuchen.";
-      if (/429|rate limit/i.test(message)) fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
-      else if (/402|credit/i.test(message)) fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
+      if (/429|rate limit/i.test(message))
+        fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
+      else if (/402|credit/i.test(message))
+        fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { lageeinschaetzung: "", chancen: [], risiken: [], naechsteSchritte: [], fehler };
     }
   },

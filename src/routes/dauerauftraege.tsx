@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -85,6 +85,14 @@ import {
 import { dauerauftragToWrite } from "@/lib/recurring-shared";
 import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten } from "@/lib/roles";
+import { AddressFields } from "@/components/forms/address-fields";
+import {
+  adresseGefuellt,
+  formatAdresseMehrzeilig,
+  leereAdresse,
+  parseAdresse,
+  type AdresseStruktur,
+} from "@/lib/address";
 
 export const Route = createFileRoute("/dauerauftraege")({
   head: () => ({
@@ -106,6 +114,8 @@ const leereVorlage = (): Dauerauftrag => ({
   id: "",
   kennung: naechsteKennung(DAUERAUFTRAEGE),
   patient: "",
+  pickup: leereAdresse(),
+  destination: leereAdresse(),
   abholort: "",
   zielort: "",
   terminzeit: "08:00",
@@ -151,9 +161,15 @@ function DauerauftraegePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
+  const [neueVorlage, setNeueVorlage] = useState<Dauerauftrag>(() => leereVorlage());
 
   const counts = useMemo(() => {
-    const base: Record<StatusFilter, number> = { alle: daten.length, aktiv: 0, pausiert: 0, beendet: 0 };
+    const base: Record<StatusFilter, number> = {
+      alle: daten.length,
+      aktiv: 0,
+      pausiert: 0,
+      beendet: 0,
+    };
     for (const d of daten) base[abgeleiteterStatus(d)] += 1;
     return base;
   }, [daten]);
@@ -165,6 +181,7 @@ function DauerauftraegePage() {
       if (kategorieFilter !== "alle" && d.kategorie !== kategorieFilter) return false;
       if (q) {
         const heu = [d.kennung, d.patient, d.abholort, d.zielort, d.kostentraeger, d.krankenkasse]
+          .map((x) => x ?? "")
           .join(" ")
           .toLowerCase();
         if (!heu.includes(q)) return false;
@@ -173,7 +190,7 @@ function DauerauftraegePage() {
     });
   }, [daten, search, statusFilter, kategorieFilter]);
 
-  const detail = detailId ? daten.find((d) => d.id === detailId) ?? null : null;
+  const detail = detailId ? (daten.find((d) => d.id === detailId) ?? null) : null;
 
   /* --------------------------- Aktionen --------------------------- */
 
@@ -338,6 +355,7 @@ function DauerauftraegePage() {
             <Button
               onClick={() => {
                 setEditTarget(null);
+                setNeueVorlage(leereVorlage());
                 setFormOpen(true);
               }}
             >
@@ -349,12 +367,14 @@ function DauerauftraegePage() {
 
       {/* KPI-Karten */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {([
-          { key: "alle", label: "Serien gesamt" },
-          { key: "aktiv", label: "Aktiv" },
-          { key: "pausiert", label: "Pausiert" },
-          { key: "beendet", label: "Beendet" },
-        ] as { key: StatusFilter; label: string }[]).map((k) => (
+        {(
+          [
+            { key: "alle", label: "Serien gesamt" },
+            { key: "aktiv", label: "Aktiv" },
+            { key: "pausiert", label: "Pausiert" },
+            { key: "beendet", label: "Beendet" },
+          ] as { key: StatusFilter; label: string }[]
+        ).map((k) => (
           <Card
             key={k.key}
             className={cn(
@@ -382,7 +402,10 @@ function DauerauftraegePage() {
             className="pl-9"
           />
         </div>
-        <Select value={kategorieFilter} onValueChange={(v) => setKategorieFilter(v as SerienKategorie | "alle")}>
+        <Select
+          value={kategorieFilter}
+          onValueChange={(v) => setKategorieFilter(v as SerienKategorie | "alle")}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Kategorie" />
           </SelectTrigger>
@@ -414,7 +437,10 @@ function DauerauftraegePage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
                     <Loader2 className="mx-auto size-5 animate-spin" />
                   </TableCell>
                 </TableRow>
@@ -431,7 +457,10 @@ function DauerauftraegePage() {
               )}
               {!isLoading && !isError && gefiltert.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
                     {daten.length === 0
                       ? "Noch keine Daueraufträge angelegt."
                       : "Keine Daueraufträge gefunden."}
@@ -444,14 +473,13 @@ function DauerauftraegePage() {
                 const KatIcon = KATEGORIE_META[d.kategorie].icon;
                 const naechste = naechsteTermine(d, 1)[0];
                 return (
-                  <TableRow
-                    key={d.id}
-                    className="cursor-pointer"
-                    onClick={() => setDetailId(d.id)}
-                  >
+                  <TableRow key={d.id} className="cursor-pointer" onClick={() => setDetailId(d.id)}>
                     <TableCell>
                       <div className="font-medium">{d.kennung}</div>
-                      <Badge variant="outline" className={cn("mt-1 gap-1", KATEGORIE_META[d.kategorie].badge)}>
+                      <Badge
+                        variant="outline"
+                        className={cn("mt-1 gap-1", KATEGORIE_META[d.kategorie].badge)}
+                      >
                         <KatIcon className="size-3" /> {KATEGORIE_META[d.kategorie].label}
                       </Badge>
                     </TableCell>
@@ -532,7 +560,7 @@ function DauerauftraegePage() {
       >
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
           <DauerauftragForm
-            initial={editTarget ?? leereVorlage()}
+            initial={editTarget ?? neueVorlage}
             istEdit={!!editTarget}
             saving={saving}
             onSubmit={speichern}
@@ -570,6 +598,8 @@ function DetailAnsicht({
   const StatusIcon = STATUS_META[st].icon;
   const termine = naechsteTermine(d, 8);
   const offen30 = offeneTermineImZeitraum(d, heuteISO(), isoPlusTage(heuteISO(), 30)).length;
+  const pickupZeilen = formatAdresseMehrzeilig(d.pickup ?? parseAdresse(d.abholort));
+  const destinationZeilen = formatAdresseMehrzeilig(d.destination ?? parseAdresse(d.zielort));
 
   return (
     <>
@@ -589,10 +619,16 @@ function DetailAnsicht({
 
       <div className="space-y-4 text-sm">
         <div className="grid grid-cols-2 gap-3">
-          <Feld label="Abholort" wert={d.abholort} />
-          <Feld label="Zielort" wert={d.zielort} />
+          <Feld label="Pickup" wert={pickupZeilen.length ? pickupZeilen.join(" · ") : "—"} />
+          <Feld
+            label="Destination"
+            wert={destinationZeilen.length ? destinationZeilen.join(" · ") : "—"}
+          />
           <Feld label="Uhrzeit Hinfahrt" wert={d.terminzeit} />
-          <Feld label="Rückfahrt" wert={d.rueckfahrt ? `Ja · ${d.rueckfahrtzeit ?? "—"}` : "Nein"} />
+          <Feld
+            label="Rückfahrt"
+            wert={d.rueckfahrt ? `Ja · ${d.rueckfahrtzeit ?? "—"}` : "Nein"}
+          />
           <Feld label="Mobilität" wert={MOBILITAET_META[d.mobilitaet].label} />
           <Feld label="Begleitperson" wert={d.begleitperson ? "Ja" : "Nein"} />
           <Feld label="Verordnung erforderlich" wert={d.verordnungErforderlich ? "Ja" : "Nein"} />
@@ -602,7 +638,10 @@ function DetailAnsicht({
           <Feld label="Bevorzugtes Fahrzeug" wert={d.bevorzugtesFahrzeug ?? "—"} />
           <Feld label="Bevorzugter Fahrer" wert={d.bevorzugterFahrer ?? "—"} />
           {d.pauseVon && d.pauseBis && (
-            <Feld label="Pausenzeitraum" wert={`${formatDatumDe(d.pauseVon)} – ${formatDatumDe(d.pauseBis)}`} />
+            <Feld
+              label="Pausenzeitraum"
+              wert={`${formatDatumDe(d.pauseVon)} – ${formatDatumDe(d.pauseBis)}`}
+            />
           )}
           <Feld label="Bereits erzeugt" wert={`${d.generierteTermine.length} Termine`} />
         </div>
@@ -635,12 +674,22 @@ function DetailAnsicht({
             <ul className="space-y-1">
               {termine.map((iso) => (
                 <li key={iso} className="flex items-center justify-between text-sm">
-                  <span className={cn("tabular-nums", d.generierteTermine.includes(iso) && "text-success")}>
+                  <span
+                    className={cn(
+                      "tabular-nums",
+                      d.generierteTermine.includes(iso) && "text-success",
+                    )}
+                  >
                     {formatDatumDe(iso)}
                     {d.generierteTermine.includes(iso) && " · erzeugt"}
                   </span>
                   {!d.generierteTermine.includes(iso) && (
-                    <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => onSkip(iso)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 gap-1"
+                      onClick={() => onSkip(iso)}
+                    >
                       <SkipForward className="size-3" /> überspringen
                     </Button>
                   )}
@@ -655,7 +704,12 @@ function DetailAnsicht({
         <Button variant="outline" onClick={onEdit}>
           Bearbeiten
         </Button>
-        <Button variant="outline" className="gap-1" disabled={st !== "aktiv"} onClick={() => onGenerate(1)}>
+        <Button
+          variant="outline"
+          className="gap-1"
+          disabled={st !== "aktiv"}
+          onClick={() => onGenerate(1)}
+        >
           <CalendarPlus className="size-4" /> Heute
         </Button>
         <Button className="gap-1" disabled={st !== "aktiv"} onClick={() => onGenerate(30)}>
@@ -703,9 +757,25 @@ function DauerauftragForm({
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
-  const [f, setF] = useState<Dauerauftrag>(initial);
+  const normalisiere = (d: Dauerauftrag): Dauerauftrag => ({
+    ...d,
+    pickup: d.pickup ?? parseAdresse(d.abholort),
+    destination: d.destination ?? parseAdresse(d.zielort),
+  });
+  const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
+
+  useEffect(() => {
+    setF(normalisiere(initial));
+  }, [initial]);
+
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
+  const setAdresse = (key: "pickup" | "destination", value: AdresseStruktur) =>
+    setF((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === "pickup" ? { abholort: "" } : { zielort: "" }),
+    }));
 
   const toggleTag = (wert: number) => {
     setF((prev) => ({
@@ -717,24 +787,34 @@ function DauerauftragForm({
   };
 
   const submit = () => {
-    if (!f.patient.trim() || !f.abholort.trim() || !f.zielort.trim()) {
-      toast.error("Bitte Patient, Abhol- und Zielort angeben.");
+    const pickup = f.pickup ?? parseAdresse(f.abholort);
+    const destination = f.destination ?? parseAdresse(f.zielort);
+    if (!f.patient.trim() || !adresseGefuellt(pickup) || !adresseGefuellt(destination)) {
+      toast.error("Bitte Patient, Pickup- und Destination-Adresse angeben.");
       return;
     }
     if (f.rhythmus === "woechentlich" && f.wochentage.length === 0) {
       toast.error("Bitte mindestens einen Wochentag wählen.");
       return;
     }
-    onSubmit(f);
+    onSubmit({
+      ...f,
+      pickup,
+      destination,
+      abholort: "",
+      zielort: "",
+    });
   };
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{istEdit ? `Dauerauftrag ${f.kennung} bearbeiten` : "Neuer Dauerauftrag"}</DialogTitle>
+        <DialogTitle>
+          {istEdit ? `Dauerauftrag ${f.kennung} bearbeiten` : "Neuer Dauerauftrag"}
+        </DialogTitle>
         <DialogDescription>
-          Serie konfigurieren – erzeugte Transporte erscheinen automatisch in Aufträgen, Dispatch &amp;
-          Abrechnung.
+          Serie konfigurieren – erzeugte Transporte erscheinen automatisch in Aufträgen, Dispatch
+          &amp; Abrechnung.
         </DialogDescription>
       </DialogHeader>
 
@@ -742,23 +822,44 @@ function DauerauftragForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>Patient</Label>
-            <Input value={f.patient} onChange={(e) => set("patient", e.target.value)} placeholder="Name des Patienten" />
+            <Input
+              value={f.patient}
+              onChange={(e) => set("patient", e.target.value)}
+              placeholder="Name des Patienten"
+            />
           </div>
-          <div>
-            <Label>Abholort</Label>
-            <Input value={f.abholort} onChange={(e) => set("abholort", e.target.value)} />
+          <div className="sm:col-span-2">
+            <AddressFields
+              idPrefix="dauer-pickup"
+              label="Pickup"
+              required
+              value={f.pickup ?? parseAdresse(f.abholort)}
+              onChange={(value) => setAdresse("pickup", value)}
+            />
           </div>
-          <div>
-            <Label>Zielort</Label>
-            <Input value={f.zielort} onChange={(e) => set("zielort", e.target.value)} />
+          <div className="sm:col-span-2">
+            <AddressFields
+              idPrefix="dauer-destination"
+              label="Destination"
+              required
+              value={f.destination ?? parseAdresse(f.zielort)}
+              onChange={(value) => setAdresse("destination", value)}
+            />
           </div>
           <div>
             <Label>Kategorie</Label>
-            <Select value={f.kategorie} onValueChange={(v) => set("kategorie", v as SerienKategorie)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={f.kategorie}
+              onValueChange={(v) => set("kategorie", v as SerienKategorie)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {KATEGORIEN.map((k) => (
-                  <SelectItem key={k} value={k}>{KATEGORIE_META[k].label}</SelectItem>
+                  <SelectItem key={k} value={k}>
+                    {KATEGORIE_META[k].label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -766,10 +867,14 @@ function DauerauftragForm({
           <div>
             <Label>Mobilität</Label>
             <Select value={f.mobilitaet} onValueChange={(v) => set("mobilitaet", v as Mobilitaet)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {MOBILITAET_OPTIONEN.map((m) => (
-                  <SelectItem key={m} value={m}>{MOBILITAET_META[m].label}</SelectItem>
+                  <SelectItem key={m} value={m}>
+                    {MOBILITAET_META[m].label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -782,17 +887,25 @@ function DauerauftragForm({
             <div>
               <Label>Rhythmus</Label>
               <Select value={f.rhythmus} onValueChange={(v) => set("rhythmus", v as Rhythmus)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {RHYTHMEN.map((r) => (
-                    <SelectItem key={r} value={r}>{RHYTHMUS_LABEL[r]}</SelectItem>
+                    <SelectItem key={r} value={r}>
+                      {RHYTHMUS_LABEL[r]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>Uhrzeit Hinfahrt</Label>
-              <Input type="time" value={f.terminzeit} onChange={(e) => set("terminzeit", e.target.value)} />
+              <Input
+                type="time"
+                value={f.terminzeit}
+                onChange={(e) => set("terminzeit", e.target.value)}
+              />
             </div>
             <div>
               <Label>Uhrzeit Rückfahrt</Label>
@@ -826,7 +939,11 @@ function DauerauftragForm({
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Startdatum</Label>
-              <Input type="date" value={f.startDatum} onChange={(e) => set("startDatum", e.target.value)} />
+              <Input
+                type="date"
+                value={f.startDatum}
+                onChange={(e) => set("startDatum", e.target.value)}
+              />
             </div>
             <div>
               <Label>Enddatum (optional)</Label>
@@ -860,10 +977,14 @@ function DauerauftragForm({
           <div>
             <Label>Abrechnungskunde</Label>
             <Select value={f.kostentraeger} onValueChange={(v) => set("kostentraeger", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {KUNDEN.map((k) => (
-                  <SelectItem key={k.id} value={k.name}>{k.name}</SelectItem>
+                  <SelectItem key={k.id} value={k.name}>
+                    {k.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -871,10 +992,14 @@ function DauerauftragForm({
           <div>
             <Label>Krankenkasse</Label>
             <Select value={f.krankenkasse} onValueChange={(v) => set("krankenkasse", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {KRANKENKASSEN.map((k) => (
-                  <SelectItem key={k.id} value={k.name}>{k.name}</SelectItem>
+                  <SelectItem key={k.id} value={k.name}>
+                    {k.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -885,11 +1010,15 @@ function DauerauftragForm({
               value={f.bevorzugtesFahrzeug ?? "none"}
               onValueChange={(v) => set("bevorzugtesFahrzeug", v === "none" ? null : v)}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
                 {FAHRZEUG_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>{x}</SelectItem>
+                  <SelectItem key={x} value={x}>
+                    {x}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -900,11 +1029,15 @@ function DauerauftragForm({
               value={f.bevorzugterFahrer ?? "none"}
               onValueChange={(v) => set("bevorzugterFahrer", v === "none" ? null : v)}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
                 {FAHRER_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>{x}</SelectItem>
+                  <SelectItem key={x} value={x}>
+                    {x}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -913,8 +1046,16 @@ function DauerauftragForm({
 
         {/* Schalter */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <SchalterFeld label="Rückfahrt anlegen" checked={f.rueckfahrt} onChange={(v) => set("rueckfahrt", v)} />
-          <SchalterFeld label="Begleitperson" checked={f.begleitperson} onChange={(v) => set("begleitperson", v)} />
+          <SchalterFeld
+            label="Rückfahrt anlegen"
+            checked={f.rueckfahrt}
+            onChange={(v) => set("rueckfahrt", v)}
+          />
+          <SchalterFeld
+            label="Begleitperson"
+            checked={f.begleitperson}
+            onChange={(v) => set("begleitperson", v)}
+          />
           <SchalterFeld
             label="Verordnung erforderlich"
             checked={f.verordnungErforderlich}
@@ -925,7 +1066,11 @@ function DauerauftragForm({
             checked={f.feiertageUeberspringen}
             onChange={(v) => set("feiertageUeberspringen", v)}
           />
-          <SchalterFeld label="Pausiert" checked={f.pausiert} onChange={(v) => set("pausiert", v)} />
+          <SchalterFeld
+            label="Pausiert"
+            checked={f.pausiert}
+            onChange={(v) => set("pausiert", v)}
+          />
         </div>
 
         <div>

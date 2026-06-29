@@ -103,7 +103,6 @@ function EinstellungenSeite() {
     setWerte((prev) => ({ ...prev, [key]: value }));
   }
 
-
   function speichern() {
     try {
       window.localStorage.setItem(SPEICHER_KEY, JSON.stringify(werte));
@@ -319,9 +318,7 @@ function EinstellungenSeite() {
           <CardContent className="space-y-2">
             <div className="rounded-lg border border-border/70 px-3 py-2 text-sm">
               Angemeldet als <strong>{akteur || "—"}</strong>
-              {role && (
-                <span className="text-muted-foreground"> · Rolle: {ROLE_LABELS[role]}</span>
-              )}
+              {role && <span className="text-muted-foreground"> · Rolle: {ROLE_LABELS[role]}</span>}
             </div>
             <Link to="/administration">
               <Button variant="outline" className="w-full justify-start">

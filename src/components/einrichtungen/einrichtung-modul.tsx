@@ -17,11 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import {
-  type Einrichtung,
-  type EinrichtungTyp,
-  nextStammId,
-} from "@/lib/stammdaten";
+import { type Einrichtung, type EinrichtungTyp, nextStammId } from "@/lib/stammdaten";
 import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
@@ -324,15 +320,7 @@ function EinrichtungDetail({
   );
 }
 
-function Zeile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
+function Zeile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -442,7 +430,12 @@ function FormFelder({
       <Feld label="Name *">
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </Feld>
-      <AddressFields idPrefix="einrichtung-adresse" label="Adresse *" value={adr} onChange={setAdr} />
+      <AddressFields
+        idPrefix="einrichtung-adresse"
+        label="Adresse *"
+        value={adr}
+        onChange={setAdr}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Feld label="Ansprechpartner">
@@ -455,11 +448,7 @@ function FormFelder({
           <Input value={email} onChange={(e) => setEmail(e.target.value)} />
         </Feld>
         <Feld label={config.kapazitaetLabel}>
-          <Input
-            type="number"
-            value={kapazitaet}
-            onChange={(e) => setKapazitaet(e.target.value)}
-          />
+          <Input type="number" value={kapazitaet} onChange={(e) => setKapazitaet(e.target.value)} />
         </Feld>
       </div>
       <Feld label="Öffnungszeiten">

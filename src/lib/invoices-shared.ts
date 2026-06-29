@@ -172,8 +172,7 @@ export function abrechnungsBereitschaft(a: Auftrag): AbrechnungsBereitschaft {
 
   // Patient signature / completion confirmation (required for non-emergency).
   if (verordnungErforderlich(a)) {
-    const signatur =
-      a.detailStatus === "abgeschlossen" || (abgeschlossen && !!a.fahrer);
+    const signatur = a.detailStatus === "abgeschlossen" || (abgeschlossen && !!a.fahrer);
     if (!signatur) fehlend.push("Patientenunterschrift fehlt");
   }
 

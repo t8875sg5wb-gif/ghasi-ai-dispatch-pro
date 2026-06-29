@@ -100,8 +100,8 @@ export function AuftragDetail({
   const zeigtWarnung = hatWarnung(stufe);
   const unzugewiesen = istUnzugewiesen(auftrag);
   const fehlt = fehlendeFelder(auftrag);
-  const abholZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.abholort));
-  const zielZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.zielort));
+  const abholZeilen = formatAdresseMehrzeilig(auftrag.pickup ?? parseAdresse(auftrag.abholort));
+  const zielZeilen = formatAdresseMehrzeilig(auftrag.destination ?? parseAdresse(auftrag.zielort));
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -137,8 +137,7 @@ export function AuftragDetail({
             <div className="flex items-center justify-between">
               {STATUS_PIPELINE.map((s, i) => {
                 const meta = STATUS_META[s];
-                const reached =
-                  auftrag.status !== "storniert" && i <= activeIndex;
+                const reached = auftrag.status !== "storniert" && i <= activeIndex;
                 return (
                   <div key={s} className="flex flex-1 flex-col items-center text-center">
                     <div
@@ -183,7 +182,8 @@ export function AuftragDetail({
                     variant={destructive ? "outline" : "default"}
                     className={cn(
                       "gap-1.5",
-                      destructive && "border-destructive/30 text-destructive hover:bg-destructive/10",
+                      destructive &&
+                        "border-destructive/30 text-destructive hover:bg-destructive/10",
                     )}
                     onClick={() => onStatusChange(auftrag.id, next)}
                   >
@@ -223,7 +223,9 @@ export function AuftragDetail({
                 <p className="text-xs text-muted-foreground">Abholort</p>
                 {abholZeilen.length > 0 ? (
                   abholZeilen.map((z, i) => (
-                    <p key={i} className="text-sm font-medium leading-tight">{z}</p>
+                    <p key={i} className="text-sm font-medium leading-tight">
+                      {z}
+                    </p>
                   ))
                 ) : (
                   <p className="text-sm font-medium">—</p>
@@ -238,7 +240,9 @@ export function AuftragDetail({
                 <p className="text-xs text-muted-foreground">Zielort</p>
                 {zielZeilen.length > 0 ? (
                   zielZeilen.map((z, i) => (
-                    <p key={i} className="text-sm font-medium leading-tight">{z}</p>
+                    <p key={i} className="text-sm font-medium leading-tight">
+                      {z}
+                    </p>
                   ))
                 ) : (
                   <p className="text-sm font-medium">—</p>
@@ -246,16 +250,8 @@ export function AuftragDetail({
               </div>
             </div>
             <InfoRow icon={Calendar} label="Termin" value={formatTermin(auftrag.termin)} />
-            <InfoRow
-              icon={User}
-              label="Fahrer"
-              value={auftrag.fahrer ?? "Nicht zugewiesen"}
-            />
-            <InfoRow
-              icon={Truck}
-              label="Fahrzeug"
-              value={auftrag.fahrzeug ?? "Nicht zugewiesen"}
-            />
+            <InfoRow icon={User} label="Fahrer" value={auftrag.fahrer ?? "Nicht zugewiesen"} />
+            <InfoRow icon={Truck} label="Fahrzeug" value={auftrag.fahrzeug ?? "Nicht zugewiesen"} />
             <InfoRow icon={CreditCard} label="Kostenträger" value={auftrag.kostentraeger || "—"} />
             {fehlt.length > 0 && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
@@ -272,8 +268,6 @@ export function AuftragDetail({
             </p>
             <MedizinDetails auftrag={auftrag} rolle="dispo" />
           </div>
-
-
 
           {auftrag.notiz && (
             <>

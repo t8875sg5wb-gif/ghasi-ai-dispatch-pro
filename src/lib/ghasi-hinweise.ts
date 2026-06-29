@@ -16,7 +16,11 @@ export interface Hinweis {
 }
 
 const EUR = (n: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 function tageBis(iso: string): number {
   const ziel = new Date(iso).getTime();
@@ -167,6 +171,11 @@ export function generateHinweise(): Hinweis[] {
     });
   }
 
-  const reihenfolge: Record<HinweisStufe, number> = { kritisch: 0, warnung: 1, info: 2, positiv: 3 };
+  const reihenfolge: Record<HinweisStufe, number> = {
+    kritisch: 0,
+    warnung: 1,
+    info: 2,
+    positiv: 3,
+  };
   return h.sort((a, b) => reihenfolge[a.stufe] - reihenfolge[b.stufe]);
 }

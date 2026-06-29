@@ -4,12 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Fahrer } from "@/lib/fahrer";
-import {
-  rowToFahrer,
-  writeToRow,
-  type DriverRow,
-  type DriverWrite,
-} from "@/lib/drivers-shared";
+import { rowToFahrer, writeToRow, type DriverRow, type DriverWrite } from "@/lib/drivers-shared";
 
 export const listDrivers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

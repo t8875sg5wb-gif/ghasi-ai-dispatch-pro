@@ -98,9 +98,24 @@ export function ExecutiveAnalysis() {
               </div>
             )}
             <div className="grid gap-3 lg:grid-cols-3">
-              <Lane title="Chancen" icon={TrendingUp} tone="bg-success/15 text-success" items={data.chancen} />
-              <Lane title="Risiken" icon={AlertTriangle} tone="bg-warning/20 text-warning" items={data.risiken} />
-              <Lane title="Nächste Schritte" icon={ListChecks} tone="bg-primary/10 text-primary" items={data.naechsteSchritte} />
+              <Lane
+                title="Chancen"
+                icon={TrendingUp}
+                tone="bg-success/15 text-success"
+                items={data.chancen}
+              />
+              <Lane
+                title="Risiken"
+                icon={AlertTriangle}
+                tone="bg-warning/20 text-warning"
+                items={data.risiken}
+              />
+              <Lane
+                title="Nächste Schritte"
+                icon={ListChecks}
+                tone="bg-primary/10 text-primary"
+                items={data.naechsteSchritte}
+              />
             </div>
             <Badge variant="secondary" className="text-[10px]">
               Nur Empfehlungen · keine automatische Ausführung

@@ -8,7 +8,10 @@ export const Route = createFileRoute("/dialysezentren")({
   head: () => ({
     meta: [
       { title: "Dialysezentren – GHASI AI" },
-      { name: "description", content: "Dialysezentren, Schichtzeiten und wiederkehrende Sammeltouren." },
+      {
+        name: "description",
+        content: "Dialysezentren, Schichtzeiten und wiederkehrende Sammeltouren.",
+      },
     ],
   }),
   component: () => (

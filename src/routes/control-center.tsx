@@ -22,12 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  computeKpis,
-  computeBusinessHealth,
-  EUR,
-  type HealthStufe,
-} from "@/lib/ai-brain";
+import { computeKpis, computeBusinessHealth, EUR, type HealthStufe } from "@/lib/ai-brain";
 
 export const Route = createFileRoute("/control-center")({
   head: () => ({
@@ -94,14 +89,62 @@ function ControlCenter() {
   const health = computeBusinessHealth(k);
 
   const stats = [
-    { label: "Umsatz heute", value: EUR(k.umsatzHeute), icon: Euro, tone: "primary" as const, hint: `Monat ${EUR(k.umsatzMonat)}` },
-    { label: "Gewinn heute", value: EUR(k.gewinnHeute), icon: TrendingUp, tone: "success" as const, hint: `Marge ${k.margeProzent} %` },
-    { label: "Laufende Transporte", value: String(k.laufendeTransporte), icon: Loader, tone: "warning" as const, hint: `${k.offeneTransporte} offen` },
-    { label: "Patienten unterwegs", value: String(k.patientenUnterwegs), icon: HeartPulse, tone: "info" as const, hint: "aktuell betreut" },
-    { label: "Fahrzeuge aktiv", value: `${k.aktiveFahrzeuge}`, icon: Truck, tone: "primary" as const, hint: `${k.freieFahrzeuge} frei` },
-    { label: "Fahrer aktiv", value: `${k.aktiveFahrer}`, icon: UserCheck, tone: "accent" as const, hint: `${k.freieFahrer} frei` },
-    { label: "Offene Rechnungen", value: String(k.offeneRechnungen), icon: FileText, tone: "warning" as const, hint: "zur Prüfung" },
-    { label: "KI-Effizienz", value: `${k.aiEffizienz} %`, icon: Cpu, tone: "success" as const, hint: "Gesamtindex" },
+    {
+      label: "Umsatz heute",
+      value: EUR(k.umsatzHeute),
+      icon: Euro,
+      tone: "primary" as const,
+      hint: `Monat ${EUR(k.umsatzMonat)}`,
+    },
+    {
+      label: "Gewinn heute",
+      value: EUR(k.gewinnHeute),
+      icon: TrendingUp,
+      tone: "success" as const,
+      hint: `Marge ${k.margeProzent} %`,
+    },
+    {
+      label: "Laufende Transporte",
+      value: String(k.laufendeTransporte),
+      icon: Loader,
+      tone: "warning" as const,
+      hint: `${k.offeneTransporte} offen`,
+    },
+    {
+      label: "Patienten unterwegs",
+      value: String(k.patientenUnterwegs),
+      icon: HeartPulse,
+      tone: "info" as const,
+      hint: "aktuell betreut",
+    },
+    {
+      label: "Fahrzeuge aktiv",
+      value: `${k.aktiveFahrzeuge}`,
+      icon: Truck,
+      tone: "primary" as const,
+      hint: `${k.freieFahrzeuge} frei`,
+    },
+    {
+      label: "Fahrer aktiv",
+      value: `${k.aktiveFahrer}`,
+      icon: UserCheck,
+      tone: "accent" as const,
+      hint: `${k.freieFahrer} frei`,
+    },
+    {
+      label: "Offene Rechnungen",
+      value: String(k.offeneRechnungen),
+      icon: FileText,
+      tone: "warning" as const,
+      hint: "zur Prüfung",
+    },
+    {
+      label: "KI-Effizienz",
+      value: `${k.aiEffizienz} %`,
+      icon: Cpu,
+      tone: "success" as const,
+      hint: "Gesamtindex",
+    },
   ];
 
   return (
@@ -132,7 +175,8 @@ function ControlCenter() {
           <CardContent className="flex flex-col items-center gap-2">
             <HealthGauge score={health.score} stufe={health.stufe} />
             <p className="text-center text-xs text-muted-foreground">
-              Dynamisch berechnet aus Profitabilität, Auslastung, Pünktlichkeit, Zufriedenheit und Risiko.
+              Dynamisch berechnet aus Profitabilität, Auslastung, Pünktlichkeit, Zufriedenheit und
+              Risiko.
             </p>
           </CardContent>
         </Card>
@@ -200,7 +244,9 @@ function ControlCenter() {
               </span>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{k.flottenauslastung} %</p>
-                <p className="text-xs text-muted-foreground">Flottenauslastung · zu den Prognosen</p>
+                <p className="text-xs text-muted-foreground">
+                  Flottenauslastung · zu den Prognosen
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -43,7 +43,10 @@ function VorschlagZeile({
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="font-semibold">{v.fahrer.name}</span>
             {primary && (
-              <Badge variant="outline" className="h-5 border-primary/30 bg-primary/10 px-1.5 text-[10px] text-primary">
+              <Badge
+                variant="outline"
+                className="h-5 border-primary/30 bg-primary/10 px-1.5 text-[10px] text-primary"
+              >
                 Empfohlen
               </Badge>
             )}
@@ -74,9 +77,7 @@ function VorschlagZeile({
           Zuweisen
         </Button>
       </div>
-      {primary && (
-        <p className="mt-2 text-xs text-muted-foreground">{v.begruendung}</p>
-      )}
+      {primary && <p className="mt-2 text-xs text-muted-foreground">{v.begruendung}</p>}
     </div>
   );
 }
@@ -84,13 +85,7 @@ function VorschlagZeile({
 export function DriverSuggestion({ auftrag, onConfirm, disabled }: DriverSuggestionProps) {
   const fehlt = fehlendeFelder(auftrag);
   const { empfehlung, alternativen } = useMemo(
-    () =>
-      empfehleFuerAuftrag(
-        auftrag,
-        INITIAL_FAHRER,
-        INITIAL_FAHRZEUGE,
-        INITIAL_AUFTRAEGE,
-      ),
+    () => empfehleFuerAuftrag(auftrag, INITIAL_FAHRER, INITIAL_FAHRZEUGE, INITIAL_AUFTRAEGE),
     [auftrag],
   );
 
@@ -117,12 +112,7 @@ export function DriverSuggestion({ auftrag, onConfirm, disabled }: DriverSuggest
             <>
               <p className="pt-1 text-xs font-medium text-muted-foreground">Alternativen</p>
               {alternativen.map((v) => (
-                <VorschlagZeile
-                  key={v.fahrer.id}
-                  v={v}
-                  onConfirm={onConfirm}
-                  disabled={disabled}
-                />
+                <VorschlagZeile key={v.fahrer.id} v={v} onConfirm={onConfirm} disabled={disabled} />
               ))}
             </>
           )}

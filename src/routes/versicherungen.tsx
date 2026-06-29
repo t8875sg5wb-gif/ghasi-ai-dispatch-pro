@@ -53,7 +53,10 @@ export const Route = createFileRoute("/versicherungen")({
   head: () => ({
     meta: [
       { title: "Versicherungen – GHASI AI" },
-      { name: "description", content: "Fahrzeug- und Betriebsversicherungen, Beiträge und Laufzeiten." },
+      {
+        name: "description",
+        content: "Fahrzeug- und Betriebsversicherungen, Beiträge und Laufzeiten.",
+      },
     ],
   }),
   component: VersicherungenSeite,
@@ -244,14 +247,18 @@ function buildHinweise(items: Versicherung[]): string[] {
   for (const v of items) {
     const tage = tageBisAblauf(v.ablauf);
     if (v.status !== "gekuendigt" && tage <= 60 && tage >= 0) {
-      out.push(`Police ${v.policennummer} (${v.fahrzeug}) läuft in ${tage} Tagen ab – Verlängerung prüfen.`);
+      out.push(
+        `Police ${v.policennummer} (${v.fahrzeug}) läuft in ${tage} Tagen ab – Verlängerung prüfen.`,
+      );
     }
   }
   const ohne = INITIAL_FAHRZEUGE.filter(
     (f) => !items.some((v) => v.fahrzeug === f.kennzeichen && v.art === "Haftpflicht"),
   );
   if (ohne.length > 0)
-    out.push(`${ohne.length} Fahrzeug(e) ohne erfasste Haftpflicht: ${ohne.map((f) => f.kennzeichen).join(", ")}.`);
+    out.push(
+      `${ohne.length} Fahrzeug(e) ohne erfasste Haftpflicht: ${ohne.map((f) => f.kennzeichen).join(", ")}.`,
+    );
   if (out.length === 0) out.push("Alle Policen sind aktiv und langfristig gültig.");
   return out.slice(0, 4);
 }
@@ -325,7 +332,8 @@ function VersicherungDetail({
                 {fahrzeug.nummer} · {fahrzeug.marke} {fahrzeug.modell}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {fahrzeug.kennzeichen} · {fahrzeug.typ} · {fahrzeug.kilometerstand.toLocaleString("de-DE")} km
+                {fahrzeug.kennzeichen} · {fahrzeug.typ} ·{" "}
+                {fahrzeug.kilometerstand.toLocaleString("de-DE")} km
               </p>
             </div>
           </CardContent>
@@ -356,7 +364,12 @@ function VersicherungForm({
           <DialogDescription>Versicherungsdaten für Flotte und Buchhaltung.</DialogDescription>
         </DialogHeader>
         {open && (
-          <VersicherungFelder target={target} existing={existing} onClose={onClose} onSave={onSave} />
+          <VersicherungFelder
+            target={target}
+            existing={existing}
+            onClose={onClose}
+            onSave={onSave}
+          />
         )}
       </DialogContent>
     </Dialog>
@@ -379,7 +392,9 @@ function VersicherungFelder({
   const [art, setArt] = useState<VersicherungsArt>(target?.art ?? "Haftpflicht");
   const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? FAHRZEUG_OPTIONEN[1] ?? "Flotte");
   const [beitragMonat, setBeitragMonat] = useState(String(target?.beitragMonat ?? ""));
-  const [selbstbeteiligung, setSelbstbeteiligung] = useState(String(target?.selbstbeteiligung ?? "0"));
+  const [selbstbeteiligung, setSelbstbeteiligung] = useState(
+    String(target?.selbstbeteiligung ?? "0"),
+  );
   const [beginn, setBeginn] = useState(target?.beginn ?? "");
   const [ablauf, setAblauf] = useState(target?.ablauf ?? "");
   const [notiz, setNotiz] = useState(target?.notiz ?? "");
@@ -442,7 +457,11 @@ function VersicherungFelder({
           </Select>
         </Feld>
         <Feld label="Beitrag / Monat (EUR) *">
-          <Input type="number" value={beitragMonat} onChange={(e) => setBeitragMonat(e.target.value)} />
+          <Input
+            type="number"
+            value={beitragMonat}
+            onChange={(e) => setBeitragMonat(e.target.value)}
+          />
         </Feld>
         <Feld label="Selbstbeteiligung (EUR)">
           <Input
@@ -471,15 +490,7 @@ function VersicherungFelder({
   );
 }
 
-function Kpi({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: typeof Euro;
-}) {
+function Kpi({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Euro }) {
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
@@ -495,15 +506,7 @@ function Kpi({
   );
 }
 
-function Zeile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Euro;
-  label: string;
-  value: string;
-}) {
+function Zeile({ icon: Icon, label, value }: { icon: typeof Euro; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">

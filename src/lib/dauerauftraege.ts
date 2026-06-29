@@ -30,6 +30,7 @@ import {
   INITIAL_AUFTRAEGE,
   nextAuftragId,
 } from "@/lib/auftraege";
+import { type AdresseStruktur, adresseAusStrukturOderLegacy, formatAdresse } from "@/lib/address";
 
 /* ------------------------------------------------------------------ *
  * Typen
@@ -46,6 +47,10 @@ export interface Dauerauftrag {
   /** Sprechende Kennung der Serie, z. B. "DA-001". */
   kennung: string;
   patient: string;
+  /** Strukturierte Abholadresse; legacy `abholort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  pickup?: AdresseStruktur;
+  /** Strukturierte Zieladresse; legacy `zielort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  destination?: AdresseStruktur;
   abholort: string;
   zielort: string;
   /** Uhrzeit der Hinfahrt im Format HH:MM. */
@@ -157,12 +162,7 @@ export const WOCHENTAGE: { wert: number; kurz: string; label: string }[] = [
   { wert: 0, kurz: "So", label: "Sonntag" },
 ];
 
-export const KATEGORIEN: SerienKategorie[] = [
-  "dialyse",
-  "pflegeheim",
-  "krankenhaus",
-  "sonstige",
-];
+export const KATEGORIEN: SerienKategorie[] = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"];
 
 export const RHYTHMEN: Rhythmus[] = ["taeglich", "woechentlich"];
 
@@ -316,12 +316,16 @@ function naechsteNummer(): string {
   return `A-${nummernZaehler}`;
 }
 
-function baueAuftrag(
-  d: Dauerauftrag,
-  iso: string,
-  richtung: "hin" | "rueck",
-): Auftrag {
+function baueAuftrag(d: Dauerauftrag, iso: string, richtung: "hin" | "rueck"): Auftrag {
   const hin = richtung === "hin";
+  const pickup = adresseAusStrukturOderLegacy(
+    hin ? d.pickup : d.destination,
+    hin ? d.abholort : d.zielort,
+  );
+  const destination = adresseAusStrukturOderLegacy(
+    hin ? d.destination : d.pickup,
+    hin ? d.zielort : d.abholort,
+  );
   return {
     id: nextAuftragId(),
     nummer: naechsteNummer(),
@@ -329,9 +333,11 @@ function baueAuftrag(
     transportart: transportartVon(d),
     prioritaet: "normal",
     status: "neu",
-    abholort: hin ? d.abholort : d.zielort,
-    zielort: hin ? d.zielort : d.abholort,
-    termin: `${iso}T${(hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit)}`,
+    pickup,
+    destination,
+    abholort: formatAdresse(pickup),
+    zielort: formatAdresse(destination),
+    termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
     fahrer: d.bevorzugterFahrer,
     fahrzeug: d.bevorzugtesFahrzeug,
     kostentraeger: d.kostentraeger,
@@ -355,11 +361,7 @@ function baueAuftrag(
  * sodass dieselbe Serie denselben Tag nicht doppelt erzeugt.
  * Gibt die neu erzeugten Transporte zurück (mutiert d.generierteTermine).
  */
-export function generiereTransporte(
-  d: Dauerauftrag,
-  vonISO: string,
-  bisISO: string,
-): Auftrag[] {
+export function generiereTransporte(d: Dauerauftrag, vonISO: string, bisISO: string): Auftrag[] {
   const neu: Auftrag[] = [];
   let cursor = vonISO < d.startDatum ? d.startDatum : vonISO;
   let sicherung = 0;
@@ -377,11 +379,7 @@ export function generiereTransporte(
 }
 
 /** Zählt, wie viele Termine im Zeitraum erzeugt WÜRDEN (Vorschau). */
-export function offeneTermineImZeitraum(
-  d: Dauerauftrag,
-  vonISO: string,
-  bisISO: string,
-): string[] {
+export function offeneTermineImZeitraum(d: Dauerauftrag, vonISO: string, bisISO: string): string[] {
   const treffer: string[] = [];
   let cursor = vonISO < d.startDatum ? d.startDatum : vonISO;
   let sicherung = 0;
@@ -416,13 +414,23 @@ export function transportWritesFuer(
   let sicherung = 0;
   const bauen = (iso: string, richtung: "hin" | "rueck") => {
     const hin = richtung === "hin";
+    const pickup = adresseAusStrukturOderLegacy(
+      hin ? d.pickup : d.destination,
+      hin ? d.abholort : d.zielort,
+    );
+    const destination = adresseAusStrukturOderLegacy(
+      hin ? d.destination : d.pickup,
+      hin ? d.zielort : d.abholort,
+    );
     const w: import("@/lib/orders-shared").OrderWrite = {
       patient: d.patient,
       transportart: transportartVon(d),
       prioritaet: "normal",
       status: "neu",
-      abholort: hin ? d.abholort : d.zielort,
-      zielort: hin ? d.zielort : d.abholort,
+      pickup,
+      destination,
+      abholort: "",
+      zielort: "",
       termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
       fahrer: d.bevorzugterFahrer,
       fahrzeug: d.bevorzugtesFahrzeug,

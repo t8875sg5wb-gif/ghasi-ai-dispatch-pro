@@ -18,13 +18,7 @@ import {
   Receipt,
 } from "lucide-react";
 
-import {
-  KUNDEN,
-  KUNDEN_TYPEN,
-  VERTRAGS_STATI,
-  nextStammId,
-  type Kunde,
-} from "@/lib/stammdaten";
+import { KUNDEN, KUNDEN_TYPEN, VERTRAGS_STATI, nextStammId, type Kunde } from "@/lib/stammdaten";
 import { INITIAL_RECHNUNGEN, RECHNUNG_STATUS_META, EUR } from "@/lib/finance";
 import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
 import { logActivity } from "@/lib/protokoll";
@@ -57,7 +51,10 @@ export const Route = createFileRoute("/kunden")({
   head: () => ({
     meta: [
       { title: "Kunden – GHASI AI" },
-      { name: "description", content: "Auftraggeber, Kassen und Vertragspartner zentral verwalten." },
+      {
+        name: "description",
+        content: "Auftraggeber, Kassen und Vertragspartner zentral verwalten.",
+      },
     ],
   }),
   component: KundenSeite,
@@ -191,7 +188,10 @@ function KundenSeite() {
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{k.name}</span>
                   {k.offeneRechnungen > 0 && (
-                    <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning text-[10px]">
+                    <Badge
+                      variant="outline"
+                      className="border-warning/30 bg-warning/10 text-warning text-[10px]"
+                    >
                       {k.offeneRechnungen} offen
                     </Badge>
                   )}
@@ -235,14 +235,20 @@ function buildHinweise(kunden: Kunde[]): string[] {
   const offen = kunden.filter((k) => k.offeneRechnungen > 0);
   if (offen.length > 0) {
     const summe = offen.reduce((s, k) => s + k.offeneRechnungen, 0);
-    out.push(`${offen.length} Kunde(n) mit insgesamt ${summe} offenen Rechnungen – Zahlungseingang prüfen.`);
+    out.push(
+      `${offen.length} Kunde(n) mit insgesamt ${summe} offenen Rechnungen – Zahlungseingang prüfen.`,
+    );
   }
   const ohneVertrag = kunden.filter((k) => k.vertragsstatus === "Kein Vertrag");
   if (ohneVertrag.length > 0)
-    out.push(`${ohneVertrag.length} Kunde(n) ohne Rahmen-/Einzelvertrag – Vertragsabschluss empfohlen.`);
+    out.push(
+      `${ohneVertrag.length} Kunde(n) ohne Rahmen-/Einzelvertrag – Vertragsabschluss empfohlen.`,
+    );
   const topUmsatz = [...kunden].sort((a, b) => (b.umsatzJahr ?? 0) - (a.umsatzJahr ?? 0))[0];
   if (topUmsatz?.umsatzJahr)
-    out.push(`Umsatzstärkster Kunde: „${topUmsatz.name}“ mit ${EUR(topUmsatz.umsatzJahr)} pro Jahr.`);
+    out.push(
+      `Umsatzstärkster Kunde: „${topUmsatz.name}“ mit ${EUR(topUmsatz.umsatzJahr)} pro Jahr.`,
+    );
   if (out.length === 0) out.push("Alle Kunden sind vollständig erfasst, keine offenen Rechnungen.");
   return out.slice(0, 4);
 }
@@ -282,7 +288,11 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
               <Zeile icon={FileText} label="Vertrag" value={kunde.vertragsstatus} />
             )}
             {typeof kunde.zahlungszielTage === "number" && (
-              <Zeile icon={CreditCard} label="Zahlungsziel" value={`${kunde.zahlungszielTage} Tage`} />
+              <Zeile
+                icon={CreditCard}
+                label="Zahlungsziel"
+                value={`${kunde.zahlungszielTage} Tage`}
+              />
             )}
             {typeof kunde.kreditlimit === "number" && (
               <Zeile icon={Euro} label="Kreditlimit" value={EUR(kunde.kreditlimit)} />
@@ -353,7 +363,10 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
               <div key={a.id} className="rounded-xl border border-border/70 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{a.nummer}</span>
-                  <Badge variant="outline" className={cn("text-[10px]", STATUS_META[a.status].badge)}>
+                  <Badge
+                    variant="outline"
+                    className={cn("text-[10px]", STATUS_META[a.status].badge)}
+                  >
                     {STATUS_META[a.status].label}
                   </Badge>
                 </div>
@@ -369,15 +382,7 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
   );
 }
 
-function Zeile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof User;
-  label: string;
-  value: string;
-}) {
+function Zeile({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -529,10 +534,18 @@ function KundeFelder({
         </div>
 
         <Feld label="Zahlungsziel (Tage)">
-          <Input type="number" value={zahlungsziel} onChange={(e) => setZahlungsziel(e.target.value)} />
+          <Input
+            type="number"
+            value={zahlungsziel}
+            onChange={(e) => setZahlungsziel(e.target.value)}
+          />
         </Feld>
         <Feld label="Kreditlimit (EUR)">
-          <Input type="number" value={kreditlimit} onChange={(e) => setKreditlimit(e.target.value)} />
+          <Input
+            type="number"
+            value={kreditlimit}
+            onChange={(e) => setKreditlimit(e.target.value)}
+          />
         </Feld>
         <Feld label="Jahresumsatz (EUR)">
           <Input type="number" value={umsatzJahr} onChange={(e) => setUmsatzJahr(e.target.value)} />

@@ -53,10 +53,34 @@ function PrognosenPage() {
   const p = computePrognosen();
 
   const stats = [
-    { label: "Umsatz diese Woche", value: EUR(p.zusammenfassung.umsatzWocheGesamt), icon: TrendingUp, tone: "primary" as const, hint: "Prognose" },
-    { label: "Engpasstag", value: p.zusammenfassung.erwarteterEngpassTag, icon: CalendarRange, tone: "warning" as const, hint: "höchster Bedarf" },
-    { label: "Fahrer-Lücke (Spitze)", value: `${p.zusammenfassung.fahrerLueckeSpitze}`, icon: Users, tone: "accent" as const, hint: "zusätzlich nötig" },
-    { label: "Wartungen 30 Tage", value: `${p.zusammenfassung.wartungenNaechste30Tage}`, icon: Wrench, tone: "info" as const, hint: "geplant" },
+    {
+      label: "Umsatz diese Woche",
+      value: EUR(p.zusammenfassung.umsatzWocheGesamt),
+      icon: TrendingUp,
+      tone: "primary" as const,
+      hint: "Prognose",
+    },
+    {
+      label: "Engpasstag",
+      value: p.zusammenfassung.erwarteterEngpassTag,
+      icon: CalendarRange,
+      tone: "warning" as const,
+      hint: "höchster Bedarf",
+    },
+    {
+      label: "Fahrer-Lücke (Spitze)",
+      value: `${p.zusammenfassung.fahrerLueckeSpitze}`,
+      icon: Users,
+      tone: "accent" as const,
+      hint: "zusätzlich nötig",
+    },
+    {
+      label: "Wartungen 30 Tage",
+      value: `${p.zusammenfassung.wartungenNaechste30Tage}`,
+      icon: Wrench,
+      tone: "info" as const,
+      hint: "geplant",
+    },
   ];
 
   return (
@@ -75,16 +99,28 @@ function PrognosenPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Umsatzprognose · Woche" icon={TrendingUp} tone="bg-primary/10 text-primary">
+        <ChartCard
+          title="Umsatzprognose · Woche"
+          icon={TrendingUp}
+          tone="bg-primary/10 text-primary"
+        >
           <ForecastAreaChart data={p.umsatzWoche} unit="€" />
         </ChartCard>
-        <ChartCard title="Umsatzprognose · Monat" icon={CalendarRange} tone="bg-success/15 text-success">
+        <ChartCard
+          title="Umsatzprognose · Monat"
+          icon={CalendarRange}
+          tone="bg-success/15 text-success"
+        >
           <ForecastAreaChart data={p.umsatzMonat} unit="€" color="var(--chart-3)" />
         </ChartCard>
         <ChartCard title="Auslastungsprognose" icon={Gauge} tone="bg-info/15 text-info">
           <ForecastBarChart data={p.auslastungWoche} unit="%" color="var(--chart-2)" />
         </ChartCard>
-        <ChartCard title="Fahrerbedarf vs. Verfügbarkeit" icon={Users} tone="bg-accent/15 text-accent">
+        <ChartCard
+          title="Fahrerbedarf vs. Verfügbarkeit"
+          icon={Users}
+          tone="bg-accent/15 text-accent"
+        >
           <ForecastLineChart data={p.fahrerbedarf} />
         </ChartCard>
         <ChartCard title="Wartungsbedarf" icon={Wrench} tone="bg-warning/20 text-warning">
@@ -93,13 +129,18 @@ function PrognosenPage() {
         <ChartCard title="Kraftstoffbedarf" icon={Fuel} tone="bg-warning/20 text-warning">
           <ForecastBarChart data={p.kraftstoff} unit="l" color="var(--chart-4)" />
         </ChartCard>
-        <ChartCard title="Saisonale Nachfrage (Index)" icon={LineChart} tone="bg-primary/10 text-primary">
+        <ChartCard
+          title="Saisonale Nachfrage (Index)"
+          icon={LineChart}
+          tone="bg-primary/10 text-primary"
+        >
           <ForecastAreaChart data={p.saisonNachfrage} unit="Tsd. €" color="var(--chart-5)" />
         </ChartCard>
       </section>
 
       <p className="text-center text-xs text-muted-foreground">
-        Prognosen basieren auf aktuellen Betriebsdaten und Nachfrageprofilen. GHASI AI gibt Empfehlungen – Entscheidungen treffen Sie.
+        Prognosen basieren auf aktuellen Betriebsdaten und Nachfrageprofilen. GHASI AI gibt
+        Empfehlungen – Entscheidungen treffen Sie.
       </p>
     </div>
   );

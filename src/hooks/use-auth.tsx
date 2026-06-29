@@ -1,13 +1,6 @@
 // Zentraler Auth-Kontext für GHASI AI.
 // Verwaltet Session, Benutzerprofil und Rolle und stellt Anmelde-/Abmelde-Funktionen bereit.
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,11 +16,7 @@ interface AuthContextValue {
   name: string;
   loading: boolean;
   signInEmail: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUpEmail: (
-    email: string,
-    password: string,
-    name: string,
-  ) => Promise<{ error: string | null }>;
+  signUpEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signInGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }

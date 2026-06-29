@@ -7,37 +7,46 @@ import type {
   Rhythmus,
   SerienKategorie,
 } from "@/lib/dauerauftraege";
-import type { Mobilitaet } from "@/lib/auftraege";
+import { type Mobilitaet, istMobilitaet } from "@/lib/auftraege";
+import {
+  type AdresseStruktur,
+  adresseAusStrukturOderLegacy,
+  formatAdresse,
+  normalisiereAdresse,
+} from "@/lib/address";
 
 /** Shape the client sends when creating/updating a recurring order. */
 export interface RecurringWrite {
-  kennung: string;
-  patient: string;
-  abholort: string;
-  zielort: string;
-  terminzeit: string;
-  rueckfahrt: boolean;
+  kennung?: string;
+  patient?: string;
+  /** Legacy fallback; new writes should send `pickup`/`destination`. */
+  abholort?: string;
+  zielort?: string;
+  pickup?: AdresseStruktur;
+  destination?: AdresseStruktur;
+  terminzeit?: string;
+  rueckfahrt?: boolean;
   rueckfahrtzeit?: string | null;
-  mobilitaet: string;
-  begleitperson: boolean;
-  verordnungErforderlich: boolean;
-  kostentraeger: string;
-  krankenkasse: string;
+  mobilitaet?: string;
+  begleitperson?: boolean;
+  verordnungErforderlich?: boolean;
+  kostentraeger?: string;
+  krankenkasse?: string;
   bevorzugtesFahrzeug?: string | null;
   bevorzugterFahrer?: string | null;
-  notiz: string;
-  medizinischeNotiz: string;
-  kategorie: string;
-  rhythmus: string;
-  wochentage: number[];
-  startDatum: string;
+  notiz?: string;
+  medizinischeNotiz?: string;
+  kategorie?: string;
+  rhythmus?: string;
+  wochentage?: number[];
+  startDatum?: string;
   endDatum?: string | null;
-  pausiert: boolean;
+  pausiert?: boolean;
   pauseVon?: string | null;
   pauseBis?: string | null;
-  feiertageUeberspringen: boolean;
-  uebersprungeneTermine: string[];
-  generierteTermine: string[];
+  feiertageUeberspringen?: boolean;
+  uebersprungeneTermine?: string[];
+  generierteTermine?: string[];
 }
 
 /** Minimal structural type of a row coming back from `recurring_orders`. */
@@ -47,6 +56,18 @@ export interface RecurringRow {
   patient: string;
   abholort: string;
   zielort: string;
+  pickup_street?: string | null;
+  pickup_house_number?: string | null;
+  pickup_postal_code?: string | null;
+  pickup_city?: string | null;
+  pickup_country?: string | null;
+  pickup_additional_info?: string | null;
+  destination_street?: string | null;
+  destination_house_number?: string | null;
+  destination_postal_code?: string | null;
+  destination_city?: string | null;
+  destination_country?: string | null;
+  destination_additional_info?: string | null;
   terminzeit: string;
   rueckfahrt: boolean;
   rueckfahrtzeit: string | null;
@@ -74,36 +95,68 @@ export interface RecurringRow {
 }
 
 export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
+  const pickup = adresseAusStrukturOderLegacy(
+    {
+      street: r.pickup_street ?? "",
+      houseNumber: r.pickup_house_number ?? "",
+      postalCode: r.pickup_postal_code ?? "",
+      city: r.pickup_city ?? "",
+      country: r.pickup_country ?? "Deutschland",
+      additionalInfo: r.pickup_additional_info ?? "",
+    },
+    r.abholort,
+  );
+  const destination = adresseAusStrukturOderLegacy(
+    {
+      street: r.destination_street ?? "",
+      houseNumber: r.destination_house_number ?? "",
+      postalCode: r.destination_postal_code ?? "",
+      city: r.destination_city ?? "",
+      country: r.destination_country ?? "Deutschland",
+      additionalInfo: r.destination_additional_info ?? "",
+    },
+    r.zielort,
+  );
+  const mobilitaet: Mobilitaet = istMobilitaet(r.mobilitaet) ? r.mobilitaet : "gehfaehig";
+  const kategorie: SerienKategorie = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"].includes(
+    r.kategorie,
+  )
+    ? (r.kategorie as SerienKategorie)
+    : "sonstige";
+  const rhythmus: Rhythmus =
+    r.rhythmus === "taeglich" || r.rhythmus === "woechentlich" ? r.rhythmus : "woechentlich";
   return {
     id: r.id,
-    kennung: r.kennung,
-    patient: r.patient,
-    abholort: r.abholort,
-    zielort: r.zielort,
-    terminzeit: r.terminzeit,
-    rueckfahrt: r.rueckfahrt,
+    kennung: r.kennung ?? "DA-—",
+    patient: r.patient ?? "Unbekannter Patient",
+    pickup,
+    destination,
+    abholort: formatAdresse(pickup) || (r.abholort ?? ""),
+    zielort: formatAdresse(destination) || (r.zielort ?? ""),
+    terminzeit: r.terminzeit ?? "08:00",
+    rueckfahrt: Boolean(r.rueckfahrt),
     rueckfahrtzeit: r.rueckfahrtzeit ?? undefined,
-    mobilitaet: r.mobilitaet as Mobilitaet,
-    begleitperson: r.begleitperson,
-    verordnungErforderlich: r.verordnung_erforderlich,
-    kostentraeger: r.kostentraeger,
-    krankenkasse: r.krankenkasse,
+    mobilitaet,
+    begleitperson: Boolean(r.begleitperson),
+    verordnungErforderlich: r.verordnung_erforderlich ?? true,
+    kostentraeger: r.kostentraeger ?? "",
+    krankenkasse: r.krankenkasse ?? "",
     bevorzugtesFahrzeug: r.bevorzugtes_fahrzeug,
     bevorzugterFahrer: r.bevorzugter_fahrer,
     notiz: r.notiz ?? "",
     medizinischeNotiz: r.medizinische_notiz ?? "",
-    kategorie: r.kategorie as SerienKategorie,
-    rhythmus: r.rhythmus as Rhythmus,
-    wochentage: r.wochentage ?? [],
-    startDatum: r.start_datum,
+    kategorie,
+    rhythmus,
+    wochentage: Array.isArray(r.wochentage) ? r.wochentage : [],
+    startDatum: r.start_datum ?? new Date().toISOString().slice(0, 10),
     endDatum: r.end_datum,
-    pausiert: r.pausiert,
+    pausiert: Boolean(r.pausiert),
     pauseVon: r.pause_von,
     pauseBis: r.pause_bis,
-    feiertageUeberspringen: r.feiertage_ueberspringen,
-    uebersprungeneTermine: r.uebersprungene_termine ?? [],
-    generierteTermine: r.generierte_termine ?? [],
-    erstellt: r.created_at,
+    feiertageUeberspringen: r.feiertage_ueberspringen ?? true,
+    uebersprungeneTermine: Array.isArray(r.uebersprungene_termine) ? r.uebersprungene_termine : [],
+    generierteTermine: Array.isArray(r.generierte_termine) ? r.generierte_termine : [],
+    erstellt: r.created_at ?? new Date().toISOString(),
   };
 }
 
@@ -112,6 +165,8 @@ export function dauerauftragToWrite(d: Dauerauftrag): RecurringWrite {
   return {
     kennung: d.kennung,
     patient: d.patient,
+    pickup: d.pickup,
+    destination: d.destination,
     abholort: d.abholort,
     zielort: d.zielort,
     terminzeit: d.terminzeit,
@@ -148,8 +203,34 @@ export function writeToRecurringRow(w: Partial<RecurringWrite>): Record<string, 
   };
   set("kennung", w.kennung);
   set("patient", w.patient);
-  set("abholort", w.abholort);
-  set("zielort", w.zielort);
+  const pickup = w.pickup
+    ? normalisiereAdresse(w.pickup)
+    : w.abholort !== undefined
+      ? normalisiereAdresse(w.abholort)
+      : undefined;
+  const destination = w.destination
+    ? normalisiereAdresse(w.destination)
+    : w.zielort !== undefined
+      ? normalisiereAdresse(w.zielort)
+      : undefined;
+  set("abholort", w.abholort ?? (pickup ? "" : undefined));
+  set("zielort", w.zielort ?? (destination ? "" : undefined));
+  if (pickup) {
+    set("pickup_street", pickup.street);
+    set("pickup_house_number", pickup.houseNumber);
+    set("pickup_postal_code", pickup.postalCode);
+    set("pickup_city", pickup.city);
+    set("pickup_country", pickup.country || "Deutschland");
+    set("pickup_additional_info", pickup.additionalInfo);
+  }
+  if (destination) {
+    set("destination_street", destination.street);
+    set("destination_house_number", destination.houseNumber);
+    set("destination_postal_code", destination.postalCode);
+    set("destination_city", destination.city);
+    set("destination_country", destination.country || "Deutschland");
+    set("destination_additional_info", destination.additionalInfo);
+  }
   set("terminzeit", w.terminzeit);
   set("rueckfahrt", w.rueckfahrt);
   set("rueckfahrtzeit", w.rueckfahrtzeit);

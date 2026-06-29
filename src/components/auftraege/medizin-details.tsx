@@ -147,7 +147,8 @@ export function MedizinDetails({
                 : "Verordnung fehlt – vor Abfahrt klären."}
             </p>
             <p className="text-xs text-muted-foreground">
-              Status: {ver.label}. {rolle === "fahrer"
+              Status: {ver.label}.{" "}
+              {rolle === "fahrer"
                 ? "Bitte beim Disponenten nachfragen."
                 : "Fahrer informieren / Verordnung anfordern."}
             </p>
@@ -193,9 +194,7 @@ export function MedizinDetails({
             </Button>
           </div>
         ) : (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Kein Verordnungsdokument hinterlegt.
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Kein Verordnungsdokument hinterlegt.</p>
         )}
       </div>
 

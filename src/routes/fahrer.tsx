@@ -97,7 +97,6 @@ function FahrerPage() {
     return () => clearInterval(interval);
   }, []);
 
-
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
 
   const stats = useMemo(() => {
@@ -168,9 +167,7 @@ function FahrerPage() {
 
   function handleSubmit(values: FahrerFormValues) {
     if (editTarget) {
-      setFahrer((prev) =>
-        prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)),
-      );
+      setFahrer((prev) => prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)));
       if (isPersisted(editTarget.id)) {
         updateMut.mutate({ id: editTarget.id, values });
       }
@@ -188,17 +185,36 @@ function FahrerPage() {
     setEditTarget(null);
   }
 
-
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
     ...FAHRER_STATI.map((s) => ({ value: s, label: FAHRER_STATUS_META[s].label })),
   ];
 
   const summaryCards = [
-    { label: "Fahrer gesamt", value: String(stats.gesamt), icon: Users, tone: "bg-primary/10 text-primary" },
-    { label: "Verfügbar", value: String(stats.verfuegbar), icon: CheckCircle2, tone: "bg-success/15 text-success" },
-    { label: "Unterwegs", value: String(stats.unterwegs), icon: Truck, tone: "bg-warning/20 text-warning" },
-    { label: "Fristen-Warnungen", value: String(stats.warnungen), icon: AlertTriangle, tone: "bg-destructive/15 text-destructive" },
+    {
+      label: "Fahrer gesamt",
+      value: String(stats.gesamt),
+      icon: Users,
+      tone: "bg-primary/10 text-primary",
+    },
+    {
+      label: "Verfügbar",
+      value: String(stats.verfuegbar),
+      icon: CheckCircle2,
+      tone: "bg-success/15 text-success",
+    },
+    {
+      label: "Unterwegs",
+      value: String(stats.unterwegs),
+      icon: Truck,
+      tone: "bg-warning/20 text-warning",
+    },
+    {
+      label: "Fristen-Warnungen",
+      value: String(stats.warnungen),
+      icon: AlertTriangle,
+      tone: "bg-destructive/15 text-destructive",
+    },
   ];
 
   return (
@@ -222,7 +238,12 @@ function FahrerPage() {
         {summaryCards.map((s) => (
           <Card key={s.label} className="border-border/70 p-4">
             <div className="flex items-center gap-3">
-              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", s.tone)}>
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                  s.tone,
+                )}
+              >
                 <s.icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -292,7 +313,10 @@ function FahrerPage() {
                       </div>
                       <ul className="space-y-0.5">
                         {e.gruende.map((g) => (
-                          <li key={g} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <li
+                            key={g}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                          >
                             <CheckCircle2 className="h-3 w-3 text-success" />
                             {g}
                           </li>
@@ -324,7 +348,9 @@ function FahrerPage() {
               )}
             >
               {chip.label}
-              <span className={cn("rounded-full px-1.5 text-xs", active ? "bg-white/20" : "bg-muted")}>
+              <span
+                className={cn("rounded-full px-1.5 text-xs", active ? "bg-white/20" : "bg-muted")}
+              >
                 {counts[chip.value]}
               </span>
             </button>
@@ -388,13 +414,18 @@ function FahrerPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate font-semibold leading-tight">{f.name}</p>
-                      {hatWarnung && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />}
+                      {hatWarnung && (
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {f.nummer} · {f.fahrzeug ?? "Kein Fahrzeug"}
                     </p>
                   </div>
-                  <Badge variant="outline" className="gap-1 border-warning/30 bg-warning/10 text-warning">
+                  <Badge
+                    variant="outline"
+                    className="gap-1 border-warning/30 bg-warning/10 text-warning"
+                  >
                     <Star className="h-3 w-3 fill-current" />
                     {f.bewertung.toFixed(1)}
                   </Badge>

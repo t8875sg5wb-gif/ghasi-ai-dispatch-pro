@@ -52,11 +52,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import {
-  INITIAL_AUFTRAEGE,
-  effektiveVerordnung,
-  verordnungFehlt,
-} from "@/lib/auftraege";
+import { INITIAL_AUFTRAEGE, effektiveVerordnung, verordnungFehlt } from "@/lib/auftraege";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
 import { AlertTriangle } from "lucide-react";
 
@@ -68,15 +64,7 @@ interface FahrerDetailProps {
   onEdit: (fahrer: Fahrer) => void;
 }
 
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
+function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -149,7 +137,9 @@ function Metric({
   } as const;
   return (
     <div className="rounded-xl border border-border/70 bg-card p-3">
-      <div className={cn("mb-2 flex h-8 w-8 items-center justify-center rounded-lg", toneMap[tone])}>
+      <div
+        className={cn("mb-2 flex h-8 w-8 items-center justify-center rounded-lg", toneMap[tone])}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-lg font-bold tabular-nums leading-none">{value}</p>
@@ -236,9 +226,24 @@ export function FahrerDetail({
               Heute
             </p>
             <div className="grid grid-cols-3 gap-2">
-              <Metric icon={RouteIcon} label="Kilometer" value={`${fahrer.kmHeute} km`} tone="info" />
-              <Metric icon={Euro} label="Umsatz" value={formatEUR(fahrer.umsatzHeute)} tone="success" />
-              <Metric icon={Gauge} label="Gewinn" value={formatEUR(fahrer.gewinnHeute)} tone="success" />
+              <Metric
+                icon={RouteIcon}
+                label="Kilometer"
+                value={`${fahrer.kmHeute} km`}
+                tone="info"
+              />
+              <Metric
+                icon={Euro}
+                label="Umsatz"
+                value={formatEUR(fahrer.umsatzHeute)}
+                tone="success"
+              />
+              <Metric
+                icon={Gauge}
+                label="Gewinn"
+                value={formatEUR(fahrer.gewinnHeute)}
+                tone="success"
+              />
             </div>
           </div>
 
@@ -286,9 +291,7 @@ export function FahrerDetail({
                   <div key={a.id} className="rounded-xl border border-border/70 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-semibold">{a.patient}</span>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {a.nummer}
-                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">{a.nummer}</span>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {a.abholort} → {a.zielort}
@@ -319,8 +322,6 @@ export function FahrerDetail({
 
           <Separator />
 
-
-
           {/* Contact */}
           <div className="space-y-4">
             <InfoRow icon={Phone} label="Telefon" value={fahrer.telefon || "—"} />
@@ -346,7 +347,11 @@ export function FahrerDetail({
               info={fahrer.fuehrerschein.info}
             />
             <NachweisRow icon={ShieldCheck} label="P-Schein" iso={fahrer.pSchein.gueltigBis} />
-            <NachweisRow icon={Heart} label="Erste-Hilfe-Nachweis" iso={fahrer.ersteHilfe.gueltigBis} />
+            <NachweisRow
+              icon={Heart}
+              label="Erste-Hilfe-Nachweis"
+              iso={fahrer.ersteHilfe.gueltigBis}
+            />
           </div>
 
           <Separator />
@@ -357,13 +362,43 @@ export function FahrerDetail({
               Leistung & Personal
             </p>
             <div className="grid grid-cols-3 gap-2">
-              <Metric icon={CheckCircle2} label="Pünktlichkeit" value={`${fahrer.puenktlichkeit}%`} tone="success" />
-              <Metric icon={Award} label="Überstunden" value={`${fahrer.ueberstunden} h`} tone="warning" />
-              <Metric icon={Star} label="Bewertung" value={fahrer.bewertung.toFixed(1)} tone="info" />
+              <Metric
+                icon={CheckCircle2}
+                label="Pünktlichkeit"
+                value={`${fahrer.puenktlichkeit}%`}
+                tone="success"
+              />
+              <Metric
+                icon={Award}
+                label="Überstunden"
+                value={`${fahrer.ueberstunden} h`}
+                tone="warning"
+              />
+              <Metric
+                icon={Star}
+                label="Bewertung"
+                value={fahrer.bewertung.toFixed(1)}
+                tone="info"
+              />
               <Metric icon={ThumbsUp} label="Lob" value={`${fahrer.lob}`} tone="success" />
-              <Metric icon={ThumbsDown} label="Beschwerden" value={`${fahrer.beschwerden}`} tone={fahrer.beschwerden > 0 ? "warning" : "muted"} />
-              <Metric icon={Plane} label="Urlaub übrig" value={`${fahrer.urlaubstage} T`} tone="info" />
-              <Metric icon={Thermometer} label="Krank (Jahr)" value={`${fahrer.krankheitstage} T`} tone={fahrer.krankheitstage > 5 ? "warning" : "muted"} />
+              <Metric
+                icon={ThumbsDown}
+                label="Beschwerden"
+                value={`${fahrer.beschwerden}`}
+                tone={fahrer.beschwerden > 0 ? "warning" : "muted"}
+              />
+              <Metric
+                icon={Plane}
+                label="Urlaub übrig"
+                value={`${fahrer.urlaubstage} T`}
+                tone="info"
+              />
+              <Metric
+                icon={Thermometer}
+                label="Krank (Jahr)"
+                value={`${fahrer.krankheitstage} T`}
+                tone={fahrer.krankheitstage > 5 ? "warning" : "muted"}
+              />
             </div>
           </div>
         </div>

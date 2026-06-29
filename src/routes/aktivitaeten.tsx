@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Activity,
-  ClipboardList,
-  Users,
-  Truck,
-  BrainCircuit,
-  RefreshCw,
-} from "lucide-react";
+import { Activity, ClipboardList, Users, Truck, BrainCircuit, RefreshCw } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +45,12 @@ function relativ(iso: string): string {
   if (min < 60) return `vor ${min} Min`;
   const std = Math.round(min / 60);
   if (std < 24) return `vor ${std} Std`;
-  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 async function ladeProtokoll(): Promise<LogRow[]> {
@@ -80,7 +78,8 @@ function AktivitaetenPage() {
         <div>
           <h1 className="text-xl font-semibold sm:text-2xl">Aktivitätsprotokoll</h1>
           <p className="text-sm text-muted-foreground">
-            Jede wichtige Änderung wird automatisch dokumentiert – nachvollziehbar nach Person, Zeit und Inhalt.
+            Jede wichtige Änderung wird automatisch dokumentiert – nachvollziehbar nach Person, Zeit
+            und Inhalt.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="shrink-0 gap-2">
@@ -100,8 +99,8 @@ function AktivitaetenPage() {
             <div className="py-12 text-center">
               <Activity className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">
-                Noch keine Aktivitäten. Sobald Änderungen vorgenommen werden (z. B. Auftragsstatus oder
-                KI-Entscheidungen), erscheinen sie hier.
+                Noch keine Aktivitäten. Sobald Änderungen vorgenommen werden (z. B. Auftragsstatus
+                oder KI-Entscheidungen), erscheinen sie hier.
               </p>
             </div>
           ) : (

@@ -64,7 +64,10 @@ export function UnassignedAlerts({
                   {a.nummer} · {a.patient}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive">
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                  >
                     <UserX className="h-3 w-3" />
                     Nicht zugewiesen
                   </Badge>
@@ -100,7 +103,10 @@ export function UnassignedAlerts({
             <AlertTriangle className="h-4 w-4" />
           </span>
           Nicht zugewiesene Aufträge
-          <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive">
+          <Badge
+            variant="outline"
+            className="border-destructive/30 bg-destructive/10 text-destructive"
+          >
             {dringend.length}
           </Badge>
         </CardTitle>

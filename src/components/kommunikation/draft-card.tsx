@@ -20,17 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  KANAL_META,
-  KATEGORIE_META,
-  PRIORITAET_META,
-  type KommEntwurf,
-} from "@/lib/communication";
-import {
-  genehmigeEntwurf,
-  lehneEntwurfAb,
-  bearbeiteEntwurf,
-} from "@/lib/communication-store";
+import { KANAL_META, KATEGORIE_META, PRIORITAET_META, type KommEntwurf } from "@/lib/communication";
+import { genehmigeEntwurf, lehneEntwurfAb, bearbeiteEntwurf } from "@/lib/communication-store";
 
 export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
   const [edit, setEdit] = useState(false);
@@ -177,12 +168,22 @@ export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
                 Speichern
               </Button>
             ) : (
-              <Button size="sm" variant="secondary" onClick={() => setEdit(true)} className="gap-1.5">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setEdit(true)}
+                className="gap-1.5"
+              >
                 <Pencil className="h-4 w-4" />
                 Bearbeiten
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={verwerfen} className="gap-1.5 text-destructive hover:text-destructive">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={verwerfen}
+              className="gap-1.5 text-destructive hover:text-destructive"
+            >
               <X className="h-4 w-4" />
               Verwerfen
             </Button>

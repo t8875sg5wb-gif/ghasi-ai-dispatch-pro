@@ -97,7 +97,10 @@ function Verbindungen() {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {verbindungen.map((v) => (
-          <Card key={v.name} className="border-border/70 shadow-sm transition-all hover:shadow-card">
+          <Card
+            key={v.name}
+            className="border-border/70 shadow-sm transition-all hover:shadow-card"
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">

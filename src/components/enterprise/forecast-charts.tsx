@@ -73,11 +73,28 @@ export function ForecastAreaChart({
         <CartesianGrid {...gridProps} />
         <XAxis dataKey="label" {...axisProps} />
         <YAxis {...axisProps} width={48} />
-        <Tooltip {...tooltipStyle()} formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`, "Prognose"]} />
+        <Tooltip
+          {...tooltipStyle()}
+          formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`, "Prognose"]}
+        />
         {data.some((d) => d.ist !== undefined) && (
-          <Area type="monotone" dataKey="ist" stroke="var(--chart-3)" strokeWidth={2} fill="transparent" name="Ist" />
+          <Area
+            type="monotone"
+            dataKey="ist"
+            stroke="var(--chart-3)"
+            strokeWidth={2}
+            fill="transparent"
+            name="Ist"
+          />
         )}
-        <Area type="monotone" dataKey="prognose" stroke={color} strokeWidth={2.5} fill="url(#fcArea)" name="Prognose" />
+        <Area
+          type="monotone"
+          dataKey="prognose"
+          stroke={color}
+          strokeWidth={2.5}
+          fill="url(#fcArea)"
+          name="Prognose"
+        />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -102,7 +119,11 @@ export function ForecastBarChart({
         <CartesianGrid {...gridProps} />
         <XAxis dataKey="label" {...axisProps} />
         <YAxis {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle()} cursor={{ fill: "var(--muted)", opacity: 0.4 }} formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`.trim(), "Prognose"]} />
+        <Tooltip
+          {...tooltipStyle()}
+          cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+          formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`.trim(), "Prognose"]}
+        />
         <Bar dataKey="prognose" fill={color} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -126,9 +147,26 @@ export function ForecastLineChart({
         <CartesianGrid {...gridProps} />
         <XAxis dataKey="label" {...axisProps} />
         <YAxis {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle()} formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`.trim(), ""]} />
-        <Line type="monotone" dataKey="ist" stroke="var(--chart-3)" strokeWidth={2} dot={false} name="Bedarf (Ist)" />
-        <Line type="monotone" dataKey="prognose" stroke="var(--chart-1)" strokeWidth={2.5} dot={{ r: 3 }} name="Prognose" />
+        <Tooltip
+          {...tooltipStyle()}
+          formatter={(v: number) => [`${v.toLocaleString("de-DE")} ${unit}`.trim(), ""]}
+        />
+        <Line
+          type="monotone"
+          dataKey="ist"
+          stroke="var(--chart-3)"
+          strokeWidth={2}
+          dot={false}
+          name="Bedarf (Ist)"
+        />
+        <Line
+          type="monotone"
+          dataKey="prognose"
+          stroke="var(--chart-1)"
+          strokeWidth={2.5}
+          dot={{ r: 3 }}
+          name="Prognose"
+        />
       </LineChart>
     </ResponsiveContainer>
   );

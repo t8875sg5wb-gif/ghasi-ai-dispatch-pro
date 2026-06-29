@@ -303,7 +303,10 @@ ${buildKnowledgeSnapshot()}`;
                   .describe("z.B. entscheidung, kunde, fahrer, fahrzeug, ablauf, vorliebe"),
                 inhalt: z.string().describe("Was genau gemerkt werden soll, in einem Satz."),
                 wichtigkeit: z.number().min(1).max(5).describe("1=gering, 5=sehr wichtig"),
-                bezug: z.string().optional().describe("optionaler Bezug, z.B. Fahrername oder Kennzeichen"),
+                bezug: z
+                  .string()
+                  .optional()
+                  .describe("optionaler Bezug, z.B. Fahrername oder Kennzeichen"),
               }),
               execute: async ({ kategorie, inhalt, wichtigkeit, bezug }) => {
                 const { error } = await supabaseAdmin.from("ghasi_memory").insert({

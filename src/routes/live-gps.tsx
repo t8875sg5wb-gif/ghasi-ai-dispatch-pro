@@ -116,7 +116,9 @@ function LiveGps() {
             <MapPin className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Live-GPS &amp; Transport-Execution</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Live-GPS &amp; Transport-Execution
+            </h1>
             <p className="text-sm text-muted-foreground">
               Echtzeit-Flottenkarte (OpenStreetMap) mit Routen, Status &amp; automatischen Alerts.
             </p>
@@ -267,7 +269,9 @@ function LiveGps() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-semibold">{a.titel}</p>
-                        <Badge className={cn("shrink-0 text-[10px]", meta.badge)}>{meta.label}</Badge>
+                        <Badge className={cn("shrink-0 text-[10px]", meta.badge)}>
+                          {meta.label}
+                        </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">{a.details}</p>
                     </div>
@@ -294,13 +298,18 @@ function LiveGps() {
                     {a.label}
                   </Badge>
                 ))}
-                {["Apple Maps", "Waze", "Twilio", "WhatsApp Business", "Firebase", "GPS-Tracker"].map(
-                  (x) => (
-                    <Badge key={x} variant="secondary" className="text-[10px]">
-                      {x}
-                    </Badge>
-                  ),
-                )}
+                {[
+                  "Apple Maps",
+                  "Waze",
+                  "Twilio",
+                  "WhatsApp Business",
+                  "Firebase",
+                  "GPS-Tracker",
+                ].map((x) => (
+                  <Badge key={x} variant="secondary" className="text-[10px]">
+                    {x}
+                  </Badge>
+                ))}
               </div>
               <p>
                 Sobald ein API-Key hinterlegt ist, wird der jeweilige Layer/Dienst ohne weitere
@@ -388,7 +397,10 @@ function VehicleDetail({ v }: { v: FleetVehicle }) {
                       : "border-success/30 bg-success/10 text-success",
                   )}
                 >
-                  Verordnung: {a.verordnungFehlt ? "fehlt" : VERORDNUNG_META[effektiveVerordnung(a.transport)].kurz}
+                  Verordnung:{" "}
+                  {a.verordnungFehlt
+                    ? "fehlt"
+                    : VERORDNUNG_META[effektiveVerordnung(a.transport)].kurz}
                 </Badge>
                 <Badge variant="secondary" className="text-[10px]">
                   Begleitung: {a.begleitperson ? "Ja" : "Nein"}

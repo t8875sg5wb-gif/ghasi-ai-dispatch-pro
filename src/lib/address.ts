@@ -18,6 +18,10 @@ export interface AdresseStruktur {
 
 export const LAND_STANDARD = "Deutschland";
 
+function text(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : value == null ? fallback : String(value);
+}
+
 export function leereAdresse(): AdresseStruktur {
   return {
     street: "",
@@ -31,12 +35,36 @@ export function leereAdresse(): AdresseStruktur {
 
 /** Hat die Adresse mindestens ein gefülltes Kernfeld? */
 export function adresseGefuellt(a: AdresseStruktur): boolean {
+  const adr = normalisiereAdresse(a);
   return Boolean(
-    a.street.trim() ||
-      a.houseNumber.trim() ||
-      a.postalCode.trim() ||
-      a.city.trim(),
+    adr.street.trim() || adr.houseNumber.trim() || adr.postalCode.trim() || adr.city.trim(),
   );
+}
+
+/** Robustly coerces partially migrated/nullable address objects into the app shape. */
+export function normalisiereAdresse(
+  input: Partial<AdresseStruktur> | string | null | undefined,
+): AdresseStruktur {
+  if (typeof input === "string" || input == null) return parseAdresse(input);
+  return {
+    street: text(input.street),
+    houseNumber: text(input.houseNumber),
+    postalCode: text(input.postalCode),
+    city: text(input.city),
+    country: text(input.country, LAND_STANDARD) || LAND_STANDARD,
+    additionalInfo: text(input.additionalInfo),
+  };
+}
+
+/** Prefer structured fields; fall back to a legacy one-line address string. */
+export function adresseAusStrukturOderLegacy(
+  struktur: Partial<AdresseStruktur> | null | undefined,
+  legacy: string | null | undefined,
+): AdresseStruktur {
+  const normalisiert = normalisiereAdresse(struktur);
+  return adresseGefuellt(normalisiert) || normalisiert.additionalInfo.trim()
+    ? normalisiert
+    : parseAdresse(legacy);
 }
 
 /**
@@ -63,7 +91,7 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
   // Land erkennen (letztes Segment)
   const laender = ["deutschland", "germany", "österreich", "schweiz"];
-  let rest = [...segmente];
+  const rest = [...segmente];
   const letztes = rest[rest.length - 1]?.toLowerCase() ?? "";
   if (laender.includes(letztes)) {
     result.country = rest.pop() as string;
@@ -104,9 +132,7 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
   // Reste als Zusatzinfo bewahren
   if (rest.length > 0) {
-    result.additionalInfo = [result.additionalInfo, ...rest]
-      .filter(Boolean)
-      .join(", ");
+    result.additionalInfo = [result.additionalInfo, ...rest].filter(Boolean).join(", ");
   }
 
   return result;
@@ -114,35 +140,49 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
 /** Setzt strukturierte Felder zu einem einzeiligen Adress-String zusammen. */
 export function formatAdresse(a: AdresseStruktur): string {
-  const strasse = [a.street, a.houseNumber].filter((s) => s && s.trim()).join(" ").trim();
-  const ort = [a.postalCode, a.city].filter((s) => s && s.trim()).join(" ").trim();
+  const adr = normalisiereAdresse(a);
+  const strasse = [adr.street, adr.houseNumber]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
+  const ort = [adr.postalCode, adr.city]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   const teile = [strasse, ort].filter(Boolean);
-  if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
-    teile.push(a.country.trim());
+  if (adr.country && adr.country.trim() && adr.country.trim() !== LAND_STANDARD) {
+    teile.push(adr.country.trim());
   }
   let out = teile.join(", ");
-  if (a.additionalInfo && a.additionalInfo.trim()) {
-    out = out ? `${out} (${a.additionalInfo.trim()})` : a.additionalInfo.trim();
+  if (adr.additionalInfo && adr.additionalInfo.trim()) {
+    out = out ? `${out} (${adr.additionalInfo.trim()})` : adr.additionalInfo.trim();
   }
   return out;
 }
 
 /** Mehrzeilige Darstellung für Detailansichten. */
 export function formatAdresseMehrzeilig(a: AdresseStruktur): string[] {
+  const adr = normalisiereAdresse(a);
   const zeilen: string[] = [];
-  const strasse = [a.street, a.houseNumber].filter((s) => s && s.trim()).join(" ").trim();
+  const strasse = [adr.street, adr.houseNumber]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   if (strasse) zeilen.push(strasse);
-  const ort = [a.postalCode, a.city].filter((s) => s && s.trim()).join(" ").trim();
+  const ort = [adr.postalCode, adr.city]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   if (ort) zeilen.push(ort);
-  if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
-    zeilen.push(a.country.trim());
+  if (adr.country && adr.country.trim() && adr.country.trim() !== LAND_STANDARD) {
+    zeilen.push(adr.country.trim());
   }
-  if (a.additionalInfo && a.additionalInfo.trim()) zeilen.push(a.additionalInfo.trim());
+  if (adr.additionalInfo && adr.additionalInfo.trim()) zeilen.push(adr.additionalInfo.trim());
   return zeilen;
 }
 
 /** Kurze Stadt-/Ort-Kennung für Distanz-/Nähe-Heuristiken. */
 export function adresseStadt(input: string | AdresseStruktur | null | undefined): string {
-  const a = typeof input === "string" ? parseAdresse(input) : input ?? leereAdresse();
+  const a = typeof input === "string" ? parseAdresse(input) : (input ?? leereAdresse());
   return (a.city || "").trim().toLowerCase();
 }

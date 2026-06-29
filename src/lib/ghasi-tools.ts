@@ -194,7 +194,6 @@ export function buildBusinessTools(role: AppRole | null) {
     });
   }
 
-
   if (erlaubt("fahrer")) {
     tools.fahrer_abrufen = tool({
       description:

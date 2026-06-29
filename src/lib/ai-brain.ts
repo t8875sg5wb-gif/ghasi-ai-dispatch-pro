@@ -18,13 +18,22 @@
 // client. Existing modules remain completely untouched.
 // ============================================================
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE, type Fahrzeug, fahrzeugWarnungen, reparaturkostenGesamt } from "@/lib/fahrzeuge";
+import {
+  INITIAL_FAHRZEUGE,
+  type Fahrzeug,
+  fahrzeugWarnungen,
+  reparaturkostenGesamt,
+} from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 
 export const EUR = (n: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 const round = (n: number, d = 0) => {
   const f = 10 ** d;
@@ -69,7 +78,9 @@ export function computeKpis(): BrainKpis {
   const freieFahrer = fahrer.filter((f) => f.status === "verfuegbar").length;
 
   const laufendeTransporte = auftraege.filter((a) => a.status === "unterwegs").length;
-  const offeneTransporte = auftraege.filter((a) => a.status === "neu" || a.status === "disponiert").length;
+  const offeneTransporte = auftraege.filter(
+    (a) => a.status === "neu" || a.status === "disponiert",
+  ).length;
   const patientenUnterwegs = laufendeTransporte;
 
   const umsatzHeute = fahrer.reduce((s, f) => s + f.umsatzHeute, 0);
@@ -80,19 +91,31 @@ export function computeKpis(): BrainKpis {
 
   const offeneRechnungen = KUNDEN.reduce((s, k) => s + k.offeneRechnungen, 0);
 
-  const einsetzbareFzg = fzg.filter((v) => v.status !== "werkstatt" && v.status !== "nicht_verfuegbar").length;
-  const flottenauslastung = einsetzbareFzg > 0 ? round((aktiveFahrzeuge / einsetzbareFzg) * 100) : 0;
-  const dienstfahrer = fahrer.filter((f) => f.status !== "urlaub" && f.status !== "krank" && f.status !== "feierabend").length;
+  const einsetzbareFzg = fzg.filter(
+    (v) => v.status !== "werkstatt" && v.status !== "nicht_verfuegbar",
+  ).length;
+  const flottenauslastung =
+    einsetzbareFzg > 0 ? round((aktiveFahrzeuge / einsetzbareFzg) * 100) : 0;
+  const dienstfahrer = fahrer.filter(
+    (f) => f.status !== "urlaub" && f.status !== "krank" && f.status !== "feierabend",
+  ).length;
   const fahrerauslastung = dienstfahrer > 0 ? round((aktiveFahrer / dienstfahrer) * 100) : 0;
 
-  const wartungOffen = fzg.filter((v) => v.status === "werkstatt" || fahrzeugWarnungen(v).hatWarnung).length;
+  const wartungOffen = fzg.filter(
+    (v) => v.status === "werkstatt" || fahrzeugWarnungen(v).hatWarnung,
+  ).length;
   const kritischeAlarme = fzg.filter((v) => {
     const w = fahrzeugWarnungen(v);
     return w.tuev || w.versicherung || w.wartung;
   }).length;
 
-  const durchschnittPuenktlichkeit = round(fahrer.reduce((s, f) => s + f.puenktlichkeit, 0) / fahrer.length);
-  const durchschnittBewertung = round(fahrer.reduce((s, f) => s + f.bewertung, 0) / fahrer.length, 1);
+  const durchschnittPuenktlichkeit = round(
+    fahrer.reduce((s, f) => s + f.puenktlichkeit, 0) / fahrer.length,
+  );
+  const durchschnittBewertung = round(
+    fahrer.reduce((s, f) => s + f.bewertung, 0) / fahrer.length,
+    1,
+  );
 
   // AI efficiency: blend of utilisation balance, punctuality and margin.
   const aiEffizienz = round(
@@ -153,15 +176,41 @@ export function computeBusinessHealth(kpis: BrainKpis = computeKpis()): Business
   const risiko = Math.max(0, 20 - kpis.kritischeAlarme * 4 - kpis.wartungOffen * 1.5); // fewer issues = better
 
   const faktoren: HealthFaktor[] = [
-    { label: "Profitabilität", wert: profitabilitaet, max: 20, beschreibung: `Marge ${kpis.margeProzent} %` },
-    { label: "Auslastung", wert: auslastung, max: 25, beschreibung: `Flotte ${kpis.flottenauslastung} % · Fahrer ${kpis.fahrerauslastung} %` },
-    { label: "Pünktlichkeit", wert: puenktlichkeit, max: 20, beschreibung: `Ø ${kpis.durchschnittPuenktlichkeit} %` },
-    { label: "Kundenzufriedenheit", wert: zufriedenheit, max: 15, beschreibung: `Ø ${kpis.durchschnittBewertung}/5` },
-    { label: "Risiko & Compliance", wert: round(risiko), max: 20, beschreibung: `${kpis.kritischeAlarme} kritisch · ${kpis.wartungOffen} Wartung offen` },
+    {
+      label: "Profitabilität",
+      wert: profitabilitaet,
+      max: 20,
+      beschreibung: `Marge ${kpis.margeProzent} %`,
+    },
+    {
+      label: "Auslastung",
+      wert: auslastung,
+      max: 25,
+      beschreibung: `Flotte ${kpis.flottenauslastung} % · Fahrer ${kpis.fahrerauslastung} %`,
+    },
+    {
+      label: "Pünktlichkeit",
+      wert: puenktlichkeit,
+      max: 20,
+      beschreibung: `Ø ${kpis.durchschnittPuenktlichkeit} %`,
+    },
+    {
+      label: "Kundenzufriedenheit",
+      wert: zufriedenheit,
+      max: 15,
+      beschreibung: `Ø ${kpis.durchschnittBewertung}/5`,
+    },
+    {
+      label: "Risiko & Compliance",
+      wert: round(risiko),
+      max: 20,
+      beschreibung: `${kpis.kritischeAlarme} kritisch · ${kpis.wartungOffen} Wartung offen`,
+    },
   ];
 
   const score = Math.max(0, Math.min(100, round(faktoren.reduce((s, f) => s + f.wert, 0))));
-  const stufe: HealthStufe = score >= 85 ? "exzellent" : score >= 70 ? "gut" : score >= 55 ? "stabil" : "kritisch";
+  const stufe: HealthStufe =
+    score >= 85 ? "exzellent" : score >= 70 ? "gut" : score >= 55 ? "stabil" : "kritisch";
 
   return { score, stufe, faktoren };
 }
@@ -219,7 +268,9 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
   }));
 
   // Drivers needed vs. on duty.
-  const grundFahrer = INITIAL_FAHRER.filter((f) => f.status !== "urlaub" && f.status !== "krank").length;
+  const grundFahrer = INITIAL_FAHRER.filter(
+    (f) => f.status !== "urlaub" && f.status !== "krank",
+  ).length;
   const fahrerbedarf: ForecastPoint[] = WOCHENTAGE.map((label, i) => ({
     label,
     ist: grundFahrer,
@@ -229,7 +280,10 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
     0,
     ...fahrerbedarf.map((p) => round((p.prognose ?? 0) - (p.ist ?? 0))),
   );
-  const engpassIdx = fahrerbedarf.reduce((best, p, i, arr) => (p.prognose > arr[best].prognose ? i : best), 0);
+  const engpassIdx = fahrerbedarf.reduce(
+    (best, p, i, arr) => (p.prognose > arr[best].prognose ? i : best),
+    0,
+  );
 
   // Maintenance load over the next weeks.
   const wartungsbedarf: ForecastPoint[] = ["KW 1", "KW 2", "KW 3", "KW 4"].map((label, i) => ({
@@ -238,7 +292,10 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
   }));
   const wartungenNaechste30Tage = wartungsbedarf.reduce((s, p) => s + p.prognose, 0);
 
-  const tankBasis = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.verbrauch * (v.kraftstoff === "Elektro" ? 0 : 1), 0);
+  const tankBasis = INITIAL_FAHRZEUGE.reduce(
+    (s, v) => s + v.verbrauch * (v.kraftstoff === "Elektro" ? 0 : 1),
+    0,
+  );
   const kraftstoff: ForecastPoint[] = WOCHENTAGE.map((label, i) => ({
     label,
     prognose: round(tankBasis * TAGESPROFIL[i] * 1.5),
@@ -299,7 +356,8 @@ export function computeInsights(): Insight[] {
   const kpis = computeKpis();
 
   // Underutilised vehicles: free + below-average monthly revenue.
-  const avgFzgUmsatz = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0) / INITIAL_FAHRZEUGE.length;
+  const avgFzgUmsatz =
+    INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0) / INITIAL_FAHRZEUGE.length;
   const unterausgelastet = INITIAL_FAHRZEUGE.filter(
     (v) => v.status === "frei" && v.monatsumsatz < avgFzgUmsatz * 0.7,
   );
@@ -309,7 +367,8 @@ export function computeInsights(): Insight[] {
       kategorie: "flotte",
       titel: `${v.kennzeichen} ist unterausgelastet`,
       erklaerung: `Monatsumsatz ${EUR(v.monatsumsatz)} liegt ${round((1 - v.monatsumsatz / avgFzgUmsatz) * 100)} % unter dem Flottendurchschnitt von ${EUR(avgFzgUmsatz)}.`,
-      empfehlung: "Mehr Sitzend-/Dialysefahrten auf dieses Fahrzeug verteilen oder Standzeit reduzieren.",
+      empfehlung:
+        "Mehr Sitzend-/Dialysefahrten auf dieses Fahrzeug verteilen oder Standzeit reduzieren.",
       wirkung: "mittel",
       potenzial: `+${EUR(round(avgFzgUmsatz - v.monatsumsatz))}/Monat möglich`,
       to: "/fahrzeuge",
@@ -317,7 +376,9 @@ export function computeInsights(): Insight[] {
   }
 
   // Overloaded drivers: high overtime.
-  const ueberlastet = [...INITIAL_FAHRER].filter((f) => f.ueberstunden >= 25).sort((a, b) => b.ueberstunden - a.ueberstunden);
+  const ueberlastet = [...INITIAL_FAHRER]
+    .filter((f) => f.ueberstunden >= 25)
+    .sort((a, b) => b.ueberstunden - a.ueberstunden);
   for (const f of ueberlastet.slice(0, 2)) {
     insights.push({
       id: `fahrer-${f.id}`,
@@ -378,7 +439,8 @@ export function computeInsights(): Insight[] {
       id: "wiederkehrend",
       kategorie: "trend",
       titel: `${wiederkehrend} wiederkehrende Patienten`,
-      erklaerung: "Regelmäßige Dialyse-/Therapiefahrten lassen sich als Serientermine fest einplanen und sichern planbaren Umsatz.",
+      erklaerung:
+        "Regelmäßige Dialyse-/Therapiefahrten lassen sich als Serientermine fest einplanen und sichern planbaren Umsatz.",
       empfehlung: "Serientouren anlegen und feste Fahrer/Fahrzeuge zuordnen.",
       wirkung: "mittel",
       to: "/dialysezentren",
@@ -386,7 +448,9 @@ export function computeInsights(): Insight[] {
   }
 
   // Maintenance cost watch.
-  const teuersteReparatur = [...INITIAL_FAHRZEUGE].sort((a, b) => reparaturkostenGesamt(b) - reparaturkostenGesamt(a))[0];
+  const teuersteReparatur = [...INITIAL_FAHRZEUGE].sort(
+    (a, b) => reparaturkostenGesamt(b) - reparaturkostenGesamt(a),
+  )[0];
   if (teuersteReparatur && reparaturkostenGesamt(teuersteReparatur) > 800) {
     insights.push({
       id: `wartungskosten-${teuersteReparatur.id}`,
@@ -420,11 +484,30 @@ const STUFE_PRIO: Record<HinweisStufe, AlarmPrioritaet> = {
   positiv: "Niedrig",
 };
 
-export const ALARM_PRIO_META: Record<AlarmPrioritaet, { dot: string; badge: string; ring: string }> = {
-  Kritisch: { dot: "bg-destructive", badge: "border-destructive/30 bg-destructive/10 text-destructive", ring: "bg-destructive/15 text-destructive" },
-  Hoch: { dot: "bg-warning", badge: "border-warning/30 bg-warning/10 text-warning", ring: "bg-warning/20 text-warning" },
-  Mittel: { dot: "bg-info", badge: "border-info/30 bg-info/10 text-info", ring: "bg-info/15 text-info" },
-  Niedrig: { dot: "bg-success", badge: "border-success/30 bg-success/10 text-success", ring: "bg-success/15 text-success" },
+export const ALARM_PRIO_META: Record<
+  AlarmPrioritaet,
+  { dot: string; badge: string; ring: string }
+> = {
+  Kritisch: {
+    dot: "bg-destructive",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    ring: "bg-destructive/15 text-destructive",
+  },
+  Hoch: {
+    dot: "bg-warning",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    ring: "bg-warning/20 text-warning",
+  },
+  Mittel: {
+    dot: "bg-info",
+    badge: "border-info/30 bg-info/10 text-info",
+    ring: "bg-info/15 text-info",
+  },
+  Niedrig: {
+    dot: "bg-success",
+    badge: "border-success/30 bg-success/10 text-success",
+    ring: "bg-success/15 text-success",
+  },
 };
 
 /** Reuses the rule engine and re-categorises into 4 priority levels. Client-only (time-relative). */

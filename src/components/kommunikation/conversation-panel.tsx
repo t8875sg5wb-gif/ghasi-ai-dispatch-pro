@@ -43,7 +43,9 @@ export function ConversationPanel({ konversation }: { konversation: Konversation
       {/* Header */}
       <div className="border-b border-border/70 px-4 py-3.5 sm:px-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", kat.ring)}>
+          <span
+            className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", kat.ring)}
+          >
             <KatIcon className="h-4 w-4" />
           </span>
           <p className="text-sm font-semibold">{konversation.betreff}</p>
@@ -72,7 +74,10 @@ export function ConversationPanel({ konversation }: { konversation: Konversation
       {/* History */}
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-5">
         {konversation.nachrichten.map((n) => (
-          <div key={n.id} className={cn("flex flex-col gap-1", n.eigen ? "items-end" : "items-start")}>
+          <div
+            key={n.id}
+            className={cn("flex flex-col gap-1", n.eigen ? "items-end" : "items-start")}
+          >
             <div
               className={cn(
                 "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
@@ -106,7 +111,12 @@ export function ConversationPanel({ konversation }: { konversation: Konversation
       {/* Reply composer (manual send only) */}
       <div className="border-t border-border/70 p-3 sm:p-4">
         <div className="flex items-end gap-2">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl" title="Anhang (in Vorbereitung)">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-xl"
+            title="Anhang (in Vorbereitung)"
+          >
             <Paperclip className="h-4 w-4" />
           </Button>
           <Textarea
@@ -122,7 +132,12 @@ export function ConversationPanel({ konversation }: { konversation: Konversation
             placeholder={`Antwort über ${kanal.label} …`}
             className="max-h-32 min-h-[40px] resize-none text-sm"
           />
-          <Button size="icon" className="h-9 w-9 shrink-0 rounded-xl" onClick={senden} disabled={!antwort.trim()}>
+          <Button
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-xl"
+            onClick={senden}
+            disabled={!antwort.trim()}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>

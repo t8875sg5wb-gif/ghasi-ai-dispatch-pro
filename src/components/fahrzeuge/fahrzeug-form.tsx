@@ -77,12 +77,7 @@ function emptyValues(): FahrzeugFormValues {
   };
 }
 
-export function FahrzeugForm({
-  initial,
-  onSubmit,
-  onCancel,
-  submitLabel,
-}: FahrzeugFormProps) {
+export function FahrzeugForm({ initial, onSubmit, onCancel, submitLabel }: FahrzeugFormProps) {
   const [values, setValues] = useState<FahrzeugFormValues>(emptyValues);
 
   useEffect(() => {
@@ -94,10 +89,7 @@ export function FahrzeugForm({
     }
   }, [initial]);
 
-  function set<K extends keyof FahrzeugFormValues>(
-    key: K,
-    value: FahrzeugFormValues[K],
-  ) {
+  function set<K extends keyof FahrzeugFormValues>(key: K, value: FahrzeugFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -173,7 +165,9 @@ export function FahrzeugForm({
       {/* Suitability */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex items-center justify-between rounded-xl border border-border/70 px-3 py-2.5">
-          <Label htmlFor="rolli" className="cursor-pointer">Rollstuhl</Label>
+          <Label htmlFor="rolli" className="cursor-pointer">
+            Rollstuhl
+          </Label>
           <Switch
             id="rolli"
             checked={values.rollstuhlGeeignet}
@@ -181,7 +175,9 @@ export function FahrzeugForm({
           />
         </div>
         <div className="flex items-center justify-between rounded-xl border border-border/70 px-3 py-2.5">
-          <Label htmlFor="liegend" className="cursor-pointer">Liegend</Label>
+          <Label htmlFor="liegend" className="cursor-pointer">
+            Liegend
+          </Label>
           <Switch
             id="liegend"
             checked={values.liegendGeeignet}
@@ -204,10 +200,7 @@ export function FahrzeugForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Status</Label>
-          <Select
-            value={values.status}
-            onValueChange={(v) => set("status", v as FahrzeugStatus)}
-          >
+          <Select value={values.status} onValueChange={(v) => set("status", v as FahrzeugStatus)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

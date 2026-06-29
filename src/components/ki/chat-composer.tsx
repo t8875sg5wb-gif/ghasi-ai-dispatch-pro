@@ -90,7 +90,9 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
     rec.interimResults = true;
     rec.continuous = false;
     let finalText = "";
-    rec.onresult = (e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => {
+    rec.onresult = (e: {
+      results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+    }) => {
       let interim = "";
       for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];
@@ -154,13 +156,20 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
           disabled={busy || reading}
           aria-label="Datei anhängen"
         >
-          {reading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+          {reading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Paperclip className="h-5 w-5" />
+          )}
         </Button>
         <Button
           type="button"
           size="icon"
           variant="ghost"
-          className={cn("h-11 w-11 shrink-0 rounded-2xl", recording && "bg-destructive/15 text-destructive")}
+          className={cn(
+            "h-11 w-11 shrink-0 rounded-2xl",
+            recording && "bg-destructive/15 text-destructive",
+          )}
           onClick={toggleVoice}
           disabled={busy}
           aria-label="Spracheingabe"
@@ -177,7 +186,11 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
               submit();
             }
           }}
-          placeholder={recording ? "Sprechen Sie …" : "Fragen Sie GHASI AI – alles Geschäftliche oder Alltägliche …"}
+          placeholder={
+            recording
+              ? "Sprechen Sie …"
+              : "Fragen Sie GHASI AI – alles Geschäftliche oder Alltägliche …"
+          }
           rows={1}
           className="max-h-36 min-h-11 flex-1 resize-none rounded-2xl"
         />
