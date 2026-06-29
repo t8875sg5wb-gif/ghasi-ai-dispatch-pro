@@ -342,7 +342,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
  */
 export const INITIAL_RECHNUNGEN: Rechnung[] = [];
 
-
+let idCounter = 100;
 export function nextRechnungId(): string {
   idCounter += 1;
   return `r-${idCounter}`;
