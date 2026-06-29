@@ -123,15 +123,13 @@ export function FahrerForm({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="adresse">Adresse</Label>
-        <Input
-          id="adresse"
-          value={values.adresse}
-          onChange={(e) => set("adresse", e.target.value)}
-          placeholder="Straße, PLZ Ort"
-        />
-      </div>
+      <AddressFields
+        idPrefix="fahrer-adresse"
+        label="Adresse"
+        value={parseAdresse(values.adresse)}
+        onChange={(adr) => set("adresse", formatAdresse(adr))}
+      />
+
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
