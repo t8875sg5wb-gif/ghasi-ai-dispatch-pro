@@ -20,7 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { computeFinanzKpis, offenePostenJeKunde, EUR } from "@/lib/finance";
+import { computeFinanzKpis, offenePostenJeKunde, INITIAL_RECHNUNGEN, EUR } from "@/lib/finance";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/buchhaltung")({
   head: () => ({
