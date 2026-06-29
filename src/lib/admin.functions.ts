@@ -18,11 +18,13 @@ const GUELTIGE_ROLLEN: AppRole[] = ["admin", "disposition", "finanz", "fahrer"];
 export const listeBenutzer = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<BenutzerEintrag[]> => {
-    const { data: istAdmin, error: rollenFehler } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (rollenFehler || istAdmin !== true) {
+    const { data: eigeneAdminRolle, error: rollenFehler } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (rollenFehler || !eigeneAdminRolle) {
       throw new Error("Kein Zugriff: Diese Aktion ist Administratoren vorbehalten.");
     }
 
@@ -57,11 +59,13 @@ export const setzeRolle = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ context, data }): Promise<{ ok: true }> => {
-    const { data: istAdmin, error: rollenFehler } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (rollenFehler || istAdmin !== true) {
+    const { data: eigeneAdminRolle, error: rollenFehler } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (rollenFehler || !eigeneAdminRolle) {
       throw new Error("Kein Zugriff: Diese Aktion ist Administratoren vorbehalten.");
     }
 
