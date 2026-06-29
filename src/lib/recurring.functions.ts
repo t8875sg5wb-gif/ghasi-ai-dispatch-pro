@@ -139,7 +139,7 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       zielort: string,
     ) => `${termin.slice(0, 10)}|${patient}|${abholort}|${zielort}`;
     const bekannt = new Set(
-      (vorhanden ?? []).map((o: Record<string, string>) =>
+      (vorhanden ?? []).map((o: { termin: string; patient: string; abholort: string; zielort: string }) =>
         dedupKey(o.termin, o.patient, o.abholort, o.zielort),
       ),
     );
