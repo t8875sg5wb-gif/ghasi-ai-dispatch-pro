@@ -14,6 +14,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { AdresseStruktur } from "@/lib/address";
+
 export type AuftragStatus =
   | "neu"
   | "disponiert"
@@ -55,6 +57,10 @@ export interface Auftrag {
   transportart: Transportart;
   prioritaet: AuftragPrioritaet;
   status: AuftragStatus;
+  /** Strukturierte Abholadresse; legacy `abholort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  pickup?: AdresseStruktur;
+  /** Strukturierte Zieladresse; legacy `zielort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  destination?: AdresseStruktur;
   abholort: string;
   zielort: string;
   termin: string; // ISO datetime

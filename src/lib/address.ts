@@ -39,6 +39,30 @@ export function adresseGefuellt(a: AdresseStruktur): boolean {
   );
 }
 
+/** Robustly coerces partially migrated/nullable address objects into the app shape. */
+export function normalisiereAdresse(input: Partial<AdresseStruktur> | string | null | undefined): AdresseStruktur {
+  if (typeof input === "string" || input == null) return parseAdresse(input);
+  return {
+    street: input.street ?? "",
+    houseNumber: input.houseNumber ?? "",
+    postalCode: input.postalCode ?? "",
+    city: input.city ?? "",
+    country: input.country || LAND_STANDARD,
+    additionalInfo: input.additionalInfo ?? "",
+  };
+}
+
+/** Prefer structured fields; fall back to a legacy one-line address string. */
+export function adresseAusStrukturOderLegacy(
+  struktur: Partial<AdresseStruktur> | null | undefined,
+  legacy: string | null | undefined,
+): AdresseStruktur {
+  const normalisiert = normalisiereAdresse(struktur);
+  return adresseGefuellt(normalisiert) || normalisiert.additionalInfo.trim()
+    ? normalisiert
+    : parseAdresse(legacy);
+}
+
 /**
  * Zerlegt einen freien Adress-String bestmöglich in strukturierte Felder.
  * Erkennt deutsche Adressmuster wie:
