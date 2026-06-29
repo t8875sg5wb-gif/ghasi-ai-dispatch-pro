@@ -147,13 +147,16 @@ function EinstellungenSeite() {
             <Feld label="Firmenname">
               <Input value={werte.firma} onChange={(e) => set("firma", e.target.value)} />
             </Feld>
-            <Feld label="Adresse">
-              <Textarea
-                value={werte.adresse}
-                onChange={(e) => set("adresse", e.target.value)}
-                rows={2}
-              />
-            </Feld>
+            <AddressFields
+              idPrefix="firma-adresse"
+              label="Adresse"
+              value={firmaAdr}
+              onChange={(next) => {
+                setFirmaAdr(next);
+                set("adresse", formatAdresse(next));
+              }}
+            />
+
             <div className="grid gap-4 sm:grid-cols-2">
               <Feld label="Telefon">
                 <Input value={werte.telefon} onChange={(e) => set("telefon", e.target.value)} />
