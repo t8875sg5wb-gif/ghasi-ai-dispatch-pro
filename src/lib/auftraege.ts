@@ -328,6 +328,22 @@ export const PRIORITAETEN: AuftragPrioritaet[] = [
   "dringend",
 ];
 
+export function istAuftragStatus(value: unknown): value is AuftragStatus {
+  return STATUS_PIPELINE.includes(value as AuftragStatus) || value === "storniert";
+}
+
+export function istAuftragPrioritaet(value: unknown): value is AuftragPrioritaet {
+  return PRIORITAETEN.includes(value as AuftragPrioritaet);
+}
+
+export function istTransportart(value: unknown): value is Transportart {
+  return TRANSPORTARTEN.includes(value as Transportart);
+}
+
+export function istMobilitaet(value: unknown): value is Mobilitaet {
+  return MOBILITAET_OPTIONEN.includes(value as Mobilitaet);
+}
+
 export function formatTermin(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("de-DE", {

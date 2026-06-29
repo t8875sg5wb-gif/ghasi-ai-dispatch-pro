@@ -8,6 +8,10 @@ import type {
   Mobilitaet,
   Transportart,
   VerordnungStatus,
+  istAuftragPrioritaet,
+  istAuftragStatus,
+  istMobilitaet,
+  istTransportart,
 } from "@/lib/auftraege";
 import {
   type AdresseStruktur,
@@ -19,20 +23,20 @@ import {
 /** Shape the client sends when creating/updating an order. */
 export interface OrderWrite {
   nummer?: string;
-  patient: string;
-  transportart: string;
-  prioritaet: string;
+  patient?: string;
+  transportart?: string;
+  prioritaet?: string;
   status?: string;
   /** Legacy fallback; new writes should send `pickup`/`destination`. */
   abholort?: string;
   zielort?: string;
   pickup?: AdresseStruktur;
   destination?: AdresseStruktur;
-  termin: string;
-  fahrer: string | null;
-  fahrzeug: string | null;
-  kostentraeger: string;
-  notiz: string;
+  termin?: string;
+  fahrer?: string | null;
+  fahrzeug?: string | null;
+  kostentraeger?: string;
+  notiz?: string;
   verordnung?: string;
   verordnungDokumentId?: string | null;
   mobilitaet?: string | null;
@@ -111,15 +115,15 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
   );
   const abholort = formatAdresse(pickup) || (r.abholort ?? "");
   const zielort = formatAdresse(destination) || (r.zielort ?? "");
-  const valideStatus = new Set<AuftragStatus>(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]);
-  const validePrio = new Set<AuftragPrioritaet>(["niedrig", "normal", "hoch", "dringend"]);
-  const status = valideStatus.has(r.status as AuftragStatus) ? (r.status as AuftragStatus) : "neu";
-  const prioritaet = validePrio.has(r.prioritaet as AuftragPrioritaet) ? (r.prioritaet as AuftragPrioritaet) : "normal";
+  const status: AuftragStatus = istAuftragStatus(r.status) ? r.status : "neu";
+  const prioritaet: AuftragPrioritaet = istAuftragPrioritaet(r.prioritaet) ? r.prioritaet : "normal";
+  const transportart: Transportart = istTransportart(r.transportart) ? r.transportart : "Sitzendtransport";
+  const mobilitaet: Mobilitaet | undefined = istMobilitaet(r.mobilitaet) ? r.mobilitaet : undefined;
   return {
     id: r.id,
     nummer: r.nummer ?? "—",
     patient: r.patient ?? "Unbekannter Patient",
-    transportart: (r.transportart || "Sitzendtransport") as Transportart,
+    transportart,
     prioritaet,
     status,
     pickup,
@@ -133,8 +137,8 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     notiz: r.notiz ?? "",
     verordnung: (r.verordnung ?? "nicht_erhalten") as VerordnungStatus,
     verordnungDokumentId: r.verordnung_dokument_id ?? null,
-    mobilitaet: (r.mobilitaet ?? undefined) as Mobilitaet | undefined,
-    begleitperson: r.begleitperson,
+    mobilitaet,
+    begleitperson: Boolean(r.begleitperson),
     abholanforderung: r.abholanforderung ?? "",
     zielanforderung: r.zielanforderung ?? "",
     patientennotiz: r.patientennotiz ?? "",
