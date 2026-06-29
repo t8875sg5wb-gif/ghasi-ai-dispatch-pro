@@ -84,7 +84,7 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
   // Land erkennen (letztes Segment)
   const laender = ["deutschland", "germany", "österreich", "schweiz"];
-  let rest = [...segmente];
+  const rest = [...segmente];
   const letztes = rest[rest.length - 1]?.toLowerCase() ?? "";
   if (laender.includes(letztes)) {
     result.country = rest.pop() as string;

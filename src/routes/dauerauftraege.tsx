@@ -153,6 +153,7 @@ function DauerauftraegePage() {
   const updateMut = useUpdateRecurring();
   const seedMut = useSeedRecurring();
   const generateMut = useGenerateRecurring();
+  const neueVorlage = useMemo(() => leereVorlage(), [daten.length, formOpen]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
@@ -558,7 +559,7 @@ function DauerauftraegePage() {
       >
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
           <DauerauftragForm
-            initial={editTarget ?? leereVorlage()}
+            initial={editTarget ?? neueVorlage}
             istEdit={!!editTarget}
             saving={saving}
             onSubmit={speichern}
@@ -764,8 +765,7 @@ function DauerauftragForm({
 
   useEffect(() => {
     setF(normalisiere(initial));
-    // `initial` for new records is created inline by the parent; key by identity fields to avoid reset loops.
-  }, [initial.id, initial.kennung]);
+  }, [initial]);
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
