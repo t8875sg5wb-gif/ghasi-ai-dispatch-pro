@@ -35,7 +35,10 @@ export function leereAdresse(): AdresseStruktur {
 
 /** Hat die Adresse mindestens ein gefülltes Kernfeld? */
 export function adresseGefuellt(a: AdresseStruktur): boolean {
-  return Boolean(a.street.trim() || a.houseNumber.trim() || a.postalCode.trim() || a.city.trim());
+  const adr = normalisiereAdresse(a);
+  return Boolean(
+    adr.street.trim() || adr.houseNumber.trim() || adr.postalCode.trim() || adr.city.trim(),
+  );
 }
 
 /** Robustly coerces partially migrated/nullable address objects into the app shape. */
