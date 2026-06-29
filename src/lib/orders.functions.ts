@@ -73,8 +73,8 @@ export const updateOrder = createServerFn({ method: "POST" })
     );
     if (relevant) {
       const gps =
-        auftrag.lat != null && auftrag.lng != null
-          ? { lat: auftrag.lat, lng: auftrag.lng }
+        typeof v.lat === "number" && typeof v.lng === "number"
+          ? { lat: v.lat, lng: v.lng }
           : null;
       await context.supabase.from("activity_log").insert({
         bereich: "auftraege",
