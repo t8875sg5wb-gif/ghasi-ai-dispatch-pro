@@ -13,6 +13,23 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { GlobalSearch, useGlobalSearchHotkey } from "@/components/global-search";
 import { UserMenu } from "@/components/layout/user-menu";
 import { allNavItems } from "@/lib/navigation";
+import { useOrders } from "@/lib/orders-store";
+import { useRecurring } from "@/lib/recurring-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
+
+/**
+ * Hydrates the database-backed stores app-wide so the legacy in-memory mirrors
+ * (INITIAL_AUFTRAEGE, DAUERAUFTRAEGE, INITIAL_FAHRER, INITIAL_RECHNUNGEN) always
+ * reflect persisted data on every page, not demo seed data. Runs only inside the
+ * authenticated shell.
+ */
+function useHydrateStores() {
+  useOrders();
+  useRecurring();
+  useDrivers();
+  useInvoices();
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
