@@ -184,7 +184,12 @@ export const Route = createFileRoute("/api/chat")({
           });
         }
 
+        // AI Brain: load real persisted data into the in-memory mirrors so every
+        // knowledge snapshot and business tool reads the database, never demo seeds.
+        await hydrateServerMirrors();
+
         // Frage für das Audit-Protokoll festhalten.
+
         let frage = "";
 
         // Eingehende Nutzer-Nachricht sofort sichern (geht bei Fehlern nicht verloren).
