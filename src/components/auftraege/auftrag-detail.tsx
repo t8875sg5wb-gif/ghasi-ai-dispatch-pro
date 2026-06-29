@@ -204,11 +204,47 @@ export function AuftragDetail({
             </p>
           )}
 
+          {/* KI-Zuweisungsvorschlag bei fehlendem Fahrer/Fahrzeug */}
+          {canManage && unzugewiesen && onAssign && (
+            <DriverSuggestion
+              auftrag={auftrag}
+              onConfirm={(fahrer, fahrzeug) => onAssign(auftrag.id, fahrer, fahrzeug)}
+            />
+          )}
+
           <Separator />
 
           <div className="space-y-4">
-            <InfoRow icon={MapPin} label="Abholort" value={auftrag.abholort} />
-            <InfoRow icon={ArrowRight} label="Zielort" value={auftrag.zielort} />
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Abholort</p>
+                {abholZeilen.length > 0 ? (
+                  abholZeilen.map((z, i) => (
+                    <p key={i} className="text-sm font-medium leading-tight">{z}</p>
+                  ))
+                ) : (
+                  <p className="text-sm font-medium">—</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Zielort</p>
+                {zielZeilen.length > 0 ? (
+                  zielZeilen.map((z, i) => (
+                    <p key={i} className="text-sm font-medium leading-tight">{z}</p>
+                  ))
+                ) : (
+                  <p className="text-sm font-medium">—</p>
+                )}
+              </div>
+            </div>
             <InfoRow icon={Calendar} label="Termin" value={formatTermin(auftrag.termin)} />
             <InfoRow
               icon={User}
@@ -221,6 +257,11 @@ export function AuftragDetail({
               value={auftrag.fahrzeug ?? "Nicht zugewiesen"}
             />
             <InfoRow icon={CreditCard} label="Kostenträger" value={auftrag.kostentraeger || "—"} />
+            {fehlt.length > 0 && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                Fehlende Zuweisung: {fehlt.join(" & ")}
+              </p>
+            )}
           </div>
 
           <Separator />
