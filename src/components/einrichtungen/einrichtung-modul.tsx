@@ -31,6 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressFields } from "@/components/forms/address-fields";
+import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
