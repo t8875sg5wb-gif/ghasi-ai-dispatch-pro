@@ -84,6 +84,7 @@ export function AuftragDetail({
   onOpenChange,
   onStatusChange,
   onEdit,
+  onAssign,
   canManage = true,
   canChangeStatus = true,
 }: AuftragDetailProps) {
@@ -93,6 +94,14 @@ export function AuftragDetail({
   const prio = PRIORITAET_META[auftrag.prioritaet];
   const transitions = STATUS_TRANSITIONS[auftrag.status];
   const activeIndex = STATUS_PIPELINE.indexOf(auftrag.status);
+
+  const now = Date.now();
+  const stufe = warnStufe(auftrag, now);
+  const zeigtWarnung = hatWarnung(stufe);
+  const unzugewiesen = istUnzugewiesen(auftrag);
+  const fehlt = fehlendeFelder(auftrag);
+  const abholZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.abholort));
+  const zielZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.zielort));
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
