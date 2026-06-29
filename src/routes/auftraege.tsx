@@ -356,6 +356,11 @@ function AuftraegePage() {
         </div>
       </section>
 
+      {/* Dringende, nicht zugewiesene Aufträge */}
+      {canManage && (
+        <UnassignedAlerts auftraege={auftraege} onSelect={openDetail} />
+      )}
+
       {/* List */}
       <Card className="border-border/70 shadow-card">
         <CardContent className="p-0">
