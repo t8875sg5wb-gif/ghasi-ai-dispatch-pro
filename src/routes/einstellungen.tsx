@@ -89,14 +89,18 @@ function EinstellungenSeite() {
   const { theme, setTheme } = useTheme();
   const { name: akteur, role } = useAuth();
   const [werte, setWerte] = useState<Einstellungen>(STANDARD);
+  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(STANDARD.adresse));
 
   useEffect(() => {
-    setWerte(ladeEinstellungen());
+    const geladen = ladeEinstellungen();
+    setWerte(geladen);
+    setFirmaAdr(parseAdresse(geladen.adresse));
   }, []);
 
   function set<K extends keyof Einstellungen>(key: K, value: Einstellungen[K]) {
     setWerte((prev) => ({ ...prev, [key]: value }));
   }
+
 
   function speichern() {
     try {
