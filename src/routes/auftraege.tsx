@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -419,7 +419,7 @@ function AuftraegePage() {
               </TableHeader>
               <TableBody>
                 {gruppen.map((gruppe) => (
-                  <React.Fragment key={gruppe.id}>
+                  <Fragment key={gruppe.id}>
                     <TableRow className="hover:bg-transparent">
                       <TableCell
                         colSpan={5}
@@ -511,7 +511,7 @@ function AuftraegePage() {
                         </TableRow>
                       );
                     })}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </TableBody>
 
