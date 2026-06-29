@@ -14,6 +14,7 @@ import {
   istAuftragStatus,
   istMobilitaet,
   istTransportart,
+  istVerordnungStatus,
 } from "@/lib/auftraege";
 import {
   type AdresseStruktur,
@@ -125,6 +126,9 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     ? r.transportart
     : "Sitzendtransport";
   const mobilitaet: Mobilitaet | undefined = istMobilitaet(r.mobilitaet) ? r.mobilitaet : undefined;
+  const verordnung: VerordnungStatus = istVerordnungStatus(r.verordnung)
+    ? r.verordnung
+    : "nicht_erhalten";
   return {
     id: r.id,
     nummer: r.nummer ?? "—",
@@ -141,7 +145,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     fahrzeug: r.fahrzeug,
     kostentraeger: r.kostentraeger ?? "",
     notiz: r.notiz ?? "",
-    verordnung: (r.verordnung ?? "nicht_erhalten") as VerordnungStatus,
+    verordnung,
     verordnungDokumentId: r.verordnung_dokument_id ?? null,
     mobilitaet,
     begleitperson: Boolean(r.begleitperson),
