@@ -415,3 +415,10 @@ export const SEED_FAHRER: Fahrer[] = [
     gewinnHeute: 0,
   },
 ];
+
+/**
+ * Live drivers mirror. Empty at module load; `useDrivers()` fills it from the
+ * database on every fetch (the AppShell prefetches it app-wide). This is the
+ * production source of truth — never the demo `SEED_FAHRER` above.
+ */
+export const INITIAL_FAHRER: Fahrer[] = [];
