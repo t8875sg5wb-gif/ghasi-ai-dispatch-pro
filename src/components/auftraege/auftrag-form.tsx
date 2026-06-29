@@ -176,27 +176,21 @@ export function AuftragForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="abholort">Abholort</Label>
-          <Input
-            id="abholort"
-            value={values.abholort}
-            onChange={(e) => set("abholort", e.target.value)}
-            placeholder="Startadresse"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="zielort">Zielort</Label>
-          <Input
-            id="zielort"
-            value={values.zielort}
-            onChange={(e) => set("zielort", e.target.value)}
-            placeholder="Zieladresse"
-            required
-          />
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AddressFields
+          idPrefix="abhol"
+          label="Abholort"
+          required
+          value={abholAdr}
+          onChange={handleAbholAdr}
+        />
+        <AddressFields
+          idPrefix="ziel"
+          label="Zielort"
+          required
+          value={zielAdr}
+          onChange={handleZielAdr}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
