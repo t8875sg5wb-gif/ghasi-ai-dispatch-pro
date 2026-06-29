@@ -16,6 +16,14 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
+import {
+  type AdresseStruktur,
+  parseAdresse,
+  formatAdresse,
+  leereAdresse,
+  adresseGefuellt,
+} from "@/lib/address";
+import { AddressFields } from "@/components/forms/address-fields";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
