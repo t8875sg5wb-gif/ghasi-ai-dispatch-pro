@@ -18,6 +18,10 @@ export interface AdresseStruktur {
 
 export const LAND_STANDARD = "Deutschland";
 
+function text(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : value == null ? fallback : String(value);
+}
+
 export function leereAdresse(): AdresseStruktur {
   return {
     street: "",
@@ -40,12 +44,12 @@ export function normalisiereAdresse(
 ): AdresseStruktur {
   if (typeof input === "string" || input == null) return parseAdresse(input);
   return {
-    street: input.street ?? "",
-    houseNumber: input.houseNumber ?? "",
-    postalCode: input.postalCode ?? "",
-    city: input.city ?? "",
-    country: input.country || LAND_STANDARD,
-    additionalInfo: input.additionalInfo ?? "",
+    street: text(input.street),
+    houseNumber: text(input.houseNumber),
+    postalCode: text(input.postalCode),
+    city: text(input.city),
+    country: text(input.country, LAND_STANDARD) || LAND_STANDARD,
+    additionalInfo: text(input.additionalInfo),
   };
 }
 
@@ -133,42 +137,44 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
 /** Setzt strukturierte Felder zu einem einzeiligen Adress-String zusammen. */
 export function formatAdresse(a: AdresseStruktur): string {
-  const strasse = [a.street, a.houseNumber]
+  const adr = normalisiereAdresse(a);
+  const strasse = [adr.street, adr.houseNumber]
     .filter((s) => s && s.trim())
     .join(" ")
     .trim();
-  const ort = [a.postalCode, a.city]
+  const ort = [adr.postalCode, adr.city]
     .filter((s) => s && s.trim())
     .join(" ")
     .trim();
   const teile = [strasse, ort].filter(Boolean);
-  if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
-    teile.push(a.country.trim());
+  if (adr.country && adr.country.trim() && adr.country.trim() !== LAND_STANDARD) {
+    teile.push(adr.country.trim());
   }
   let out = teile.join(", ");
-  if (a.additionalInfo && a.additionalInfo.trim()) {
-    out = out ? `${out} (${a.additionalInfo.trim()})` : a.additionalInfo.trim();
+  if (adr.additionalInfo && adr.additionalInfo.trim()) {
+    out = out ? `${out} (${adr.additionalInfo.trim()})` : adr.additionalInfo.trim();
   }
   return out;
 }
 
 /** Mehrzeilige Darstellung für Detailansichten. */
 export function formatAdresseMehrzeilig(a: AdresseStruktur): string[] {
+  const adr = normalisiereAdresse(a);
   const zeilen: string[] = [];
-  const strasse = [a.street, a.houseNumber]
+  const strasse = [adr.street, adr.houseNumber]
     .filter((s) => s && s.trim())
     .join(" ")
     .trim();
   if (strasse) zeilen.push(strasse);
-  const ort = [a.postalCode, a.city]
+  const ort = [adr.postalCode, adr.city]
     .filter((s) => s && s.trim())
     .join(" ")
     .trim();
   if (ort) zeilen.push(ort);
-  if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
-    zeilen.push(a.country.trim());
+  if (adr.country && adr.country.trim() && adr.country.trim() !== LAND_STANDARD) {
+    zeilen.push(adr.country.trim());
   }
-  if (a.additionalInfo && a.additionalInfo.trim()) zeilen.push(a.additionalInfo.trim());
+  if (adr.additionalInfo && adr.additionalInfo.trim()) zeilen.push(adr.additionalInfo.trim());
   return zeilen;
 }
 
