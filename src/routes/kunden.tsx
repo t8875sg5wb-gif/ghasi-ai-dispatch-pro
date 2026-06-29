@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { AddressFields } from "@/components/forms/address-fields";
+import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import {
   Building2,
   Plus,
@@ -435,7 +437,7 @@ function KundeFelder({
   const [ansprechpartner, setAnsprechpartner] = useState(target?.ansprechpartner ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [email, setEmail] = useState(target?.email ?? "");
-  const [adresse, setAdresse] = useState(target?.adresse ?? "");
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(target?.adresse ?? ""));
   const [vertragsstatus, setVertragsstatus] = useState<NonNullable<Kunde["vertragsstatus"]>>(
     target?.vertragsstatus ?? "Rahmenvertrag",
   );
@@ -465,7 +467,7 @@ function KundeFelder({
       telefon: telefon.trim(),
       offeneRechnungen: target?.offeneRechnungen ?? 0,
       email: email.trim() || undefined,
-      adresse: adresse.trim() || undefined,
+      adresse: formatAdresse(adr) || undefined,
       vertragsstatus,
       konditionen: konditionen.trim() || undefined,
       zahlungszielTage: zahlungsziel.trim() ? Number(zahlungsziel) : undefined,
@@ -522,9 +524,10 @@ function KundeFelder({
         <Feld label="E-Mail">
           <Input value={email} onChange={(e) => setEmail(e.target.value)} />
         </Feld>
-        <Feld label="Adresse">
-          <Input value={adresse} onChange={(e) => setAdresse(e.target.value)} />
-        </Feld>
+        <div className="sm:col-span-2">
+          <AddressFields idPrefix="kunde-adresse" label="Adresse" value={adr} onChange={setAdr} />
+        </div>
+
         <Feld label="Zahlungsziel (Tage)">
           <Input type="number" value={zahlungsziel} onChange={(e) => setZahlungsziel(e.target.value)} />
         </Feld>

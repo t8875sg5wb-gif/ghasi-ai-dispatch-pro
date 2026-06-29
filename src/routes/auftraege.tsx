@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -28,10 +28,21 @@ import {
 } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
 import {
+  gruppiereNachDatum,
+  warnStufe,
+  minutenBis,
+  formatCountdown,
+  fehlendeFelder,
+  istUnzugewiesen,
+  hatWarnung,
+  WARN_META,
+} from "@/lib/order-urgency";
+import {
   AuftragForm,
   type AuftragFormValues,
 } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
+import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import {
   MedizinBadges,
   fahrzeugMismatch,
@@ -133,7 +144,30 @@ function AuftraegePage() {
     });
   }, [auftraege, search, statusFilter, prioFilter]);
 
+  const gruppen = useMemo(() => gruppiereNachDatum(filtered), [filtered]);
+
   const detailAuftrag = auftraege.find((a) => a.id === detailId) ?? null;
+
+  function handleAssign(id: string, fahrer: string, fahrzeug: string | null) {
+    const ziel = auftraege.find((a) => a.id === id);
+    updateMut.mutate(
+      { id, values: { fahrer, fahrzeug, status: "disponiert" } },
+      {
+        onSuccess: () => {
+          toast.success(`Zugewiesen: ${fahrer}${fahrzeug ? ` · ${fahrzeug}` : ""}`);
+          if (ziel) {
+            logActivity({
+              bereich: "Aufträge",
+              entitaet: `${ziel.nummer} · ${ziel.patient}`,
+              aktion: "Fahrer zugewiesen",
+              beschreibung: `Fahrer ${fahrer}${fahrzeug ? ` mit ${fahrzeug}` : ""} nach KI-Vorschlag bestätigt.`,
+            });
+          }
+        },
+        onError: (e) => toast.error(`Zuweisen fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
+  }
 
   function openDetail(a: Auftrag) {
     setDetailId(a.id);
@@ -322,6 +356,11 @@ function AuftraegePage() {
         </div>
       </section>
 
+      {/* Dringende, nicht zugewiesene Aufträge */}
+      {canManage && (
+        <UnassignedAlerts auftraege={auftraege} onSelect={openDetail} />
+      )}
+
       {/* List */}
       <Card className="border-border/70 shadow-card">
         <CardContent className="p-0">
@@ -384,54 +423,103 @@ function AuftraegePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((a) => {
-                  const status = STATUS_META[a.status];
-                  const prio = PRIORITAET_META[a.prioritaet];
-                  return (
-                    <TableRow
-                      key={a.id}
-                      className="cursor-pointer"
-                      onClick={() => openDetail(a)}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <span className={cn("h-2 w-2 shrink-0 rounded-full", status.dot)} />
-                          <div className="min-w-0">
-                            <p className="font-medium leading-tight">{a.patient}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {a.nummer} · {a.transportart}
-                            </p>
-                            <MedizinBadges auftrag={a} className="mt-1.5" />
-                          </div>
-                        </div>
-                        {fahrzeugMismatch(a) && (
-                          <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
-                            <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden max-w-[260px] md:table-cell">
-                        <p className="truncate text-sm">{a.abholort}</p>
-                        <p className="truncate text-xs text-muted-foreground">→ {a.zielort}</p>
-                      </TableCell>
-                      <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
-                        {formatTermin(a.termin)}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant="outline" className={prio.badge}>
-                          {prio.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("gap-1", status.badge)}>
-                          <status.icon className="h-3 w-3" />
-                          {status.label}
-                        </Badge>
+                {gruppen.map((gruppe) => (
+                  <Fragment key={gruppe.id}>
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={5}
+                        className="bg-muted/40 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      >
+                        {gruppe.label}
+                        <span className="ml-2 rounded-full bg-muted px-1.5 text-[10px]">
+                          {gruppe.auftraege.length}
+                        </span>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                    {gruppe.auftraege.map((a) => {
+                      const status = STATUS_META[a.status];
+                      const prio = PRIORITAET_META[a.prioritaet];
+                      const stufe = warnStufe(a);
+                      const warn = WARN_META[stufe];
+                      const zeigtWarnung = hatWarnung(stufe);
+                      const unzugewiesen = istUnzugewiesen(a);
+                      const m = minutenBis(a);
+                      const fehlt = fehlendeFelder(a);
+                      return (
+                        <TableRow
+                          key={a.id}
+                          className={cn("cursor-pointer", warn.row)}
+                          onClick={() => openDetail(a)}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={cn(
+                                  "h-2 w-2 shrink-0 rounded-full",
+                                  zeigtWarnung ? warn.dot : status.dot,
+                                )}
+                              />
+                              <div className="min-w-0">
+                                <p className="font-medium leading-tight">{a.patient}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {a.nummer} · {a.transportart}
+                                </p>
+                                <MedizinBadges auftrag={a} className="mt-1.5" />
+                                {unzugewiesen && (
+                                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                    <Badge
+                                      variant="outline"
+                                      className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                                    >
+                                      <AlertTriangle className="h-3 w-3" />
+                                      Nicht zugewiesen
+                                    </Badge>
+                                    {zeigtWarnung && (
+                                      <Badge
+                                        variant="outline"
+                                        className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
+                                      >
+                                        {formatCountdown(m)}
+                                      </Badge>
+                                    )}
+                                    <span className="text-[10px] text-muted-foreground">
+                                      Fehlt: {fehlt.join(" & ")}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {fahrzeugMismatch(a) && (
+                              <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
+                                <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden max-w-[260px] md:table-cell">
+                            <p className="truncate text-sm">{a.abholort}</p>
+                            <p className="truncate text-xs text-muted-foreground">→ {a.zielort}</p>
+                          </TableCell>
+                          <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
+                            {formatTermin(a.termin)}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <Badge variant="outline" className={prio.badge}>
+                              {prio.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={cn("gap-1", status.badge)}>
+                              <status.icon className="h-3 w-3" />
+                              {status.label}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </Fragment>
+                ))}
               </TableBody>
+
             </Table>
           )}
         </CardContent>
@@ -444,6 +532,7 @@ function AuftraegePage() {
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}
         onEdit={openEdit}
+        onAssign={handleAssign}
         canManage={canManage}
         canChangeStatus={canChangeStatus}
       />

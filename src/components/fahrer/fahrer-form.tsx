@@ -12,6 +12,8 @@ import { FAHRZEUG_OPTIONEN } from "@/lib/auftraege";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AddressFields } from "@/components/forms/address-fields";
+import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import {
   Select,
   SelectContent,
@@ -68,19 +70,23 @@ export function FahrerForm({
   submitLabel,
 }: FahrerFormProps) {
   const [values, setValues] = useState<FahrerFormValues>(emptyValues);
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(""));
 
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, ...rest } = initial;
       setValues(rest);
+      setAdr(parseAdresse(initial.adresse));
     } else {
       setValues(emptyValues());
+      setAdr(parseAdresse(""));
     }
   }, [initial]);
 
   function set<K extends keyof FahrerFormValues>(key: K, value: FahrerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
+
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,15 +129,17 @@ export function FahrerForm({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="adresse">Adresse</Label>
-        <Input
-          id="adresse"
-          value={values.adresse}
-          onChange={(e) => set("adresse", e.target.value)}
-          placeholder="Straße, PLZ Ort"
-        />
-      </div>
+      <AddressFields
+        idPrefix="fahrer-adresse"
+        label="Adresse"
+        value={adr}
+        onChange={(next) => {
+          setAdr(next);
+          set("adresse", formatAdresse(next));
+        }}
+      />
+
+
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">

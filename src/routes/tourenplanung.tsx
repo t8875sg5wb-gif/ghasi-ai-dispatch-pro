@@ -65,6 +65,7 @@ import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/tourenplanung")({
@@ -340,6 +341,10 @@ function DispatchCenter() {
         <Kpi label="Umsatz heute" value={formatEUR(kpis.umsatzHeute)} icon={Euro} tone="success" />
         <Kpi label="Effizienz" value={`${kpis.effizienz}%`} icon={Gauge} tone="accent" />
       </div>
+
+      {/* Dringende, nicht zugewiesene Aufträge */}
+      <UnassignedAlerts auftraege={orders ?? []} />
+
 
       {/* Resource + insight row */}
       <div className="grid gap-4 lg:grid-cols-3">

@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressFields } from "@/components/forms/address-fields";
+import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import {
   Select,
   SelectContent,
@@ -89,14 +91,18 @@ function EinstellungenSeite() {
   const { theme, setTheme } = useTheme();
   const { name: akteur, role } = useAuth();
   const [werte, setWerte] = useState<Einstellungen>(STANDARD);
+  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(STANDARD.adresse));
 
   useEffect(() => {
-    setWerte(ladeEinstellungen());
+    const geladen = ladeEinstellungen();
+    setWerte(geladen);
+    setFirmaAdr(parseAdresse(geladen.adresse));
   }, []);
 
   function set<K extends keyof Einstellungen>(key: K, value: Einstellungen[K]) {
     setWerte((prev) => ({ ...prev, [key]: value }));
   }
+
 
   function speichern() {
     try {
@@ -143,13 +149,16 @@ function EinstellungenSeite() {
             <Feld label="Firmenname">
               <Input value={werte.firma} onChange={(e) => set("firma", e.target.value)} />
             </Feld>
-            <Feld label="Adresse">
-              <Textarea
-                value={werte.adresse}
-                onChange={(e) => set("adresse", e.target.value)}
-                rows={2}
-              />
-            </Feld>
+            <AddressFields
+              idPrefix="firma-adresse"
+              label="Adresse"
+              value={firmaAdr}
+              onChange={(next) => {
+                setFirmaAdr(next);
+                set("adresse", formatAdresse(next));
+              }}
+            />
+
             <div className="grid gap-4 sm:grid-cols-2">
               <Feld label="Telefon">
                 <Input value={werte.telefon} onChange={(e) => set("telefon", e.target.value)} />

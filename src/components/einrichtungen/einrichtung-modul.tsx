@@ -31,6 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressFields } from "@/components/forms/address-fields";
+import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -398,7 +400,7 @@ function FormFelder({
   onSave: (e: Einrichtung) => void;
 }) {
   const [name, setName] = useState(target?.name ?? "");
-  const [adresse, setAdresse] = useState(target?.adresse ?? "");
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(target?.adresse ?? ""));
   const [ansprechpartner, setAnsprechpartner] = useState(target?.ansprechpartner ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [email, setEmail] = useState(target?.email ?? "");
@@ -411,6 +413,7 @@ function FormFelder({
   const [aktiv, setAktiv] = useState(target?.aktiv ?? true);
 
   function submit() {
+    const adresse = formatAdresse(adr);
     if (!name.trim() || !adresse.trim()) {
       toast.error("Name und Adresse sind erforderlich.");
       return;
@@ -439,9 +442,8 @@ function FormFelder({
       <Feld label="Name *">
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </Feld>
-      <Feld label="Adresse *">
-        <Input value={adresse} onChange={(e) => setAdresse(e.target.value)} />
-      </Feld>
+      <AddressFields idPrefix="einrichtung-adresse" label="Adresse *" value={adr} onChange={setAdr} />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Feld label="Ansprechpartner">
           <Input value={ansprechpartner} onChange={(e) => setAnsprechpartner(e.target.value)} />

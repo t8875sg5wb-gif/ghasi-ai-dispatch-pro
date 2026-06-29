@@ -33,6 +33,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
+import { useOrders } from "@/lib/orders-store";
+import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -185,6 +187,7 @@ function Dashboard() {
   // Zeit-/datumsabhängige Hinweise erst nach Mount erzeugen (kein SSR-Mismatch).
   const [hinweise, setHinweise] = useState<Hinweis[]>([]);
   useEffect(() => setHinweise(generateHinweise()), []);
+  const { data: auftraege = [] } = useOrders();
   const auslastungFahrzeuge = 63;
   const auslastungFahrer = 61;
   const prognose = "11.900 €";
@@ -216,6 +219,10 @@ function Dashboard() {
 
       {/* Executive Business Health */}
       <ExecutiveHealth />
+
+      {/* Dringende, nicht zugewiesene Aufträge */}
+      <UnassignedAlerts auftraege={auftraege} />
+
 
       {/* Schnellzugriffe */}
       <section className="grid grid-cols-3 gap-3 sm:grid-cols-6">

@@ -16,6 +16,14 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
+import {
+  type AdresseStruktur,
+  parseAdresse,
+  formatAdresse,
+  leereAdresse,
+  adresseGefuellt,
+} from "@/lib/address";
+import { AddressFields } from "@/components/forms/address-fields";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,13 +78,19 @@ export function AuftragForm({
   submitLabel,
 }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
+  const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
+  const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
       setValues({ ...rest, termin: rest.termin.slice(0, 16) });
+      setAbholAdr(parseAdresse(initial.abholort));
+      setZielAdr(parseAdresse(initial.zielort));
     } else {
       setValues(emptyValues());
+      setAbholAdr(leereAdresse());
+      setZielAdr(leereAdresse());
     }
   }, [initial]);
 
@@ -87,13 +101,28 @@ export function AuftragForm({
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
+  // Strukturierte Adresse → formatierter String in der bestehenden Spalte.
+  function handleAbholAdr(a: AdresseStruktur) {
+    setAbholAdr(a);
+    set("abholort", formatAdresse(a));
+  }
+  function handleZielAdr(a: AdresseStruktur) {
+    setZielAdr(a);
+    set("zielort", formatAdresse(a));
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!values.patient.trim() || !values.abholort.trim() || !values.zielort.trim()) {
+    if (!values.patient.trim() || !adresseGefuellt(abholAdr) || !adresseGefuellt(zielAdr)) {
       return;
     }
-    onSubmit(values);
+    onSubmit({
+      ...values,
+      abholort: formatAdresse(abholAdr),
+      zielort: formatAdresse(zielAdr),
+    });
   }
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,27 +176,21 @@ export function AuftragForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="abholort">Abholort</Label>
-          <Input
-            id="abholort"
-            value={values.abholort}
-            onChange={(e) => set("abholort", e.target.value)}
-            placeholder="Startadresse"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="zielort">Zielort</Label>
-          <Input
-            id="zielort"
-            value={values.zielort}
-            onChange={(e) => set("zielort", e.target.value)}
-            placeholder="Zieladresse"
-            required
-          />
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AddressFields
+          idPrefix="abhol"
+          label="Abholort"
+          required
+          value={abholAdr}
+          onChange={handleAbholAdr}
+        />
+        <AddressFields
+          idPrefix="ziel"
+          label="Zielort"
+          required
+          value={zielAdr}
+          onChange={handleZielAdr}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
