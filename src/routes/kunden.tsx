@@ -435,7 +435,7 @@ function KundeFelder({
   const [ansprechpartner, setAnsprechpartner] = useState(target?.ansprechpartner ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [email, setEmail] = useState(target?.email ?? "");
-  const [adresse, setAdresse] = useState(target?.adresse ?? "");
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(target?.adresse ?? ""));
   const [vertragsstatus, setVertragsstatus] = useState<NonNullable<Kunde["vertragsstatus"]>>(
     target?.vertragsstatus ?? "Rahmenvertrag",
   );
