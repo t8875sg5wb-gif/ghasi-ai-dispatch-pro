@@ -532,6 +532,7 @@ function AuftraegePage() {
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}
         onEdit={openEdit}
+        onAssign={handleAssign}
         canManage={canManage}
         canChangeStatus={canChangeStatus}
       />
