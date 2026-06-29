@@ -91,8 +91,8 @@ export const seedOrders = createServerFn({ method: "POST" })
       .select("*", { count: "exact", head: true });
     if ((count ?? 0) > 0) return { seeded: 0 };
 
-    const { INITIAL_AUFTRAEGE } = await import("@/lib/auftraege");
-    const rows = INITIAL_AUFTRAEGE.map((a: Auftrag) =>
+    const { SEED_AUFTRAEGE } = await import("@/lib/auftraege");
+    const rows = SEED_AUFTRAEGE.map((a: Auftrag) =>
       writeToRow({
         nummer: a.nummer,
         patient: a.patient,
