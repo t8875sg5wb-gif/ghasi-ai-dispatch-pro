@@ -132,12 +132,14 @@ function terminMs(a: Pick<Auftrag, "termin">): number {
 function gruppeFuer(a: Auftrag, now: number): { id: GruppenId; label: string; sort: number } {
   const termin = new Date(a.termin).getTime();
   if (Number.isNaN(termin)) return { id: "ohne-termin", label: "Ohne gültigen Termin", sort: 98 };
-  // Überfällige aktive Aufträge zuerst
-  if (istAktiv(a) && termin < now) return { id: "ueberfaellig", label: "Überfällig", sort: -1 };
-
   const heute = tagesStart(new Date(now));
   const terminTag = tagesStart(new Date(termin));
   const diffTage = Math.round((terminTag - heute) / TAG_MS);
+
+  // Keep today's overdue transports inside today's card instead of creating one endless special list.
+  if (istAktiv(a) && termin < now && diffTage < 0) {
+    return { id: "ueberfaellig", label: "Überfällig", sort: -1 };
+  }
 
   if (diffTage >= 0 && diffTage <= 7) {
     return {
@@ -184,5 +186,9 @@ export function gruppiereNachDatum(auftraege: Auftrag[], now = Date.now()): Auft
 export function dringendeUnzugewiesene(auftraege: Auftrag[], now = Date.now()): Auftrag[] {
   return auftraege
     .filter((a) => istUnzugewiesen(a) && hatWarnung(warnStufe(a, now)))
-    .sort((a, b) => WARN_META[warnStufe(a, now)].rang - WARN_META[warnStufe(b, now)].rang);
+    .sort((a, b) => {
+      const rang = WARN_META[warnStufe(a, now)].rang - WARN_META[warnStufe(b, now)].rang;
+      if (rang !== 0) return rang;
+      return terminMs(a) - terminMs(b);
+    });
 }

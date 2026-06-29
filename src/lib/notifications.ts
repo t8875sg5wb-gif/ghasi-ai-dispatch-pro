@@ -186,7 +186,7 @@ export function syncOrderNotifications(auftraege: Auftrag[], now = Date.now()): 
 
     const m = minutenBis(a, now);
     const fehlt = fehlendeFelder(a);
-    const id = `auftrag-unassigned-${a.id}`;
+    const id = `auftrag-unassigned-${a.id}-${stufe}`;
     const titel = `Nicht zugewiesen: ${a.nummer} · ${a.patient}`;
     const text = `${formatCountdown(m)} · Fehlt: ${fehlt.join(" & ")}`;
     const istNeu = pushNotification({
