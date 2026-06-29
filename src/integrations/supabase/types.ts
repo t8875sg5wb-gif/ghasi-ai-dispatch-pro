@@ -348,6 +348,12 @@ export type Database = {
           begleitperson: boolean
           created_at: string
           dauerauftrag_id: string | null
+          destination_additional_info: string
+          destination_city: string
+          destination_country: string
+          destination_house_number: string
+          destination_postal_code: string
+          destination_street: string
           detail_status: string | null
           fahrer: string | null
           fahrer_user_id: string | null
@@ -361,6 +367,12 @@ export type Database = {
           nummer: string
           patient: string
           patientennotiz: string
+          pickup_additional_info: string
+          pickup_city: string
+          pickup_country: string
+          pickup_house_number: string
+          pickup_postal_code: string
+          pickup_street: string
           prioritaet: string
           status: string
           termin: string
@@ -379,6 +391,12 @@ export type Database = {
           begleitperson?: boolean
           created_at?: string
           dauerauftrag_id?: string | null
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
           detail_status?: string | null
           fahrer?: string | null
           fahrer_user_id?: string | null
@@ -392,6 +410,12 @@ export type Database = {
           nummer: string
           patient?: string
           patientennotiz?: string
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
           prioritaet?: string
           status?: string
           termin?: string
@@ -410,6 +434,12 @@ export type Database = {
           begleitperson?: boolean
           created_at?: string
           dauerauftrag_id?: string | null
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
           detail_status?: string | null
           fahrer?: string | null
           fahrer_user_id?: string | null
@@ -423,6 +453,12 @@ export type Database = {
           nummer?: string
           patient?: string
           patientennotiz?: string
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
           prioritaet?: string
           status?: string
           termin?: string
@@ -467,6 +503,12 @@ export type Database = {
           bevorzugter_fahrer: string | null
           bevorzugtes_fahrzeug: string | null
           created_at: string
+          destination_additional_info: string
+          destination_city: string
+          destination_country: string
+          destination_house_number: string
+          destination_postal_code: string
+          destination_street: string
           end_datum: string | null
           feiertage_ueberspringen: boolean
           generierte_termine: string[]
@@ -482,6 +524,12 @@ export type Database = {
           pause_bis: string | null
           pause_von: string | null
           pausiert: boolean
+          pickup_additional_info: string
+          pickup_city: string
+          pickup_country: string
+          pickup_house_number: string
+          pickup_postal_code: string
+          pickup_street: string
           rhythmus: string
           rueckfahrt: boolean
           rueckfahrtzeit: string | null
@@ -499,6 +547,12 @@ export type Database = {
           bevorzugter_fahrer?: string | null
           bevorzugtes_fahrzeug?: string | null
           created_at?: string
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
           end_datum?: string | null
           feiertage_ueberspringen?: boolean
           generierte_termine?: string[]
@@ -514,6 +568,12 @@ export type Database = {
           pause_bis?: string | null
           pause_von?: string | null
           pausiert?: boolean
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
           rhythmus?: string
           rueckfahrt?: boolean
           rueckfahrtzeit?: string | null
@@ -531,6 +591,12 @@ export type Database = {
           bevorzugter_fahrer?: string | null
           bevorzugtes_fahrzeug?: string | null
           created_at?: string
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
           end_datum?: string | null
           feiertage_ueberspringen?: boolean
           generierte_termine?: string[]
@@ -546,6 +612,12 @@ export type Database = {
           pause_bis?: string | null
           pause_von?: string | null
           pausiert?: boolean
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
           rhythmus?: string
           rueckfahrt?: boolean
           rueckfahrtzeit?: string | null
