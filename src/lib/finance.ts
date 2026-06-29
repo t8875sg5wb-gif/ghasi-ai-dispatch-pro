@@ -335,7 +335,14 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
   },
 ];
 
-let idCounter = 100;
+/**
+ * Live invoices mirror. Empty at module load; `useInvoices()` fills it from the
+ * database on every fetch. This is the production source of truth — never the
+ * demo `SEED_RECHNUNGEN` above.
+ */
+export const INITIAL_RECHNUNGEN: Rechnung[] = [];
+
+
 export function nextRechnungId(): string {
   idCounter += 1;
   return `r-${idCounter}`;
