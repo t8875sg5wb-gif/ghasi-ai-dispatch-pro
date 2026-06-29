@@ -63,8 +63,40 @@ export const updateOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return rowToAuftrag(updated as unknown as OrderRow);
+    const auftrag = rowToAuftrag(updated as unknown as OrderRow);
+
+    // Audit trail: persist every status / dispatch-assignment / driver change with
+    // timestamp, status, driver, vehicle and GPS position (when available).
+    const v = data.values as Record<string, unknown>;
+    const relevant = ["status", "detail_status", "fahrer", "fahrzeug", "lat", "lng"].some(
+      (k) => k in v,
+    );
+    if (relevant) {
+      const gps =
+        auftrag.lat != null && auftrag.lng != null
+          ? { lat: auftrag.lat, lng: auftrag.lng }
+          : null;
+      await context.supabase.from("activity_log").insert({
+        bereich: "auftraege",
+        entitaet: auftrag.id,
+        aktion: "status_update",
+        beschreibung: `Auftrag ${auftrag.nummer ?? auftrag.id}: Status ${auftrag.status}${
+          auftrag.fahrer ? `, Fahrer ${auftrag.fahrer}` : ""
+        }${auftrag.fahrzeug ? `, Fahrzeug ${auftrag.fahrzeug}` : ""}`,
+        metadaten: {
+          status: auftrag.status,
+          detailStatus: auftrag.detailStatus ?? null,
+          fahrer: auftrag.fahrer ?? null,
+          fahrzeug: auftrag.fahrzeug ?? null,
+          gps,
+          zeitpunkt: new Date().toISOString(),
+        } as never,
+      } as never);
+    }
+
+    return auftrag;
   });
+
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
