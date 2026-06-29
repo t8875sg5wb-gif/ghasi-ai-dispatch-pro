@@ -125,12 +125,46 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
     const { neueTermine, writes } = transportWritesFuer(d, data.vonISO, data.bisISO);
     if (writes.length === 0) return { created: 0, neueTermine: [] };
 
+    // Database-level duplicate guard: never generate the same transport twice for
+    // the same series (recurringOrderId + date + patient + pickup + destination),
+    // even if `generierteTermine` is stale or generation runs concurrently.
+    const { data: vorhanden } = await context.supabase
+      .from("orders")
+      .select("termin, patient, abholort, zielort, dauerauftrag_id")
+      .eq("dauerauftrag_id", data.id);
+    const dedupKey = (
+      termin: string,
+      patient: string,
+      abholort: string,
+      zielort: string,
+    ) => `${termin.slice(0, 10)}|${patient}|${abholort}|${zielort}`;
+    const bekannt = new Set(
+      (vorhanden ?? []).map((o: Record<string, string>) =>
+        dedupKey(o.termin, o.patient, o.abholort, o.zielort),
+      ),
+    );
+    const neueWrites = writes.filter((w) => {
+      const key = dedupKey(w.termin, w.patient, w.abholort, w.zielort);
+      if (bekannt.has(key)) return false;
+      bekannt.add(key); // guard against duplicates within this same batch too
+      return true;
+    });
+    if (neueWrites.length === 0) {
+      // Still record the dates as generated so the series advances.
+      const merged = Array.from(new Set([...(d.generierteTermine ?? []), ...neueTermine]));
+      await context.supabase
+        .from("recurring_orders")
+        .update({ generierte_termine: merged } as never)
+        .eq("id", data.id);
+      return { created: 0, neueTermine: [] };
+    }
+
     // Continuous order numbers based on the current order count.
     const { count } = await context.supabase
       .from("orders")
       .select("*", { count: "exact", head: true });
     let next = 2045 + (count ?? 0);
-    const orderRows = writes.map((w) =>
+    const orderRows = neueWrites.map((w) =>
       writeToRow({ ...w, nummer: `A-${next++}`, status: w.status ?? "neu" }),
     );
 
@@ -148,5 +182,5 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (updErr) throw new Error(updErr.message);
 
-    return { created: writes.length, neueTermine };
+    return { created: neueWrites.length, neueTermine };
   });
