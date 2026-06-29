@@ -78,13 +78,19 @@ export function AuftragForm({
   submitLabel,
 }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
+  const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
+  const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
       setValues({ ...rest, termin: rest.termin.slice(0, 16) });
+      setAbholAdr(parseAdresse(initial.abholort));
+      setZielAdr(parseAdresse(initial.zielort));
     } else {
       setValues(emptyValues());
+      setAbholAdr(leereAdresse());
+      setZielAdr(leereAdresse());
     }
   }, [initial]);
 
@@ -95,13 +101,28 @@ export function AuftragForm({
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
+  // Strukturierte Adresse → formatierter String in der bestehenden Spalte.
+  function handleAbholAdr(a: AdresseStruktur) {
+    setAbholAdr(a);
+    set("abholort", formatAdresse(a));
+  }
+  function handleZielAdr(a: AdresseStruktur) {
+    setZielAdr(a);
+    set("zielort", formatAdresse(a));
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!values.patient.trim() || !values.abholort.trim() || !values.zielort.trim()) {
+    if (!values.patient.trim() || !adresseGefuellt(abholAdr) || !adresseGefuellt(zielAdr)) {
       return;
     }
-    onSubmit(values);
+    onSubmit({
+      ...values,
+      abholort: formatAdresse(abholAdr),
+      zielort: formatAdresse(zielAdr),
+    });
   }
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
