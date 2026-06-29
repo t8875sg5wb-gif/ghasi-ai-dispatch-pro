@@ -90,8 +90,8 @@ export const seedDrivers = createServerFn({ method: "POST" })
       .select("*", { count: "exact", head: true });
     if ((count ?? 0) > 0) return { seeded: 0 };
 
-    const { INITIAL_FAHRER } = await import("@/lib/fahrer");
-    const rows = INITIAL_FAHRER.map((f: Fahrer) =>
+    const { SEED_FAHRER } = await import("@/lib/fahrer");
+    const rows = SEED_FAHRER.map((f: Fahrer) =>
       writeToRow({
         nummer: f.nummer,
         name: f.name,
