@@ -326,6 +326,10 @@ export function istMobilitaet(value: unknown): value is Mobilitaet {
   return MOBILITAET_OPTIONEN.includes(value as Mobilitaet);
 }
 
+export function istVerordnungStatus(value: unknown): value is VerordnungStatus {
+  return VERORDNUNG_OPTIONEN.includes(value as VerordnungStatus);
+}
+
 export function formatTermin(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("de-DE", {
