@@ -100,13 +100,22 @@ export const seedInvoices = createServerFn({ method: "POST" })
  * Server-side billing logic
  * ------------------------------------------------------------------ */
 
-async function loadOrders(supabase: { from: (t: string) => any }): Promise<Auftrag[]> {
+type SupabaseReadClient = {
+  from: (table: string) => {
+    select: (columns: string) => PromiseLike<{
+      data: unknown[] | null;
+      error: { message: string } | null;
+    }>;
+  };
+};
+
+async function loadOrders(supabase: SupabaseReadClient): Promise<Auftrag[]> {
   const { data, error } = await supabase.from("orders").select("*");
   if (error) throw new Error(error.message);
   return (data ?? []).map((r: unknown) => rowToAuftrag(r as OrderRow));
 }
 
-async function loadInvoices(supabase: { from: (t: string) => any }): Promise<Rechnung[]> {
+async function loadInvoices(supabase: SupabaseReadClient): Promise<Rechnung[]> {
   const { data, error } = await supabase.from("invoices").select("*");
   if (error) throw new Error(error.message);
   return (data ?? []).map((r: unknown) => rowToRechnung(r as InvoiceRow));
