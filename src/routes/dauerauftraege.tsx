@@ -161,7 +161,7 @@ function DauerauftraegePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
-  const neueVorlage = useMemo(() => leereVorlage(), [daten.length, formOpen]);
+  const [neueVorlage, setNeueVorlage] = useState<Dauerauftrag>(() => leereVorlage());
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
@@ -355,6 +355,7 @@ function DauerauftraegePage() {
             <Button
               onClick={() => {
                 setEditTarget(null);
+                setNeueVorlage(leereVorlage());
                 setFormOpen(true);
               }}
             >
