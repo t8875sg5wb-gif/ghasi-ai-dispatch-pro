@@ -65,6 +65,7 @@ import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/tourenplanung")({
