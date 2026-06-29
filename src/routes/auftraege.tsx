@@ -144,7 +144,30 @@ function AuftraegePage() {
     });
   }, [auftraege, search, statusFilter, prioFilter]);
 
+  const gruppen = useMemo(() => gruppiereNachDatum(filtered), [filtered]);
+
   const detailAuftrag = auftraege.find((a) => a.id === detailId) ?? null;
+
+  function handleAssign(id: string, fahrer: string, fahrzeug: string | null) {
+    const ziel = auftraege.find((a) => a.id === id);
+    updateMut.mutate(
+      { id, values: { fahrer, fahrzeug, status: "disponiert" } },
+      {
+        onSuccess: () => {
+          toast.success(`Zugewiesen: ${fahrer}${fahrzeug ? ` · ${fahrzeug}` : ""}`);
+          if (ziel) {
+            logActivity({
+              bereich: "Aufträge",
+              entitaet: `${ziel.nummer} · ${ziel.patient}`,
+              aktion: "Fahrer zugewiesen",
+              beschreibung: `Fahrer ${fahrer}${fahrzeug ? ` mit ${fahrzeug}` : ""} nach KI-Vorschlag bestätigt.`,
+            });
+          }
+        },
+        onError: (e) => toast.error(`Zuweisen fehlgeschlagen: ${(e as Error).message}`),
+      },
+    );
+  }
 
   function openDetail(a: Auftrag) {
     setDetailId(a.id);
