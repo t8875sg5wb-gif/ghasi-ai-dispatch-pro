@@ -341,6 +341,10 @@ function DispatchCenter() {
         <Kpi label="Effizienz" value={`${kpis.effizienz}%`} icon={Gauge} tone="accent" />
       </div>
 
+      {/* Dringende, nicht zugewiesene Aufträge */}
+      <UnassignedAlerts auftraege={orders ?? []} />
+
+
       {/* Resource + insight row */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Executive AI */}
