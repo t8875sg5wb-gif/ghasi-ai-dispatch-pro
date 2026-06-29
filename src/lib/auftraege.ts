@@ -16,12 +16,7 @@ import {
 
 import type { AdresseStruktur } from "@/lib/address";
 
-export type AuftragStatus =
-  | "neu"
-  | "disponiert"
-  | "unterwegs"
-  | "abgeschlossen"
-  | "storniert";
+export type AuftragStatus = "neu" | "disponiert" | "unterwegs" | "abgeschlossen" | "storniert";
 
 export type AuftragPrioritaet = "niedrig" | "normal" | "hoch" | "dringend";
 
@@ -265,10 +260,7 @@ export interface FahrzeugEignung {
 }
 
 /** Passt das Fahrzeug zur Mobilität des Patienten? */
-export function fahrzeugPasstZuMobilitaet(
-  m: Mobilitaet | undefined,
-  f: FahrzeugEignung,
-): boolean {
+export function fahrzeugPasstZuMobilitaet(m: Mobilitaet | undefined, f: FahrzeugEignung): boolean {
   const bedarf = MOBILITAET_META[m ?? "gehfaehig"].benoetigtFahrzeug;
   if (bedarf === "liegend") return f.liegendGeeignet;
   if (bedarf === "rollstuhl") return f.rollstuhlGeeignet;
@@ -284,12 +276,7 @@ export function empfohlenerFahrzeugtyp(m: Mobilitaet | undefined): string {
 }
 
 /** Ordered list of statuses used for the workflow pipeline (excludes storniert). */
-export const STATUS_PIPELINE: AuftragStatus[] = [
-  "neu",
-  "disponiert",
-  "unterwegs",
-  "abgeschlossen",
-];
+export const STATUS_PIPELINE: AuftragStatus[] = ["neu", "disponiert", "unterwegs", "abgeschlossen"];
 
 /**
  * Allowed status transitions for the workflow.
@@ -303,14 +290,14 @@ export const STATUS_TRANSITIONS: Record<AuftragStatus, AuftragStatus[]> = {
   storniert: ["neu"],
 };
 
-export const PRIORITAET_META: Record<
-  AuftragPrioritaet,
-  { label: string; badge: string }
-> = {
+export const PRIORITAET_META: Record<AuftragPrioritaet, { label: string; badge: string }> = {
   niedrig: { label: "Niedrig", badge: "border-border bg-muted text-muted-foreground" },
   normal: { label: "Normal", badge: "border-info/30 bg-info/10 text-info" },
   hoch: { label: "Hoch", badge: "border-warning/30 bg-warning/10 text-warning" },
-  dringend: { label: "Dringend", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+  dringend: {
+    label: "Dringend",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+  },
 };
 
 export const TRANSPORTARTEN: Transportart[] = [
@@ -321,12 +308,7 @@ export const TRANSPORTARTEN: Transportart[] = [
   "Notfall",
 ];
 
-export const PRIORITAETEN: AuftragPrioritaet[] = [
-  "niedrig",
-  "normal",
-  "hoch",
-  "dringend",
-];
+export const PRIORITAETEN: AuftragPrioritaet[] = ["niedrig", "normal", "hoch", "dringend"];
 
 export function istAuftragStatus(value: unknown): value is AuftragStatus {
   return STATUS_PIPELINE.includes(value as AuftragStatus) || value === "storniert";
@@ -514,18 +496,6 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
  */
 export const INITIAL_AUFTRAEGE: Auftrag[] = [];
 
-export const FAHRER_OPTIONEN = [
-  "M. Keller",
-  "S. Yilmaz",
-  "P. Richter",
-  "L. Schäfer",
-  "T. Wolf",
-];
+export const FAHRER_OPTIONEN = ["M. Keller", "S. Yilmaz", "P. Richter", "L. Schäfer", "T. Wolf"];
 
-export const FAHRZEUG_OPTIONEN = [
-  "B-KT 142",
-  "B-KT 097",
-  "B-KT 204",
-  "B-KT 311",
-  "B-KT 358",
-];
+export const FAHRZEUG_OPTIONEN = ["B-KT 142", "B-KT 097", "B-KT 204", "B-KT 311", "B-KT 358"];

@@ -162,12 +162,7 @@ export const WOCHENTAGE: { wert: number; kurz: string; label: string }[] = [
   { wert: 0, kurz: "So", label: "Sonntag" },
 ];
 
-export const KATEGORIEN: SerienKategorie[] = [
-  "dialyse",
-  "pflegeheim",
-  "krankenhaus",
-  "sonstige",
-];
+export const KATEGORIEN: SerienKategorie[] = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"];
 
 export const RHYTHMEN: Rhythmus[] = ["taeglich", "woechentlich"];
 
@@ -321,11 +316,7 @@ function naechsteNummer(): string {
   return `A-${nummernZaehler}`;
 }
 
-function baueAuftrag(
-  d: Dauerauftrag,
-  iso: string,
-  richtung: "hin" | "rueck",
-): Auftrag {
+function baueAuftrag(d: Dauerauftrag, iso: string, richtung: "hin" | "rueck"): Auftrag {
   const hin = richtung === "hin";
   const pickup = hin ? d.pickup : d.destination;
   const destination = hin ? d.destination : d.pickup;
@@ -340,7 +331,7 @@ function baueAuftrag(
     destination,
     abholort: pickup ? formatAdresse(pickup) : hin ? d.abholort : d.zielort,
     zielort: destination ? formatAdresse(destination) : hin ? d.zielort : d.abholort,
-    termin: `${iso}T${(hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit)}`,
+    termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
     fahrer: d.bevorzugterFahrer,
     fahrzeug: d.bevorzugtesFahrzeug,
     kostentraeger: d.kostentraeger,
@@ -364,11 +355,7 @@ function baueAuftrag(
  * sodass dieselbe Serie denselben Tag nicht doppelt erzeugt.
  * Gibt die neu erzeugten Transporte zurück (mutiert d.generierteTermine).
  */
-export function generiereTransporte(
-  d: Dauerauftrag,
-  vonISO: string,
-  bisISO: string,
-): Auftrag[] {
+export function generiereTransporte(d: Dauerauftrag, vonISO: string, bisISO: string): Auftrag[] {
   const neu: Auftrag[] = [];
   let cursor = vonISO < d.startDatum ? d.startDatum : vonISO;
   let sicherung = 0;
@@ -386,11 +373,7 @@ export function generiereTransporte(
 }
 
 /** Zählt, wie viele Termine im Zeitraum erzeugt WÜRDEN (Vorschau). */
-export function offeneTermineImZeitraum(
-  d: Dauerauftrag,
-  vonISO: string,
-  bisISO: string,
-): string[] {
+export function offeneTermineImZeitraum(d: Dauerauftrag, vonISO: string, bisISO: string): string[] {
   const treffer: string[] = [];
   let cursor = vonISO < d.startDatum ? d.startDatum : vonISO;
   let sicherung = 0;

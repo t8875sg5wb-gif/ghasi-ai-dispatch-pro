@@ -118,10 +118,13 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     r.zielort,
   );
   const mobilitaet: Mobilitaet = istMobilitaet(r.mobilitaet) ? r.mobilitaet : "gehfaehig";
-  const kategorie: SerienKategorie = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"].includes(r.kategorie)
+  const kategorie: SerienKategorie = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"].includes(
+    r.kategorie,
+  )
     ? (r.kategorie as SerienKategorie)
     : "sonstige";
-  const rhythmus: Rhythmus = r.rhythmus === "taeglich" || r.rhythmus === "woechentlich" ? r.rhythmus : "woechentlich";
+  const rhythmus: Rhythmus =
+    r.rhythmus === "taeglich" || r.rhythmus === "woechentlich" ? r.rhythmus : "woechentlich";
   return {
     id: r.id,
     kennung: r.kennung ?? "DA-—",
@@ -200,8 +203,16 @@ export function writeToRecurringRow(w: Partial<RecurringWrite>): Record<string, 
   };
   set("kennung", w.kennung);
   set("patient", w.patient);
-  const pickup = w.pickup ? normalisiereAdresse(w.pickup) : w.abholort !== undefined ? normalisiereAdresse(w.abholort) : undefined;
-  const destination = w.destination ? normalisiereAdresse(w.destination) : w.zielort !== undefined ? normalisiereAdresse(w.zielort) : undefined;
+  const pickup = w.pickup
+    ? normalisiereAdresse(w.pickup)
+    : w.abholort !== undefined
+      ? normalisiereAdresse(w.abholort)
+      : undefined;
+  const destination = w.destination
+    ? normalisiereAdresse(w.destination)
+    : w.zielort !== undefined
+      ? normalisiereAdresse(w.zielort)
+      : undefined;
   set("abholort", w.abholort ?? (pickup ? "" : undefined));
   set("zielort", w.zielort ?? (destination ? "" : undefined));
   if (pickup) {

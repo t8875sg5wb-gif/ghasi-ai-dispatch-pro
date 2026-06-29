@@ -66,10 +66,7 @@ export const deleteRecurring = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("recurring_orders")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("recurring_orders").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -92,9 +89,7 @@ export const seedRecurring = createServerFn({ method: "POST" })
       writeToRecurringRow(dauerauftragToWrite(d)),
     );
     if (rows.length === 0) return { seeded: 0 };
-    const { error } = await context.supabase
-      .from("recurring_orders")
-      .insert(rows as never);
+    const { error } = await context.supabase.from("recurring_orders").insert(rows as never);
     if (error) throw new Error(error.message);
     return { seeded: rows.length };
   });
@@ -132,24 +127,21 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       .from("orders")
       .select("termin, patient, abholort, zielort, dauerauftrag_id")
       .eq("dauerauftrag_id", data.id);
-    const dedupKey = (
-      termin: string,
-      patient: string,
-      pickupKey: string,
-      destinationKey: string,
-    ) => `${termin.slice(0, 10)}|${patient}|${pickupKey}|${destinationKey}`;
+    const dedupKey = (termin: string, patient: string, pickupKey: string, destinationKey: string) =>
+      `${termin.slice(0, 10)}|${patient}|${pickupKey}|${destinationKey}`;
     const bekannt = new Set(
-      (vorhanden ?? []).map((o: { termin: string; patient: string; abholort: string; zielort: string }) =>
-        dedupKey(o.termin, o.patient, o.abholort, o.zielort),
+      (vorhanden ?? []).map(
+        (o: { termin: string; patient: string; abholort: string; zielort: string }) =>
+          dedupKey(o.termin, o.patient, o.abholort, o.zielort),
       ),
     );
     const neueWrites = writes.filter((w) => {
       const pickupKey = w.pickup
         ? `${w.pickup.street}|${w.pickup.houseNumber}|${w.pickup.postalCode}|${w.pickup.city}|${w.pickup.country}`
-        : w.abholort ?? "";
+        : (w.abholort ?? "");
       const destinationKey = w.destination
         ? `${w.destination.street}|${w.destination.houseNumber}|${w.destination.postalCode}|${w.destination.city}|${w.destination.country}`
-        : w.zielort ?? "";
+        : (w.zielort ?? "");
       const key = dedupKey(w.termin ?? "", w.patient ?? "", pickupKey, destinationKey);
       if (bekannt.has(key)) return false;
       bekannt.add(key); // guard against duplicates within this same batch too
@@ -174,14 +166,10 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       writeToRow({ ...w, nummer: `A-${next++}`, status: w.status ?? "neu" }),
     );
 
-    const { error: insErr } = await context.supabase
-      .from("orders")
-      .insert(orderRows as never);
+    const { error: insErr } = await context.supabase.from("orders").insert(orderRows as never);
     if (insErr) throw new Error(insErr.message);
 
-    const mergedTermine = Array.from(
-      new Set([...(d.generierteTermine ?? []), ...neueTermine]),
-    );
+    const mergedTermine = Array.from(new Set([...(d.generierteTermine ?? []), ...neueTermine]));
     const { error: updErr } = await context.supabase
       .from("recurring_orders")
       .update({ generierte_termine: mergedTermine } as never)

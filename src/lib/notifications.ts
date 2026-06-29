@@ -90,7 +90,8 @@ export function pushNotification(
   load();
   const vorhanden = items.find((i) => i.id === n.id);
   if (vorhanden) {
-    const veraendert = vorhanden.titel !== n.titel || vorhanden.text !== n.text || vorhanden.stufe !== n.stufe;
+    const veraendert =
+      vorhanden.titel !== n.titel || vorhanden.text !== n.text || vorhanden.stufe !== n.stufe;
     vorhanden.titel = n.titel;
     vorhanden.text = n.text;
     vorhanden.stufe = n.stufe;
@@ -98,10 +99,7 @@ export function pushNotification(
     if (veraendert) emit();
     return false;
   }
-  items = [
-    { ...n, createdAt: n.createdAt ?? Date.now(), gelesen: false },
-    ...items,
-  ].slice(0, MAX);
+  items = [{ ...n, createdAt: n.createdAt ?? Date.now(), gelesen: false }, ...items].slice(0, MAX);
   emit();
   return true;
 }
@@ -206,8 +204,16 @@ export function syncOrderNotifications(auftraege: Auftrag[], now = Date.now()): 
 }
 
 export const NOTIF_STUFE_META: Record<NotifStufe, { label: string; badge: string; dot: string }> = {
-  kritisch: { label: "Kritisch", badge: "border-destructive/30 bg-destructive/10 text-destructive", dot: "bg-destructive" },
-  warnung: { label: "Warnung", badge: "border-warning/30 bg-warning/10 text-warning", dot: "bg-warning" },
+  kritisch: {
+    label: "Kritisch",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    dot: "bg-destructive",
+  },
+  warnung: {
+    label: "Warnung",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    dot: "bg-warning",
+  },
   info: { label: "Info", badge: "border-info/30 bg-info/10 text-info", dot: "bg-info" },
 };
 

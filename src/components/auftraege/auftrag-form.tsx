@@ -71,12 +71,7 @@ function emptyValues(): AuftragFormValues {
   };
 }
 
-export function AuftragForm({
-  initial,
-  onSubmit,
-  onCancel,
-  submitLabel,
-}: AuftragFormProps) {
+export function AuftragForm({ initial, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
@@ -94,10 +89,7 @@ export function AuftragForm({
     }
   }, [initial]);
 
-  function set<K extends keyof AuftragFormValues>(
-    key: K,
-    value: AuftragFormValues[K],
-  ) {
+  function set<K extends keyof AuftragFormValues>(key: K, value: AuftragFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -124,7 +116,6 @@ export function AuftragForm({
       zielort: "",
     });
   }
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -370,7 +361,6 @@ export function AuftragForm({
           rows={3}
         />
       </div>
-
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

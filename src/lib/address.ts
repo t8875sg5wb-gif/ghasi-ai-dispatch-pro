@@ -31,16 +31,13 @@ export function leereAdresse(): AdresseStruktur {
 
 /** Hat die Adresse mindestens ein gefülltes Kernfeld? */
 export function adresseGefuellt(a: AdresseStruktur): boolean {
-  return Boolean(
-    a.street.trim() ||
-      a.houseNumber.trim() ||
-      a.postalCode.trim() ||
-      a.city.trim(),
-  );
+  return Boolean(a.street.trim() || a.houseNumber.trim() || a.postalCode.trim() || a.city.trim());
 }
 
 /** Robustly coerces partially migrated/nullable address objects into the app shape. */
-export function normalisiereAdresse(input: Partial<AdresseStruktur> | string | null | undefined): AdresseStruktur {
+export function normalisiereAdresse(
+  input: Partial<AdresseStruktur> | string | null | undefined,
+): AdresseStruktur {
   if (typeof input === "string" || input == null) return parseAdresse(input);
   return {
     street: input.street ?? "",
@@ -128,9 +125,7 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
   // Reste als Zusatzinfo bewahren
   if (rest.length > 0) {
-    result.additionalInfo = [result.additionalInfo, ...rest]
-      .filter(Boolean)
-      .join(", ");
+    result.additionalInfo = [result.additionalInfo, ...rest].filter(Boolean).join(", ");
   }
 
   return result;
@@ -138,8 +133,14 @@ export function parseAdresse(input: string | null | undefined): AdresseStruktur 
 
 /** Setzt strukturierte Felder zu einem einzeiligen Adress-String zusammen. */
 export function formatAdresse(a: AdresseStruktur): string {
-  const strasse = [a.street, a.houseNumber].filter((s) => s && s.trim()).join(" ").trim();
-  const ort = [a.postalCode, a.city].filter((s) => s && s.trim()).join(" ").trim();
+  const strasse = [a.street, a.houseNumber]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
+  const ort = [a.postalCode, a.city]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   const teile = [strasse, ort].filter(Boolean);
   if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
     teile.push(a.country.trim());
@@ -154,9 +155,15 @@ export function formatAdresse(a: AdresseStruktur): string {
 /** Mehrzeilige Darstellung für Detailansichten. */
 export function formatAdresseMehrzeilig(a: AdresseStruktur): string[] {
   const zeilen: string[] = [];
-  const strasse = [a.street, a.houseNumber].filter((s) => s && s.trim()).join(" ").trim();
+  const strasse = [a.street, a.houseNumber]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   if (strasse) zeilen.push(strasse);
-  const ort = [a.postalCode, a.city].filter((s) => s && s.trim()).join(" ").trim();
+  const ort = [a.postalCode, a.city]
+    .filter((s) => s && s.trim())
+    .join(" ")
+    .trim();
   if (ort) zeilen.push(ort);
   if (a.country && a.country.trim() && a.country.trim() !== LAND_STANDARD) {
     zeilen.push(a.country.trim());
@@ -167,6 +174,6 @@ export function formatAdresseMehrzeilig(a: AdresseStruktur): string[] {
 
 /** Kurze Stadt-/Ort-Kennung für Distanz-/Nähe-Heuristiken. */
 export function adresseStadt(input: string | AdresseStruktur | null | undefined): string {
-  const a = typeof input === "string" ? parseAdresse(input) : input ?? leereAdresse();
+  const a = typeof input === "string" ? parseAdresse(input) : (input ?? leereAdresse());
   return (a.city || "").trim().toLowerCase();
 }

@@ -118,8 +118,12 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
   const abholort = formatAdresse(pickup) || (r.abholort ?? "");
   const zielort = formatAdresse(destination) || (r.zielort ?? "");
   const status: AuftragStatus = istAuftragStatus(r.status) ? r.status : "neu";
-  const prioritaet: AuftragPrioritaet = istAuftragPrioritaet(r.prioritaet) ? r.prioritaet : "normal";
-  const transportart: Transportart = istTransportart(r.transportart) ? r.transportart : "Sitzendtransport";
+  const prioritaet: AuftragPrioritaet = istAuftragPrioritaet(r.prioritaet)
+    ? r.prioritaet
+    : "normal";
+  const transportart: Transportart = istTransportart(r.transportart)
+    ? r.transportart
+    : "Sitzendtransport";
   const mobilitaet: Mobilitaet | undefined = istMobilitaet(r.mobilitaet) ? r.mobilitaet : undefined;
   return {
     id: r.id,
@@ -162,8 +166,16 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);
   set("status", w.status);
-  const pickup = w.pickup ? normalisiereAdresse(w.pickup) : w.abholort !== undefined ? normalisiereAdresse(w.abholort) : undefined;
-  const destination = w.destination ? normalisiereAdresse(w.destination) : w.zielort !== undefined ? normalisiereAdresse(w.zielort) : undefined;
+  const pickup = w.pickup
+    ? normalisiereAdresse(w.pickup)
+    : w.abholort !== undefined
+      ? normalisiereAdresse(w.abholort)
+      : undefined;
+  const destination = w.destination
+    ? normalisiereAdresse(w.destination)
+    : w.zielort !== undefined
+      ? normalisiereAdresse(w.zielort)
+      : undefined;
   set("abholort", w.abholort ?? (pickup ? "" : undefined));
   set("zielort", w.zielort ?? (destination ? "" : undefined));
   if (pickup) {

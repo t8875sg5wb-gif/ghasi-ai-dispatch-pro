@@ -70,11 +70,41 @@ export interface WarnMeta {
 }
 
 export const WARN_META: Record<WarnStufe, WarnMeta> = {
-  normal: { label: "Planmäßig", row: "", badge: "border-border bg-muted text-muted-foreground", dot: "bg-muted-foreground", rang: 4 },
-  gelb: { label: "Warnung", row: "bg-warning/5 hover:bg-warning/10", badge: "border-warning/30 bg-warning/10 text-warning", dot: "bg-warning", rang: 3 },
-  orange: { label: "Dringend", row: "bg-warning/10 hover:bg-warning/15", badge: "border-warning/40 bg-warning/20 text-warning", dot: "bg-warning", rang: 2 },
-  rot: { label: "Kritisch", row: "bg-destructive/5 hover:bg-destructive/10", badge: "border-destructive/30 bg-destructive/10 text-destructive", dot: "bg-destructive", rang: 1 },
-  ueberfaellig: { label: "Überfällig", row: "bg-destructive/10 hover:bg-destructive/15", badge: "border-destructive/40 bg-destructive/20 text-destructive", dot: "bg-destructive", rang: 0 },
+  normal: {
+    label: "Planmäßig",
+    row: "",
+    badge: "border-border bg-muted text-muted-foreground",
+    dot: "bg-muted-foreground",
+    rang: 4,
+  },
+  gelb: {
+    label: "Warnung",
+    row: "bg-warning/5 hover:bg-warning/10",
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    dot: "bg-warning",
+    rang: 3,
+  },
+  orange: {
+    label: "Dringend",
+    row: "bg-warning/10 hover:bg-warning/15",
+    badge: "border-warning/40 bg-warning/20 text-warning",
+    dot: "bg-warning",
+    rang: 2,
+  },
+  rot: {
+    label: "Kritisch",
+    row: "bg-destructive/5 hover:bg-destructive/10",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    dot: "bg-destructive",
+    rang: 1,
+  },
+  ueberfaellig: {
+    label: "Überfällig",
+    row: "bg-destructive/10 hover:bg-destructive/15",
+    badge: "border-destructive/40 bg-destructive/20 text-destructive",
+    dot: "bg-destructive",
+    rang: 0,
+  },
 };
 
 /** Soll dieser Auftrag eine sichtbare Warnung auslösen? */
@@ -162,7 +192,12 @@ export function gruppiereNachDatum(auftraege: Auftrag[], now = Date.now()): Auft
   for (const a of auftraege) {
     const gruppe = gruppeFuer(a, now);
     if (!buckets.has(gruppe.id)) {
-      buckets.set(gruppe.id, { id: gruppe.id, label: gruppe.label, sort: gruppe.sort, auftraege: [] });
+      buckets.set(gruppe.id, {
+        id: gruppe.id,
+        label: gruppe.label,
+        sort: gruppe.sort,
+        auftraege: [],
+      });
     }
     buckets.get(gruppe.id)!.auftraege.push(a);
   }

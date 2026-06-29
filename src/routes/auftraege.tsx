@@ -20,12 +20,7 @@ import {
   STATUS_PIPELINE,
   formatTermin,
 } from "@/lib/auftraege";
-import {
-  useOrders,
-  useCreateOrder,
-  useUpdateOrder,
-  useSeedOrders,
-} from "@/lib/orders-store";
+import { useOrders, useCreateOrder, useUpdateOrder, useSeedOrders } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
 import {
   gruppiereNachDatum,
@@ -37,16 +32,10 @@ import {
   hatWarnung,
   WARN_META,
 } from "@/lib/order-urgency";
-import {
-  AuftragForm,
-  type AuftragFormValues,
-} from "@/components/auftraege/auftrag-form";
+import { AuftragForm, type AuftragFormValues } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
-import {
-  MedizinBadges,
-  fahrzeugMismatch,
-} from "@/components/auftraege/medizin-details";
+import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,8 +88,7 @@ function AuftraegePage() {
   const canManage = darfAuftragVerwalten(role);
   const canChangeStatus = darfAuftragStatusAendern(role);
 
-  const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } =
-    useOrders();
+  const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } = useOrders();
   const createMut = useCreateOrder();
   const updateMut = useUpdateOrder();
   const seedMut = useSeedOrders();
@@ -225,8 +213,7 @@ function AuftraegePage() {
             setFormOpen(false);
             setEditTarget(null);
           },
-          onError: (e) =>
-            toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`),
+          onError: (e) => toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`),
         },
       );
     } else {
@@ -242,8 +229,7 @@ function AuftraegePage() {
           setFormOpen(false);
           setEditTarget(null);
         },
-        onError: (e) =>
-          toast.error(`Anlegen fehlgeschlagen: ${(e as Error).message}`),
+        onError: (e) => toast.error(`Anlegen fehlgeschlagen: ${(e as Error).message}`),
       });
     }
   }
@@ -317,10 +303,7 @@ function AuftraegePage() {
             >
               {chip.label}
               <span
-                className={cn(
-                  "rounded-full px-1.5 text-xs",
-                  active ? "bg-white/20" : "bg-muted",
-                )}
+                className={cn("rounded-full px-1.5 text-xs", active ? "bg-white/20" : "bg-muted")}
               >
                 {counts[chip.value]}
               </span>
@@ -359,9 +342,7 @@ function AuftraegePage() {
       </section>
 
       {/* Dringende, nicht zugewiesene Aufträge */}
-      {canManage && (
-        <UnassignedAlerts auftraege={auftraege} onSelect={openDetail} />
-      )}
+      {canManage && <UnassignedAlerts auftraege={auftraege} onSelect={openDetail} />}
 
       {/* List */}
       <Card className="border-border/70 shadow-card">
@@ -438,84 +419,86 @@ function AuftraegePage() {
                       </TableHeader>
                       <TableBody>
                         {gruppe.auftraege.map((a) => {
-                      const status = STATUS_META[a.status];
-                      const prio = PRIORITAET_META[a.prioritaet];
-                      const stufe = warnStufe(a);
-                      const warn = WARN_META[stufe];
-                      const zeigtWarnung = hatWarnung(stufe);
-                      const unzugewiesen = istUnzugewiesen(a);
-                      const m = minutenBis(a);
-                      const fehlt = fehlendeFelder(a);
-                      return (
-                        <TableRow
-                          key={a.id}
-                          className={cn("cursor-pointer", warn.row)}
-                          onClick={() => openDetail(a)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <span
-                                className={cn(
-                                  "h-2 w-2 shrink-0 rounded-full",
-                                  zeigtWarnung ? warn.dot : status.dot,
-                                )}
-                              />
-                              <div className="min-w-0">
-                                <p className="font-medium leading-tight">{a.patient}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {a.nummer} · {a.transportart}
-                                </p>
-                                <MedizinBadges auftrag={a} className="mt-1.5" />
-                                {unzugewiesen && (
-                                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                    <Badge
-                                      variant="outline"
-                                      className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
-                                    >
-                                      <AlertTriangle className="h-3 w-3" />
-                                      Nicht zugewiesen
-                                    </Badge>
-                                    {zeigtWarnung && (
-                                      <Badge
-                                        variant="outline"
-                                        className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
-                                      >
-                                        {formatCountdown(m)}
-                                      </Badge>
+                          const status = STATUS_META[a.status];
+                          const prio = PRIORITAET_META[a.prioritaet];
+                          const stufe = warnStufe(a);
+                          const warn = WARN_META[stufe];
+                          const zeigtWarnung = hatWarnung(stufe);
+                          const unzugewiesen = istUnzugewiesen(a);
+                          const m = minutenBis(a);
+                          const fehlt = fehlendeFelder(a);
+                          return (
+                            <TableRow
+                              key={a.id}
+                              className={cn("cursor-pointer", warn.row)}
+                              onClick={() => openDetail(a)}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={cn(
+                                      "h-2 w-2 shrink-0 rounded-full",
+                                      zeigtWarnung ? warn.dot : status.dot,
                                     )}
-                                    <span className="text-[10px] text-muted-foreground">
-                                      Fehlt: {fehlt.join(" & ")}
-                                    </span>
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="font-medium leading-tight">{a.patient}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {a.nummer} · {a.transportart}
+                                    </p>
+                                    <MedizinBadges auftrag={a} className="mt-1.5" />
+                                    {unzugewiesen && (
+                                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                        <Badge
+                                          variant="outline"
+                                          className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                                        >
+                                          <AlertTriangle className="h-3 w-3" />
+                                          Nicht zugewiesen
+                                        </Badge>
+                                        {zeigtWarnung && (
+                                          <Badge
+                                            variant="outline"
+                                            className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
+                                          >
+                                            {formatCountdown(m)}
+                                          </Badge>
+                                        )}
+                                        <span className="text-[10px] text-muted-foreground">
+                                          Fehlt: {fehlt.join(" & ")}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
+                                </div>
+                                {fahrzeugMismatch(a) && (
+                                  <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
+                                    <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+                                  </span>
                                 )}
-                              </div>
-                            </div>
-                            {fahrzeugMismatch(a) && (
-                              <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
-                                <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="hidden max-w-[260px] md:table-cell">
-                            <p className="truncate text-sm">{a.abholort}</p>
-                            <p className="truncate text-xs text-muted-foreground">→ {a.zielort}</p>
-                          </TableCell>
-                          <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
-                            {formatTermin(a.termin)}
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge variant="outline" className={prio.badge}>
-                              {prio.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={cn("gap-1", status.badge)}>
-                              <status.icon className="h-3 w-3" />
-                              {status.label}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
+                              </TableCell>
+                              <TableCell className="hidden max-w-[260px] md:table-cell">
+                                <p className="truncate text-sm">{a.abholort}</p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  → {a.zielort}
+                                </p>
+                              </TableCell>
+                              <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
+                                {formatTermin(a.termin)}
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                <Badge variant="outline" className={prio.badge}>
+                                  {prio.label}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={cn("gap-1", status.badge)}>
+                                  <status.icon className="h-3 w-3" />
+                                  {status.label}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
                         })}
                       </TableBody>
                     </Table>
@@ -543,9 +526,7 @@ function AuftraegePage() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {editTarget ? "Auftrag bearbeiten" : "Neuer Auftrag"}
-            </DialogTitle>
+            <DialogTitle>{editTarget ? "Auftrag bearbeiten" : "Neuer Auftrag"}</DialogTitle>
             <DialogDescription>
               {editTarget
                 ? `Änderungen an ${editTarget.nummer} speichern.`
@@ -556,9 +537,7 @@ function AuftraegePage() {
             initial={editTarget ?? undefined}
             onSubmit={handleSubmit}
             onCancel={() => setFormOpen(false)}
-            submitLabel={
-              saving ? "Speichern …" : editTarget ? "Speichern" : "Auftrag erstellen"
-            }
+            submitLabel={saving ? "Speichern …" : editTarget ? "Speichern" : "Auftrag erstellen"}
           />
         </DialogContent>
       </Dialog>
