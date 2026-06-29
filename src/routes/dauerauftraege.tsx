@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -85,6 +85,14 @@ import {
 import { dauerauftragToWrite } from "@/lib/recurring-shared";
 import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten } from "@/lib/roles";
+import { AddressFields } from "@/components/forms/address-fields";
+import {
+  adresseGefuellt,
+  formatAdresseMehrzeilig,
+  leereAdresse,
+  parseAdresse,
+  type AdresseStruktur,
+} from "@/lib/address";
 
 export const Route = createFileRoute("/dauerauftraege")({
   head: () => ({
@@ -106,6 +114,8 @@ const leereVorlage = (): Dauerauftrag => ({
   id: "",
   kennung: naechsteKennung(DAUERAUFTRAEGE),
   patient: "",
+  pickup: leereAdresse(),
+  destination: leereAdresse(),
   abholort: "",
   zielort: "",
   terminzeit: "08:00",
@@ -165,6 +175,7 @@ function DauerauftraegePage() {
       if (kategorieFilter !== "alle" && d.kategorie !== kategorieFilter) return false;
       if (q) {
         const heu = [d.kennung, d.patient, d.abholort, d.zielort, d.kostentraeger, d.krankenkasse]
+          .map((x) => x ?? "")
           .join(" ")
           .toLowerCase();
         if (!heu.includes(q)) return false;
@@ -570,6 +581,8 @@ function DetailAnsicht({
   const StatusIcon = STATUS_META[st].icon;
   const termine = naechsteTermine(d, 8);
   const offen30 = offeneTermineImZeitraum(d, heuteISO(), isoPlusTage(heuteISO(), 30)).length;
+  const pickupZeilen = formatAdresseMehrzeilig(d.pickup ?? parseAdresse(d.abholort));
+  const destinationZeilen = formatAdresseMehrzeilig(d.destination ?? parseAdresse(d.zielort));
 
   return (
     <>
@@ -589,8 +602,8 @@ function DetailAnsicht({
 
       <div className="space-y-4 text-sm">
         <div className="grid grid-cols-2 gap-3">
-          <Feld label="Abholort" wert={d.abholort} />
-          <Feld label="Zielort" wert={d.zielort} />
+          <Feld label="Pickup" wert={pickupZeilen.length ? pickupZeilen.join(" · ") : "—"} />
+          <Feld label="Destination" wert={destinationZeilen.length ? destinationZeilen.join(" · ") : "—"} />
           <Feld label="Uhrzeit Hinfahrt" wert={d.terminzeit} />
           <Feld label="Rückfahrt" wert={d.rueckfahrt ? `Ja · ${d.rueckfahrtzeit ?? "—"}` : "Nein"} />
           <Feld label="Mobilität" wert={MOBILITAET_META[d.mobilitaet].label} />
@@ -703,9 +716,25 @@ function DauerauftragForm({
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
-  const [f, setF] = useState<Dauerauftrag>(initial);
+  const normalisiere = (d: Dauerauftrag): Dauerauftrag => ({
+    ...d,
+    pickup: d.pickup ?? parseAdresse(d.abholort),
+    destination: d.destination ?? parseAdresse(d.zielort),
+  });
+  const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
+
+  useEffect(() => {
+    setF(normalisiere(initial));
+  }, [initial]);
+
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
+  const setAdresse = (key: "pickup" | "destination", value: AdresseStruktur) =>
+    setF((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === "pickup" ? { abholort: "" } : { zielort: "" }),
+    }));
 
   const toggleTag = (wert: number) => {
     setF((prev) => ({
@@ -717,15 +746,23 @@ function DauerauftragForm({
   };
 
   const submit = () => {
-    if (!f.patient.trim() || !f.abholort.trim() || !f.zielort.trim()) {
-      toast.error("Bitte Patient, Abhol- und Zielort angeben.");
+    const pickup = f.pickup ?? parseAdresse(f.abholort);
+    const destination = f.destination ?? parseAdresse(f.zielort);
+    if (!f.patient.trim() || !adresseGefuellt(pickup) || !adresseGefuellt(destination)) {
+      toast.error("Bitte Patient, Pickup- und Destination-Adresse angeben.");
       return;
     }
     if (f.rhythmus === "woechentlich" && f.wochentage.length === 0) {
       toast.error("Bitte mindestens einen Wochentag wählen.");
       return;
     }
-    onSubmit(f);
+    onSubmit({
+      ...f,
+      pickup,
+      destination,
+      abholort: "",
+      zielort: "",
+    });
   };
 
   return (
@@ -744,13 +781,23 @@ function DauerauftragForm({
             <Label>Patient</Label>
             <Input value={f.patient} onChange={(e) => set("patient", e.target.value)} placeholder="Name des Patienten" />
           </div>
-          <div>
-            <Label>Abholort</Label>
-            <Input value={f.abholort} onChange={(e) => set("abholort", e.target.value)} />
+          <div className="sm:col-span-2">
+            <AddressFields
+              idPrefix="dauer-pickup"
+              label="Pickup"
+              required
+              value={f.pickup ?? parseAdresse(f.abholort)}
+              onChange={(value) => setAdresse("pickup", value)}
+            />
           </div>
-          <div>
-            <Label>Zielort</Label>
-            <Input value={f.zielort} onChange={(e) => set("zielort", e.target.value)} />
+          <div className="sm:col-span-2">
+            <AddressFields
+              idPrefix="dauer-destination"
+              label="Destination"
+              required
+              value={f.destination ?? parseAdresse(f.zielort)}
+              onChange={(value) => setAdresse("destination", value)}
+            />
           </div>
           <div>
             <Label>Kategorie</Label>
