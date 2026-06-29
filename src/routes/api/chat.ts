@@ -7,6 +7,7 @@ import { buildKnowledgeSnapshot } from "@/lib/ghasi-knowledge";
 import { generateHinweise } from "@/lib/ghasi-hinweise";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
 import { buildBusinessTools } from "@/lib/ghasi-tools";
+import { hydrateServerMirrors } from "@/lib/server-mirror.server";
 import {
   type AppRole,
   hoechsteRolle,
@@ -183,7 +184,12 @@ export const Route = createFileRoute("/api/chat")({
           });
         }
 
+        // AI Brain: load real persisted data into the in-memory mirrors so every
+        // knowledge snapshot and business tool reads the database, never demo seeds.
+        await hydrateServerMirrors();
+
         // Frage für das Audit-Protokoll festhalten.
+
         let frage = "";
 
         // Eingehende Nutzer-Nachricht sofort sichern (geht bei Fehlern nicht verloren).

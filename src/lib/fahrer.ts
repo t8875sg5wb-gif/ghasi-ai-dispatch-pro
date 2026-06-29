@@ -234,7 +234,12 @@ export function empfehleFahrer(fahrer: Fahrer[], limit = 3): FahrerScore[] {
     .slice(0, limit);
 }
 
-export const INITIAL_FAHRER: Fahrer[] = [
+/**
+ * Demo drivers — used ONLY as one-time seed data for the `drivers` table (see
+ * seedDrivers). Production reads come from the database via `useDrivers()`,
+ * which mirrors persisted rows into `INITIAL_FAHRER`.
+ */
+export const SEED_FAHRER: Fahrer[] = [
   {
     id: "f-1",
     nummer: "F-001",
@@ -410,3 +415,10 @@ export const INITIAL_FAHRER: Fahrer[] = [
     gewinnHeute: 0,
   },
 ];
+
+/**
+ * Live drivers mirror. Empty at module load; `useDrivers()` fills it from the
+ * database on every fetch (the AppShell prefetches it app-wide). This is the
+ * production source of truth — never the demo `SEED_FAHRER` above.
+ */
+export const INITIAL_FAHRER: Fahrer[] = [];

@@ -163,7 +163,12 @@ const pos = (beschreibung: string, menge: number, einzelpreis: number): Rechnung
   einzelpreis,
 });
 
-export const INITIAL_RECHNUNGEN: Rechnung[] = [
+/**
+ * Demo invoices — used ONLY as one-time seed data for the `invoices` table
+ * (see seedInvoices). Production reads come from the database via
+ * `useInvoices()`, which mirrors persisted rows into `INITIAL_RECHNUNGEN`.
+ */
+export const SEED_RECHNUNGEN: Rechnung[] = [
   {
     id: "r-1",
     nummer: "RE-2026-0041",
@@ -329,6 +334,13 @@ export const INITIAL_RECHNUNGEN: Rechnung[] = [
     positionen: [pos("Sitzendtransporte April", 10, 98)],
   },
 ];
+
+/**
+ * Live invoices mirror. Empty at module load; `useInvoices()` fills it from the
+ * database on every fetch. This is the production source of truth — never the
+ * demo `SEED_RECHNUNGEN` above.
+ */
+export const INITIAL_RECHNUNGEN: Rechnung[] = [];
 
 let idCounter = 100;
 export function nextRechnungId(): string {

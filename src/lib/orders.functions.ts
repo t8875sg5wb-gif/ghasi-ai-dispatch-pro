@@ -63,8 +63,40 @@ export const updateOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return rowToAuftrag(updated as unknown as OrderRow);
+    const auftrag = rowToAuftrag(updated as unknown as OrderRow);
+
+    // Audit trail: persist every status / dispatch-assignment / driver change with
+    // timestamp, status, driver, vehicle and GPS position (when available).
+    const v = data.values as Record<string, unknown>;
+    const relevant = ["status", "detail_status", "fahrer", "fahrzeug", "lat", "lng"].some(
+      (k) => k in v,
+    );
+    if (relevant) {
+      const gps =
+        typeof v.lat === "number" && typeof v.lng === "number"
+          ? { lat: v.lat, lng: v.lng }
+          : null;
+      await context.supabase.from("activity_log").insert({
+        bereich: "auftraege",
+        entitaet: auftrag.id,
+        aktion: "status_update",
+        beschreibung: `Auftrag ${auftrag.nummer ?? auftrag.id}: Status ${auftrag.status}${
+          auftrag.fahrer ? `, Fahrer ${auftrag.fahrer}` : ""
+        }${auftrag.fahrzeug ? `, Fahrzeug ${auftrag.fahrzeug}` : ""}`,
+        metadaten: {
+          status: auftrag.status,
+          detailStatus: auftrag.detailStatus ?? null,
+          fahrer: auftrag.fahrer ?? null,
+          fahrzeug: auftrag.fahrzeug ?? null,
+          gps,
+          zeitpunkt: new Date().toISOString(),
+        } as never,
+      } as never);
+    }
+
+    return auftrag;
   });
+
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -91,8 +123,8 @@ export const seedOrders = createServerFn({ method: "POST" })
       .select("*", { count: "exact", head: true });
     if ((count ?? 0) > 0) return { seeded: 0 };
 
-    const { INITIAL_AUFTRAEGE } = await import("@/lib/auftraege");
-    const rows = INITIAL_AUFTRAEGE.map((a: Auftrag) =>
+    const { SEED_AUFTRAEGE } = await import("@/lib/auftraege");
+    const rows = SEED_AUFTRAEGE.map((a: Auftrag) =>
       writeToRow({
         nummer: a.nummer,
         patient: a.patient,

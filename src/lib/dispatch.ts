@@ -320,105 +320,15 @@ export function dispatchAusAuftraege(auftraege: Auftrag[]): DispatchTransport[] 
   return auftraege.map((a, idx) => auftragZuTransport(a, idx));
 }
 
-/** Build the dispatch dataset: existing orders + generated recurring trips. */
+/**
+ * Build the dispatch dataset purely from persisted orders (database-connected
+ * via the `INITIAL_AUFTRAEGE` mirror). No demo transports are injected — the
+ * board reflects only real orders from the database.
+ */
 export function generateDispatchTransporte(): DispatchTransport[] {
-  const basis: DispatchTransport[] = INITIAL_AUFTRAEGE.map((a, idx) =>
-    auftragZuTransport(a, idx),
-  );
-
-  // Make one active trip delayed for demonstration.
-  const verspaetet = basis.find((t) => t.liveStatus === "in_fahrt");
-  if (verspaetet) verspaetet.verspaetungMin = 18;
-
-  const extra: DispatchTransport[] = [
-    mkTransport({
-      nummer: "A-2045",
-      patient: "Hannah Voigt",
-      transportart: "Dialysefahrt",
-      prioritaet: "normal",
-      abholort: "Pflegeheim Lindenhof, Berlin",
-      zielort: "Dialysezentrum Nord, Berlin",
-      abholzeit: "09:15",
-      distanzKm: 14,
-      kostentraeger: "AOK Nordost",
-      serie: "Dialyse",
-      liveStatus: "fahrer_zugewiesen",
-      fahrer: "L. Schäfer",
-      fahrzeug: null,
-    }),
-    mkTransport({
-      nummer: "A-2046",
-      patient: "Werner Brandt",
-      transportart: "Sitzendtransport",
-      prioritaet: "normal",
-      abholort: "Privatadresse Steglitz",
-      zielort: "Strahlentherapie Süd, Berlin",
-      abholzeit: "09:45",
-      distanzKm: 11,
-      kostentraeger: "Barmer",
-      serie: "Strahlentherapie",
-      wiederkehrend: true,
-      liveStatus: "geplant",
-    }),
-    mkTransport({
-      nummer: "A-2047",
-      patient: "Ingrid Sommer",
-      transportart: "Rollstuhl",
-      prioritaet: "hoch",
-      abholort: "Pflegeheim Sonnenhof, Berlin",
-      zielort: "Orthopädie Klinikum West, Berlin",
-      abholzeit: "10:00",
-      distanzKm: 9,
-      kostentraeger: "DAK Gesundheit",
-      liveStatus: "anfahrt",
-      fahrer: "M. Keller",
-      fahrzeug: "B-KT 142",
-    }),
-    mkTransport({
-      nummer: "A-2048",
-      patient: "Dialysezentrum Nord (Sammelfahrt)",
-      transportart: "Dialysefahrt",
-      prioritaet: "normal",
-      abholort: "Pflegeheim Lindenhof, Berlin",
-      zielort: "Dialysezentrum Nord, Berlin",
-      abholzeit: "09:20",
-      distanzKm: 13,
-      kostentraeger: "AOK Nordost",
-      serie: "Dialyse",
-      wiederkehrend: true,
-      liveStatus: "geplant",
-    }),
-    mkTransport({
-      nummer: "A-2049",
-      patient: "Notfall – Sturzverletzung",
-      transportart: "Notfall",
-      prioritaet: "dringend",
-      abholort: "Privatadresse Wedding",
-      zielort: "Klinikum West, Notaufnahme",
-      abholzeit: "08:05",
-      distanzKm: 7,
-      kostentraeger: "Selbstzahler",
-      liveStatus: "geplant",
-      istNotfall: true,
-    }),
-    mkTransport({
-      nummer: "A-2050",
-      patient: "Gerda Lindner",
-      transportart: "Sitzendtransport",
-      prioritaet: "niedrig",
-      abholort: "Privatadresse Pankow",
-      zielort: "Physiotherapie Mitte, Berlin",
-      abholzeit: "13:30",
-      distanzKm: 12,
-      kostentraeger: "Techniker Krankenkasse",
-      serie: "Physiotherapie",
-      wiederkehrend: true,
-      liveStatus: "geplant",
-    }),
-  ];
-
-  return [...basis, ...extra];
+  return INITIAL_AUFTRAEGE.map((a, idx) => auftragZuTransport(a, idx));
 }
+
 
 /** Reverse map: fine-grained LiveStatus → coarse persisted Auftrag status. */
 const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
@@ -453,59 +363,6 @@ export function dispatchPatchToWrite(
     w.abrechnungStatus = patch.abrechnungBereit ? "bereit" : "offen";
   }
   return w;
-}
-
-interface MkInput {
-  nummer: string;
-  patient: string;
-  transportart: Transportart;
-  prioritaet: AuftragPrioritaet;
-  abholort: string;
-  zielort: string;
-  abholzeit: string;
-  distanzKm: number;
-  kostentraeger: string;
-  liveStatus: LiveStatus;
-  fahrer?: string | null;
-  fahrzeug?: string | null;
-  serie?: SerienTyp;
-  wiederkehrend?: boolean;
-  istNotfall?: boolean;
-}
-
-let seq = 500;
-function mkTransport(i: MkInput): DispatchTransport {
-  seq += 1;
-  const fahrtMin = Math.round(i.distanzKm * 2.4);
-  const liegend = i.transportart === "Liegendtransport" || i.transportart === "Notfall";
-  const rollstuhl = i.transportart === "Rollstuhl";
-  return {
-    id: `d-${seq}`,
-    nummer: i.nummer,
-    patient: i.patient,
-    transportart: i.transportart,
-    prioritaet: i.prioritaet,
-    status: "neu",
-    abholort: i.abholort,
-    zielort: i.zielort,
-    termin: `2026-06-26T${i.abholzeit}`,
-    fahrer: i.fahrer ?? null,
-    fahrzeug: i.fahrzeug ?? null,
-    kostentraeger: i.kostentraeger,
-    notiz: "",
-    liveStatus: i.liveStatus,
-    abholzeit: i.abholzeit,
-    ankunftzeit: plus(`2026-06-26T${i.abholzeit}`, fahrtMin),
-    distanzKm: i.distanzKm,
-    leerKm: 2 + (seq % 4),
-    verspaetungMin: 0,
-    wiederkehrend: i.wiederkehrend ?? false,
-    serie: i.serie,
-    erloes: 95 + i.distanzKm * 6,
-    rollstuhl,
-    liegend,
-    istNotfall: i.istNotfall ?? i.transportart === "Notfall",
-  };
 }
 
 /* ------------------------------------------------------------------ *

@@ -339,7 +339,12 @@ export function nextAuftragId(): string {
   return `a-${idCounter}`;
 }
 
-export const INITIAL_AUFTRAEGE: Auftrag[] = [
+/**
+ * Demo orders — used ONLY as one-time seed data for the `orders` table (see
+ * seedOrders). Production reads come from the database via `useOrders()`, which
+ * mirrors persisted rows into `INITIAL_AUFTRAEGE`.
+ */
+export const SEED_AUFTRAEGE: Auftrag[] = [
   {
     id: "a-1",
     nummer: "A-2041",
@@ -479,6 +484,13 @@ export const INITIAL_AUFTRAEGE: Auftrag[] = [
     medizinischeNotiz: "",
   },
 ];
+
+/**
+ * Live orders mirror. Empty at module load; `useOrders()` fills it from the
+ * database on every fetch (the AppShell prefetches it app-wide). This is the
+ * production source of truth — never the demo `SEED_AUFTRAEGE` above.
+ */
+export const INITIAL_AUFTRAEGE: Auftrag[] = [];
 
 export const FAHRER_OPTIONEN = [
   "M. Keller",

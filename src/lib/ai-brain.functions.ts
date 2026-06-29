@@ -29,6 +29,11 @@ export const generateExecutiveAnalysis = createServerFn({ method: "POST" }).hand
     const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
     const { buildBrainSnapshot, computeInsights, computePrognosen } = await import("@/lib/ai-brain");
     const { buildKnowledgeSnapshot } = await import("@/lib/ghasi-knowledge");
+    const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
+
+    // AI Brain: load real persisted data into the in-memory mirrors first so the
+    // briefing is built from database data, never demo seeds.
+    await hydrateServerMirrors();
 
     const insights = computeInsights()
       .slice(0, 8)

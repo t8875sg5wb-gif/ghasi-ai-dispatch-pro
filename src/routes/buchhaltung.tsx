@@ -20,7 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { computeFinanzKpis, offenePostenJeKunde, EUR } from "@/lib/finance";
+import { computeFinanzKpis, offenePostenJeKunde, INITIAL_RECHNUNGEN, EUR } from "@/lib/finance";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/buchhaltung")({
   head: () => ({
@@ -52,8 +53,10 @@ const KOSTEN_LABEL = {
 } as const;
 
 function BuchhaltungPage() {
-  const kpis = useMemo(() => computeFinanzKpis(), []);
-  const offen = useMemo(() => offenePostenJeKunde(), []);
+  const { data: invoiceData } = useInvoices();
+  const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
+  const kpis = useMemo(() => computeFinanzKpis(alleRechnungen), [alleRechnungen]);
+  const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
 
   const kostenpositionen = (Object.keys(KOSTEN_LABEL) as (keyof typeof KOSTEN_LABEL)[]).map(
     (k) => ({
