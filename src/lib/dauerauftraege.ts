@@ -30,11 +30,7 @@ import {
   INITIAL_AUFTRAEGE,
   nextAuftragId,
 } from "@/lib/auftraege";
-import {
-  type AdresseStruktur,
-  adresseAusStrukturOderLegacy,
-  formatAdresse,
-} from "@/lib/address";
+import { type AdresseStruktur, adresseAusStrukturOderLegacy, formatAdresse } from "@/lib/address";
 
 /* ------------------------------------------------------------------ *
  * Typen
