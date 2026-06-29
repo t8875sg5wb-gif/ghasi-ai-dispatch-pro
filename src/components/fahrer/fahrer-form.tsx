@@ -132,9 +132,13 @@ export function FahrerForm({
       <AddressFields
         idPrefix="fahrer-adresse"
         label="Adresse"
-        value={parseAdresse(values.adresse)}
-        onChange={(adr) => set("adresse", formatAdresse(adr))}
+        value={adr}
+        onChange={(next) => {
+          setAdr(next);
+          set("adresse", formatAdresse(next));
+        }}
       />
+
 
 
       <div className="grid gap-4 sm:grid-cols-3">
