@@ -440,9 +440,8 @@ function FormFelder({
       <Feld label="Name *">
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </Feld>
-      <Feld label="Adresse *">
-        <Input value={adresse} onChange={(e) => setAdresse(e.target.value)} />
-      </Feld>
+      <AddressFields idPrefix="einrichtung-adresse" label="Adresse *" value={adr} onChange={setAdr} />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Feld label="Ansprechpartner">
           <Input value={ansprechpartner} onChange={(e) => setAnsprechpartner(e.target.value)} />
