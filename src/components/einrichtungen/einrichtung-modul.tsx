@@ -411,6 +411,7 @@ function FormFelder({
   const [aktiv, setAktiv] = useState(target?.aktiv ?? true);
 
   function submit() {
+    const adresse = formatAdresse(adr);
     if (!name.trim() || !adresse.trim()) {
       toast.error("Name und Adresse sind erforderlich.");
       return;
