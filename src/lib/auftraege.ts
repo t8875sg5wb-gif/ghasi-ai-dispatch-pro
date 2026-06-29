@@ -485,7 +485,14 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
   },
 ];
 
-export const FAHRER_OPTIONEN = [
+/**
+ * Live orders mirror. Empty at module load; `useOrders()` fills it from the
+ * database on every fetch (the AppShell prefetches it app-wide). This is the
+ * production source of truth — never the demo `SEED_AUFTRAEGE` above.
+ */
+export const INITIAL_AUFTRAEGE: Auftrag[] = [];
+
+
   "M. Keller",
   "S. Yilmaz",
   "P. Richter",
