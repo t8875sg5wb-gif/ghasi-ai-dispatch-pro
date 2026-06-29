@@ -465,7 +465,7 @@ function KundeFelder({
       telefon: telefon.trim(),
       offeneRechnungen: target?.offeneRechnungen ?? 0,
       email: email.trim() || undefined,
-      adresse: adresse.trim() || undefined,
+      adresse: formatAdresse(adr) || undefined,
       vertragsstatus,
       konditionen: konditionen.trim() || undefined,
       zahlungszielTage: zahlungsziel.trim() ? Number(zahlungsziel) : undefined,
