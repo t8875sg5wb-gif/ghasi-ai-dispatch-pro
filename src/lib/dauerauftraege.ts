@@ -30,7 +30,11 @@ import {
   INITIAL_AUFTRAEGE,
   nextAuftragId,
 } from "@/lib/auftraege";
-import { type AdresseStruktur, formatAdresse } from "@/lib/address";
+import {
+  type AdresseStruktur,
+  adresseAusStrukturOderLegacy,
+  formatAdresse,
+} from "@/lib/address";
 
 /* ------------------------------------------------------------------ *
  * Typen
@@ -318,8 +322,14 @@ function naechsteNummer(): string {
 
 function baueAuftrag(d: Dauerauftrag, iso: string, richtung: "hin" | "rueck"): Auftrag {
   const hin = richtung === "hin";
-  const pickup = hin ? d.pickup : d.destination;
-  const destination = hin ? d.destination : d.pickup;
+  const pickup = adresseAusStrukturOderLegacy(
+    hin ? d.pickup : d.destination,
+    hin ? d.abholort : d.zielort,
+  );
+  const destination = adresseAusStrukturOderLegacy(
+    hin ? d.destination : d.pickup,
+    hin ? d.zielort : d.abholort,
+  );
   return {
     id: nextAuftragId(),
     nummer: naechsteNummer(),
@@ -329,8 +339,8 @@ function baueAuftrag(d: Dauerauftrag, iso: string, richtung: "hin" | "rueck"): A
     status: "neu",
     pickup,
     destination,
-    abholort: pickup ? formatAdresse(pickup) : hin ? d.abholort : d.zielort,
-    zielort: destination ? formatAdresse(destination) : hin ? d.zielort : d.abholort,
+    abholort: formatAdresse(pickup),
+    zielort: formatAdresse(destination),
     termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
     fahrer: d.bevorzugterFahrer,
     fahrzeug: d.bevorzugtesFahrzeug,
@@ -408,8 +418,14 @@ export function transportWritesFuer(
   let sicherung = 0;
   const bauen = (iso: string, richtung: "hin" | "rueck") => {
     const hin = richtung === "hin";
-    const pickup = hin ? d.pickup : d.destination;
-    const destination = hin ? d.destination : d.pickup;
+    const pickup = adresseAusStrukturOderLegacy(
+      hin ? d.pickup : d.destination,
+      hin ? d.abholort : d.zielort,
+    );
+    const destination = adresseAusStrukturOderLegacy(
+      hin ? d.destination : d.pickup,
+      hin ? d.zielort : d.abholort,
+    );
     const w: import("@/lib/orders-shared").OrderWrite = {
       patient: d.patient,
       transportart: transportartVon(d),
@@ -417,8 +433,8 @@ export function transportWritesFuer(
       status: "neu",
       pickup,
       destination,
-      abholort: pickup ? "" : hin ? d.abholort : d.zielort,
-      zielort: destination ? "" : hin ? d.zielort : d.abholort,
+      abholort: "",
+      zielort: "",
       termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
       fahrer: d.bevorzugterFahrer,
       fahrzeug: d.bevorzugtesFahrzeug,
