@@ -522,9 +522,10 @@ function KundeFelder({
         <Feld label="E-Mail">
           <Input value={email} onChange={(e) => setEmail(e.target.value)} />
         </Feld>
-        <Feld label="Adresse">
-          <Input value={adresse} onChange={(e) => setAdresse(e.target.value)} />
-        </Feld>
+        <div className="sm:col-span-2">
+          <AddressFields idPrefix="kunde-adresse" label="Adresse" value={adr} onChange={setAdr} />
+        </div>
+
         <Feld label="Zahlungsziel (Tage)">
           <Input type="number" value={zahlungsziel} onChange={(e) => setZahlungsziel(e.target.value)} />
         </Feld>
