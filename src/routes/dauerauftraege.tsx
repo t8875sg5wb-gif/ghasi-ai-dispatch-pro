@@ -725,7 +725,8 @@ function DauerauftragForm({
 
   useEffect(() => {
     setF(normalisiere(initial));
-  }, [initial]);
+    // `initial` for new records is created inline by the parent; key by identity fields to avoid reset loops.
+  }, [initial.id, initial.kennung]);
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));

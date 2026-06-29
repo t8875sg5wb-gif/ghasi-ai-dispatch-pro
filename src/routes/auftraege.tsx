@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -124,7 +124,9 @@ function AuftraegePage() {
       abgeschlossen: 0,
       storniert: 0,
     };
-    for (const a of auftraege) base[a.status] += 1;
+    for (const a of auftraege) {
+      if (a.status in base) base[a.status] += 1;
+    }
     return base;
   }, [auftraege]);
 
@@ -135,10 +137,10 @@ function AuftraegePage() {
       if (prioFilter !== "alle" && a.prioritaet !== prioFilter) return false;
       if (!q) return true;
       return (
-        a.patient.toLowerCase().includes(q) ||
-        a.nummer.toLowerCase().includes(q) ||
-        a.abholort.toLowerCase().includes(q) ||
-        a.zielort.toLowerCase().includes(q) ||
+        (a.patient ?? "").toLowerCase().includes(q) ||
+        (a.nummer ?? "").toLowerCase().includes(q) ||
+        (a.abholort ?? "").toLowerCase().includes(q) ||
+        (a.zielort ?? "").toLowerCase().includes(q) ||
         (a.fahrer ?? "").toLowerCase().includes(q)
       );
     });
@@ -412,31 +414,30 @@ function AuftraegePage() {
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Auftrag</TableHead>
-                  <TableHead className="hidden md:table-cell">Strecke</TableHead>
-                  <TableHead className="hidden lg:table-cell">Termin</TableHead>
-                  <TableHead className="hidden sm:table-cell">Priorität</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {gruppen.map((gruppe) => (
-                  <Fragment key={gruppe.id}>
-                    <TableRow className="hover:bg-transparent">
-                      <TableCell
-                        colSpan={5}
-                        className="bg-muted/40 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                      >
+            <div className="space-y-4 p-3 sm:p-4">
+              {gruppen.map((gruppe) => (
+                <Card key={gruppe.id} className="border-border/70 shadow-none">
+                  <CardContent className="p-0">
+                    <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+                      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                         {gruppe.label}
-                        <span className="ml-2 rounded-full bg-muted px-1.5 text-[10px]">
-                          {gruppe.auftraege.length}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                    {gruppe.auftraege.map((a) => {
+                      </h2>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        {gruppe.auftraege.length}
+                      </span>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead>Auftrag</TableHead>
+                          <TableHead className="hidden md:table-cell">Strecke</TableHead>
+                          <TableHead className="hidden lg:table-cell">Termin</TableHead>
+                          <TableHead className="hidden sm:table-cell">Priorität</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {gruppe.auftraege.map((a) => {
                       const status = STATUS_META[a.status];
                       const prio = PRIORITAET_META[a.prioritaet];
                       const stufe = warnStufe(a);
@@ -515,12 +516,13 @@ function AuftraegePage() {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
-                  </Fragment>
-                ))}
-              </TableBody>
-
-            </Table>
+                        })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
