@@ -7,6 +7,7 @@ import { buildKnowledgeSnapshot } from "@/lib/ghasi-knowledge";
 import { generateHinweise } from "@/lib/ghasi-hinweise";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
 import { buildBusinessTools } from "@/lib/ghasi-tools";
+import { hydrateServerMirrors } from "@/lib/server-mirror.server";
 import {
   type AppRole,
   hoechsteRolle,
