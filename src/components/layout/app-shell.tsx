@@ -1,6 +1,6 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Search, Bell } from "lucide-react";
+import { Search } from "lucide-react";
 
 import {
   SidebarInset,
@@ -12,11 +12,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { GlobalSearch, useGlobalSearchHotkey } from "@/components/global-search";
 import { UserMenu } from "@/components/layout/user-menu";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 import { allNavItems } from "@/lib/navigation";
 import { useOrders } from "@/lib/orders-store";
 import { useRecurring } from "@/lib/recurring-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { syncOrderNotifications } from "@/lib/notifications";
+import { logActivity } from "@/lib/protokoll";
 
 /**
  * Hydrates the database-backed stores app-wide so the legacy in-memory mirrors
@@ -25,17 +28,49 @@ import { useInvoices } from "@/lib/invoices-store";
  * authenticated shell.
  */
 function useHydrateStores() {
-  useOrders();
+  const orders = useOrders();
   useRecurring();
   useDrivers();
   useInvoices();
+  return orders;
+}
+
+/**
+ * Erzeugt In-App-Benachrichtigungen für dringende, nicht zugewiesene Aufträge
+ * und protokolliert neue Warnungen im Audit-Log. Aktualisiert sich minütlich,
+ * damit Countdowns/Stufen nachziehen.
+ */
+function useOrderNotificationSync(auftraege: ReturnType<typeof useHydrateStores>["data"]) {
+  const [tick, setTick] = useState(0);
+  const protokolliert = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const t = setInterval(() => setTick((x) => x + 1), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (!auftraege) return;
+    const neue = syncOrderNotifications(auftraege);
+    for (const n of neue) {
+      if (protokolliert.current.has(n.id)) continue;
+      protokolliert.current.add(n.id);
+      logActivity({
+        bereich: "Aufträge",
+        entitaet: n.titel,
+        aktion: "Warnung: Nicht zugewiesen",
+        beschreibung: n.text,
+      });
+    }
+  }, [auftraege, tick]);
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [searchOpen, setSearchOpen] = useState(false);
   useGlobalSearchHotkey(setSearchOpen);
-  useHydrateStores();
+  const orders = useHydrateStores();
+  useOrderNotificationSync(orders.data);
 
 
   const current =
@@ -76,10 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Benachrichtigungen">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
-          </Button>
+          <NotificationCenter />
           <ThemeToggle />
           <UserMenu />
         </header>
