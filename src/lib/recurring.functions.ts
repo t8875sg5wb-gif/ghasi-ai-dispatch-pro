@@ -150,7 +150,7 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       const destinationKey = w.destination
         ? `${w.destination.street}|${w.destination.houseNumber}|${w.destination.postalCode}|${w.destination.city}|${w.destination.country}`
         : w.zielort ?? "";
-      const key = dedupKey(w.termin, w.patient, pickupKey, destinationKey);
+      const key = dedupKey(w.termin ?? "", w.patient ?? "", pickupKey, destinationKey);
       if (bekannt.has(key)) return false;
       bekannt.add(key); // guard against duplicates within this same batch too
       return true;

@@ -8,6 +8,8 @@ import type {
   Mobilitaet,
   Transportart,
   VerordnungStatus,
+} from "@/lib/auftraege";
+import {
   istAuftragPrioritaet,
   istAuftragStatus,
   istMobilitaet,
