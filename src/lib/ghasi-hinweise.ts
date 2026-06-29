@@ -115,21 +115,41 @@ export function generateHinweise(): Hinweis[] {
     }
   }
 
-  // Aufträge: mögliche Verspätung / Kunde wartet
+  // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();
   for (const a of INITIAL_AUFTRAEGE) {
     const minBis = (new Date(a.termin).getTime() - jetzt) / 60000;
-    if ((a.status === "neu" || a.status === "disponiert") && minBis <= 60) {
+    const aktiv = a.status === "neu" || a.status === "disponiert" || a.status === "unterwegs";
+    const unzugewiesen = aktiv && (!a.fahrer || !a.fahrzeug);
+
+    // Nicht zugewiesen + zeitkritisch (≤ 60 Min oder überfällig)
+    if (unzugewiesen && minBis <= 60) {
+      const fehlt = [!a.fahrer ? "Fahrer" : null, !a.fahrzeug ? "Fahrzeug" : null]
+        .filter(Boolean)
+        .join(" & ");
+      h.push({
+        id: `unassigned-${a.id}`,
+        stufe: minBis <= 15 ? "kritisch" : minBis <= 30 ? "warnung" : "warnung",
+        bereich: "Aufträge",
+        to: "/auftraege",
+        titel: `${a.nummer}: Nicht zugewiesen`,
+        text:
+          minBis < 0
+            ? `Termin überschritten – ${a.patient} wartet, ${fehlt} fehlt. KI-Vorschlag prüfen.`
+            : `Termin in ${Math.round(minBis)} Min, ${fehlt} fehlt. GHASI AI kann einen Fahrer vorschlagen (Bestätigung nötig).`,
+      });
+    } else if (aktiv && !unzugewiesen && minBis <= 30) {
+      // Zugewiesen, aber knapp/verspätet
       h.push({
         id: `delay-${a.id}`,
-        stufe: minBis <= 15 ? "kritisch" : "warnung",
+        stufe: minBis <= 0 ? "warnung" : "info",
         bereich: "Aufträge",
         to: "/auftraege",
         titel: `${a.nummer}: Auftrag könnte verspätet sein`,
         text:
           minBis < 0
-            ? `Termin überschritten – ${a.patient} wartet (${a.abholort}).`
-            : `Termin in ${Math.round(minBis)} Min, Status „${a.status}". ${a.fahrer ? `Fahrer: ${a.fahrer}.` : "Noch kein Fahrer zugewiesen."}`,
+            ? `Termin überschritten – ${a.patient} wartet (Fahrer: ${a.fahrer}).`
+            : `Termin in ${Math.round(minBis)} Min, Status „${a.status}", Fahrer ${a.fahrer}.`,
       });
     }
   }
