@@ -492,7 +492,7 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
  */
 export const INITIAL_AUFTRAEGE: Auftrag[] = [];
 
-
+export const FAHRER_OPTIONEN = [
   "M. Keller",
   "S. Yilmaz",
   "P. Richter",
