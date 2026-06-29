@@ -85,8 +85,8 @@ export function AuftragForm({
     if (initial) {
       const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
       setValues({ ...rest, termin: rest.termin.slice(0, 16) });
-      setAbholAdr(parseAdresse(initial.abholort));
-      setZielAdr(parseAdresse(initial.zielort));
+      setAbholAdr(initial.pickup ?? parseAdresse(initial.abholort));
+      setZielAdr(initial.destination ?? parseAdresse(initial.zielort));
     } else {
       setValues(emptyValues());
       setAbholAdr(leereAdresse());
@@ -118,8 +118,10 @@ export function AuftragForm({
     }
     onSubmit({
       ...values,
-      abholort: formatAdresse(abholAdr),
-      zielort: formatAdresse(zielAdr),
+      pickup: abholAdr,
+      destination: zielAdr,
+      abholort: "",
+      zielort: "",
     });
   }
 

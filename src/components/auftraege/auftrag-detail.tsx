@@ -100,8 +100,8 @@ export function AuftragDetail({
   const zeigtWarnung = hatWarnung(stufe);
   const unzugewiesen = istUnzugewiesen(auftrag);
   const fehlt = fehlendeFelder(auftrag);
-  const abholZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.abholort));
-  const zielZeilen = formatAdresseMehrzeilig(parseAdresse(auftrag.zielort));
+  const abholZeilen = formatAdresseMehrzeilig(auftrag.pickup ?? parseAdresse(auftrag.abholort));
+  const zielZeilen = formatAdresseMehrzeilig(auftrag.destination ?? parseAdresse(auftrag.zielort));
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

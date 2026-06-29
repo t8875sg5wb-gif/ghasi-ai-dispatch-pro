@@ -111,13 +111,17 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
   );
   const abholort = formatAdresse(pickup) || (r.abholort ?? "");
   const zielort = formatAdresse(destination) || (r.zielort ?? "");
+  const valideStatus = new Set<AuftragStatus>(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]);
+  const validePrio = new Set<AuftragPrioritaet>(["niedrig", "normal", "hoch", "dringend"]);
+  const status = valideStatus.has(r.status as AuftragStatus) ? (r.status as AuftragStatus) : "neu";
+  const prioritaet = validePrio.has(r.prioritaet as AuftragPrioritaet) ? (r.prioritaet as AuftragPrioritaet) : "normal";
   return {
     id: r.id,
     nummer: r.nummer ?? "—",
     patient: r.patient ?? "Unbekannter Patient",
     transportart: (r.transportart || "Sitzendtransport") as Transportart,
-    prioritaet: (r.prioritaet || "normal") as AuftragPrioritaet,
-    status: (r.status || "neu") as AuftragStatus,
+    prioritaet,
+    status,
     pickup,
     destination,
     abholort,

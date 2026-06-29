@@ -33,7 +33,9 @@ export function fehlendeFelder(a: Pick<Auftrag, "fahrer" | "fahrzeug">): string[
 
 /** Minuten bis zum Termin (negativ = überfällig). */
 export function minutenBis(a: Pick<Auftrag, "termin">, now = Date.now()): number {
-  return Math.round((new Date(a.termin).getTime() - now) / 60000);
+  const ms = new Date(a.termin ?? "").getTime();
+  if (Number.isNaN(ms)) return Number.POSITIVE_INFINITY;
+  return Math.round((ms - now) / 60000);
 }
 
 /** Berechnet die Warnstufe eines Auftrags. */
@@ -99,13 +101,7 @@ export function formatCountdown(minuten: number): string {
  * Datums-Gruppierung
  * ------------------------------------------------------------------ */
 
-export type GruppenId =
-  | "ueberfaellig"
-  | "heute"
-  | "morgen"
-  | "uebermorgen"
-  | "naechste7"
-  | "spaeter";
+export type GruppenId = string;
 
 export interface AuftragGruppe {
   id: GruppenId;
@@ -113,14 +109,7 @@ export interface AuftragGruppe {
   auftraege: Auftrag[];
 }
 
-const GRUPPEN_LABEL: Record<GruppenId, string> = {
-  ueberfaellig: "Überfällig",
-  heute: "Heute",
-  morgen: "Morgen",
-  uebermorgen: "Übermorgen",
-  naechste7: "Nächste 7 Tage",
-  spaeter: "Später",
-};
+const TAG_MS = 86_400_000;
 
 function tagesStart(d: Date): number {
   const x = new Date(d);
@@ -128,21 +117,36 @@ function tagesStart(d: Date): number {
   return x.getTime();
 }
 
-function gruppeFuer(a: Auftrag, now: number): GruppenId {
+function labelFuerDiff(diffTage: number, date: Date): string {
+  if (diffTage === 0) return "Heute";
+  if (diffTage === 1) return "Morgen";
+  if (diffTage === 2) return "Übermorgen";
+  return date.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit" });
+}
+
+function terminMs(a: Pick<Auftrag, "termin">): number {
+  const ms = new Date(a.termin ?? "").getTime();
+  return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
+}
+
+function gruppeFuer(a: Auftrag, now: number): { id: GruppenId; label: string; sort: number } {
   const termin = new Date(a.termin).getTime();
+  if (Number.isNaN(termin)) return { id: "ohne-termin", label: "Ohne gültigen Termin", sort: 98 };
   // Überfällige aktive Aufträge zuerst
-  if (istAktiv(a) && termin < now) return "ueberfaellig";
+  if (istAktiv(a) && termin < now) return { id: "ueberfaellig", label: "Überfällig", sort: -1 };
 
   const heute = tagesStart(new Date(now));
-  const tag = 86_400_000;
   const terminTag = tagesStart(new Date(termin));
-  const diffTage = Math.round((terminTag - heute) / tag);
+  const diffTage = Math.round((terminTag - heute) / TAG_MS);
 
-  if (diffTage <= 0) return "heute";
-  if (diffTage === 1) return "morgen";
-  if (diffTage === 2) return "uebermorgen";
-  if (diffTage <= 7) return "naechste7";
-  return "spaeter";
+  if (diffTage >= 0 && diffTage <= 7) {
+    return {
+      id: `tag-${diffTage}`,
+      label: labelFuerDiff(diffTage, new Date(terminTag)),
+      sort: diffTage,
+    };
+  }
+  return { id: "spaeter", label: "Später", sort: 99 };
 }
 
 /**
@@ -151,31 +155,29 @@ function gruppeFuer(a: Auftrag, now: number): GruppenId {
  * Leere Gruppen werden ausgelassen.
  */
 export function gruppiereNachDatum(auftraege: Auftrag[], now = Date.now()): AuftragGruppe[] {
-  const reihenfolge: GruppenId[] = [
-    "ueberfaellig",
-    "heute",
-    "morgen",
-    "uebermorgen",
-    "naechste7",
-    "spaeter",
-  ];
-  const buckets = new Map<GruppenId, Auftrag[]>();
-  for (const id of reihenfolge) buckets.set(id, []);
+  const buckets = new Map<GruppenId, AuftragGruppe & { sort: number }>();
 
   for (const a of auftraege) {
-    buckets.get(gruppeFuer(a, now))!.push(a);
+    const gruppe = gruppeFuer(a, now);
+    if (!buckets.has(gruppe.id)) {
+      buckets.set(gruppe.id, { id: gruppe.id, label: gruppe.label, sort: gruppe.sort, auftraege: [] });
+    }
+    buckets.get(gruppe.id)!.auftraege.push(a);
   }
 
-  const byTermin = (a: Auftrag, b: Auftrag) =>
-    new Date(a.termin).getTime() - new Date(b.termin).getTime();
+  const byDringlichkeitDannTermin = (a: Auftrag, b: Auftrag) => {
+    const ar = WARN_META[warnStufe(a, now)].rang;
+    const br = WARN_META[warnStufe(b, now)].rang;
+    if (ar !== br) return ar - br;
+    return terminMs(a) - terminMs(b);
+  };
 
-  return reihenfolge
-    .map((id) => ({
-      id,
-      label: GRUPPEN_LABEL[id],
-      auftraege: buckets.get(id)!.sort(byTermin),
-    }))
-    .filter((g) => g.auftraege.length > 0);
+  return Array.from(buckets.values())
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ sort: _sort, ...g }) => ({
+      ...g,
+      auftraege: g.auftraege.sort(byDringlichkeitDannTermin),
+    }));
 }
 
 /** Liefert die dringend unzugewiesenen Aufträge (Warnstufe ≥ gelb), sortiert. */
