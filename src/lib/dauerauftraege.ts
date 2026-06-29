@@ -30,6 +30,7 @@ import {
   INITIAL_AUFTRAEGE,
   nextAuftragId,
 } from "@/lib/auftraege";
+import { type AdresseStruktur, formatAdresse } from "@/lib/address";
 
 /* ------------------------------------------------------------------ *
  * Typen
@@ -46,6 +47,10 @@ export interface Dauerauftrag {
   /** Sprechende Kennung der Serie, z. B. "DA-001". */
   kennung: string;
   patient: string;
+  /** Strukturierte Abholadresse; legacy `abholort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  pickup?: AdresseStruktur;
+  /** Strukturierte Zieladresse; legacy `zielort` bleibt als rückwärtskompatible Anzeige erhalten. */
+  destination?: AdresseStruktur;
   abholort: string;
   zielort: string;
   /** Uhrzeit der Hinfahrt im Format HH:MM. */
@@ -322,6 +327,8 @@ function baueAuftrag(
   richtung: "hin" | "rueck",
 ): Auftrag {
   const hin = richtung === "hin";
+  const pickup = hin ? d.pickup : d.destination;
+  const destination = hin ? d.destination : d.pickup;
   return {
     id: nextAuftragId(),
     nummer: naechsteNummer(),
@@ -329,8 +336,10 @@ function baueAuftrag(
     transportart: transportartVon(d),
     prioritaet: "normal",
     status: "neu",
-    abholort: hin ? d.abholort : d.zielort,
-    zielort: hin ? d.zielort : d.abholort,
+    pickup,
+    destination,
+    abholort: pickup ? formatAdresse(pickup) : hin ? d.abholort : d.zielort,
+    zielort: destination ? formatAdresse(destination) : hin ? d.zielort : d.abholort,
     termin: `${iso}T${(hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit)}`,
     fahrer: d.bevorzugterFahrer,
     fahrzeug: d.bevorzugtesFahrzeug,
@@ -416,13 +425,17 @@ export function transportWritesFuer(
   let sicherung = 0;
   const bauen = (iso: string, richtung: "hin" | "rueck") => {
     const hin = richtung === "hin";
+    const pickup = hin ? d.pickup : d.destination;
+    const destination = hin ? d.destination : d.pickup;
     const w: import("@/lib/orders-shared").OrderWrite = {
       patient: d.patient,
       transportart: transportartVon(d),
       prioritaet: "normal",
       status: "neu",
-      abholort: hin ? d.abholort : d.zielort,
-      zielort: hin ? d.zielort : d.abholort,
+      pickup,
+      destination,
+      abholort: pickup ? "" : hin ? d.abholort : d.zielort,
+      zielort: destination ? "" : hin ? d.zielort : d.abholort,
       termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
       fahrer: d.bevorzugterFahrer,
       fahrzeug: d.bevorzugtesFahrzeug,

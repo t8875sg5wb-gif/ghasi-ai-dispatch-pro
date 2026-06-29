@@ -135,16 +135,22 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
     const dedupKey = (
       termin: string,
       patient: string,
-      abholort: string,
-      zielort: string,
-    ) => `${termin.slice(0, 10)}|${patient}|${abholort}|${zielort}`;
+      pickupKey: string,
+      destinationKey: string,
+    ) => `${termin.slice(0, 10)}|${patient}|${pickupKey}|${destinationKey}`;
     const bekannt = new Set(
       (vorhanden ?? []).map((o: { termin: string; patient: string; abholort: string; zielort: string }) =>
         dedupKey(o.termin, o.patient, o.abholort, o.zielort),
       ),
     );
     const neueWrites = writes.filter((w) => {
-      const key = dedupKey(w.termin, w.patient, w.abholort, w.zielort);
+      const pickupKey = w.pickup
+        ? `${w.pickup.street}|${w.pickup.houseNumber}|${w.pickup.postalCode}|${w.pickup.city}|${w.pickup.country}`
+        : w.abholort ?? "";
+      const destinationKey = w.destination
+        ? `${w.destination.street}|${w.destination.houseNumber}|${w.destination.postalCode}|${w.destination.city}|${w.destination.country}`
+        : w.zielort ?? "";
+      const key = dedupKey(w.termin, w.patient, pickupKey, destinationKey);
       if (bekannt.has(key)) return false;
       bekannt.add(key); // guard against duplicates within this same batch too
       return true;
