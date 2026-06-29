@@ -153,7 +153,6 @@ function DauerauftraegePage() {
   const updateMut = useUpdateRecurring();
   const seedMut = useSeedRecurring();
   const generateMut = useGenerateRecurring();
-  const neueVorlage = useMemo(() => leereVorlage(), [daten.length, formOpen]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
@@ -162,6 +161,7 @@ function DauerauftraegePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
+  const neueVorlage = useMemo(() => leereVorlage(), [daten.length, formOpen]);
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
