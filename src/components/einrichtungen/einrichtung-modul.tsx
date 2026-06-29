@@ -398,7 +398,7 @@ function FormFelder({
   onSave: (e: Einrichtung) => void;
 }) {
   const [name, setName] = useState(target?.name ?? "");
-  const [adresse, setAdresse] = useState(target?.adresse ?? "");
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(target?.adresse ?? ""));
   const [ansprechpartner, setAnsprechpartner] = useState(target?.ansprechpartner ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [email, setEmail] = useState(target?.email ?? "");
