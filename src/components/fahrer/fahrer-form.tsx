@@ -70,19 +70,23 @@ export function FahrerForm({
   submitLabel,
 }: FahrerFormProps) {
   const [values, setValues] = useState<FahrerFormValues>(emptyValues);
+  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(""));
 
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, ...rest } = initial;
       setValues(rest);
+      setAdr(parseAdresse(initial.adresse));
     } else {
       setValues(emptyValues());
+      setAdr(parseAdresse(""));
     }
   }, [initial]);
 
   function set<K extends keyof FahrerFormValues>(key: K, value: FahrerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
+
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
