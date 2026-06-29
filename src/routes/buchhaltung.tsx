@@ -53,8 +53,10 @@ const KOSTEN_LABEL = {
 } as const;
 
 function BuchhaltungPage() {
-  const kpis = useMemo(() => computeFinanzKpis(), []);
-  const offen = useMemo(() => offenePostenJeKunde(), []);
+  const { data: invoiceData } = useInvoices();
+  const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
+  const kpis = useMemo(() => computeFinanzKpis(alleRechnungen), [alleRechnungen]);
+  const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
 
   const kostenpositionen = (Object.keys(KOSTEN_LABEL) as (keyof typeof KOSTEN_LABEL)[]).map(
     (k) => ({
