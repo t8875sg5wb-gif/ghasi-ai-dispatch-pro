@@ -365,59 +365,6 @@ export function dispatchPatchToWrite(
   return w;
 }
 
-interface MkInput {
-  nummer: string;
-  patient: string;
-  transportart: Transportart;
-  prioritaet: AuftragPrioritaet;
-  abholort: string;
-  zielort: string;
-  abholzeit: string;
-  distanzKm: number;
-  kostentraeger: string;
-  liveStatus: LiveStatus;
-  fahrer?: string | null;
-  fahrzeug?: string | null;
-  serie?: SerienTyp;
-  wiederkehrend?: boolean;
-  istNotfall?: boolean;
-}
-
-let seq = 500;
-function mkTransport(i: MkInput): DispatchTransport {
-  seq += 1;
-  const fahrtMin = Math.round(i.distanzKm * 2.4);
-  const liegend = i.transportart === "Liegendtransport" || i.transportart === "Notfall";
-  const rollstuhl = i.transportart === "Rollstuhl";
-  return {
-    id: `d-${seq}`,
-    nummer: i.nummer,
-    patient: i.patient,
-    transportart: i.transportart,
-    prioritaet: i.prioritaet,
-    status: "neu",
-    abholort: i.abholort,
-    zielort: i.zielort,
-    termin: `2026-06-26T${i.abholzeit}`,
-    fahrer: i.fahrer ?? null,
-    fahrzeug: i.fahrzeug ?? null,
-    kostentraeger: i.kostentraeger,
-    notiz: "",
-    liveStatus: i.liveStatus,
-    abholzeit: i.abholzeit,
-    ankunftzeit: plus(`2026-06-26T${i.abholzeit}`, fahrtMin),
-    distanzKm: i.distanzKm,
-    leerKm: 2 + (seq % 4),
-    verspaetungMin: 0,
-    wiederkehrend: i.wiederkehrend ?? false,
-    serie: i.serie,
-    erloes: 95 + i.distanzKm * 6,
-    rollstuhl,
-    liegend,
-    istNotfall: i.istNotfall ?? i.transportart === "Notfall",
-  };
-}
-
 /* ------------------------------------------------------------------ *
  * KI-Dispatch-Engine: bester Fahrer + bestes Fahrzeug
  * ------------------------------------------------------------------ */
