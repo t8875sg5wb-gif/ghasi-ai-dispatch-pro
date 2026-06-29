@@ -17,12 +17,7 @@ import {
 } from "lucide-react";
 
 import { listeBenutzer, setzeRolle, type BenutzerEintrag } from "@/lib/admin.functions";
-import {
-  ROLE_LABELS,
-  ROLE_BESCHREIBUNG,
-  ROLE_BEREICHE,
-  type AppRole,
-} from "@/lib/roles";
+import { ROLE_LABELS, ROLE_BESCHREIBUNG, ROLE_BEREICHE, type AppRole } from "@/lib/roles";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +38,10 @@ export const Route = createFileRoute("/administration")({
   head: () => ({
     meta: [
       { title: "Administration – GHASI AI" },
-      { name: "description", content: "Benutzer, Rollen, Rechte und Systemkonfiguration verwalten." },
+      {
+        name: "description",
+        content: "Benutzer, Rollen, Rechte und Systemkonfiguration verwalten.",
+      },
     ],
   }),
   component: AdministrationSeite,
@@ -118,8 +116,7 @@ function Benutzerverwaltung() {
       });
       toast.success("Rollen aktualisiert");
     },
-    onError: (e: unknown) =>
-      toast.error(e instanceof Error ? e.message : "Aktion fehlgeschlagen"),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Aktion fehlgeschlagen"),
   });
 
   const benutzer = (data ?? []).filter((b) => {
@@ -213,11 +210,7 @@ function BenutzerZeile({
           </Badge>
         ))}
         {offen.length > 0 && (
-          <Select
-            onValueChange={(v) => onAdd(v as AppRole)}
-            disabled={busy}
-            value=""
-          >
+          <Select onValueChange={(v) => onAdd(v as AppRole)} disabled={busy} value="">
             <SelectTrigger className="h-8 w-auto gap-1 border-dashed text-xs">
               <Plus className="h-3.5 w-3.5" />
               <SelectValue placeholder="Rolle" />

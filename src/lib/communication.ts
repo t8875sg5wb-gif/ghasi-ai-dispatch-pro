@@ -184,26 +184,47 @@ export const KATEGORIE_REIHENFOLGE: KommKategorie[] = [
   "system",
 ];
 
-export const KANAL_META: Record<
-  KommKanal,
-  { label: string; icon: LucideIcon; badge: string }
-> = {
-  whatsapp: { label: "WhatsApp", icon: MessageCircle, badge: "border-success/30 bg-success/10 text-success" },
+export const KANAL_META: Record<KommKanal, { label: string; icon: LucideIcon; badge: string }> = {
+  whatsapp: {
+    label: "WhatsApp",
+    icon: MessageCircle,
+    badge: "border-success/30 bg-success/10 text-success",
+  },
   sms: { label: "SMS", icon: Smartphone, badge: "border-info/30 bg-info/10 text-info" },
   email: { label: "E-Mail", icon: Mail, badge: "border-accent/30 bg-accent/10 text-accent" },
-  intern: { label: "Interne Nachricht", icon: MessageSquare, badge: "border-border bg-muted text-muted-foreground" },
-  fahrer: { label: "Fahrer-Benachrichtigung", icon: Truck, badge: "border-primary/30 bg-primary/10 text-primary" },
-  kunde: { label: "Kunden-Benachrichtigung", icon: Building2, badge: "border-warning/30 bg-warning/10 text-warning" },
+  intern: {
+    label: "Interne Nachricht",
+    icon: MessageSquare,
+    badge: "border-border bg-muted text-muted-foreground",
+  },
+  fahrer: {
+    label: "Fahrer-Benachrichtigung",
+    icon: Truck,
+    badge: "border-primary/30 bg-primary/10 text-primary",
+  },
+  kunde: {
+    label: "Kunden-Benachrichtigung",
+    icon: Building2,
+    badge: "border-warning/30 bg-warning/10 text-warning",
+  },
 };
 
 export const PRIORITAET_META: Record<
   KommPrioritaet,
   { label: string; badge: string; dot: string }
 > = {
-  kritisch: { label: "Kritisch", badge: "border-destructive/30 bg-destructive/10 text-destructive", dot: "bg-destructive" },
+  kritisch: {
+    label: "Kritisch",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    dot: "bg-destructive",
+  },
   hoch: { label: "Hoch", badge: "border-warning/30 bg-warning/10 text-warning", dot: "bg-warning" },
   normal: { label: "Normal", badge: "border-info/30 bg-info/10 text-info", dot: "bg-info" },
-  niedrig: { label: "Niedrig", badge: "border-border bg-muted text-muted-foreground", dot: "bg-muted-foreground/50" },
+  niedrig: {
+    label: "Niedrig",
+    badge: "border-border bg-muted text-muted-foreground",
+    dot: "bg-muted-foreground/50",
+  },
 };
 
 const PRIO_RANG: Record<KommPrioritaet, number> = { kritisch: 0, hoch: 1, normal: 2, niedrig: 3 };
@@ -225,13 +246,62 @@ export interface IntegrationInfo {
 }
 
 export const INTEGRATIONEN: IntegrationInfo[] = [
-  { id: "whatsapp-business", label: "WhatsApp Business API", icon: MessageCircle, beschreibung: "Patienten- & Kundennachrichten direkt über WhatsApp.", kanal: "whatsapp", status: "geplant" },
-  { id: "twilio-sms", label: "Twilio SMS", icon: Smartphone, beschreibung: "SMS-Benachrichtigungen für Abholzeiten & Verspätungen.", kanal: "sms", status: "geplant" },
-  { id: "outlook", label: "Microsoft Outlook", icon: Mail, beschreibung: "E-Mail-Postfach für Kunden & Werkstätten.", kanal: "email", status: "geplant" },
-  { id: "gmail", label: "Gmail", icon: Mail, beschreibung: "Google-Workspace-Postfach anbinden.", kanal: "email", status: "geplant" },
-  { id: "teams", label: "Microsoft Teams", icon: MessageSquare, beschreibung: "Interne Team-Benachrichtigungen.", kanal: "intern", status: "geplant" },
-  { id: "slack", label: "Slack", icon: Slack, beschreibung: "Interne Kanäle für Disposition & Leitung.", kanal: "intern", status: "geplant" },
-  { id: "push", label: "Push Notifications", icon: BellRing, beschreibung: "Mobile Push an die Fahrer-App.", kanal: "fahrer", status: "geplant" },
+  {
+    id: "whatsapp-business",
+    label: "WhatsApp Business API",
+    icon: MessageCircle,
+    beschreibung: "Patienten- & Kundennachrichten direkt über WhatsApp.",
+    kanal: "whatsapp",
+    status: "geplant",
+  },
+  {
+    id: "twilio-sms",
+    label: "Twilio SMS",
+    icon: Smartphone,
+    beschreibung: "SMS-Benachrichtigungen für Abholzeiten & Verspätungen.",
+    kanal: "sms",
+    status: "geplant",
+  },
+  {
+    id: "outlook",
+    label: "Microsoft Outlook",
+    icon: Mail,
+    beschreibung: "E-Mail-Postfach für Kunden & Werkstätten.",
+    kanal: "email",
+    status: "geplant",
+  },
+  {
+    id: "gmail",
+    label: "Gmail",
+    icon: Mail,
+    beschreibung: "Google-Workspace-Postfach anbinden.",
+    kanal: "email",
+    status: "geplant",
+  },
+  {
+    id: "teams",
+    label: "Microsoft Teams",
+    icon: MessageSquare,
+    beschreibung: "Interne Team-Benachrichtigungen.",
+    kanal: "intern",
+    status: "geplant",
+  },
+  {
+    id: "slack",
+    label: "Slack",
+    icon: Slack,
+    beschreibung: "Interne Kanäle für Disposition & Leitung.",
+    kanal: "intern",
+    status: "geplant",
+  },
+  {
+    id: "push",
+    label: "Push Notifications",
+    icon: BellRing,
+    beschreibung: "Mobile Push an die Fahrer-App.",
+    kanal: "fahrer",
+    status: "geplant",
+  },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -274,8 +344,9 @@ export function generateEntwuerfe(): KommEntwurf[] {
   const drafts: KommEntwurf[] = [];
 
   // 1) Late / imminent patient pickup → SMS draft to the patient
-  const baldFaellig = INITIAL_AUFTRAEGE
-    .filter((a) => (a.status === "neu" || a.status === "disponiert") && minutenBis(a.termin) <= 90)
+  const baldFaellig = INITIAL_AUFTRAEGE.filter(
+    (a) => (a.status === "neu" || a.status === "disponiert") && minutenBis(a.termin) <= 90,
+  )
     .sort((a, b) => minutenBis(a.termin) - minutenBis(b.termin))
     .slice(0, 2);
   for (const a of baldFaellig) {
@@ -293,7 +364,8 @@ export function generateEntwuerfe(): KommEntwurf[] {
           ? `Ihr Transport zur Fahrt ${a.nummer} verzögert sich leider geringfügig. Unser Fahrer ist auf dem Weg und meldet sich bei Ankunft. Wir bitten um Ihr Verständnis.`
           : `kurze Erinnerung: Ihre Abholung (${a.nummer}) ist für ${formatTermin(a.termin)} ab ${a.abholort} geplant. Bitte halten Sie sich bereit.`) +
         `\n\nFreundliche Grüße\n${FIRMA}`,
-      erklaerung: "SMS-Entwurf an den Patienten, damit die Abholung transparent bleibt und Rückfragen vermieden werden.",
+      erklaerung:
+        "SMS-Entwurf an den Patienten, damit die Abholung transparent bleibt und Rückfragen vermieden werden.",
       grund: verspaetet
         ? `Termin von ${a.nummer} ist überschritten und der Status ist noch „${a.status}".`
         : `Abholtermin von ${a.nummer} ist in ${min} Minuten, Status „${a.status}".`,
@@ -311,8 +383,9 @@ export function generateEntwuerfe(): KommEntwurf[] {
   }
 
   // 2) Vehicle maintenance overdue / due soon → E-Mail draft to the workshop
-  const wartungFaellig = INITIAL_FAHRZEUGE
-    .filter((v) => v.status === "werkstatt" || tageBis(v.naechsteWartung) <= 10)
+  const wartungFaellig = INITIAL_FAHRZEUGE.filter(
+    (v) => v.status === "werkstatt" || tageBis(v.naechsteWartung) <= 10,
+  )
     .sort((a, b) => tageBis(a.naechsteWartung) - tageBis(b.naechsteWartung))
     .slice(0, 2);
   for (const v of wartungFaellig) {
@@ -330,7 +403,8 @@ export function generateEntwuerfe(): KommEntwurf[] {
         `für unser Fahrzeug ${v.marke} ${v.modell} (${v.kennzeichen}) ist die Wartung ${ueberfaellig ? `seit ${-tage} Tag(en) überfällig` : `in ${tage} Tag(en) fällig`} (geplant: ${v.naechsteWartung}).\n` +
         `Bitte nennen Sie uns einen kurzfristigen Termin. Aktueller Kilometerstand: ${v.kilometerstand.toLocaleString("de-DE")} km.\n\n` +
         `Vielen Dank und freundliche Grüße\n${FIRMA}`,
-      erklaerung: "E-Mail-Entwurf an die Werkstatt, um die fällige Wartung rechtzeitig zu terminieren und Ausfälle zu vermeiden.",
+      erklaerung:
+        "E-Mail-Entwurf an die Werkstatt, um die fällige Wartung rechtzeitig zu terminieren und Ausfälle zu vermeiden.",
       grund: ueberfaellig
         ? `Wartung von ${v.kennzeichen} ist seit ${-tage} Tag(en) überfällig.`
         : `Wartung von ${v.kennzeichen} ist in ${tage} Tag(en) fällig.`,
@@ -364,7 +438,8 @@ export function generateEntwuerfe(): KommEntwurf[] {
         `wir möchten Sie freundlich an ${k.offeneRechnungen} offene Rechnung(en) erinnern. Sollte die Zahlung bereits erfolgt sein, betrachten Sie diese Nachricht bitte als gegenstandslos.\n` +
         `Für Rückfragen stehen wir Ihnen jederzeit gern zur Verfügung.\n\n` +
         `Mit freundlichen Grüßen\n${FIRMA}`,
-      erklaerung: "Höflicher Mahnungs-Entwurf, der die Liquidität verbessert, ohne die Kundenbeziehung zu belasten.",
+      erklaerung:
+        "Höflicher Mahnungs-Entwurf, der die Liquidität verbessert, ohne die Kundenbeziehung zu belasten.",
       grund: `${k.name} hat ${k.offeneRechnungen} offene Rechnung(en).`,
       quelldaten: [
         { label: "Kunde", wert: k.name },
@@ -392,9 +467,12 @@ export function generateEntwuerfe(): KommEntwurf[] {
       nachricht:
         `Guten Tag,\n\n` +
         `kurze Statusinfo zum Transport ${a.nummer} (${a.patient}): Das Fahrzeug ist aktuell unterwegs Richtung ${a.zielort}.` +
-        (fahrer && fahrer.puenktlichkeit < 90 ? ` Aufgrund der aktuellen Verkehrslage kann es zu einer leichten Verzögerung kommen.` : ` Die Ankunft erfolgt voraussichtlich planmäßig.`) +
+        (fahrer && fahrer.puenktlichkeit < 90
+          ? ` Aufgrund der aktuellen Verkehrslage kann es zu einer leichten Verzögerung kommen.`
+          : ` Die Ankunft erfolgt voraussichtlich planmäßig.`) +
         `\n\nFreundliche Grüße\n${FIRMA}`,
-      erklaerung: "Kunden-Benachrichtigung, damit der Auftraggeber proaktiv über den Transportstatus informiert ist.",
+      erklaerung:
+        "Kunden-Benachrichtigung, damit der Auftraggeber proaktiv über den Transportstatus informiert ist.",
       grund: `Transport ${a.nummer} ist unterwegs${fahrer ? ` (Fahrer ${fahrer.name}, Pünktlichkeit ${fahrer.puenktlichkeit} %)` : ""}.`,
       quelldaten: [
         { label: "Auftrag", wert: a.nummer },
@@ -422,7 +500,8 @@ export function generateEntwuerfe(): KommEntwurf[] {
         `Guten Tag ${p.name},\n\n` +
         `Ihre wiederkehrende Dialysefahrt wurde angepasst. Bitte bestätigen Sie kurz die neue Abholzeit, damit wir Ihren Serientermin fest einplanen können.\n\n` +
         `Vielen Dank & freundliche Grüße\n${FIRMA}`,
-      erklaerung: "WhatsApp-Entwurf zur Bestätigung eines geänderten Serientermins – sichert planbaren Umsatz und vermeidet Leerfahrten.",
+      erklaerung:
+        "WhatsApp-Entwurf zur Bestätigung eines geänderten Serientermins – sichert planbaren Umsatz und vermeidet Leerfahrten.",
       grund: `${p.name} ist wiederkehrender Patient (${p.hinweis}).`,
       quelldaten: [
         { label: "Patient", wert: p.name },

@@ -152,9 +152,7 @@ function FahrzeugePage() {
 
   function handleSubmit(values: FahrzeugFormValues) {
     if (editTarget) {
-      setFahrzeuge((prev) =>
-        prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)),
-      );
+      setFahrzeuge((prev) => prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)));
       toast.success("Fahrzeug aktualisiert");
     } else {
       const id = nextFahrzeugId();
@@ -172,10 +170,30 @@ function FahrzeugePage() {
   ];
 
   const summaryCards = [
-    { label: "Fahrzeuge gesamt", value: String(stats.gesamt), icon: Truck, tone: "bg-primary/10 text-primary" },
-    { label: "Frei", value: String(stats.frei), icon: CheckCircle2, tone: "bg-success/15 text-success" },
-    { label: "Unterwegs", value: String(stats.unterwegs), icon: Truck, tone: "bg-info/15 text-info" },
-    { label: "Wartungswarnungen", value: String(stats.warnungen), icon: AlertTriangle, tone: "bg-warning/20 text-warning" },
+    {
+      label: "Fahrzeuge gesamt",
+      value: String(stats.gesamt),
+      icon: Truck,
+      tone: "bg-primary/10 text-primary",
+    },
+    {
+      label: "Frei",
+      value: String(stats.frei),
+      icon: CheckCircle2,
+      tone: "bg-success/15 text-success",
+    },
+    {
+      label: "Unterwegs",
+      value: String(stats.unterwegs),
+      icon: Truck,
+      tone: "bg-info/15 text-info",
+    },
+    {
+      label: "Wartungswarnungen",
+      value: String(stats.warnungen),
+      icon: AlertTriangle,
+      tone: "bg-warning/20 text-warning",
+    },
   ];
 
   return (
@@ -199,7 +217,12 @@ function FahrzeugePage() {
         {summaryCards.map((s) => (
           <Card key={s.label} className="border-border/70 p-4">
             <div className="flex items-center gap-3">
-              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", s.tone)}>
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                  s.tone,
+                )}
+              >
                 <s.icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -264,7 +287,10 @@ function FahrzeugePage() {
                       </div>
                       <ul className="space-y-0.5">
                         {e.gruende.map((g) => (
-                          <li key={g} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <li
+                            key={g}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                          >
                             <CheckCircle2 className="h-3 w-3 text-success" />
                             {g}
                           </li>
@@ -296,7 +322,9 @@ function FahrzeugePage() {
               )}
             >
               {chip.label}
-              <span className={cn("rounded-full px-1.5 text-xs", active ? "bg-white/20" : "bg-muted")}>
+              <span
+                className={cn("rounded-full px-1.5 text-xs", active ? "bg-white/20" : "bg-muted")}
+              >
                 {counts[chip.value]}
               </span>
             </button>
@@ -352,7 +380,9 @@ function FahrzeugePage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate font-semibold leading-tight">{f.kennzeichen}</p>
-                      {warn.hatWarnung && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />}
+                      {warn.hatWarnung && (
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
+                      )}
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       {f.marke} {f.modell} · {f.fahrer ?? "Kein Fahrer"}
@@ -369,7 +399,9 @@ function FahrzeugePage() {
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Fuel className="h-3 w-3" /> Tank
                     </span>
-                    <span className={cn("font-medium tabular-nums", warn.tank && "text-destructive")}>
+                    <span
+                      className={cn("font-medium tabular-nums", warn.tank && "text-destructive")}
+                    >
                       {Math.round(f.tankstand)}% · {f.reichweite} km
                     </span>
                   </div>

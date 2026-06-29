@@ -53,7 +53,8 @@ function AssistantLayout() {
           <div className="min-w-0">
             <p className="font-semibold leading-tight">GHASI AI</p>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-success" /> Online · Digitaler Geschäftsführer & Assistent
+              <span className="h-2 w-2 rounded-full bg-success" /> Online · Digitaler
+              Geschäftsführer & Assistent
             </p>
           </div>
         </div>

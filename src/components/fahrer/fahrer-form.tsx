@@ -63,12 +63,7 @@ function emptyValues(): FahrerFormValues {
   };
 }
 
-export function FahrerForm({
-  initial,
-  onSubmit,
-  onCancel,
-  submitLabel,
-}: FahrerFormProps) {
+export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerFormProps) {
   const [values, setValues] = useState<FahrerFormValues>(emptyValues);
   const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(""));
 
@@ -86,7 +81,6 @@ export function FahrerForm({
   function set<K extends keyof FahrerFormValues>(key: K, value: FahrerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
-
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,8 +133,6 @@ export function FahrerForm({
         }}
       />
 
-
-
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="fs">Führerschein bis</Label>
@@ -148,7 +140,9 @@ export function FahrerForm({
             id="fs"
             type="date"
             value={values.fuehrerschein.gueltigBis}
-            onChange={(e) => set("fuehrerschein", { ...values.fuehrerschein, gueltigBis: e.target.value })}
+            onChange={(e) =>
+              set("fuehrerschein", { ...values.fuehrerschein, gueltigBis: e.target.value })
+            }
           />
         </div>
         <div className="space-y-1.5">
@@ -166,7 +160,9 @@ export function FahrerForm({
             id="eh"
             type="date"
             value={values.ersteHilfe.gueltigBis}
-            onChange={(e) => set("ersteHilfe", { ...values.ersteHilfe, gueltigBis: e.target.value })}
+            onChange={(e) =>
+              set("ersteHilfe", { ...values.ersteHilfe, gueltigBis: e.target.value })
+            }
           />
         </div>
       </div>
@@ -204,10 +200,7 @@ export function FahrerForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Live-Status</Label>
-          <Select
-            value={values.status}
-            onValueChange={(v) => set("status", v as FahrerStatus)}
-          >
+          <Select value={values.status} onValueChange={(v) => set("status", v as FahrerStatus)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

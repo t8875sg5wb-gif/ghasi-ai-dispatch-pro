@@ -143,7 +143,6 @@ function DispatchCenter() {
     [persist],
   );
 
-
   const zuweisen = useCallback(
     (id: string, fahrerName: string) => {
       const t = transporte.find((x) => x.id === id);
@@ -344,7 +343,6 @@ function DispatchCenter() {
 
       {/* Dringende, nicht zugewiesene Aufträge */}
       <UnassignedAlerts auftraege={orders ?? []} />
-
 
       {/* Resource + insight row */}
       <div className="grid gap-4 lg:grid-cols-3">

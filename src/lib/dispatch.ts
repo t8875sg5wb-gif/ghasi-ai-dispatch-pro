@@ -35,11 +35,7 @@ import {
   fahrzeugPasstZuMobilitaet,
   verordnungFehlt,
 } from "@/lib/auftraege";
-import {
-  type Fahrer,
-  FAHRER_STATUS_META,
-  bewerteFahrer,
-} from "@/lib/fahrer";
+import { type Fahrer, FAHRER_STATUS_META, bewerteFahrer } from "@/lib/fahrer";
 import {
   type Fahrzeug,
   FAHRZEUG_STATUS_META,
@@ -255,10 +251,9 @@ const STATUS_MAP: Record<Auftrag["status"], LiveStatus> = {
   storniert: "storniert",
 };
 
-function abgeleiteteFelder(a: Auftrag): Pick<
-  DispatchTransport,
-  "rollstuhl" | "liegend" | "istNotfall"
-> {
+function abgeleiteteFelder(
+  a: Auftrag,
+): Pick<DispatchTransport, "rollstuhl" | "liegend" | "istNotfall"> {
   const liegend = a.transportart === "Liegendtransport" || a.transportart === "Notfall";
   const rollstuhl = a.transportart === "Rollstuhl";
   return { liegend, rollstuhl, istNotfall: a.transportart === "Notfall" };
@@ -329,7 +324,6 @@ export function generateDispatchTransporte(): DispatchTransport[] {
   return INITIAL_AUFTRAEGE.map((a, idx) => auftragZuTransport(a, idx));
 }
 
-
 /** Reverse map: fine-grained LiveStatus → coarse persisted Auftrag status. */
 const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
   geplant: "neu",
@@ -349,9 +343,7 @@ const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
  * Translate an optimistic DispatchTransport patch into a persisted order write
  * payload, so every Dispatch-Center action is stored in the database.
  */
-export function dispatchPatchToWrite(
-  patch: Partial<DispatchTransport>,
-): Partial<OrderWrite> {
+export function dispatchPatchToWrite(patch: Partial<DispatchTransport>): Partial<OrderWrite> {
   const w: Partial<OrderWrite> = {};
   if (patch.fahrer !== undefined) w.fahrer = patch.fahrer;
   if (patch.fahrzeug !== undefined) w.fahrzeug = patch.fahrzeug;
@@ -629,7 +621,9 @@ export function erkenneKonflikte(
     }
   }
 
-  return konflikte.sort((a, b) => (a.schwere === b.schwere ? 0 : a.schwere === "kritisch" ? -1 : 1));
+  return konflikte.sort((a, b) =>
+    a.schwere === b.schwere ? 0 : a.schwere === "kritisch" ? -1 : 1,
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -685,7 +679,9 @@ export function berechneKpis(
   const freieFahrer = fahrer.filter((f) => FAHRER_STATUS_META[f.status].einsetzbar).length;
   const freieFahrzeuge = fahrzeuge.filter((f) => FAHRZEUG_STATUS_META[f.status].einsetzbar).length;
   const fahrzeugAuslastung = fahrzeuge.length
-    ? Math.round((fahrzeuge.filter((f) => f.status === "unterwegs").length / fahrzeuge.length) * 100)
+    ? Math.round(
+        (fahrzeuge.filter((f) => f.status === "unterwegs").length / fahrzeuge.length) * 100,
+      )
     : 0;
   const fahrerAuslastung = fahrer.length
     ? Math.round((fahrer.filter((f) => f.status === "unterwegs").length / fahrer.length) * 100)

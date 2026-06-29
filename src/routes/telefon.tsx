@@ -57,7 +57,10 @@ export const Route = createFileRoute("/telefon")({
   head: () => ({
     meta: [
       { title: "Telefon – GHASI AI" },
-      { name: "description", content: "Anrufannahme, Rückrufliste, Gesprächsnotizen und Anrufstatistik." },
+      {
+        name: "description",
+        content: "Anrufannahme, Rückrufliste, Gesprächsnotizen und Anrufstatistik.",
+      },
     ],
   }),
   component: TelefonSeite,
@@ -129,7 +132,9 @@ function TelefonSeite() {
 
   function auftragAusAnruf(anruf: Anruf) {
     setAnrufe((prev) =>
-      prev.map((a) => (a.id === anruf.id ? { ...a, auftragErstellt: true, status: "erledigt" } : a)),
+      prev.map((a) =>
+        a.id === anruf.id ? { ...a, auftragErstellt: true, status: "erledigt" } : a,
+      ),
     );
     logActivity({
       bereich: "Telefon",
@@ -169,7 +174,12 @@ function TelefonSeite() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Kpi label="Anrufe gesamt" value={String(stats.gesamt)} icon={PhoneCall} />
         <Kpi label="Eingehend" value={String(stats.eingehend)} icon={Phone} />
-        <Kpi label="Offen / Rückruf" value={String(stats.offen)} icon={ClipboardList} tone="warning" />
+        <Kpi
+          label="Offen / Rückruf"
+          value={String(stats.offen)}
+          icon={ClipboardList}
+          tone="warning"
+        />
         <Kpi label="Ø Dauer" value={formatDauer(stats.schnittDauer)} icon={Clock} />
       </div>
 
@@ -203,7 +213,10 @@ function TelefonSeite() {
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Select value={richtungFilter} onValueChange={(v) => setRichtungFilter(v as RichtungFilter)}>
+              <Select
+                value={richtungFilter}
+                onValueChange={(v) => setRichtungFilter(v as RichtungFilter)}
+              >
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
@@ -216,7 +229,10 @@ function TelefonSeite() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+              >
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
@@ -298,12 +314,16 @@ function buildHinweise(anrufe: Anruf[]): string[] {
   const out: string[] = [];
   const rueckruf = anrufe.filter((a) => a.status === "rueckruf");
   if (rueckruf.length > 0)
-    out.push(`${rueckruf.length} Rückruf(e) offen – z. B. ${rueckruf[0].name ?? rueckruf[0].nummer}.`);
+    out.push(
+      `${rueckruf.length} Rückruf(e) offen – z. B. ${rueckruf[0].name ?? rueckruf[0].nummer}.`,
+    );
   const vm = anrufe.filter((a) => a.richtung === "voicemail" && a.status !== "erledigt");
   if (vm.length > 0) out.push(`${vm.length} unbearbeitete Voicemail(s) abhören.`);
   const beschwerden = anrufe.filter((a) => a.kategorie === "Beschwerde" && a.status !== "erledigt");
   if (beschwerden.length > 0)
-    out.push(`${beschwerden.length} offene Beschwerde(n) – zeitnah klären, um Kundenbindung zu sichern.`);
+    out.push(
+      `${beschwerden.length} offene Beschwerde(n) – zeitnah klären, um Kundenbindung zu sichern.`,
+    );
   if (out.length === 0) out.push("Keine offenen Rückrufe oder Voicemails – alles bearbeitet.");
   return out.slice(0, 4);
 }
@@ -422,9 +442,7 @@ function AnrufFelder({
   const [name, setName] = useState(target?.name ?? "");
   const [kategorie, setKategorie] = useState<AnrufKategorie>(target?.kategorie ?? "Auftrag");
   const [status, setStatus] = useState<AnrufStatus>(target?.status ?? "offen");
-  const [dauerMin, setDauerMin] = useState(
-    target ? String(Math.round(target.dauerSek / 60)) : "0",
-  );
+  const [dauerMin, setDauerMin] = useState(target ? String(Math.round(target.dauerSek / 60)) : "0");
   const [notiz, setNotiz] = useState(target?.notiz ?? "");
 
   function submit() {
@@ -545,15 +563,7 @@ function Kpi({
   );
 }
 
-function Zeile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Phone;
-  label: string;
-  value: string;
-}) {
+function Zeile({ icon: Icon, label, value }: { icon: typeof Phone; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">

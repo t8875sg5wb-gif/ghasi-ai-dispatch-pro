@@ -51,8 +51,7 @@ export function useUpdateDriver() {
   const qc = useQueryClient();
   const fn = useServerFn(updateDriver);
   return useMutation({
-    mutationFn: (input: { id: string; values: Partial<DriverWrite> }) =>
-      fn({ data: input }),
+    mutationFn: (input: { id: string; values: Partial<DriverWrite> }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: DRIVERS_QUERY_KEY }),
   });
 }

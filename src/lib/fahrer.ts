@@ -8,13 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type FahrerStatus =
-  | "verfuegbar"
-  | "unterwegs"
-  | "pause"
-  | "urlaub"
-  | "krank"
-  | "feierabend";
+export type FahrerStatus = "verfuegbar" | "unterwegs" | "pause" | "urlaub" | "krank" | "feierabend";
 
 export type Vertragsart = "Vollzeit" | "Teilzeit" | "Minijob" | "Aushilfe";
 
@@ -129,15 +123,13 @@ export const FAHRER_STATI: FahrerStatus[] = [
   "feierabend",
 ];
 
-export const VERTRAGSARTEN: Vertragsart[] = [
-  "Vollzeit",
-  "Teilzeit",
-  "Minijob",
-  "Aushilfe",
-];
+export const VERTRAGSARTEN: Vertragsart[] = ["Vollzeit", "Teilzeit", "Minijob", "Aushilfe"];
 
 export function initials(name: string): string {
-  const parts = name.replace(/[^\p{L}\s.-]/gu, "").split(/[\s.-]+/).filter(Boolean);
+  const parts = name
+    .replace(/[^\p{L}\s.-]/gu, "")
+    .split(/[\s.-]+/)
+    .filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();

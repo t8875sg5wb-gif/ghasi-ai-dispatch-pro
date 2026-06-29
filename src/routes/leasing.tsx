@@ -54,7 +54,10 @@ export const Route = createFileRoute("/leasing")({
   head: () => ({
     meta: [
       { title: "Leasing – GHASI AI" },
-      { name: "description", content: "Leasing- und Finanzierungsverträge, Raten, Laufzeiten und Kilometer." },
+      {
+        name: "description",
+        content: "Leasing- und Finanzierungsverträge, Raten, Laufzeiten und Kilometer.",
+      },
     ],
   }),
   component: LeasingSeite,
@@ -239,26 +242,24 @@ function buildHinweise(items: Leasingvertrag[]): string[] {
   for (const l of items) {
     const tage = tageBisEnde(l.ende);
     if (l.status !== "beendet" && tage <= 120 && tage >= 0)
-      out.push(`Vertrag ${l.vertragsnummer} (${l.fahrzeug}) endet in ${tage} Tagen – Anschluss planen.`);
+      out.push(
+        `Vertrag ${l.vertragsnummer} (${l.fahrzeug}) endet in ${tage} Tagen – Anschluss planen.`,
+      );
     if (kmAuslastung(l) >= 90 && l.status !== "beendet")
-      out.push(`${l.fahrzeug}: ${kmAuslastung(l)} % der Inklusiv-Kilometer erreicht – Mehrkilometer drohen.`);
+      out.push(
+        `${l.fahrzeug}: ${kmAuslastung(l)} % der Inklusiv-Kilometer erreicht – Mehrkilometer drohen.`,
+      );
   }
-  const ohne = INITIAL_FAHRZEUGE.filter(
-    (f) => !items.some((l) => l.fahrzeug === f.kennzeichen),
-  );
+  const ohne = INITIAL_FAHRZEUGE.filter((f) => !items.some((l) => l.fahrzeug === f.kennzeichen));
   if (ohne.length > 0)
-    out.push(`${ohne.length} Fahrzeug(e) ohne Leasingvertrag (evtl. Eigentum): ${ohne.map((f) => f.kennzeichen).join(", ")}.`);
+    out.push(
+      `${ohne.length} Fahrzeug(e) ohne Leasingvertrag (evtl. Eigentum): ${ohne.map((f) => f.kennzeichen).join(", ")}.`,
+    );
   if (out.length === 0) out.push("Alle Verträge laufen planmäßig, keine kritischen Laufzeiten.");
   return out.slice(0, 4);
 }
 
-function LeasingDetail({
-  vertrag: l,
-  onEdit,
-}: {
-  vertrag: Leasingvertrag;
-  onEdit: () => void;
-}) {
+function LeasingDetail({ vertrag: l, onEdit }: { vertrag: Leasingvertrag; onEdit: () => void }) {
   const status = abgeleiteterLeasingStatus(l);
   const meta = LEASING_STATUS_META[status];
   const fahrzeug = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === l.fahrzeug);
@@ -453,7 +454,11 @@ function LeasingFelder({
           <Input type="number" value={laufzeit} onChange={(e) => setLaufzeit(e.target.value)} />
         </Feld>
         <Feld label="Inklusiv-km">
-          <Input type="number" value={kmInklusive} onChange={(e) => setKmInklusive(e.target.value)} />
+          <Input
+            type="number"
+            value={kmInklusive}
+            onChange={(e) => setKmInklusive(e.target.value)}
+          />
         </Feld>
         <Feld label="Aktueller km-Stand">
           <Input type="number" value={kmAktuell} onChange={(e) => setKmAktuell(e.target.value)} />
@@ -478,15 +483,7 @@ function LeasingFelder({
   );
 }
 
-function Kpi({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: typeof Euro;
-}) {
+function Kpi({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Euro }) {
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
@@ -502,15 +499,7 @@ function Kpi({
   );
 }
 
-function Zeile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Euro;
-  label: string;
-  value: string;
-}) {
+function Zeile({ icon: Icon, label, value }: { icon: typeof Euro; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">

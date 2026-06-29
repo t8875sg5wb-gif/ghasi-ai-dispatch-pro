@@ -16,7 +16,12 @@ import { PageHero } from "@/components/enterprise/page-hero";
 import { ExecutiveAnalysis } from "@/components/ai/executive-analysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { computeInsights, type Insight, type InsightKategorie, type InsightWirkung } from "@/lib/ai-brain";
+import {
+  computeInsights,
+  type Insight,
+  type InsightKategorie,
+  type InsightWirkung,
+} from "@/lib/ai-brain";
 
 export const Route = createFileRoute("/insights")({
   head: () => ({
@@ -54,12 +59,19 @@ function InsightCard({ insight }: { insight: Insight }) {
     <Card className="group flex h-full flex-col border-border/70 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card">
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-3">
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${meta.tone}`}>
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${meta.tone}`}
+          >
             <meta.icon className="h-5 w-5" />
           </span>
           <div className="flex items-center gap-1.5">
-            <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>
-            <Badge variant="outline" className={`text-[10px] capitalize ${WIRKUNG_BADGE[insight.wirkung]}`}>
+            <Badge variant="outline" className="text-[10px]">
+              {meta.label}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`text-[10px] capitalize ${WIRKUNG_BADGE[insight.wirkung]}`}
+            >
               {insight.wirkung}
             </Badge>
           </div>

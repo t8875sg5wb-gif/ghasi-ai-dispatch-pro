@@ -39,11 +39,7 @@ import {
   EUR,
   type RechnungStatus,
 } from "@/lib/finance";
-import {
-  useInvoices,
-  useSeedInvoices,
-  useGenerateBillingDrafts,
-} from "@/lib/invoices-store";
+import { useInvoices, useSeedInvoices, useGenerateBillingDrafts } from "@/lib/invoices-store";
 import { useOrders } from "@/lib/orders-store";
 
 export const Route = createFileRoute("/rechnungen")({
@@ -101,9 +97,7 @@ function RechnungenPage() {
       {isError && (
         <Card className="border-destructive/40 bg-destructive/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <p className="text-sm text-destructive">
-              Rechnungen konnten nicht geladen werden.
-            </p>
+            <p className="text-sm text-destructive">Rechnungen konnten nicht geladen werden.</p>
             <Button size="sm" variant="outline" onClick={() => refetch()}>
               Erneut versuchen
             </Button>
@@ -111,16 +105,12 @@ function RechnungenPage() {
         </Card>
       )}
 
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Rechnungen werden geladen …</p>
-      )}
+      {isLoading && <p className="text-sm text-muted-foreground">Rechnungen werden geladen …</p>}
 
       {istLeer && (
         <Card className="border-border/70 shadow-card">
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              Noch keine Rechnungen in der Datenbank.
-            </p>
+            <p className="text-sm text-muted-foreground">Noch keine Rechnungen in der Datenbank.</p>
             <div className="flex flex-wrap justify-center gap-2">
               <Button
                 size="sm"
@@ -130,18 +120,13 @@ function RechnungenPage() {
               >
                 Abrechnungs-Entwürfe erstellen
               </Button>
-              <Button
-                size="sm"
-                disabled={seedMut.isPending}
-                onClick={() => seedMut.mutate()}
-              >
+              <Button size="sm" disabled={seedMut.isPending} onClick={() => seedMut.mutate()}>
                 Beispieldaten laden
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
-
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard

@@ -21,7 +21,14 @@ const toneMap: Record<NonNullable<StatCardProps["tone"]>, string> = {
   info: "bg-info/15 text-info",
 };
 
-export function StatCard({ label, value, icon: Icon, trend, tone = "primary", hint }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  icon: Icon,
+  trend,
+  tone = "primary",
+  hint,
+}: StatCardProps) {
   return (
     <Card className="group relative overflow-hidden border-border/70 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card">
       <div className="flex items-start justify-between gap-3">
@@ -29,7 +36,12 @@ export function StatCard({ label, value, icon: Icon, trend, tone = "primary", hi
           <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
           <p className="mt-1.5 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
         </div>
-        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", toneMap[tone])}>
+        <div
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
+            toneMap[tone],
+          )}
+        >
           <Icon className="h-5 w-5" />
         </div>
       </div>

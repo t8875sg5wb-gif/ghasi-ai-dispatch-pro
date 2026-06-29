@@ -2,11 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -71,7 +67,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   useGlobalSearchHotkey(setSearchOpen);
   const orders = useHydrateStores();
   useOrderNotificationSync(orders.data);
-
 
   const current =
     allNavItems.find((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to))) ??

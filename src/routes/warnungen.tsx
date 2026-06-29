@@ -6,12 +6,7 @@ import { PageHero } from "@/components/enterprise/page-hero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  computeAlarme,
-  ALARM_PRIO_META,
-  type Alarm,
-  type AlarmPrioritaet,
-} from "@/lib/ai-brain";
+import { computeAlarme, ALARM_PRIO_META, type Alarm, type AlarmPrioritaet } from "@/lib/ai-brain";
 
 export const Route = createFileRoute("/warnungen")({
   head: () => ({
@@ -63,7 +58,9 @@ function AlertCenter() {
               onClick={() => setFilter(active ? "alle" : p)}
               className={cn(
                 "rounded-2xl border p-5 text-left transition-all hover:-translate-y-0.5 hover:shadow-card",
-                active ? "border-primary bg-primary/5 shadow-card" : "border-border/70 bg-card shadow-sm",
+                active
+                  ? "border-primary bg-primary/5 shadow-card"
+                  : "border-border/70 bg-card shadow-sm",
               )}
             >
               <div className="flex items-center gap-2">
@@ -82,7 +79,10 @@ function AlertCenter() {
           <span className="text-muted-foreground">({gefiltert.length})</span>
         </p>
         {filter !== "alle" && (
-          <button onClick={() => setFilter("alle")} className="text-sm text-primary hover:underline">
+          <button
+            onClick={() => setFilter("alle")}
+            className="text-sm text-primary hover:underline"
+          >
             Filter zurücksetzen
           </button>
         )}
@@ -95,7 +95,12 @@ function AlertCenter() {
             <Link key={a.id} to={a.to} className="group">
               <Card className="h-full border-border/70 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card">
                 <CardContent className="flex items-start gap-3 p-4">
-                  <span className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", meta.ring)}>
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                      meta.ring,
+                    )}
+                  >
                     <ShieldAlert className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -104,7 +109,9 @@ function AlertCenter() {
                       <Badge variant="outline" className={cn("text-[10px]", meta.badge)}>
                         {a.prioritaet}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">{a.bereich}</Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        {a.bereich}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">{a.text}</p>
                   </div>

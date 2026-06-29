@@ -41,7 +41,11 @@ export async function firecrawlSearch(query: string, limit = 5): Promise<WebSear
       body: JSON.stringify({ query, limit }),
     });
     if (!res.ok) {
-      return { verbunden: true, treffer: [], fehler: `Websuche fehlgeschlagen (HTTP ${res.status}).` };
+      return {
+        verbunden: true,
+        treffer: [],
+        fehler: `Websuche fehlgeschlagen (HTTP ${res.status}).`,
+      };
     }
     const json = (await res.json()) as {
       data?: { web?: unknown[] } | unknown[];
@@ -54,7 +58,11 @@ export async function firecrawlSearch(query: string, limit = 5): Promise<WebSear
     }));
     return { verbunden: true, treffer };
   } catch (e) {
-    return { verbunden: true, treffer: [], fehler: e instanceof Error ? e.message : "Unbekannter Fehler." };
+    return {
+      verbunden: true,
+      treffer: [],
+      fehler: e instanceof Error ? e.message : "Unbekannter Fehler.",
+    };
   }
 }
 
@@ -71,7 +79,11 @@ export async function firecrawlScrape(url: string): Promise<WebScrapeErgebnis> {
       body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
     });
     if (!res.ok) {
-      return { verbunden: true, url, fehler: `Seite konnte nicht gelesen werden (HTTP ${res.status}).` };
+      return {
+        verbunden: true,
+        url,
+        fehler: `Seite konnte nicht gelesen werden (HTTP ${res.status}).`,
+      };
     }
     const json = (await res.json()) as {
       data?: { markdown?: string; metadata?: { title?: string } };

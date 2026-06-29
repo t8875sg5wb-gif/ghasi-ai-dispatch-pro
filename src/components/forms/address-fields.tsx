@@ -15,13 +15,7 @@ interface AddressFieldsProps {
   required?: boolean;
 }
 
-export function AddressFields({
-  value,
-  onChange,
-  idPrefix,
-  label,
-  required,
-}: AddressFieldsProps) {
+export function AddressFields({ value, onChange, idPrefix, label, required }: AddressFieldsProps) {
   function set<K extends keyof AdresseStruktur>(key: K, v: string) {
     onChange({ ...value, [key]: v });
   }

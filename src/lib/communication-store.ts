@@ -64,9 +64,7 @@ export function ladeEntwuerfe() {
 
 export function markiereGelesen(id: string, gelesen = true) {
   setState({
-    konversationen: state.konversationen.map((k) =>
-      k.id === id ? { ...k, gelesen } : k,
-    ),
+    konversationen: state.konversationen.map((k) => (k.id === id ? { ...k, gelesen } : k)),
   });
 }
 

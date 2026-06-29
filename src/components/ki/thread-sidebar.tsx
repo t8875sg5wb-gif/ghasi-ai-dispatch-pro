@@ -46,7 +46,11 @@ export function ThreadSidebar({
     <div className="flex h-full flex-col">
       <div className="p-3">
         <Button onClick={newThread} disabled={create.isPending} className="w-full rounded-xl">
-          {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {create.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
           Neue Unterhaltung
         </Button>
       </div>
@@ -108,7 +112,10 @@ export function ThreadSidebar({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
               Löschen
             </AlertDialogAction>
           </AlertDialogFooter>

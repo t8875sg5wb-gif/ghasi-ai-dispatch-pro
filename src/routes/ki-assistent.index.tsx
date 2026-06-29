@@ -51,8 +51,8 @@ function AssistantStart() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Guten Tag, ich bin GHASI AI</h1>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-            Ihr digitaler Geschäftsführer und persönlicher KI-Assistent. Fragen Sie mich alles –
-            zum Betrieb oder ganz alltäglich. Wichtige Aktionen führe ich nie eigenmächtig aus.
+            Ihr digitaler Geschäftsführer und persönlicher KI-Assistent. Fragen Sie mich alles – zum
+            Betrieb oder ganz alltäglich. Wichtige Aktionen führe ich nie eigenmächtig aus.
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">

@@ -40,8 +40,9 @@ function markerHtml(v: FleetVehicle, selected: boolean): string {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
   );
 }
 
@@ -237,11 +238,7 @@ export function FleetMap({
         .bindPopup(`<strong>Zielort</strong><br/>${escapeHtml(a.transport.zielort)}`)
         .addTo(layer);
 
-      const bounds = Lmod.latLngBounds([
-        toLatLng(v.gps),
-        toLatLng(a.pickup),
-        toLatLng(a.ziel),
-      ]);
+      const bounds = Lmod.latLngBounds([toLatLng(v.gps), toLatLng(a.pickup), toLatLng(a.ziel)]);
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
     } else {
       map.setView(toLatLng(v.gps), 14, { animate: true });
@@ -271,8 +268,20 @@ export function FleetMap({
         aria-label="Vollbild"
         className="absolute right-3 top-3 z-[500] flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-background/90 text-foreground shadow-card backdrop-blur transition-colors hover:bg-muted"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+          <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+          <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
         </svg>
       </button>
     </div>

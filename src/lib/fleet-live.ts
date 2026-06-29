@@ -6,11 +6,7 @@
 // automatische Alerts. Deterministisch (SSR/Hydration-stabil) und
 // vollständig client-safe. Bestehende Module bleiben unangetastet.
 // ============================================================
-import {
-  type Fahrzeug,
-  type FahrzeugStatus,
-  INITIAL_FAHRZEUGE,
-} from "@/lib/fahrzeuge";
+import { type Fahrzeug, type FahrzeugStatus, INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import {
   type DispatchTransport,
@@ -53,7 +49,7 @@ export const KARTEN_ANBIETER: KartenAnbieter[] = [
     id: "osm",
     label: "Straße",
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; OpenStreetMap',
+    attribution: "&copy; OpenStreetMap",
     maxZoom: 19,
   },
   {
@@ -187,7 +183,7 @@ function polyline(a: LatLng, b: LatLng, segmente = 6): LatLng[] {
   for (let i = 0; i <= segmente; i += 1) {
     const t = i / segmente;
     // leichte Auslenkung, damit Routen nicht schnurgerade wirken
-    const jitter = i === 0 || i === segmente ? 0 : ((((seed >> i) % 100) / 100) - 0.5) * 0.004;
+    const jitter = i === 0 || i === segmente ? 0 : (((seed >> i) % 100) / 100 - 0.5) * 0.004;
     punkte.push({
       lat: Number((a.lat + (b.lat - a.lat) * t + jitter).toFixed(5)),
       lng: Number((a.lng + (b.lng - a.lng) * t - jitter).toFixed(5)),
@@ -402,8 +398,9 @@ export function buildFleet(): FleetVehicle[] {
             t.liveStatus !== "abgeschlossen" &&
             t.liveStatus !== "storniert",
         )
-        .sort((a, b) => LIVE_STATUS_META[b.liveStatus].stufe - LIVE_STATUS_META[a.liveStatus].stufe)[0] ??
-      null;
+        .sort(
+          (a, b) => LIVE_STATUS_META[b.liveStatus].stufe - LIVE_STATUS_META[a.liveStatus].stufe,
+        )[0] ?? null;
 
     let assignment: FleetAssignment | null = null;
     let routeGeplant: LatLng[] = [];
@@ -447,7 +444,7 @@ export function buildFleet(): FleetVehicle[] {
 
     const farbe = farbeVon(v, assignment);
     const faehrt = farbe === "fahrt" || farbe === "notfall";
-    const gpsVerloren = !offline && (h % 17) === 0; // seltenes, deterministisches Signal-Aussetzen
+    const gpsVerloren = !offline && h % 17 === 0; // seltenes, deterministisches Signal-Aussetzen
     const geschwindigkeit = gpsVerloren ? 0 : faehrt ? 22 + (h % 38) : 0;
     const fahrerObj = INITIAL_FAHRER.find((f) => f.name === v.fahrer) ?? null;
 
@@ -546,7 +543,9 @@ export function buildGpsSnapshot(): string {
   lines.push(`\n## Aktive Alerts (${alerts.length})`);
   if (alerts.length === 0) lines.push(`- Keine.`);
   for (const al of alerts) {
-    lines.push(`- [${ALERT_SCHWERE_META[al.schwere].label}] ${al.titel} (${al.kennzeichen}): ${al.details}`);
+    lines.push(
+      `- [${ALERT_SCHWERE_META[al.schwere].label}] ${al.titel} (${al.kennzeichen}): ${al.details}`,
+    );
   }
 
   return lines.join("\n");

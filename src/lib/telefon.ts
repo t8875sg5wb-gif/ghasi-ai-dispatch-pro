@@ -12,12 +12,7 @@ export type AnrufRichtung = "eingehend" | "ausgehend" | "verpasst" | "voicemail"
 
 export type AnrufStatus = "offen" | "rueckruf" | "erledigt";
 
-export type AnrufKategorie =
-  | "Auftrag"
-  | "Rückfrage"
-  | "Terminänderung"
-  | "Beschwerde"
-  | "Sonstige";
+export type AnrufKategorie = "Auftrag" | "Rückfrage" | "Terminänderung" | "Beschwerde" | "Sonstige";
 
 export interface Anruf {
   id: string;
@@ -47,7 +42,10 @@ export const ANRUF_RICHTUNG_META: Record<
 
 export const ANRUF_STATUS_META: Record<AnrufStatus, { label: string; badge: string }> = {
   offen: { label: "Offen", badge: "bg-warning/15 text-warning border-warning/30" },
-  rueckruf: { label: "Rückruf nötig", badge: "bg-destructive/15 text-destructive border-destructive/30" },
+  rueckruf: {
+    label: "Rückruf nötig",
+    badge: "bg-destructive/15 text-destructive border-destructive/30",
+  },
   erledigt: { label: "Erledigt", badge: "bg-success/15 text-success border-success/30" },
 };
 
@@ -64,12 +62,73 @@ function iso(minutenZurueck: number): string {
 }
 
 export const INITIAL_ANRUFE: Anruf[] = [
-  { id: "an-1", richtung: "eingehend", nummer: "030 9100100", name: "Dialysezentrum Nord", zeitpunkt: iso(18), dauerSek: 214, kategorie: "Auftrag", status: "erledigt", notiz: "Sammeltour Schicht 11:30 bestätigt.", auftragErstellt: true },
-  { id: "an-2", richtung: "verpasst", nummer: "030 1234503", name: "Pflegeheim Sonnenhof", zeitpunkt: iso(42), dauerSek: 0, kategorie: "Terminänderung", status: "rueckruf", notiz: "Rückruf wegen verschobenem Arzttermin." },
-  { id: "an-3", richtung: "ausgehend", nummer: "0151 22233344", name: "Margarete Hoffmann", zeitpunkt: iso(75), dauerSek: 96, kategorie: "Rückfrage", status: "erledigt", notiz: "Abholzeit für morgen bestätigt." },
-  { id: "an-4", richtung: "voicemail", nummer: "030 9000200", name: "Augenklinik Mitte", zeitpunkt: iso(130), dauerSek: 38, kategorie: "Auftrag", status: "offen", notiz: "VM: Rücktransport nach ambulanter OP gewünscht." },
-  { id: "an-5", richtung: "eingehend", nummer: "0170 99887766", name: undefined, zeitpunkt: iso(190), dauerSek: 152, kategorie: "Beschwerde", status: "offen", notiz: "Wartezeit beim letzten Transport zu lang – klären." },
-  { id: "an-6", richtung: "eingehend", nummer: "030 1234500", name: "AOK Nordost", zeitpunkt: iso(240), dauerSek: 305, kategorie: "Rückfrage", status: "erledigt", notiz: "Abrechnungsrückfrage geklärt." },
+  {
+    id: "an-1",
+    richtung: "eingehend",
+    nummer: "030 9100100",
+    name: "Dialysezentrum Nord",
+    zeitpunkt: iso(18),
+    dauerSek: 214,
+    kategorie: "Auftrag",
+    status: "erledigt",
+    notiz: "Sammeltour Schicht 11:30 bestätigt.",
+    auftragErstellt: true,
+  },
+  {
+    id: "an-2",
+    richtung: "verpasst",
+    nummer: "030 1234503",
+    name: "Pflegeheim Sonnenhof",
+    zeitpunkt: iso(42),
+    dauerSek: 0,
+    kategorie: "Terminänderung",
+    status: "rueckruf",
+    notiz: "Rückruf wegen verschobenem Arzttermin.",
+  },
+  {
+    id: "an-3",
+    richtung: "ausgehend",
+    nummer: "0151 22233344",
+    name: "Margarete Hoffmann",
+    zeitpunkt: iso(75),
+    dauerSek: 96,
+    kategorie: "Rückfrage",
+    status: "erledigt",
+    notiz: "Abholzeit für morgen bestätigt.",
+  },
+  {
+    id: "an-4",
+    richtung: "voicemail",
+    nummer: "030 9000200",
+    name: "Augenklinik Mitte",
+    zeitpunkt: iso(130),
+    dauerSek: 38,
+    kategorie: "Auftrag",
+    status: "offen",
+    notiz: "VM: Rücktransport nach ambulanter OP gewünscht.",
+  },
+  {
+    id: "an-5",
+    richtung: "eingehend",
+    nummer: "0170 99887766",
+    name: undefined,
+    zeitpunkt: iso(190),
+    dauerSek: 152,
+    kategorie: "Beschwerde",
+    status: "offen",
+    notiz: "Wartezeit beim letzten Transport zu lang – klären.",
+  },
+  {
+    id: "an-6",
+    richtung: "eingehend",
+    nummer: "030 1234500",
+    name: "AOK Nordost",
+    zeitpunkt: iso(240),
+    dauerSek: 305,
+    kategorie: "Rückfrage",
+    status: "erledigt",
+    notiz: "Abrechnungsrückfrage geklärt.",
+  },
 ];
 
 export function nextAnrufId(vorhandene: Anruf[]): string {

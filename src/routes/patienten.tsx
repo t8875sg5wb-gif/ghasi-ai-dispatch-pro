@@ -195,9 +195,7 @@ function PatientProfil({ patient }: { patient: Patient }) {
                   <span className="text-muted-foreground">Verordnung:</span>
                   <span className="font-medium">{ver.label}</span>
                 </div>
-                {mismatch && (
-                  <p className="mt-1 text-xs font-medium text-warning">{mismatch}</p>
-                )}
+                {mismatch && <p className="mt-1 text-xs font-medium text-warning">{mismatch}</p>}
               </div>
             );
           })}

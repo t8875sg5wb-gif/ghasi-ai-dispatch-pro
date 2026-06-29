@@ -79,13 +79,7 @@ function SectionCard({
   );
 }
 
-function Row({
-  fahrzeug,
-  right,
-}: {
-  fahrzeug: Fahrzeug;
-  right: React.ReactNode;
-}) {
+function Row({ fahrzeug, right }: { fahrzeug: Fahrzeug; right: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-3 py-2.5">
       <div className="min-w-0">
@@ -111,10 +105,7 @@ function WartungPage() {
     () => [...fahrzeuge].sort((a, b) => (a.naechsteWartung > b.naechsteWartung ? 1 : -1)),
     [fahrzeuge],
   );
-  const reifen = useMemo(
-    () => fahrzeuge.filter((f) => f.reifenstatus !== "gut"),
-    [fahrzeuge],
-  );
+  const reifen = useMemo(() => fahrzeuge.filter((f) => f.reifenstatus !== "gut"), [fahrzeuge]);
   const reparaturen = useMemo(
     () =>
       [...fahrzeuge]
@@ -124,20 +115,37 @@ function WartungPage() {
   );
   const tank = useMemo(() => fahrzeuge.filter((f) => f.tankstand <= 20), [fahrzeuge]);
   const empfehlungen = useMemo(
-    () =>
-      fahrzeuge
-        .map(flottenEmpfehlung)
-        .filter((e) => e.aktion !== "einsetzen"),
+    () => fahrzeuge.map(flottenEmpfehlung).filter((e) => e.aktion !== "einsetzen"),
     [fahrzeuge],
   );
 
   const offeneWarnungen = fahrzeuge.filter((f) => fahrzeugWarnungen(f).hatWarnung).length;
 
   const summary = [
-    { label: "Wartungswarnungen", value: String(offeneWarnungen), icon: AlertTriangle, tone: "bg-warning/20 text-warning" },
-    { label: "Ölwechsel fällig", value: String(oel.length), icon: Droplets, tone: "bg-info/15 text-info" },
-    { label: "Niedriger Tank", value: String(tank.length), icon: Fuel, tone: "bg-destructive/15 text-destructive" },
-    { label: "Reifen prüfen", value: String(reifen.length), icon: Gauge, tone: "bg-primary/10 text-primary" },
+    {
+      label: "Wartungswarnungen",
+      value: String(offeneWarnungen),
+      icon: AlertTriangle,
+      tone: "bg-warning/20 text-warning",
+    },
+    {
+      label: "Ölwechsel fällig",
+      value: String(oel.length),
+      icon: Droplets,
+      tone: "bg-info/15 text-info",
+    },
+    {
+      label: "Niedriger Tank",
+      value: String(tank.length),
+      icon: Fuel,
+      tone: "bg-destructive/15 text-destructive",
+    },
+    {
+      label: "Reifen prüfen",
+      value: String(reifen.length),
+      icon: Gauge,
+      tone: "bg-primary/10 text-primary",
+    },
   ];
 
   return (
@@ -163,7 +171,12 @@ function WartungPage() {
         {summary.map((s) => (
           <Card key={s.label} className="border-border/70 p-4">
             <div className="flex items-center gap-3">
-              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", s.tone)}>
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                  s.tone,
+                )}
+              >
                 <s.icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -214,7 +227,11 @@ function WartungPage() {
 
       {/* Detail sections */}
       <section className="grid gap-4 lg:grid-cols-2">
-        <SectionCard icon={CalendarClock} title="Nächste Wartung" subtitle="Geplante Servicetermine">
+        <SectionCard
+          icon={CalendarClock}
+          title="Nächste Wartung"
+          subtitle="Geplante Servicetermine"
+        >
           {wartung.map((f) => (
             <Row
               key={f.id}
@@ -244,7 +261,9 @@ function WartungPage() {
 
         <SectionCard icon={Droplets} title="Ölwechsel" subtitle="Nach Kilometerstand fällig">
           {oel.length === 0 ? (
-            <p className="px-1 py-2 text-sm text-muted-foreground">Kein Ölwechsel in Kürze fällig.</p>
+            <p className="px-1 py-2 text-sm text-muted-foreground">
+              Kein Ölwechsel in Kürze fällig.
+            </p>
           ) : (
             oel.map((f) => (
               <Row
@@ -308,14 +327,19 @@ function WartungPage() {
 
         <SectionCard icon={Fuel} title="Tankstand" subtitle="Fahrzeuge mit niedrigem Tank">
           {tank.length === 0 ? (
-            <p className="px-1 py-2 text-sm text-muted-foreground">Alle Fahrzeuge ausreichend betankt.</p>
+            <p className="px-1 py-2 text-sm text-muted-foreground">
+              Alle Fahrzeuge ausreichend betankt.
+            </p>
           ) : (
             tank.map((f) => (
               <Row
                 key={f.id}
                 fahrzeug={f}
                 right={
-                  <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive">
+                  <Badge
+                    variant="outline"
+                    className="border-destructive/30 bg-destructive/10 text-destructive"
+                  >
                     {Math.round(f.tankstand)}% · {formatKm(f.reichweite)}
                   </Badge>
                 }

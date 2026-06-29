@@ -97,7 +97,9 @@ function Posteingang() {
               <Sparkles className="h-4 w-4" />
               Aktions-Center
               {offeneEntwuerfe > 0 && (
-                <Badge className="ml-1 border-0 bg-primary text-primary-foreground">{offeneEntwuerfe}</Badge>
+                <Badge className="ml-1 border-0 bg-primary text-primary-foreground">
+                  {offeneEntwuerfe}
+                </Badge>
               )}
             </Button>
           </Link>
@@ -171,7 +173,9 @@ function Posteingang() {
                 onClick={() => setPrio(p)}
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
-                  prio === p ? "border-primary bg-primary/5" : "border-border/70 bg-card hover:bg-muted",
+                  prio === p
+                    ? "border-primary bg-primary/5"
+                    : "border-border/70 bg-card hover:bg-muted",
                 )}
               >
                 {p === "alle" ? "Alle Prioritäten" : PRIORITAET_META[p].label}
@@ -192,11 +196,18 @@ function Posteingang() {
                   onClick={() => oeffnen(k.id)}
                   className={cn(
                     "w-full rounded-2xl border p-3.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-card",
-                    aktivId === k.id ? "border-primary bg-primary/5 shadow-card" : "border-border/70 bg-card shadow-sm",
+                    aktivId === k.id
+                      ? "border-primary bg-primary/5 shadow-card"
+                      : "border-border/70 bg-card shadow-sm",
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <span className={cn("relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", meta.ring)}>
+                    <span
+                      className={cn(
+                        "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                        meta.ring,
+                      )}
+                    >
                       <Icon className="h-4 w-4" />
                       {!k.gelesen && (
                         <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-primary" />
@@ -204,7 +215,12 @@ function Posteingang() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className={cn("truncate text-sm", k.gelesen ? "font-medium" : "font-semibold")}>
+                        <p
+                          className={cn(
+                            "truncate text-sm",
+                            k.gelesen ? "font-medium" : "font-semibold",
+                          )}
+                        >
                           {k.betreff}
                         </p>
                         <span className="shrink-0 text-[10px] text-muted-foreground">
@@ -212,12 +228,21 @@ function Posteingang() {
                         </span>
                       </div>
                       <p className="truncate text-xs text-muted-foreground">{k.partner}</p>
-                      {last && <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{last.text}</p>}
+                      {last && (
+                        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                          {last.text}
+                        </p>
+                      )}
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                         <Badge variant="outline" className={cn("text-[10px]", kanal.badge)}>
                           {kanal.label}
                         </Badge>
-                        <span className={cn("inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px]", prioMeta.badge)}>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px]",
+                            prioMeta.badge,
+                          )}
+                        >
                           <span className={cn("h-1.5 w-1.5 rounded-full", prioMeta.dot)} />
                           {prioMeta.label}
                         </span>
@@ -237,7 +262,9 @@ function Posteingang() {
               <Card className="border-dashed border-border/70 bg-muted/30">
                 <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
                   <MailCheck className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Keine Nachrichten für diesen Filter.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Keine Nachrichten für diesen Filter.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -255,7 +282,8 @@ function Posteingang() {
               </div>
               <p className="text-base font-semibold">Unterhaltung auswählen</p>
               <p className="max-w-xs text-sm text-muted-foreground">
-                Wählen Sie eine Nachricht aus, um den vollständigen Verlauf zu sehen und zu antworten.
+                Wählen Sie eine Nachricht aus, um den vollständigen Verlauf zu sehen und zu
+                antworten.
               </p>
             </div>
           )}
@@ -290,7 +318,9 @@ function CategoryChip({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-        active ? "border-primary bg-primary/5 shadow-sm" : "border-border/70 bg-card hover:bg-muted",
+        active
+          ? "border-primary bg-primary/5 shadow-sm"
+          : "border-border/70 bg-card hover:bg-muted",
       )}
     >
       {label}

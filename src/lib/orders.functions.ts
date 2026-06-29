@@ -4,12 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
-import {
-  rowToAuftrag,
-  writeToRow,
-  type OrderRow,
-  type OrderWrite,
-} from "@/lib/orders-shared";
+import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -73,9 +68,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     );
     if (relevant) {
       const gps =
-        typeof v.lat === "number" && typeof v.lng === "number"
-          ? { lat: v.lat, lng: v.lng }
-          : null;
+        typeof v.lat === "number" && typeof v.lng === "number" ? { lat: v.lat, lng: v.lng } : null;
       await context.supabase.from("activity_log").insert({
         bereich: "auftraege",
         entitaet: auftrag.id,
@@ -96,7 +89,6 @@ export const updateOrder = createServerFn({ method: "POST" })
 
     return auftrag;
   });
-
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

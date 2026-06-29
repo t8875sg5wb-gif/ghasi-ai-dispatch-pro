@@ -49,8 +49,7 @@ export function useUpdateOrder() {
   const qc = useQueryClient();
   const fn = useServerFn(updateOrder);
   return useMutation({
-    mutationFn: (input: { id: string; values: Partial<OrderWrite> }) =>
-      fn({ data: input }),
+    mutationFn: (input: { id: string; values: Partial<OrderWrite> }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 }

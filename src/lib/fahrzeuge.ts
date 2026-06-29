@@ -1,25 +1,10 @@
-import {
-  CheckCircle2,
-  Truck,
-  Wrench,
-  Ban,
-  type LucideIcon,
-} from "lucide-react";
+import { CheckCircle2, Truck, Wrench, Ban, type LucideIcon } from "lucide-react";
 
 import type { Transportart } from "@/lib/auftraege";
 
-export type FahrzeugStatus =
-  | "frei"
-  | "unterwegs"
-  | "werkstatt"
-  | "nicht_verfuegbar";
+export type FahrzeugStatus = "frei" | "unterwegs" | "werkstatt" | "nicht_verfuegbar";
 
-export type Fahrzeugtyp =
-  | "KTW"
-  | "RTW"
-  | "Rollstuhlbus"
-  | "Tragestuhlwagen"
-  | "PKW";
+export type Fahrzeugtyp = "KTW" | "RTW" | "Rollstuhlbus" | "Tragestuhlwagen" | "PKW";
 
 export type Kraftstoffart = "Diesel" | "Benzin" | "Elektro" | "Hybrid";
 
@@ -132,12 +117,7 @@ export const FAHRZEUGTYPEN: Fahrzeugtyp[] = [
   "PKW",
 ];
 
-export const KRAFTSTOFFARTEN: Kraftstoffart[] = [
-  "Diesel",
-  "Benzin",
-  "Elektro",
-  "Hybrid",
-];
+export const KRAFTSTOFFARTEN: Kraftstoffart[] = ["Diesel", "Benzin", "Elektro", "Hybrid"];
 
 export const REIFENSTATI: Reifenstatus[] = ["gut", "mittel", "wechseln"];
 
@@ -373,14 +353,14 @@ export function flottenEmpfehlung(f: Fahrzeug): FlottenEmpfehlung {
   };
 }
 
-export const AKTION_META: Record<
-  EmpfehlungAktion,
-  { label: string; badge: string }
-> = {
+export const AKTION_META: Record<EmpfehlungAktion, { label: string; badge: string }> = {
   einsetzen: { label: "Stärker einsetzen", badge: "border-success/30 bg-success/10 text-success" },
   warten: { label: "Wartung planen", badge: "border-info/30 bg-info/10 text-info" },
   reparieren: { label: "Reparieren", badge: "border-warning/30 bg-warning/10 text-warning" },
-  ersetzen: { label: "Ersetzen prüfen", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+  ersetzen: {
+    label: "Ersetzen prüfen",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+  },
 };
 
 export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
@@ -413,9 +393,7 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
     oelwechselBei: 150000,
     naechsteWartung: "2026-09-12",
     reifenstatus: "gut",
-    reparaturen: [
-      { datum: "2026-02-10", beschreibung: "Bremsen vorne erneuert", kosten: 540 },
-    ],
+    reparaturen: [{ datum: "2026-02-10", beschreibung: "Bremsen vorne erneuert", kosten: 540 }],
     versicherung: "HUK-Coburg",
     versicherungBis: "2027-01-01",
     leasingrate: 690,

@@ -127,20 +127,16 @@ function abrechnungsartFuer(kostentraeger: string): {
 /** Billing-ready completed transports that do not yet have an invoice. */
 export const billingReadyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(
-    async ({
-      context,
-    }): Promise<{ nummer: string; patient: string; betrag: number }[]> => {
-      const [orders, invoices] = await Promise.all([
-        loadOrders(context.supabase),
-        loadInvoices(context.supabase),
-      ]);
-      const berechnet = new Set(invoices.map((r) => r.bezugAuftrag).filter(Boolean));
-      return orders
-        .filter((a) => abrechnungsBereitschaft(a).bereit && !berechnet.has(a.nummer))
-        .map((a) => ({ nummer: a.nummer, patient: a.patient, betrag: preisFuer(a) }));
-    },
-  );
+  .handler(async ({ context }): Promise<{ nummer: string; patient: string; betrag: number }[]> => {
+    const [orders, invoices] = await Promise.all([
+      loadOrders(context.supabase),
+      loadInvoices(context.supabase),
+    ]);
+    const berechnet = new Set(invoices.map((r) => r.bezugAuftrag).filter(Boolean));
+    return orders
+      .filter((a) => abrechnungsBereitschaft(a).bereit && !berechnet.has(a.nummer))
+      .map((a) => ({ nummer: a.nummer, patient: a.patient, betrag: preisFuer(a) }));
+  });
 
 /**
  * Generates draft invoices for every billing-ready completed transport that has
@@ -183,7 +179,9 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
           datum,
           faelligkeit: faellig,
           bezugAuftrag: a.nummer,
-          positionen: [{ beschreibung: `${a.transportart} ${a.nummer}`, menge: 1, einzelpreis: betrag }],
+          positionen: [
+            { beschreibung: `${a.transportart} ${a.nummer}`, menge: 1, einzelpreis: betrag },
+          ],
           notiz: "Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe.",
         }),
       );

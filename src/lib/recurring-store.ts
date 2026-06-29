@@ -51,8 +51,7 @@ export function useUpdateRecurring() {
   const qc = useQueryClient();
   const fn = useServerFn(updateRecurring);
   return useMutation({
-    mutationFn: (input: { id: string; values: Partial<RecurringWrite> }) =>
-      fn({ data: input }),
+    mutationFn: (input: { id: string; values: Partial<RecurringWrite> }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: RECURRING_QUERY_KEY }),
   });
 }
@@ -79,8 +78,7 @@ export function useGenerateRecurring() {
   const qc = useQueryClient();
   const fn = useServerFn(generateRecurringTransports);
   return useMutation({
-    mutationFn: (input: { id: string; vonISO: string; bisISO: string }) =>
-      fn({ data: input }),
+    mutationFn: (input: { id: string; vonISO: string; bisISO: string }) => fn({ data: input }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: RECURRING_QUERY_KEY });
       qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });

@@ -75,8 +75,8 @@ function AktionsCenter() {
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Sicherheit: </span>
             Die KI bereitet ausschließlich Entwürfe vor. Jede Nachricht erfordert Ihre ausdrückliche
-            Freigabe (Genehmigen / Bearbeiten / Verwerfen) und wird im Aktivitätsprotokoll revisionssicher
-            dokumentiert.
+            Freigabe (Genehmigen / Bearbeiten / Verwerfen) und wird im Aktivitätsprotokoll
+            revisionssicher dokumentiert.
           </p>
         </CardContent>
       </Card>
@@ -89,7 +89,9 @@ function AktionsCenter() {
             onClick={() => setFilter(s)}
             className={cn(
               "rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-card",
-              filter === s ? "border-primary bg-primary/5 shadow-card" : "border-border/70 bg-card shadow-sm",
+              filter === s
+                ? "border-primary bg-primary/5 shadow-card"
+                : "border-border/70 bg-card shadow-sm",
             )}
           >
             <p className="text-xs font-medium text-muted-foreground">
@@ -107,7 +109,9 @@ function AktionsCenter() {
             onClick={() => setFilter(f.id)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-              filter === f.id ? "border-primary bg-primary/5" : "border-border/70 bg-card hover:bg-muted",
+              filter === f.id
+                ? "border-primary bg-primary/5"
+                : "border-border/70 bg-card hover:bg-muted",
             )}
           >
             {f.label}
@@ -126,8 +130,8 @@ function AktionsCenter() {
               <CheckCircle2 className="h-8 w-8 text-success" />
               <p className="text-sm font-medium">Keine Entwürfe in diesem Status</p>
               <p className="max-w-md text-sm text-muted-foreground">
-                Sobald GHASI AI eine relevante Situation erkennt (Verspätung, fällige Wartung, offene
-                Rechnung …), erscheinen hier neue Entwürfe zur Freigabe.
+                Sobald GHASI AI eine relevante Situation erkennt (Verspätung, fällige Wartung,
+                offene Rechnung …), erscheinen hier neue Entwürfe zur Freigabe.
               </p>
             </CardContent>
           </Card>
@@ -152,7 +156,10 @@ function AktionsCenter() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-medium">{i.label}</p>
-                      <Badge variant="outline" className="border-border bg-muted text-[10px] text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="border-border bg-muted text-[10px] text-muted-foreground"
+                      >
                         geplant
                       </Badge>
                     </div>

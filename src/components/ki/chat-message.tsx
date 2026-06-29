@@ -107,7 +107,10 @@ function SmartActionCard({ aktion }: { aktion: VorbereiteteAktion }) {
     );
   }
 
-  const meta = (aktion.typ && AKTION_META[aktion.typ]) || { label: "Aktionsentwurf", icon: FileText };
+  const meta = (aktion.typ && AKTION_META[aktion.typ]) || {
+    label: "Aktionsentwurf",
+    icon: FileText,
+  };
   const Icon = meta.icon;
 
   return (
@@ -213,9 +216,13 @@ function QuellenListe({ treffer }: { treffer: WebQuelle[] }) {
           >
             <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <span className="min-w-0">
-              <span className="block truncate text-xs font-medium group-hover:text-primary">{q.titel}</span>
+              <span className="block truncate text-xs font-medium group-hover:text-primary">
+                {q.titel}
+              </span>
               {q.auszug && (
-                <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{q.auszug}</span>
+                <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                  {q.auszug}
+                </span>
               )}
             </span>
           </a>
@@ -236,7 +243,10 @@ function ToolHinweis({ icon: Icon, text }: { icon: typeof Globe; text: string })
 export function ChatMessage({ message }: { message: UIMessage }) {
   const isUser = message.role === "user";
 
-  const textParts = message.parts.filter((p) => p.type === "text") as { type: "text"; text: string }[];
+  const textParts = message.parts.filter((p) => p.type === "text") as {
+    type: "text";
+    text: string;
+  }[];
   const text = textParts.map((p) => p.text).join("");
   const fileParts = message.parts.filter((p) => p.type === "file") as {
     type: "file";
@@ -265,7 +275,9 @@ export function ChatMessage({ message }: { message: UIMessage }) {
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          isUser ? "bg-secondary text-secondary-foreground" : "bg-gradient-primary text-primary-foreground",
+          isUser
+            ? "bg-secondary text-secondary-foreground"
+            : "bg-gradient-primary text-primary-foreground",
         )}
       >
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
@@ -318,7 +330,11 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                 "output" in p && (p.output as { gespeichert?: boolean } | undefined)?.gespeichert;
               if (ok)
                 return (
-                  <ToolHinweis key={i} icon={BrainCircuit} text="Ins Langzeitgedächtnis übernommen" />
+                  <ToolHinweis
+                    key={i}
+                    icon={BrainCircuit}
+                    text="Ins Langzeitgedächtnis übernommen"
+                  />
                 );
               return null;
             }
@@ -328,9 +344,7 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                   ? (p.output as VorbereiteteAktion)
                   : undefined;
               if (!out)
-                return (
-                  <ToolHinweis key={i} icon={Loader2} text="Bereitet einen Entwurf vor …" />
-                );
+                return <ToolHinweis key={i} icon={Loader2} text="Bereitet einen Entwurf vor …" />;
               return <SmartActionCard key={i} aktion={out} />;
             }
             const biz = matchBusinessTool(p.type);
