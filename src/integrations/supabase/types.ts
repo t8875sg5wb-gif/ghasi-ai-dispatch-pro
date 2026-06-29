@@ -1,791 +1,799 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       activity_log: {
         Row: {
-          akteur: string;
-          aktion: string;
-          bereich: string;
-          beschreibung: string;
-          created_at: string;
-          entitaet: string | null;
-          id: string;
-          metadaten: Json | null;
-        };
+          akteur: string
+          aktion: string
+          bereich: string
+          beschreibung: string
+          created_at: string
+          entitaet: string | null
+          id: string
+          metadaten: Json | null
+        }
         Insert: {
-          akteur?: string;
-          aktion: string;
-          bereich: string;
-          beschreibung: string;
-          created_at?: string;
-          entitaet?: string | null;
-          id?: string;
-          metadaten?: Json | null;
-        };
+          akteur?: string
+          aktion: string
+          bereich: string
+          beschreibung: string
+          created_at?: string
+          entitaet?: string | null
+          id?: string
+          metadaten?: Json | null
+        }
         Update: {
-          akteur?: string;
-          aktion?: string;
-          bereich?: string;
-          beschreibung?: string;
-          created_at?: string;
-          entitaet?: string | null;
-          id?: string;
-          metadaten?: Json | null;
-        };
-        Relationships: [];
-      };
+          akteur?: string
+          aktion?: string
+          bereich?: string
+          beschreibung?: string
+          created_at?: string
+          entitaet?: string | null
+          id?: string
+          metadaten?: Json | null
+        }
+        Relationships: []
+      }
       ai_audit_log: {
         Row: {
-          created_at: string;
-          frage: string;
-          id: string;
-          modell: string | null;
-          quellen: Json | null;
-          rolle: string | null;
-          thread_id: string | null;
-          user_id: string | null;
-          vorbereitete_aktionen: Json | null;
-        };
+          created_at: string
+          frage: string
+          id: string
+          modell: string | null
+          quellen: Json | null
+          rolle: string | null
+          thread_id: string | null
+          user_id: string | null
+          vorbereitete_aktionen: Json | null
+        }
         Insert: {
-          created_at?: string;
-          frage: string;
-          id?: string;
-          modell?: string | null;
-          quellen?: Json | null;
-          rolle?: string | null;
-          thread_id?: string | null;
-          user_id?: string | null;
-          vorbereitete_aktionen?: Json | null;
-        };
+          created_at?: string
+          frage: string
+          id?: string
+          modell?: string | null
+          quellen?: Json | null
+          rolle?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+          vorbereitete_aktionen?: Json | null
+        }
         Update: {
-          created_at?: string;
-          frage?: string;
-          id?: string;
-          modell?: string | null;
-          quellen?: Json | null;
-          rolle?: string | null;
-          thread_id?: string | null;
-          user_id?: string | null;
-          vorbereitete_aktionen?: Json | null;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          frage?: string
+          id?: string
+          modell?: string | null
+          quellen?: Json | null
+          rolle?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+          vorbereitete_aktionen?: Json | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
-          created_at: string;
-          id: string;
-          inhalt: string;
-          parts: Json | null;
-          quellen: Json | null;
-          rolle: string;
-          thread_id: string;
-        };
+          created_at: string
+          id: string
+          inhalt: string
+          parts: Json | null
+          quellen: Json | null
+          rolle: string
+          thread_id: string
+        }
         Insert: {
-          created_at?: string;
-          id?: string;
-          inhalt?: string;
-          parts?: Json | null;
-          quellen?: Json | null;
-          rolle: string;
-          thread_id: string;
-        };
+          created_at?: string
+          id?: string
+          inhalt?: string
+          parts?: Json | null
+          quellen?: Json | null
+          rolle: string
+          thread_id: string
+        }
         Update: {
-          created_at?: string;
-          id?: string;
-          inhalt?: string;
-          parts?: Json | null;
-          quellen?: Json | null;
-          rolle?: string;
-          thread_id?: string;
-        };
+          created_at?: string
+          id?: string
+          inhalt?: string
+          parts?: Json | null
+          quellen?: Json | null
+          rolle?: string
+          thread_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "chat_messages_thread_id_fkey";
-            columns: ["thread_id"];
-            isOneToOne: false;
-            referencedRelation: "chat_threads";
-            referencedColumns: ["id"];
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       chat_threads: {
         Row: {
-          archiviert: boolean;
-          created_at: string;
-          id: string;
-          titel: string;
-          updated_at: string;
-        };
+          archiviert: boolean
+          created_at: string
+          id: string
+          titel: string
+          updated_at: string
+        }
         Insert: {
-          archiviert?: boolean;
-          created_at?: string;
-          id?: string;
-          titel?: string;
-          updated_at?: string;
-        };
+          archiviert?: boolean
+          created_at?: string
+          id?: string
+          titel?: string
+          updated_at?: string
+        }
         Update: {
-          archiviert?: boolean;
-          created_at?: string;
-          id?: string;
-          titel?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          archiviert?: boolean
+          created_at?: string
+          id?: string
+          titel?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
-          adresse: string;
-          arbeitszeiten: string;
-          beschwerden: number;
-          bewertung: number;
-          created_at: string;
-          email: string;
-          erste_hilfe: Json;
-          fahrzeug: string | null;
-          foto: string | null;
-          fuehrerschein: Json;
-          gewinn_heute: number;
-          gps: Json;
-          id: string;
-          km_heute: number;
-          krankheitstage: number;
-          lob: number;
-          name: string;
-          nummer: string;
-          p_schein: Json;
-          puenktlichkeit: number;
-          schicht: string;
-          standort: string;
-          status: string;
-          telefon: string;
-          ueberstunden: number;
-          umsatz_heute: number;
-          updated_at: string;
-          urlaubstage: number;
-          user_id: string | null;
-          vertragsart: string;
-        };
+          adresse: string
+          arbeitszeiten: string
+          beschwerden: number
+          bewertung: number
+          created_at: string
+          email: string
+          erste_hilfe: Json
+          fahrzeug: string | null
+          foto: string | null
+          fuehrerschein: Json
+          gewinn_heute: number
+          gps: Json
+          id: string
+          km_heute: number
+          krankheitstage: number
+          lob: number
+          name: string
+          nummer: string
+          p_schein: Json
+          puenktlichkeit: number
+          schicht: string
+          standort: string
+          status: string
+          telefon: string
+          ueberstunden: number
+          umsatz_heute: number
+          updated_at: string
+          urlaubstage: number
+          user_id: string | null
+          vertragsart: string
+        }
         Insert: {
-          adresse?: string;
-          arbeitszeiten?: string;
-          beschwerden?: number;
-          bewertung?: number;
-          created_at?: string;
-          email?: string;
-          erste_hilfe?: Json;
-          fahrzeug?: string | null;
-          foto?: string | null;
-          fuehrerschein?: Json;
-          gewinn_heute?: number;
-          gps?: Json;
-          id?: string;
-          km_heute?: number;
-          krankheitstage?: number;
-          lob?: number;
-          name?: string;
-          nummer: string;
-          p_schein?: Json;
-          puenktlichkeit?: number;
-          schicht?: string;
-          standort?: string;
-          status?: string;
-          telefon?: string;
-          ueberstunden?: number;
-          umsatz_heute?: number;
-          updated_at?: string;
-          urlaubstage?: number;
-          user_id?: string | null;
-          vertragsart?: string;
-        };
+          adresse?: string
+          arbeitszeiten?: string
+          beschwerden?: number
+          bewertung?: number
+          created_at?: string
+          email?: string
+          erste_hilfe?: Json
+          fahrzeug?: string | null
+          foto?: string | null
+          fuehrerschein?: Json
+          gewinn_heute?: number
+          gps?: Json
+          id?: string
+          km_heute?: number
+          krankheitstage?: number
+          lob?: number
+          name?: string
+          nummer: string
+          p_schein?: Json
+          puenktlichkeit?: number
+          schicht?: string
+          standort?: string
+          status?: string
+          telefon?: string
+          ueberstunden?: number
+          umsatz_heute?: number
+          updated_at?: string
+          urlaubstage?: number
+          user_id?: string | null
+          vertragsart?: string
+        }
         Update: {
-          adresse?: string;
-          arbeitszeiten?: string;
-          beschwerden?: number;
-          bewertung?: number;
-          created_at?: string;
-          email?: string;
-          erste_hilfe?: Json;
-          fahrzeug?: string | null;
-          foto?: string | null;
-          fuehrerschein?: Json;
-          gewinn_heute?: number;
-          gps?: Json;
-          id?: string;
-          km_heute?: number;
-          krankheitstage?: number;
-          lob?: number;
-          name?: string;
-          nummer?: string;
-          p_schein?: Json;
-          puenktlichkeit?: number;
-          schicht?: string;
-          standort?: string;
-          status?: string;
-          telefon?: string;
-          ueberstunden?: number;
-          umsatz_heute?: number;
-          updated_at?: string;
-          urlaubstage?: number;
-          user_id?: string | null;
-          vertragsart?: string;
-        };
-        Relationships: [];
-      };
+          adresse?: string
+          arbeitszeiten?: string
+          beschwerden?: number
+          bewertung?: number
+          created_at?: string
+          email?: string
+          erste_hilfe?: Json
+          fahrzeug?: string | null
+          foto?: string | null
+          fuehrerschein?: Json
+          gewinn_heute?: number
+          gps?: Json
+          id?: string
+          km_heute?: number
+          krankheitstage?: number
+          lob?: number
+          name?: string
+          nummer?: string
+          p_schein?: Json
+          puenktlichkeit?: number
+          schicht?: string
+          standort?: string
+          status?: string
+          telefon?: string
+          ueberstunden?: number
+          umsatz_heute?: number
+          updated_at?: string
+          urlaubstage?: number
+          user_id?: string | null
+          vertragsart?: string
+        }
+        Relationships: []
+      }
       ghasi_memory: {
         Row: {
-          bezug: string | null;
-          created_at: string;
-          id: string;
-          inhalt: string;
-          kategorie: string;
-          quelle: string;
-          updated_at: string;
-          wichtigkeit: number;
-        };
+          bezug: string | null
+          created_at: string
+          id: string
+          inhalt: string
+          kategorie: string
+          quelle: string
+          updated_at: string
+          wichtigkeit: number
+        }
         Insert: {
-          bezug?: string | null;
-          created_at?: string;
-          id?: string;
-          inhalt: string;
-          kategorie?: string;
-          quelle?: string;
-          updated_at?: string;
-          wichtigkeit?: number;
-        };
+          bezug?: string | null
+          created_at?: string
+          id?: string
+          inhalt: string
+          kategorie?: string
+          quelle?: string
+          updated_at?: string
+          wichtigkeit?: number
+        }
         Update: {
-          bezug?: string | null;
-          created_at?: string;
-          id?: string;
-          inhalt?: string;
-          kategorie?: string;
-          quelle?: string;
-          updated_at?: string;
-          wichtigkeit?: number;
-        };
-        Relationships: [];
-      };
+          bezug?: string | null
+          created_at?: string
+          id?: string
+          inhalt?: string
+          kategorie?: string
+          quelle?: string
+          updated_at?: string
+          wichtigkeit?: number
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
-          abrechnungsart: string;
-          betrag: number;
-          bezahlt_am: string | null;
-          bezahlter_betrag: number | null;
-          bezug_auftrag: string | null;
-          created_at: string;
-          datum: string;
-          faelligkeit: string;
-          id: string;
-          kunde: string;
-          kunde_id: string;
-          mwst_satz: number;
-          notiz: string | null;
-          nummer: string;
-          positionen: Json;
-          status: string;
-          typ: string;
-          updated_at: string;
-        };
+          abrechnungsart: string
+          betrag: number
+          bezahlt_am: string | null
+          bezahlter_betrag: number | null
+          bezug_auftrag: string | null
+          created_at: string
+          datum: string
+          faelligkeit: string
+          id: string
+          kunde: string
+          kunde_id: string
+          mwst_satz: number
+          notiz: string | null
+          nummer: string
+          positionen: Json
+          status: string
+          typ: string
+          updated_at: string
+        }
         Insert: {
-          abrechnungsart?: string;
-          betrag?: number;
-          bezahlt_am?: string | null;
-          bezahlter_betrag?: number | null;
-          bezug_auftrag?: string | null;
-          created_at?: string;
-          datum?: string;
-          faelligkeit?: string;
-          id?: string;
-          kunde?: string;
-          kunde_id?: string;
-          mwst_satz?: number;
-          notiz?: string | null;
-          nummer: string;
-          positionen?: Json;
-          status?: string;
-          typ?: string;
-          updated_at?: string;
-        };
+          abrechnungsart?: string
+          betrag?: number
+          bezahlt_am?: string | null
+          bezahlter_betrag?: number | null
+          bezug_auftrag?: string | null
+          created_at?: string
+          datum?: string
+          faelligkeit?: string
+          id?: string
+          kunde?: string
+          kunde_id?: string
+          mwst_satz?: number
+          notiz?: string | null
+          nummer: string
+          positionen?: Json
+          status?: string
+          typ?: string
+          updated_at?: string
+        }
         Update: {
-          abrechnungsart?: string;
-          betrag?: number;
-          bezahlt_am?: string | null;
-          bezahlter_betrag?: number | null;
-          bezug_auftrag?: string | null;
-          created_at?: string;
-          datum?: string;
-          faelligkeit?: string;
-          id?: string;
-          kunde?: string;
-          kunde_id?: string;
-          mwst_satz?: number;
-          notiz?: string | null;
-          nummer?: string;
-          positionen?: Json;
-          status?: string;
-          typ?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          abrechnungsart?: string
+          betrag?: number
+          bezahlt_am?: string | null
+          bezahlter_betrag?: number | null
+          bezug_auftrag?: string | null
+          created_at?: string
+          datum?: string
+          faelligkeit?: string
+          id?: string
+          kunde?: string
+          kunde_id?: string
+          mwst_satz?: number
+          notiz?: string | null
+          nummer?: string
+          positionen?: Json
+          status?: string
+          typ?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
-          abholanforderung: string;
-          abholort: string;
-          abrechnung_status: string;
-          begleitperson: boolean;
-          created_at: string;
-          dauerauftrag_id: string | null;
-          destination_additional_info: string;
-          destination_city: string;
-          destination_country: string;
-          destination_house_number: string;
-          destination_postal_code: string;
-          destination_street: string;
-          detail_status: string | null;
-          fahrer: string | null;
-          fahrer_user_id: string | null;
-          fahrzeug: string | null;
-          id: string;
-          kostentraeger: string;
-          lifecycle: Json;
-          medizinische_notiz: string;
-          mobilitaet: string | null;
-          notiz: string;
-          nummer: string;
-          patient: string;
-          patientennotiz: string;
-          pickup_additional_info: string;
-          pickup_city: string;
-          pickup_country: string;
-          pickup_house_number: string;
-          pickup_postal_code: string;
-          pickup_street: string;
-          prioritaet: string;
-          status: string;
-          termin: string;
-          transportart: string;
-          unterschrift: string | null;
-          updated_at: string;
-          verordnung: string;
-          verordnung_dokument_id: string | null;
-          zielanforderung: string;
-          zielort: string;
-        };
+          abholanforderung: string
+          abholort: string
+          abrechnung_status: string
+          begleitperson: boolean
+          created_at: string
+          dauerauftrag_id: string | null
+          destination_additional_info: string
+          destination_city: string
+          destination_country: string
+          destination_house_number: string
+          destination_postal_code: string
+          destination_street: string
+          detail_status: string | null
+          fahrer: string | null
+          fahrer_user_id: string | null
+          fahrzeug: string | null
+          id: string
+          kostentraeger: string
+          lifecycle: Json
+          medizinische_notiz: string
+          mobilitaet: string | null
+          notiz: string
+          nummer: string
+          patient: string
+          patientennotiz: string
+          pickup_additional_info: string
+          pickup_city: string
+          pickup_country: string
+          pickup_house_number: string
+          pickup_postal_code: string
+          pickup_street: string
+          prioritaet: string
+          status: string
+          termin: string
+          transportart: string
+          unterschrift: string | null
+          updated_at: string
+          verordnung: string
+          verordnung_dokument_id: string | null
+          zielanforderung: string
+          zielort: string
+        }
         Insert: {
-          abholanforderung?: string;
-          abholort?: string;
-          abrechnung_status?: string;
-          begleitperson?: boolean;
-          created_at?: string;
-          dauerauftrag_id?: string | null;
-          destination_additional_info?: string;
-          destination_city?: string;
-          destination_country?: string;
-          destination_house_number?: string;
-          destination_postal_code?: string;
-          destination_street?: string;
-          detail_status?: string | null;
-          fahrer?: string | null;
-          fahrer_user_id?: string | null;
-          fahrzeug?: string | null;
-          id?: string;
-          kostentraeger?: string;
-          lifecycle?: Json;
-          medizinische_notiz?: string;
-          mobilitaet?: string | null;
-          notiz?: string;
-          nummer: string;
-          patient?: string;
-          patientennotiz?: string;
-          pickup_additional_info?: string;
-          pickup_city?: string;
-          pickup_country?: string;
-          pickup_house_number?: string;
-          pickup_postal_code?: string;
-          pickup_street?: string;
-          prioritaet?: string;
-          status?: string;
-          termin?: string;
-          transportart?: string;
-          unterschrift?: string | null;
-          updated_at?: string;
-          verordnung?: string;
-          verordnung_dokument_id?: string | null;
-          zielanforderung?: string;
-          zielort?: string;
-        };
+          abholanforderung?: string
+          abholort?: string
+          abrechnung_status?: string
+          begleitperson?: boolean
+          created_at?: string
+          dauerauftrag_id?: string | null
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
+          detail_status?: string | null
+          fahrer?: string | null
+          fahrer_user_id?: string | null
+          fahrzeug?: string | null
+          id?: string
+          kostentraeger?: string
+          lifecycle?: Json
+          medizinische_notiz?: string
+          mobilitaet?: string | null
+          notiz?: string
+          nummer: string
+          patient?: string
+          patientennotiz?: string
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
+          prioritaet?: string
+          status?: string
+          termin?: string
+          transportart?: string
+          unterschrift?: string | null
+          updated_at?: string
+          verordnung?: string
+          verordnung_dokument_id?: string | null
+          zielanforderung?: string
+          zielort?: string
+        }
         Update: {
-          abholanforderung?: string;
-          abholort?: string;
-          abrechnung_status?: string;
-          begleitperson?: boolean;
-          created_at?: string;
-          dauerauftrag_id?: string | null;
-          destination_additional_info?: string;
-          destination_city?: string;
-          destination_country?: string;
-          destination_house_number?: string;
-          destination_postal_code?: string;
-          destination_street?: string;
-          detail_status?: string | null;
-          fahrer?: string | null;
-          fahrer_user_id?: string | null;
-          fahrzeug?: string | null;
-          id?: string;
-          kostentraeger?: string;
-          lifecycle?: Json;
-          medizinische_notiz?: string;
-          mobilitaet?: string | null;
-          notiz?: string;
-          nummer?: string;
-          patient?: string;
-          patientennotiz?: string;
-          pickup_additional_info?: string;
-          pickup_city?: string;
-          pickup_country?: string;
-          pickup_house_number?: string;
-          pickup_postal_code?: string;
-          pickup_street?: string;
-          prioritaet?: string;
-          status?: string;
-          termin?: string;
-          transportart?: string;
-          unterschrift?: string | null;
-          updated_at?: string;
-          verordnung?: string;
-          verordnung_dokument_id?: string | null;
-          zielanforderung?: string;
-          zielort?: string;
-        };
-        Relationships: [];
-      };
+          abholanforderung?: string
+          abholort?: string
+          abrechnung_status?: string
+          begleitperson?: boolean
+          created_at?: string
+          dauerauftrag_id?: string | null
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
+          detail_status?: string | null
+          fahrer?: string | null
+          fahrer_user_id?: string | null
+          fahrzeug?: string | null
+          id?: string
+          kostentraeger?: string
+          lifecycle?: Json
+          medizinische_notiz?: string
+          mobilitaet?: string | null
+          notiz?: string
+          nummer?: string
+          patient?: string
+          patientennotiz?: string
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
+          prioritaet?: string
+          status?: string
+          termin?: string
+          transportart?: string
+          unterschrift?: string | null
+          updated_at?: string
+          verordnung?: string
+          verordnung_dokument_id?: string | null
+          zielanforderung?: string
+          zielort?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
-          created_at: string;
-          email: string | null;
-          id: string;
-          name: string | null;
-          updated_at: string;
-        };
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string
+        }
         Insert: {
-          created_at?: string;
-          email?: string | null;
-          id: string;
-          name?: string | null;
-          updated_at?: string;
-        };
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
         Update: {
-          created_at?: string;
-          email?: string | null;
-          id?: string;
-          name?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       recurring_orders: {
         Row: {
-          abholort: string;
-          begleitperson: boolean;
-          bevorzugter_fahrer: string | null;
-          bevorzugtes_fahrzeug: string | null;
-          created_at: string;
-          destination_additional_info: string;
-          destination_city: string;
-          destination_country: string;
-          destination_house_number: string;
-          destination_postal_code: string;
-          destination_street: string;
-          end_datum: string | null;
-          feiertage_ueberspringen: boolean;
-          generierte_termine: string[];
-          id: string;
-          kategorie: string;
-          kennung: string;
-          kostentraeger: string;
-          krankenkasse: string;
-          medizinische_notiz: string;
-          mobilitaet: string;
-          notiz: string;
-          patient: string;
-          pause_bis: string | null;
-          pause_von: string | null;
-          pausiert: boolean;
-          pickup_additional_info: string;
-          pickup_city: string;
-          pickup_country: string;
-          pickup_house_number: string;
-          pickup_postal_code: string;
-          pickup_street: string;
-          rhythmus: string;
-          rueckfahrt: boolean;
-          rueckfahrtzeit: string | null;
-          start_datum: string;
-          terminzeit: string;
-          uebersprungene_termine: string[];
-          updated_at: string;
-          verordnung_erforderlich: boolean;
-          wochentage: number[];
-          zielort: string;
-        };
+          abholort: string
+          begleitperson: boolean
+          bevorzugter_fahrer: string | null
+          bevorzugtes_fahrzeug: string | null
+          created_at: string
+          destination_additional_info: string
+          destination_city: string
+          destination_country: string
+          destination_house_number: string
+          destination_postal_code: string
+          destination_street: string
+          end_datum: string | null
+          feiertage_ueberspringen: boolean
+          generierte_termine: string[]
+          id: string
+          kategorie: string
+          kennung: string
+          kostentraeger: string
+          krankenkasse: string
+          medizinische_notiz: string
+          mobilitaet: string
+          notiz: string
+          patient: string
+          pause_bis: string | null
+          pause_von: string | null
+          pausiert: boolean
+          pickup_additional_info: string
+          pickup_city: string
+          pickup_country: string
+          pickup_house_number: string
+          pickup_postal_code: string
+          pickup_street: string
+          rhythmus: string
+          rueckfahrt: boolean
+          rueckfahrtzeit: string | null
+          start_datum: string
+          terminzeit: string
+          uebersprungene_termine: string[]
+          updated_at: string
+          verordnung_erforderlich: boolean
+          wochentage: number[]
+          zielort: string
+        }
         Insert: {
-          abholort?: string;
-          begleitperson?: boolean;
-          bevorzugter_fahrer?: string | null;
-          bevorzugtes_fahrzeug?: string | null;
-          created_at?: string;
-          destination_additional_info?: string;
-          destination_city?: string;
-          destination_country?: string;
-          destination_house_number?: string;
-          destination_postal_code?: string;
-          destination_street?: string;
-          end_datum?: string | null;
-          feiertage_ueberspringen?: boolean;
-          generierte_termine?: string[];
-          id?: string;
-          kategorie?: string;
-          kennung: string;
-          kostentraeger?: string;
-          krankenkasse?: string;
-          medizinische_notiz?: string;
-          mobilitaet?: string;
-          notiz?: string;
-          patient?: string;
-          pause_bis?: string | null;
-          pause_von?: string | null;
-          pausiert?: boolean;
-          pickup_additional_info?: string;
-          pickup_city?: string;
-          pickup_country?: string;
-          pickup_house_number?: string;
-          pickup_postal_code?: string;
-          pickup_street?: string;
-          rhythmus?: string;
-          rueckfahrt?: boolean;
-          rueckfahrtzeit?: string | null;
-          start_datum?: string;
-          terminzeit?: string;
-          uebersprungene_termine?: string[];
-          updated_at?: string;
-          verordnung_erforderlich?: boolean;
-          wochentage?: number[];
-          zielort?: string;
-        };
+          abholort?: string
+          begleitperson?: boolean
+          bevorzugter_fahrer?: string | null
+          bevorzugtes_fahrzeug?: string | null
+          created_at?: string
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
+          end_datum?: string | null
+          feiertage_ueberspringen?: boolean
+          generierte_termine?: string[]
+          id?: string
+          kategorie?: string
+          kennung: string
+          kostentraeger?: string
+          krankenkasse?: string
+          medizinische_notiz?: string
+          mobilitaet?: string
+          notiz?: string
+          patient?: string
+          pause_bis?: string | null
+          pause_von?: string | null
+          pausiert?: boolean
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
+          rhythmus?: string
+          rueckfahrt?: boolean
+          rueckfahrtzeit?: string | null
+          start_datum?: string
+          terminzeit?: string
+          uebersprungene_termine?: string[]
+          updated_at?: string
+          verordnung_erforderlich?: boolean
+          wochentage?: number[]
+          zielort?: string
+        }
         Update: {
-          abholort?: string;
-          begleitperson?: boolean;
-          bevorzugter_fahrer?: string | null;
-          bevorzugtes_fahrzeug?: string | null;
-          created_at?: string;
-          destination_additional_info?: string;
-          destination_city?: string;
-          destination_country?: string;
-          destination_house_number?: string;
-          destination_postal_code?: string;
-          destination_street?: string;
-          end_datum?: string | null;
-          feiertage_ueberspringen?: boolean;
-          generierte_termine?: string[];
-          id?: string;
-          kategorie?: string;
-          kennung?: string;
-          kostentraeger?: string;
-          krankenkasse?: string;
-          medizinische_notiz?: string;
-          mobilitaet?: string;
-          notiz?: string;
-          patient?: string;
-          pause_bis?: string | null;
-          pause_von?: string | null;
-          pausiert?: boolean;
-          pickup_additional_info?: string;
-          pickup_city?: string;
-          pickup_country?: string;
-          pickup_house_number?: string;
-          pickup_postal_code?: string;
-          pickup_street?: string;
-          rhythmus?: string;
-          rueckfahrt?: boolean;
-          rueckfahrtzeit?: string | null;
-          start_datum?: string;
-          terminzeit?: string;
-          uebersprungene_termine?: string[];
-          updated_at?: string;
-          verordnung_erforderlich?: boolean;
-          wochentage?: number[];
-          zielort?: string;
-        };
-        Relationships: [];
-      };
+          abholort?: string
+          begleitperson?: boolean
+          bevorzugter_fahrer?: string | null
+          bevorzugtes_fahrzeug?: string | null
+          created_at?: string
+          destination_additional_info?: string
+          destination_city?: string
+          destination_country?: string
+          destination_house_number?: string
+          destination_postal_code?: string
+          destination_street?: string
+          end_datum?: string | null
+          feiertage_ueberspringen?: boolean
+          generierte_termine?: string[]
+          id?: string
+          kategorie?: string
+          kennung?: string
+          kostentraeger?: string
+          krankenkasse?: string
+          medizinische_notiz?: string
+          mobilitaet?: string
+          notiz?: string
+          patient?: string
+          pause_bis?: string | null
+          pause_von?: string | null
+          pausiert?: boolean
+          pickup_additional_info?: string
+          pickup_city?: string
+          pickup_country?: string
+          pickup_house_number?: string
+          pickup_postal_code?: string
+          pickup_street?: string
+          rhythmus?: string
+          rueckfahrt?: boolean
+          rueckfahrtzeit?: string | null
+          start_datum?: string
+          terminzeit?: string
+          uebersprungene_termine?: string[]
+          updated_at?: string
+          verordnung_erforderlich?: boolean
+          wochentage?: number[]
+          zielort?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
-          created_at: string;
-          id: string;
-          role: Database["public"]["Enums"]["app_role"];
-          user_id: string;
-        };
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
         Insert: {
-          created_at?: string;
-          id?: string;
-          role: Database["public"]["Enums"]["app_role"];
-          user_id: string;
-        };
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
         Update: {
-          created_at?: string;
-          id?: string;
-          role?: Database["public"]["Enums"]["app_role"];
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-    };
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"];
-          _user_id: string;
-        };
-        Returns: boolean;
-      };
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       primary_role: {
-        Args: { _user_id: string };
-        Returns: Database["public"]["Enums"]["app_role"];
-      };
-    };
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+    }
     Enums: {
-      app_role: "admin" | "disposition" | "finanz" | "fahrer";
-    };
+      app_role: "admin" | "disposition" | "finanz" | "fahrer"
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R;
+      Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R;
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
       }
       ? R
       : never
-    : never;
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
+      Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I;
+        Insert: infer I
       }
       ? I
       : never
-    : never;
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
+      Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U;
+        Update: infer U
       }
       ? U
       : never
-    : never;
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never;
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
+    : never
 
 export const Constants = {
   public: {
@@ -793,4 +801,4 @@ export const Constants = {
       app_role: ["admin", "disposition", "finanz", "fahrer"],
     },
   },
-} as const;
+} as const
