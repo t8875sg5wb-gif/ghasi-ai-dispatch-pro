@@ -107,7 +107,7 @@ export function AuftragDetail({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={cn("gap-1", status.badge)}>
               <status.icon className="h-3 w-3" />
               {status.label}
@@ -115,6 +115,12 @@ export function AuftragDetail({
             <Badge variant="outline" className={prio.badge}>
               {prio.label}
             </Badge>
+            {zeigtWarnung && (
+              <Badge variant="outline" className={cn("gap-1", WARN_META[stufe].badge)}>
+                <AlertTriangle className="h-3 w-3" />
+                {WARN_META[stufe].label} · {formatCountdown(minutenBis(auftrag, now))}
+              </Badge>
+            )}
           </div>
           <SheetTitle className="text-xl">{auftrag.patient}</SheetTitle>
           <SheetDescription>
