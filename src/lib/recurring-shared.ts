@@ -7,7 +7,7 @@ import type {
   Rhythmus,
   SerienKategorie,
 } from "@/lib/dauerauftraege";
-import type { Mobilitaet } from "@/lib/auftraege";
+import { type Mobilitaet, istMobilitaet } from "@/lib/auftraege";
 import {
   type AdresseStruktur,
   adresseAusStrukturOderLegacy,
@@ -17,36 +17,36 @@ import {
 
 /** Shape the client sends when creating/updating a recurring order. */
 export interface RecurringWrite {
-  kennung: string;
-  patient: string;
+  kennung?: string;
+  patient?: string;
   /** Legacy fallback; new writes should send `pickup`/`destination`. */
   abholort?: string;
   zielort?: string;
   pickup?: AdresseStruktur;
   destination?: AdresseStruktur;
-  terminzeit: string;
-  rueckfahrt: boolean;
+  terminzeit?: string;
+  rueckfahrt?: boolean;
   rueckfahrtzeit?: string | null;
-  mobilitaet: string;
-  begleitperson: boolean;
-  verordnungErforderlich: boolean;
-  kostentraeger: string;
-  krankenkasse: string;
+  mobilitaet?: string;
+  begleitperson?: boolean;
+  verordnungErforderlich?: boolean;
+  kostentraeger?: string;
+  krankenkasse?: string;
   bevorzugtesFahrzeug?: string | null;
   bevorzugterFahrer?: string | null;
-  notiz: string;
-  medizinischeNotiz: string;
-  kategorie: string;
-  rhythmus: string;
-  wochentage: number[];
-  startDatum: string;
+  notiz?: string;
+  medizinischeNotiz?: string;
+  kategorie?: string;
+  rhythmus?: string;
+  wochentage?: number[];
+  startDatum?: string;
   endDatum?: string | null;
-  pausiert: boolean;
+  pausiert?: boolean;
   pauseVon?: string | null;
   pauseBis?: string | null;
-  feiertageUeberspringen: boolean;
-  uebersprungeneTermine: string[];
-  generierteTermine: string[];
+  feiertageUeberspringen?: boolean;
+  uebersprungeneTermine?: string[];
+  generierteTermine?: string[];
 }
 
 /** Minimal structural type of a row coming back from `recurring_orders`. */
@@ -117,6 +117,11 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     },
     r.zielort,
   );
+  const mobilitaet: Mobilitaet = istMobilitaet(r.mobilitaet) ? r.mobilitaet : "gehfaehig";
+  const kategorie: SerienKategorie = ["dialyse", "pflegeheim", "krankenhaus", "sonstige"].includes(r.kategorie)
+    ? (r.kategorie as SerienKategorie)
+    : "sonstige";
+  const rhythmus: Rhythmus = r.rhythmus === "taeglich" || r.rhythmus === "woechentlich" ? r.rhythmus : "woechentlich";
   return {
     id: r.id,
     kennung: r.kennung ?? "DA-—",
@@ -128,7 +133,7 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     terminzeit: r.terminzeit ?? "08:00",
     rueckfahrt: Boolean(r.rueckfahrt),
     rueckfahrtzeit: r.rueckfahrtzeit ?? undefined,
-    mobilitaet: r.mobilitaet as Mobilitaet,
+    mobilitaet,
     begleitperson: Boolean(r.begleitperson),
     verordnungErforderlich: r.verordnung_erforderlich ?? true,
     kostentraeger: r.kostentraeger ?? "",
@@ -137,8 +142,8 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     bevorzugterFahrer: r.bevorzugter_fahrer,
     notiz: r.notiz ?? "",
     medizinischeNotiz: r.medizinische_notiz ?? "",
-    kategorie: r.kategorie as SerienKategorie,
-    rhythmus: r.rhythmus as Rhythmus,
+    kategorie,
+    rhythmus,
     wochentage: Array.isArray(r.wochentage) ? r.wochentage : [],
     startDatum: r.start_datum ?? new Date().toISOString().slice(0, 10),
     endDatum: r.end_datum,
