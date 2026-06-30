@@ -35,6 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 import { useOrders } from "@/lib/orders-store";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
+import { LiveFleetMapCard } from "@/components/gps/live-fleet-map-card";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -333,6 +334,13 @@ function Dashboard() {
           badge="Vorschlag"
         />
       </section>
+
+      {/* Interaktive Live-Flottenkarte (Google Maps) */}
+      <section>
+        <LiveFleetMapCard height="h-[360px]" />
+      </section>
+
+
 
       <section className="grid gap-4 lg:grid-cols-3">
         {/* Auslastung */}

@@ -61,6 +61,7 @@ import {
   formatEUR,
 } from "@/lib/dispatch";
 import { LiveBoard } from "@/components/dispatch/live-board";
+import { LiveFleetMapCard } from "@/components/gps/live-fleet-map-card";
 import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
@@ -437,11 +438,18 @@ function DispatchCenter() {
       <Tabs defaultValue="live-board">
         <TabsList>
           <TabsTrigger value="live-board">Live-Board</TabsTrigger>
+          <TabsTrigger value="live-karte">Live-Karte</TabsTrigger>
           <TabsTrigger value="alarme">Alarm-Center</TabsTrigger>
           <TabsTrigger value="plantafel">Plantafel</TabsTrigger>
           <TabsTrigger value="disposition">Disposition</TabsTrigger>
           <TabsTrigger value="flotte">Flotte</TabsTrigger>
         </TabsList>
+
+        {/* Live-Karte: Echtzeit-Flottenkarte (Google Maps) */}
+        <TabsContent value="live-karte" className="mt-4">
+          <LiveFleetMapCard height="h-[60vh] min-h-[420px]" />
+        </TabsContent>
+
 
         {/* Live-Board: 12-Spalten Enterprise-Dispatch mit Filter & Bulk */}
         <TabsContent value="live-board" className="mt-4">
