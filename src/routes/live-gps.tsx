@@ -18,14 +18,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { FleetMap } from "@/components/gps/fleet-map";
+import { GoogleFleetMap } from "@/components/gps/google-fleet-map";
+import { GOOGLE_MAP_STILE, type GoogleMapStil } from "@/lib/google-maps";
 import {
   type FleetVehicle,
   type LatLng,
   ALERT_SCHWERE_META,
-  ANBIETER_BEREIT,
   FLEET_FARBEN,
-  KARTEN_ANBIETER,
   buildFleet,
   computeFleetAlerts,
 } from "@/lib/fleet-live";
@@ -39,7 +38,7 @@ export const Route = createFileRoute("/live-gps")({
       {
         name: "description",
         content:
-          "Echtzeit-Flottenkarte mit OpenStreetMap: Live-Fahrzeuge, Routen, Transport-Status und automatische Alerts.",
+          "Echtzeit-Flottenkarte mit Google Maps: Live-Fahrzeuge, Routen, Transport-Status und automatische Alerts.",
       },
     ],
   }),
@@ -66,7 +65,7 @@ function LiveGps() {
   const [fleet, setFleet] = useState<FleetVehicle[]>(() => buildFleet());
   const [selected, setSelected] = useState<string | null>(null);
   const [suche, setSuche] = useState("");
-  const [anbieterId, setAnbieterId] = useState(KARTEN_ANBIETER[0].id);
+  const [stil, setStil] = useState<GoogleMapStil>("roadmap");
 
   // Live-Bewegung: fahrende Fahrzeuge alle 3s ein Stück weiterbewegen.
   useEffect(() => {
@@ -81,10 +80,6 @@ function LiveGps() {
     return () => clearInterval(interval);
   }, []);
 
-  const anbieter = useMemo(
-    () => KARTEN_ANBIETER.find((a) => a.id === anbieterId) ?? KARTEN_ANBIETER[0],
-    [anbieterId],
-  );
 
   const alerts = useMemo(() => computeFleetAlerts(fleet), [fleet]);
 
@@ -120,21 +115,21 @@ function LiveGps() {
               Live-GPS &amp; Transport-Execution
             </h1>
             <p className="text-sm text-muted-foreground">
-              Echtzeit-Flottenkarte (OpenStreetMap) mit Routen, Status &amp; automatischen Alerts.
+              Echtzeit-Flottenkarte (Google Maps) mit Routen, Status &amp; automatischen Alerts.
             </p>
           </div>
         </div>
-        {/* Karten-Anbieter */}
+        {/* Kartenstil */}
         <div className="flex items-center gap-1 rounded-xl border border-border/70 bg-card p-1">
           <Layers className="ml-1 h-4 w-4 text-muted-foreground" />
-          {KARTEN_ANBIETER.map((a) => (
+          {GOOGLE_MAP_STILE.map((a) => (
             <button
               key={a.id}
               type="button"
-              onClick={() => setAnbieterId(a.id)}
+              onClick={() => setStil(a.id)}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                a.id === anbieterId
+                a.id === stil
                   ? "bg-primary text-primary-foreground shadow-card"
                   : "text-muted-foreground hover:bg-muted",
               )}
@@ -143,6 +138,7 @@ function LiveGps() {
             </button>
           ))}
         </div>
+
       </div>
 
       {/* Status-Legende */}
@@ -167,12 +163,13 @@ function LiveGps() {
         <Card className="overflow-hidden border-border/70 lg:col-span-2">
           <CardContent className="p-0">
             <div className="h-[68vh] min-h-[420px] w-full">
-              <FleetMap
+              <GoogleFleetMap
                 vehicles={fleet}
                 selectedId={selected}
-                anbieter={anbieter}
+                stil={stil}
                 onSelect={(id) => setSelected((cur) => (cur === id ? cur : id))}
               />
+
             </div>
           </CardContent>
         </Card>
@@ -290,15 +287,13 @@ function LiveGps() {
             </CardHeader>
             <CardContent className="space-y-2 text-xs text-muted-foreground">
               <p>
-                Aktiv: OpenStreetMap, CARTO (Dunkel), Esri Satellit. Architektur vorbereitet für:
+                Aktiv: Google Maps Platform (Straße, Satellit, Dunkel) als Standard-Kartendienst.
+                Weitere Dienste optional anbindbar:
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {ANBIETER_BEREIT.map((a) => (
-                  <Badge key={a.id} variant="secondary" className="text-[10px]">
-                    {a.label}
-                  </Badge>
-                ))}
                 {[
+                  "Google Maps",
+                  "Google Routes",
                   "Apple Maps",
                   "Waze",
                   "Twilio",
@@ -311,11 +306,9 @@ function LiveGps() {
                   </Badge>
                 ))}
               </div>
-              <p>
-                Sobald ein API-Key hinterlegt ist, wird der jeweilige Layer/Dienst ohne weitere
-                Umbauten aktiviert.
-              </p>
+              <p>Google Maps wird über den verbundenen Connector automatisch authentifiziert.</p>
             </CardContent>
+
           </Card>
         </div>
       </div>
