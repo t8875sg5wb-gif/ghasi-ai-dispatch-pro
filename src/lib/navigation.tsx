@@ -32,6 +32,7 @@ import {
   Sparkles,
   Workflow,
   Repeat,
+  Compass,
   type LucideIcon,
 } from "lucide-react";
 
