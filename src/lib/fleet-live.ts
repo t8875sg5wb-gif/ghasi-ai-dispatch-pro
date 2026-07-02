@@ -26,83 +26,10 @@ import {
 } from "@/lib/auftraege";
 
 /* ------------------------------------------------------------------ *
- * Karten-Anbieter (OSM-Standard, Satellit aktiv, Architektur für
- * Google/Mapbox/HERE vorbereitet)
+ * Karten-Anbieter: GHASI AI nutzt ausschließlich Google Maps Platform.
+ * Stile werden über GOOGLE_MAP_STILE in src/lib/google-maps.ts gesteuert.
  * ------------------------------------------------------------------ */
 
-export interface KartenAnbieter {
-  id: string;
-  label: string;
-  /** Leaflet-Tile-Template oder null, wenn ein API-Key nötig ist */
-  url: string | null;
-  attribution: string;
-  maxZoom: number;
-  satellit?: boolean;
-  /** Anbieter, die einen API-Key benötigen (vorbereitet, nicht aktiv) */
-  benoetigtKey?: boolean;
-  hinweis?: string;
-}
-
-/** Standardmäßig aktive, schlüssellose Anbieter. */
-export const KARTEN_ANBIETER: KartenAnbieter[] = [
-  {
-    id: "osm",
-    label: "Straße",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: "&copy; OpenStreetMap",
-    maxZoom: 19,
-  },
-  {
-    id: "carto-dark",
-    label: "Dunkel",
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OpenStreetMap &copy; CARTO",
-    maxZoom: 20,
-  },
-  {
-    id: "esri-sat",
-    label: "Satellit",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    attribution: "&copy; Esri World Imagery",
-    maxZoom: 19,
-    satellit: true,
-  },
-];
-
-/**
- * Für die Zukunft vorbereitete Premium-Anbieter. Sobald ein API-Key
- * hinterlegt ist, lässt sich der jeweilige Tile-Layer aktivieren –
- * die Architektur (Layer-Wechsel, Marker, Routen) bleibt identisch.
- */
-export const ANBIETER_BEREIT: KartenAnbieter[] = [
-  {
-    id: "google",
-    label: "Google Maps",
-    url: null,
-    attribution: "&copy; Google",
-    maxZoom: 21,
-    benoetigtKey: true,
-    hinweis: "Maps JavaScript API / Tiles – API-Key erforderlich.",
-  },
-  {
-    id: "mapbox",
-    label: "Mapbox",
-    url: null,
-    attribution: "&copy; Mapbox &copy; OpenStreetMap",
-    maxZoom: 22,
-    benoetigtKey: true,
-    hinweis: "Mapbox Static Tiles – Access-Token erforderlich.",
-  },
-  {
-    id: "here",
-    label: "HERE Maps",
-    url: null,
-    attribution: "&copy; HERE",
-    maxZoom: 20,
-    benoetigtKey: true,
-    hinweis: "HERE Raster Tiles – API-Key erforderlich.",
-  },
-];
 
 /* ------------------------------------------------------------------ *
  * Farb-Status der Live-Marker
