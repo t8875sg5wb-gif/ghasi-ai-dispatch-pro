@@ -337,17 +337,22 @@ function StandorteSeite() {
                               )}
                             />
                           </Button>
-                          <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8"
+                            asChild
                             title="Route öffnen"
                           >
-                            <Button size="icon" variant="ghost" className="size-8" asChild={false}>
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Navigation className="size-4" />
-                            </Button>
-                          </a>
+                            </a>
+                          </Button>
                         </div>
                       </div>
                     </li>

@@ -16,6 +16,7 @@ import { Route as VerbindungenRouteImport } from './routes/verbindungen'
 import { Route as TourenplanungRouteImport } from './routes/tourenplanung'
 import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
+import { Route as StandorteRouteImport } from './routes/standorte'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
@@ -80,6 +81,11 @@ const TelefonRoute = TelefonRouteImport.update({
 const StatistikenRoute = StatistikenRouteImport.update({
   id: '/statistiken',
   path: '/statistiken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StandorteRoute = StandorteRouteImport.update({
+  id: '/standorte',
+  path: '/standorte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
   '/telefon': typeof TelefonRoute
   '/tourenplanung': typeof TourenplanungRoute
@@ -380,6 +389,7 @@ export interface FileRouteTypes {
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
+    | '/standorte'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
+    | '/standorte'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/prognosen'
     | '/rechnungen'
     | '/sitemap.xml'
+    | '/standorte'
     | '/statistiken'
     | '/telefon'
     | '/tourenplanung'
@@ -497,6 +509,7 @@ export interface RootRouteChildren {
   PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StandorteRoute: typeof StandorteRoute
   StatistikenRoute: typeof StatistikenRoute
   TelefonRoute: typeof TelefonRoute
   TourenplanungRoute: typeof TourenplanungRoute
@@ -556,6 +569,13 @@ declare module '@tanstack/react-router' {
       path: '/statistiken'
       fullPath: '/statistiken'
       preLoaderRoute: typeof StatistikenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/standorte': {
+      id: '/standorte'
+      path: '/standorte'
+      fullPath: '/standorte'
+      preLoaderRoute: typeof StandorteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StandorteRoute: StandorteRoute,
   StatistikenRoute: StatistikenRoute,
   TelefonRoute: TelefonRoute,
   TourenplanungRoute: TourenplanungRoute,
