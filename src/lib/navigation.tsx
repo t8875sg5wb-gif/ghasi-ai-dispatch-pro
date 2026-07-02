@@ -145,6 +145,13 @@ export const navGroups: NavGroup[] = [
         description: "Standort aller Fahrzeuge in Echtzeit auf der Karte.",
       },
       {
+        label: "Standorte & Umgebung",
+        to: "/standorte",
+        icon: Compass,
+        description:
+          "Kliniken, Ärzte, Apotheken, Tank- & Ladesäulen finden – powered by Google Maps.",
+      },
+      {
         label: "Telefon",
         to: "/telefon",
         icon: Phone,
