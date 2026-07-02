@@ -1,9 +1,11 @@
 // Wiederverwendbare strukturierte Adress-Eingabe (Straße, Hausnummer, PLZ,
-// Stadt, Land, Zusatzinfo). Nutzbar in allen Formularen des Systems.
-import { type AdresseStruktur } from "@/lib/address";
+// Stadt, Land, Zusatzinfo) mit Google-Places-Autovervollständigung.
+// Nutzbar in allen Formularen des Systems.
+import { type AdresseStruktur, normalisiereAdresse } from "@/lib/address";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressAutocomplete, type OrtKoordinate } from "@/components/maps/address-autocomplete";
 
 interface AddressFieldsProps {
   value: AdresseStruktur;
@@ -13,11 +15,27 @@ interface AddressFieldsProps {
   /** Überschrift, z. B. "Abholort" */
   label?: string;
   required?: boolean;
+  /** Optionaler Callback mit den Koordinaten der gewählten Adresse. */
+  onCoords?: (coords: OrtKoordinate | null) => void;
 }
 
-export function AddressFields({ value, onChange, idPrefix, label, required }: AddressFieldsProps) {
+export function AddressFields({
+  value,
+  onChange,
+  idPrefix,
+  label,
+  required,
+  onCoords,
+}: AddressFieldsProps) {
   function set<K extends keyof AdresseStruktur>(key: K, v: string) {
     onChange({ ...value, [key]: v });
+  }
+
+  function handleAutocomplete(adr: AdresseStruktur, coords: OrtKoordinate | null) {
+    const next = normalisiereAdresse(adr);
+    // Zusatzinfo des Nutzers bewahren
+    onChange({ ...next, additionalInfo: value.additionalInfo || next.additionalInfo });
+    onCoords?.(coords);
   }
 
   return (
@@ -28,6 +46,14 @@ export function AddressFields({ value, onChange, idPrefix, label, required }: Ad
           {required && <span className="text-destructive"> *</span>}
         </p>
       )}
+
+      <AddressAutocomplete
+        id={`${idPrefix}-search`}
+        onSelect={handleAutocomplete}
+        placeholder="Mit Google suchen – Adresse übernehmen …"
+      />
+
+
 
       <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
         <div className="space-y-1.5">

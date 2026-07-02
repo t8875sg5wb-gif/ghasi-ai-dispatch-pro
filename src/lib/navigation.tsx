@@ -32,6 +32,7 @@ import {
   Sparkles,
   Workflow,
   Repeat,
+  Compass,
   type LucideIcon,
 } from "lucide-react";
 
@@ -142,6 +143,13 @@ export const navGroups: NavGroup[] = [
         to: "/live-gps",
         icon: MapPin,
         description: "Standort aller Fahrzeuge in Echtzeit auf der Karte.",
+      },
+      {
+        label: "Standorte & Umgebung",
+        to: "/standorte",
+        icon: Compass,
+        description:
+          "Kliniken, Ärzte, Apotheken, Tank- & Ladesäulen finden – powered by Google Maps.",
       },
       {
         label: "Telefon",

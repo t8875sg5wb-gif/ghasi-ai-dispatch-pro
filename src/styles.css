@@ -238,15 +238,7 @@
   backdrop-filter: blur(18px) saturate(160%);
 }
 
-/* Leaflet Fleet-Map: Marker-Reset + Puls-Animation */
-.ghasi-fleet-marker {
-  background: transparent;
-  border: none;
-}
-.leaflet-container {
-  font-family: inherit;
-  background: var(--muted);
-}
+/* Fleet-Map Marker-Puls-Animation */
 @keyframes ghasi-ping {
   75%,
   100% {
