@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Crown,
   ClipboardList,
   Users,
   Truck,
