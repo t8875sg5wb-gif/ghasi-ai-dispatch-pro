@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Crown,
   ClipboardList,
   Users,
   Truck,
@@ -57,6 +58,13 @@ export const navGroups: NavGroup[] = [
         to: "/",
         icon: LayoutDashboard,
         description: "Zentrale Echtzeit-Übersicht über Ihr gesamtes Unternehmen.",
+      },
+      {
+        label: "CEO Cockpit",
+        to: "/ceo-cockpit",
+        icon: Crown,
+        description:
+          "Der digitale Geschäftsführer: Prognosen, Cashflow, Kapazität, Empfehlungen & Risiken mit finanzieller Wirkung.",
       },
       {
         label: "Control Center",

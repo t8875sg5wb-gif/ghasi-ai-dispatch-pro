@@ -30,6 +30,7 @@ export const generateExecutiveAnalysis = createServerFn({ method: "POST" }).hand
     const { buildBrainSnapshot, computeInsights, computePrognosen } =
       await import("@/lib/ai-brain");
     const { buildKnowledgeSnapshot } = await import("@/lib/ghasi-knowledge");
+    const { buildCeoSnapshot } = await import("@/lib/ceo-intelligence");
     const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
 
     // AI Brain: load real persisted data into the in-memory mirrors first so the
@@ -52,6 +53,8 @@ Erwarteter Wochenumsatz: ${prognose.zusammenfassung.umsatzWocheGesamt} €.
 Erwarteter Engpasstag: ${prognose.zusammenfassung.erwarteterEngpassTag}.
 Fahrer-Lücke Spitze: ${prognose.zusammenfassung.fahrerLueckeSpitze}.
 Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
+
+${buildCeoSnapshot()}
 
 ${buildKnowledgeSnapshot()}`;
 
