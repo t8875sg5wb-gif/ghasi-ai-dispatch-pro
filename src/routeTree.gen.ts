@@ -36,6 +36,7 @@ import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
 import { Route as ControlCenterRouteImport } from './routes/control-center'
+import { Route as CeoCockpitRouteImport } from './routes/ceo-cockpit'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AutomatisierungRouteImport } from './routes/automatisierung'
@@ -183,6 +184,11 @@ const ControlCenterRoute = ControlCenterRouteImport.update({
   path: '/control-center',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CeoCockpitRoute = CeoCockpitRouteImport.update({
+  id: '/ceo-cockpit',
+  path: '/ceo-cockpit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BuchhaltungRoute = BuchhaltungRouteImport.update({
   id: '/buchhaltung',
   path: '/buchhaltung',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
+  '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
+    | '/ceo-cockpit'
     | '/control-center'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
+    | '/ceo-cockpit'
     | '/control-center'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
+    | '/ceo-cockpit'
     | '/control-center'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -490,6 +502,7 @@ export interface RootRouteChildren {
   AutomatisierungRoute: typeof AutomatisierungRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
+  CeoCockpitRoute: typeof CeoCockpitRoute
   ControlCenterRoute: typeof ControlCenterRoute
   DauerauftraegeRoute: typeof DauerauftraegeRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
@@ -711,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControlCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ceo-cockpit': {
+      id: '/ceo-cockpit'
+      path: '/ceo-cockpit'
+      fullPath: '/ceo-cockpit'
+      preLoaderRoute: typeof CeoCockpitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/buchhaltung': {
       id: '/buchhaltung'
       path: '/buchhaltung'
@@ -814,6 +834,7 @@ const rootRouteChildren: RootRouteChildren = {
   AutomatisierungRoute: AutomatisierungRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
+  CeoCockpitRoute: CeoCockpitRoute,
   ControlCenterRoute: ControlCenterRoute,
   DauerauftraegeRoute: DauerauftraegeRoute,
   DialysezentrenRoute: DialysezentrenRoute,

@@ -59,6 +59,13 @@ export const navGroups: NavGroup[] = [
         description: "Zentrale Echtzeit-Übersicht über Ihr gesamtes Unternehmen.",
       },
       {
+        label: "CEO Cockpit",
+        to: "/ceo-cockpit",
+        icon: Crown,
+        description:
+          "Der digitale Geschäftsführer: Prognosen, Cashflow, Kapazität, Empfehlungen & Risiken mit finanzieller Wirkung.",
+      },
+      {
         label: "Control Center",
         to: "/control-center",
         icon: Gauge,
