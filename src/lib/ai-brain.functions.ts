@@ -54,6 +54,8 @@ Erwarteter Engpasstag: ${prognose.zusammenfassung.erwarteterEngpassTag}.
 Fahrer-Lücke Spitze: ${prognose.zusammenfassung.fahrerLueckeSpitze}.
 Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
 
+${buildCeoSnapshot()}
+
 ${buildKnowledgeSnapshot()}`;
 
     const toStrings = (v: unknown): string[] =>
