@@ -228,7 +228,7 @@ export interface Kombivorschlag {
 }
 
 function ortKey(a: Auftrag): string {
-  const ziel = a.destination?.ort ?? a.zielort ?? "";
+  const ziel = a.destination?.city ?? a.zielort ?? "";
   return ziel.toLowerCase().split(/[\s,]/)[0] ?? "";
 }
 
