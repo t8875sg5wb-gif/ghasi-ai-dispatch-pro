@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Save,
+  Landmark,
 } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
@@ -23,7 +24,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { AddressFields } from "@/components/forms/address-fields";
 import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
 import {
@@ -34,25 +34,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useCompanySettings, useSaveCompanySettings } from "@/lib/company-settings-store";
+import type { CompanySettings } from "@/lib/company-settings.functions";
+import {
+  STEUER_MODI,
+  STEUER_MODUS_LABEL,
+  STEUER_HINWEIS,
+  STEUER_DISCLAIMER,
+  type SteuerModus,
+} from "@/lib/steuer";
 
 export const Route = createFileRoute("/einstellungen")({
   head: () => ({
     meta: [
       { title: "Einstellungen – GHASI AI" },
-      { name: "description", content: "Unternehmensdaten, Benachrichtigungen und Präferenzen." },
+      { name: "description", content: "Unternehmensdaten, Steuern, Benachrichtigungen und Präferenzen." },
     ],
   }),
   component: EinstellungenSeite,
 });
 
-const SPEICHER_KEY = "ghasi-einstellungen";
+// UI-Präferenzen (kein Firmenstamm) bleiben lokal im Browser.
+const PREF_KEY = "ghasi-praeferenzen";
 
-interface Einstellungen {
-  firma: string;
-  adresse: string;
-  telefon: string;
-  email: string;
-  steuernummer: string;
+interface Praeferenzen {
   benNeueAuftraege: boolean;
   benWartung: boolean;
   benRechnungen: boolean;
@@ -62,12 +67,7 @@ interface Einstellungen {
   waehrung: string;
 }
 
-const STANDARD: Einstellungen = {
-  firma: "GHASI Krankentransport GmbH",
-  adresse: "Musterstr. 1, 10115 Berlin",
-  telefon: "030 1234560",
-  email: "kontakt@ghasi-transport.de",
-  steuernummer: "DE123456789",
+const STANDARD_PREF: Praeferenzen = {
   benNeueAuftraege: true,
   benWartung: true,
   benRechnungen: true,
@@ -77,44 +77,68 @@ const STANDARD: Einstellungen = {
   waehrung: "EUR",
 };
 
-function ladeEinstellungen(): Einstellungen {
-  if (typeof window === "undefined") return STANDARD;
+function ladePraeferenzen(): Praeferenzen {
+  if (typeof window === "undefined") return STANDARD_PREF;
   try {
-    const raw = window.localStorage.getItem(SPEICHER_KEY);
-    return raw ? { ...STANDARD, ...JSON.parse(raw) } : STANDARD;
+    const raw = window.localStorage.getItem(PREF_KEY);
+    return raw ? { ...STANDARD_PREF, ...JSON.parse(raw) } : STANDARD_PREF;
   } catch {
-    return STANDARD;
+    return STANDARD_PREF;
   }
 }
+
+const RECHTSFORMEN = [
+  "Einzelunternehmen",
+  "GbR",
+  "GmbH",
+  "UG (haftungsbeschränkt)",
+  "OHG",
+  "KG",
+];
 
 function EinstellungenSeite() {
   const { theme, setTheme } = useTheme();
   const { name: akteur, role } = useAuth();
-  const [werte, setWerte] = useState<Einstellungen>(STANDARD);
-  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(STANDARD.adresse));
+  const istAdmin = role === "admin";
+
+  const { data: firma } = useCompanySettings();
+  const saveFirma = useSaveCompanySettings();
+
+  const [company, setCompany] = useState<CompanySettings>(firma);
+  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(firma.adresse));
+  const [pref, setPref] = useState<Praeferenzen>(STANDARD_PREF);
 
   useEffect(() => {
-    const geladen = ladeEinstellungen();
-    setWerte(geladen);
-    setFirmaAdr(parseAdresse(geladen.adresse));
-  }, []);
+    setCompany(firma);
+    setFirmaAdr(parseAdresse(firma.adresse));
+  }, [firma]);
 
-  function set<K extends keyof Einstellungen>(key: K, value: Einstellungen[K]) {
-    setWerte((prev) => ({ ...prev, [key]: value }));
+  useEffect(() => setPref(ladePraeferenzen()), []);
+
+  function setC<K extends keyof CompanySettings>(key: K, value: CompanySettings[K]) {
+    setCompany((prev) => ({ ...prev, [key]: value }));
+  }
+  function setP<K extends keyof Praeferenzen>(key: K, value: Praeferenzen[K]) {
+    setPref((prev) => ({ ...prev, [key]: value }));
   }
 
-  function speichern() {
+  async function speichern() {
     try {
-      window.localStorage.setItem(SPEICHER_KEY, JSON.stringify(werte));
+      window.localStorage.setItem(PREF_KEY, JSON.stringify(pref));
+      if (istAdmin) {
+        await saveFirma.mutateAsync(company);
+      }
       logActivity({
         bereich: "Einstellungen",
         aktion: "gespeichert",
-        beschreibung: "Unternehmens- und Präferenzeinstellungen wurden aktualisiert.",
+        beschreibung: istAdmin
+          ? "Unternehmens-, Steuer- und Präferenzeinstellungen wurden aktualisiert."
+          : "Persönliche Präferenzen wurden aktualisiert.",
         akteur,
       });
       toast.success("Einstellungen gespeichert");
-    } catch {
-      toast.error("Speichern fehlgeschlagen");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
     }
   }
 
@@ -128,11 +152,11 @@ function EinstellungenSeite() {
           <div>
             <h1 className="text-xl font-semibold">Einstellungen</h1>
             <p className="text-sm text-muted-foreground">
-              Unternehmensdaten, Benachrichtigungen, Darstellung und Region.
+              Unternehmensdaten, Steuern, Benachrichtigungen und Region.
             </p>
           </div>
         </div>
-        <Button onClick={speichern}>
+        <Button onClick={speichern} disabled={saveFirma.isPending}>
           <Save className="mr-1.5 h-4 w-4" /> Speichern
         </Button>
       </div>
@@ -145,8 +169,44 @@ function EinstellungenSeite() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Feld label="Firmenname">
-              <Input value={werte.firma} onChange={(e) => set("firma", e.target.value)} />
+            {!istAdmin && (
+              <p className="rounded-lg bg-muted/50 p-2 text-xs text-muted-foreground">
+                Nur Administratoren können die Unternehmensdaten ändern.
+              </p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Feld label="Firmenname">
+                <Input
+                  value={company.firma}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("firma", e.target.value)}
+                />
+              </Feld>
+              <Feld label="Rechtsform">
+                <Select
+                  value={company.rechtsform}
+                  onValueChange={(v) => setC("rechtsform", v)}
+                  disabled={!istAdmin}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECHTSFORMEN.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Feld>
+            </div>
+            <Feld label="Inhaber (bei Einzelunternehmen)">
+              <Input
+                value={company.inhaber}
+                disabled={!istAdmin}
+                onChange={(e) => setC("inhaber", e.target.value)}
+              />
             </Feld>
             <AddressFields
               idPrefix="firma-adresse"
@@ -154,24 +214,88 @@ function EinstellungenSeite() {
               value={firmaAdr}
               onChange={(next) => {
                 setFirmaAdr(next);
-                set("adresse", formatAdresse(next));
+                setC("adresse", formatAdresse(next));
               }}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Feld label="Telefon">
-                <Input value={werte.telefon} onChange={(e) => set("telefon", e.target.value)} />
+                <Input
+                  value={company.telefon}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("telefon", e.target.value)}
+                />
               </Feld>
               <Feld label="E-Mail">
-                <Input value={werte.email} onChange={(e) => set("email", e.target.value)} />
+                <Input
+                  value={company.email}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("email", e.target.value)}
+                />
               </Feld>
             </div>
-            <Feld label="Steuernummer / USt-IdNr.">
-              <Input
-                value={werte.steuernummer}
-                onChange={(e) => set("steuernummer", e.target.value)}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Feld label="Steuernummer">
+                <Input
+                  value={company.steuernummer}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("steuernummer", e.target.value)}
+                />
+              </Feld>
+              <Feld label="USt-IdNr. (falls vorhanden)">
+                <Input
+                  value={company.ustId}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("ustId", e.target.value)}
+                />
+              </Feld>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Steuern */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Landmark className="h-4 w-4" /> Steuern
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Feld label="Umsatzsteuer-Modus">
+              <Select
+                value={company.steuerModus}
+                onValueChange={(v) => setC("steuerModus", v as SteuerModus)}
+                disabled={!istAdmin}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STEUER_MODI.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {STEUER_MODUS_LABEL[m]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Feld>
+            <p className="rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
+              {STEUER_HINWEIS[company.steuerModus]}
+            </p>
+            <Feld label="Gewerbesteuer-Hebesatz (%)">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={company.gewerbesteuerHebesatz}
+                disabled={!istAdmin}
+                onChange={(e) => setC("gewerbesteuerHebesatz", Number(e.target.value) || 0)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Referenzwert Minden: 460 %. Grundlage für die Gewinn-nach-Steuern-Schätzung im CEO
+                Cockpit.
+              </p>
+            </Feld>
+            <p className="text-xs italic text-muted-foreground">{STEUER_DISCLAIMER}</p>
           </CardContent>
         </Card>
 
@@ -185,26 +309,26 @@ function EinstellungenSeite() {
             <SchalterZeile
               label="Neue Aufträge"
               beschreibung="Hinweis bei eingehenden Transportaufträgen"
-              checked={werte.benNeueAuftraege}
-              onChange={(v) => set("benNeueAuftraege", v)}
+              checked={pref.benNeueAuftraege}
+              onChange={(v) => setP("benNeueAuftraege", v)}
             />
             <SchalterZeile
               label="Wartung & TÜV"
               beschreibung="Erinnerungen für Fahrzeugwartung und Fristen"
-              checked={werte.benWartung}
-              onChange={(v) => set("benWartung", v)}
+              checked={pref.benWartung}
+              onChange={(v) => setP("benWartung", v)}
             />
             <SchalterZeile
               label="Rechnungen"
               beschreibung="Hinweis bei offenen und überfälligen Rechnungen"
-              checked={werte.benRechnungen}
-              onChange={(v) => set("benRechnungen", v)}
+              checked={pref.benRechnungen}
+              onChange={(v) => setP("benRechnungen", v)}
             />
             <SchalterZeile
               label="GHASI AI Hinweise"
               beschreibung="Proaktive Empfehlungen des digitalen Geschäftsführers"
-              checked={werte.benKiHinweise}
-              onChange={(v) => set("benKiHinweise", v)}
+              checked={pref.benKiHinweise}
+              onChange={(v) => setP("benKiHinweise", v)}
             />
           </CardContent>
         </Card>
@@ -253,7 +377,7 @@ function EinstellungenSeite() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Feld label="Sprache">
-                <Select value={werte.sprache} onValueChange={(v) => set("sprache", v)}>
+                <Select value={pref.sprache} onValueChange={(v) => setP("sprache", v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -265,7 +389,7 @@ function EinstellungenSeite() {
                 </Select>
               </Feld>
               <Feld label="Währung">
-                <Select value={werte.waehrung} onValueChange={(v) => set("waehrung", v)}>
+                <Select value={pref.waehrung} onValueChange={(v) => setP("waehrung", v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -277,7 +401,7 @@ function EinstellungenSeite() {
               </Feld>
             </div>
             <Feld label="Zeitzone">
-              <Select value={werte.zeitzone} onValueChange={(v) => set("zeitzone", v)}>
+              <Select value={pref.zeitzone} onValueChange={(v) => setP("zeitzone", v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

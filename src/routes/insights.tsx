@@ -22,6 +22,9 @@ import {
   type InsightKategorie,
   type InsightWirkung,
 } from "@/lib/ai-brain";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/insights")({
   head: () => ({
@@ -103,6 +106,9 @@ function InsightCard({ insight }: { insight: Insight }) {
 }
 
 function InsightsPage() {
+  useOrders();
+  useDrivers();
+  useInvoices();
   const insights = computeInsights();
   const hoch = insights.filter((i) => i.wirkung === "hoch").length;
 

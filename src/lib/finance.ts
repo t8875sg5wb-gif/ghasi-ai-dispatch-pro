@@ -177,7 +177,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-1",
     abrechnungsart: "Krankenkasse",
     betrag: 1240,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "ueberfaellig",
     datum: "2026-05-02",
     faelligkeit: "2026-05-16",
@@ -193,7 +193,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-2",
     abrechnungsart: "Krankenkasse",
     betrag: 860,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "offen",
     datum: "2026-06-10",
     faelligkeit: "2026-06-24",
@@ -212,7 +212,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-4",
     abrechnungsart: "Kunde",
     betrag: 2180,
-    mwstSatz: 19,
+    mwstSatz: 0,
     status: "ueberfaellig",
     datum: "2026-04-28",
     faelligkeit: "2026-05-12",
@@ -227,14 +227,14 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-5",
     abrechnungsart: "Krankenkasse",
     betrag: 540,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "bezahlt",
     datum: "2026-05-30",
     faelligkeit: "2026-06-13",
     bezahltAm: "2026-06-08",
     bezahlterBetrag: 540,
     bezugAuftrag: "A-2043",
-    positionen: [pos("Sitzendtransport Charlottenburg → Augenklinik", 1, 540)],
+    positionen: [pos("Sitzendtransport Bad Oeynhausen → Augenklinik", 1, 540)],
   },
   {
     id: "r-5",
@@ -244,7 +244,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-3",
     abrechnungsart: "Kunde",
     betrag: 3260,
-    mwstSatz: 19,
+    mwstSatz: 0,
     status: "offen",
     datum: "2026-06-15",
     faelligkeit: "2026-06-29",
@@ -261,7 +261,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-2",
     abrechnungsart: "Krankenkasse",
     betrag: 320,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "teilbezahlt",
     datum: "2026-06-01",
     faelligkeit: "2026-06-15",
@@ -278,12 +278,12 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-3",
     abrechnungsart: "Patient",
     betrag: 410,
-    mwstSatz: 19,
+    mwstSatz: 0,
     status: "offen",
     datum: "2026-06-20",
     faelligkeit: "2026-07-04",
     bezugAuftrag: "A-2044",
-    positionen: [pos("Notfalltransport Neukölln → Klinikum West", 1, 410)],
+    positionen: [pos("Notfalltransport Porta Westfalica → Klinikum West", 1, 410)],
   },
   {
     id: "r-8",
@@ -293,7 +293,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-1",
     abrechnungsart: "Krankenkasse",
     betrag: 1240,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "offen",
     datum: "2026-05-02",
     faelligkeit: "2026-05-16",
@@ -309,7 +309,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-4",
     abrechnungsart: "Kunde",
     betrag: -180,
-    mwstSatz: 19,
+    mwstSatz: 0,
     status: "bezahlt",
     datum: "2026-05-20",
     faelligkeit: "2026-05-20",
@@ -325,7 +325,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     kundeId: "k-2",
     abrechnungsart: "Krankenkasse",
     betrag: 980,
-    mwstSatz: 7,
+    mwstSatz: 0,
     status: "bezahlt",
     datum: "2026-04-12",
     faelligkeit: "2026-04-26",
@@ -348,12 +348,22 @@ export function nextRechnungId(): string {
   return `r-${idCounter}`;
 }
 
+/**
+ * Der gespeicherte `betrag` ist der Netto-Leistungsbetrag. Für den
+ * Krankentransport gilt i. d. R. § 4 Nr. 17b UStG (0 % USt), sodass
+ * Netto = Brutto ist. Nur bei Regelbesteuerung (mwstSatz > 0) wird USt
+ * aufgeschlagen.
+ */
 export function netto(r: Rechnung): number {
-  return round(r.betrag / (1 + r.mwstSatz / 100), 2);
+  return round(r.betrag, 2);
 }
 
 export function mwstBetrag(r: Rechnung): number {
-  return round(r.betrag - netto(r), 2);
+  return round(r.betrag * (r.mwstSatz / 100), 2);
+}
+
+export function brutto(r: Rechnung): number {
+  return round(netto(r) + mwstBetrag(r), 2);
 }
 
 /* ------------------------------------------------------------------ *

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { PieChart, TrendingUp, Activity, Truck, Users } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -9,6 +8,9 @@ import { ForecastAreaChart, ForecastBarChart } from "@/components/enterprise/for
 import { computePrognosen, computeKpis, type ForecastPoint } from "@/lib/ai-brain";
 import { INITIAL_AUFTRAEGE, TRANSPORTARTEN } from "@/lib/auftraege";
 import { computeFinanzKpis, EUR } from "@/lib/finance";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/statistiken")({
   head: () => ({
@@ -25,29 +27,28 @@ export const Route = createFileRoute("/statistiken")({
 });
 
 function StatistikenPage() {
-  const prognose = useMemo(() => computePrognosen(), []);
-  const kpis = useMemo(() => computeKpis(), []);
-  const finanz = useMemo(() => computeFinanzKpis(), []);
+  // Live-Hydration, damit die Kennzahlen bei jeder Datenänderung neu berechnet werden.
+  useOrders();
+  useDrivers();
+  useInvoices();
 
-  const transportVerteilung: ForecastPoint[] = useMemo(
-    () =>
-      TRANSPORTARTEN.map((art) => ({
-        label: art.replace("transport", "tr."),
-        prognose: INITIAL_AUFTRAEGE.filter((a) => a.transportart === art).length,
-      })),
-    [],
-  );
+  const prognose = computePrognosen();
+  const kpis = computeKpis();
+  const finanz = computeFinanzKpis();
 
-  const kostenVerteilung: ForecastPoint[] = useMemo(
-    () => [
-      { label: "Fahrzeug", prognose: finanz.kosten.fahrzeugkosten },
-      { label: "Kraftstoff", prognose: finanz.kosten.kraftstoffkosten },
-      { label: "Wartung", prognose: finanz.kosten.wartungskosten },
-      { label: "Fahrer", prognose: finanz.kosten.fahrerkosten },
-      { label: "Leasing", prognose: finanz.kosten.leasingkosten },
-    ],
-    [finanz],
-  );
+  const transportVerteilung: ForecastPoint[] = TRANSPORTARTEN.map((art) => ({
+    label: art.replace("transport", "tr."),
+    prognose: INITIAL_AUFTRAEGE.filter((a) => a.transportart === art).length,
+  }));
+
+  const kostenVerteilung: ForecastPoint[] = [
+    { label: "Fahrzeug", prognose: finanz.kosten.fahrzeugkosten },
+    { label: "Kraftstoff", prognose: finanz.kosten.kraftstoffkosten },
+    { label: "Wartung", prognose: finanz.kosten.wartungskosten },
+    { label: "Fahrer", prognose: finanz.kosten.fahrerkosten },
+    { label: "Leasing", prognose: finanz.kosten.leasingkosten },
+  ];
+
 
   return (
     <div className="animate-fade-in space-y-6">

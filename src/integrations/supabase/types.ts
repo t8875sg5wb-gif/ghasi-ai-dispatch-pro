@@ -190,6 +190,57 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          adresse: string
+          created_at: string
+          email: string
+          firma: string
+          gewerbesteuer_hebesatz: number
+          id: string
+          inhaber: string
+          rechtsform: string
+          singleton: number
+          steuer_modus: string
+          steuernummer: string
+          telefon: string
+          updated_at: string
+          ust_id: string
+        }
+        Insert: {
+          adresse?: string
+          created_at?: string
+          email?: string
+          firma?: string
+          gewerbesteuer_hebesatz?: number
+          id?: string
+          inhaber?: string
+          rechtsform?: string
+          singleton?: number
+          steuer_modus?: string
+          steuernummer?: string
+          telefon?: string
+          updated_at?: string
+          ust_id?: string
+        }
+        Update: {
+          adresse?: string
+          created_at?: string
+          email?: string
+          firma?: string
+          gewerbesteuer_hebesatz?: number
+          id?: string
+          inhaber?: string
+          rechtsform?: string
+          singleton?: number
+          steuer_modus?: string
+          steuernummer?: string
+          telefon?: string
+          updated_at?: string
+          ust_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           adresse: string | null

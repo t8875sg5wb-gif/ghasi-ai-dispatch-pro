@@ -195,23 +195,12 @@ export const navGroups: NavGroup[] = [
         description: "Patientenakten, Mobilität und Transportbedarf.",
       },
       {
-        label: "Krankenhäuser",
-        to: "/krankenhaeuser",
+        label: "Einrichtungen",
+        to: "/einrichtungen",
         icon: Hospital,
-        description: "Kliniken, Stationen und Ansprechpartner.",
+        description: "Krankenhäuser, Dialysezentren und Pflegeheime an einem Ort.",
       },
-      {
-        label: "Dialysezentren",
-        to: "/dialysezentren",
-        icon: Droplets,
-        description: "Dialysepartner, Termine und wiederkehrende Fahrten.",
-      },
-      {
-        label: "Pflegeheime",
-        to: "/pflegeheime",
-        icon: Home,
-        description: "Einrichtungen, Bewohner und regelmäßige Transporte.",
-      },
+
     ],
   },
   {

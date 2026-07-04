@@ -32,6 +32,7 @@ import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrerRouteImport } from './routes/fahrer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
@@ -164,6 +165,11 @@ const EinstellungenRoute = EinstellungenRouteImport.update({
   path: '/einstellungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EinrichtungenRoute = EinrichtungenRouteImport.update({
+  id: '/einrichtungen',
+  path: '/einrichtungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DokumenteRoute = DokumenteRouteImport.update({
   id: '/dokumente',
   path: '/dokumente',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
+  '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
+  '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
@@ -341,6 +349,7 @@ export interface FileRoutesById {
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
+  '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
   '/fahrzeuge': typeof FahrzeugeRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
+    | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
+    | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
+    | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
     | '/fahrzeuge'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   DauerauftraegeRoute: typeof DauerauftraegeRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
   DokumenteRoute: typeof DokumenteRoute
+  EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EinstellungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/einrichtungen': {
+      id: '/einrichtungen'
+      path: '/einrichtungen'
+      fullPath: '/einrichtungen'
+      preLoaderRoute: typeof EinrichtungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dokumente': {
       id: '/dokumente'
       path: '/dokumente'
@@ -839,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   DauerauftraegeRoute: DauerauftraegeRoute,
   DialysezentrenRoute: DialysezentrenRoute,
   DokumenteRoute: DokumenteRoute,
+  EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
   FahrzeugeRoute: FahrzeugeRoute,

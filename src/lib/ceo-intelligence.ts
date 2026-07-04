@@ -22,7 +22,13 @@ import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, reparaturkostenGesamt, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag, type Transportart } from "@/lib/auftraege";
 import { KUNDEN } from "@/lib/stammdaten";
-import { computeFinanzKpis, computeKostenaufstellung } from "@/lib/finance";
+import {
+  computeFinanzKpis,
+  computeKostenaufstellung,
+  netto,
+  INITIAL_RECHNUNGEN,
+  type Rechnung,
+} from "@/lib/finance";
 import { computeKpis, computeBusinessHealth, EUR, type BrainKpis } from "@/lib/ai-brain";
 
 const round = (n: number, d = 0) => {
@@ -102,22 +108,37 @@ export interface AuftragProfit {
   kosten: number;
   gewinn: number;
   marge: number;
+  /** true = Umsatz aus TARIF geschätzt; false = aus verknüpfter Rechnung übernommen. */
+  istSchaetzung: boolean;
 }
 
-export function profitProAuftrag(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): AuftragProfit[] {
+export function profitProAuftrag(
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+): AuftragProfit[] {
+  // Index der Netto-Umsätze je verknüpftem Auftrag (echte Rechnungen).
+  const rechnungUmsatz = new Map<string, number>();
+  for (const r of rechnungen) {
+    if (r.typ !== "rechnung" || !r.bezugAuftrag) continue;
+    rechnungUmsatz.set(r.bezugAuftrag, (rechnungUmsatz.get(r.bezugAuftrag) ?? 0) + netto(r));
+  }
+
   return auftraege
     .filter((a) => a.status !== "storniert")
     .map((a) => {
       const t = TARIF[a.transportart] ?? TARIF.Sitzendtransport;
       const km = seedKm(a.id, t.avgKm);
-      const umsatz = round(t.grund + km * t.proKm);
+      const echterUmsatz = rechnungUmsatz.get(a.nummer);
+      const istSchaetzung = echterUmsatz === undefined;
+      const umsatz = istSchaetzung ? round(t.grund + km * t.proKm) : round(echterUmsatz);
       const kosten = round(km * KOSTEN_PRO_KM + t.grund * 0.25);
       const gewinn = round(umsatz - kosten);
       const marge = umsatz > 0 ? round((gewinn / umsatz) * 100) : 0;
-      return { auftrag: a, km, umsatz, kosten, gewinn, marge };
+      return { auftrag: a, km, umsatz, kosten, gewinn, marge, istSchaetzung };
     })
     .sort((a, b) => b.gewinn - a.gewinn);
 }
+
 
 export interface FahrerProfit {
   fahrer: Fahrer;

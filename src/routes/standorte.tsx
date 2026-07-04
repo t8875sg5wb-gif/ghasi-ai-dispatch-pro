@@ -49,8 +49,8 @@ export const Route = createFileRoute("/standorte")({
   component: StandorteSeite,
 });
 
-// Betriebshof (Berlin-Mitte) als Standardzentrum.
-const BASIS = { lat: 52.52, lng: 13.405 };
+// Betriebshof (Minden, NRW) als Standardzentrum.
+const BASIS = { lat: 52.2887, lng: 8.9167 };
 
 interface KategorieDef {
   id: PlaceKategorie;

@@ -14,6 +14,7 @@ import {
   type InvoiceWrite,
 } from "@/lib/invoices-shared";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
+import { modusFuerTransportart, satzFuer, STEUER_HINWEIS } from "@/lib/steuer";
 
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -121,16 +122,13 @@ async function loadInvoices(supabase: SupabaseReadClient): Promise<Rechnung[]> {
   return (data ?? []).map((r: unknown) => rowToRechnung(r as InvoiceRow));
 }
 
-function abrechnungsartFuer(kostentraeger: string): {
-  art: "Krankenkasse" | "Patient" | "Kunde";
-  mwst: number;
-} {
+function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" | "Kunde" {
   const k = kostentraeger.toLowerCase();
   if (/kasse|aok|barmer|dak|tk|techniker|krankenkasse|kkh|ikk/.test(k)) {
-    return { art: "Krankenkasse", mwst: 7 };
+    return "Krankenkasse";
   }
-  if (/selbstzahler|patient|privat/.test(k)) return { art: "Patient", mwst: 19 };
-  return { art: "Kunde", mwst: 19 };
+  if (/selbstzahler|patient|privat/.test(k)) return "Patient";
+  return "Kunde";
 }
 
 /** Billing-ready completed transports that do not yet have an invoice. */
@@ -172,7 +170,9 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
       if (!abrechnungsBereitschaft(a).bereit) continue;
       if (berechnet.has(a.nummer)) continue;
       const betrag = preisFuer(a);
-      const { art, mwst } = abrechnungsartFuer(a.kostentraeger);
+      const art = abrechnungsartFuer(a.kostentraeger);
+      const modus = modusFuerTransportart(a.transportart);
+      const mwst = satzFuer(modus);
       const nummer = `RE-2026-${String(40 + lfd++).padStart(4, "0")}`;
       nummern.push(nummer);
       writes.push(
@@ -191,7 +191,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
           positionen: [
             { beschreibung: `${a.transportart} ${a.nummer}`, menge: 1, einzelpreis: betrag },
           ],
-          notiz: "Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe.",
+          notiz: `Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe. ${STEUER_HINWEIS[modus]}`,
         }),
       );
       berechnet.add(a.nummer);

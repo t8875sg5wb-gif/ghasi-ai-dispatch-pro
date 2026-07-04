@@ -28,6 +28,8 @@ import { Progress } from "@/components/ui/progress";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useCompanySettings } from "@/lib/company-settings-store";
+import { computeGewerbesteuer, computeGewinnNachSteuern, STEUER_DISCLAIMER } from "@/lib/steuer";
 import { computeKpis, computeBusinessHealth, EUR } from "@/lib/ai-brain";
 import {
   computeCashflowForecast,
@@ -36,6 +38,7 @@ import {
   computeCeoRecommendations,
   computeRiskAlerts,
   profitProFahrer,
+  profitProAuftrag,
   buildCeoBriefing,
   buildEveningSummary,
   type CeoWirkung,
@@ -74,6 +77,7 @@ function CeoCockpit() {
   useDrivers();
   useInvoices();
 
+  const { data: firma } = useCompanySettings();
   const kpis = computeKpis();
   const health = computeBusinessHealth(kpis);
   const cashflow = computeCashflowForecast(kpis);
@@ -82,8 +86,15 @@ function CeoCockpit() {
   const recs = computeCeoRecommendations();
   const risks = computeRiskAlerts();
   const topFahrer = profitProFahrer().slice(0, 4);
+  const topAuftraege = profitProAuftrag().slice(0, 6);
   const briefing = buildCeoBriefing();
   const abend = buildEveningSummary();
+
+  // Gewinn nach Steuern (Schätzung) auf Basis des Jahresgewinns (365-Tage-Prognose)
+  // und des Gewerbesteuer-Hebesatzes aus den Unternehmenseinstellungen.
+  const jahresGewinn = cashflow.find((c) => c.tage === 365)?.gewinn ?? 0;
+  const gewerbesteuer = computeGewerbesteuer(jahresGewinn, firma.gewerbesteuerHebesatz);
+  const gewinnNachSteuern = computeGewinnNachSteuern(jahresGewinn, firma.gewerbesteuerHebesatz);
 
   const stats = [
     {
@@ -233,6 +244,44 @@ function CeoCockpit() {
         </CardContent>
       </Card>
 
+      {/* Gewinn nach Steuern (Schätzung) */}
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
+            <TrendingUp className="h-4 w-4" />
+          </span>
+          <CardTitle className="text-base">Gewinn nach Steuern (Schätzung)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+              <p className="text-xs font-medium text-muted-foreground">Jahresgewinn (Prognose)</p>
+              <p className="mt-1 text-lg font-bold tabular-nums">{EUR(jahresGewinn)}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Gewerbesteuer (Hebesatz {firma.gewerbesteuerHebesatz} %)
+              </p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-destructive">
+                −{EUR(gewerbesteuer)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-success/30 bg-success/5 p-4">
+              <p className="text-xs font-medium text-muted-foreground">Gewinn nach Gewerbesteuer</p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-success">
+                {EUR(gewinnNachSteuern)}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Vereinfachte Schätzung (Freibetrag 24.500 €, Steuermesszahl 3,5 %). Einkommensteuer und
+            weitere Faktoren sind nicht berücksichtigt. {STEUER_DISCLAIMER}
+          </p>
+        </CardContent>
+      </Card>
+
+
+
       {/* Empfehlungen + Risiken */}
       <section className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border/70 shadow-sm">
@@ -336,6 +385,57 @@ function CeoCockpit() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Profit je Auftrag (echt aus Rechnungen vs. Schätzung) */}
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Euro className="h-4 w-4" />
+          </span>
+          <CardTitle className="text-base">Profit je Auftrag</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {topAuftraege.length === 0 && (
+            <p className="text-sm text-muted-foreground">Noch keine Auftragsdaten geladen.</p>
+          )}
+          {topAuftraege.map((a) => (
+            <div
+              key={a.auftrag.id}
+              className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {a.auftrag.nummer} · {a.auftrag.patient}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Umsatz {EUR(a.umsatz)} · Kosten {EUR(a.kosten)} · Marge {a.marge} %
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold tabular-nums text-success">
+                  {EUR(a.gewinn)}
+                </span>
+                <Badge
+                  variant="outline"
+                  className={
+                    a.istSchaetzung
+                      ? "border-warning/30 bg-warning/10 text-warning"
+                      : "border-success/30 bg-success/10 text-success"
+                  }
+                >
+                  {a.istSchaetzung ? "Schätzung" : "Rechnung"}
+                </Badge>
+              </div>
+            </div>
+          ))}
+          <p className="pt-1 text-xs text-muted-foreground">
+            „Rechnung“ = Umsatz aus verknüpfter Rechnung. „Schätzung“ = Tarifkalkulation für noch
+            nicht berechnete Aufträge.
+          </p>
+        </CardContent>
+      </Card>
+
+
 
       <ExecutiveAnalysis />
     </div>

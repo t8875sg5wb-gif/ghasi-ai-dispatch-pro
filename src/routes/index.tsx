@@ -13,17 +13,13 @@ import {
   Gauge,
   Activity,
   AlertTriangle,
-  CloudSun,
-  TrafficCone,
   CalendarDays,
   Sparkles,
   ArrowRight,
   Inbox,
   ListTodo,
-  BadgeCheck,
   Zap,
   Bot,
-  ClipboardCheck,
 } from "lucide-react";
 
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -34,6 +30,16 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
+import { useCalls } from "@/lib/calls-store";
+import { computeKpis, EUR } from "@/lib/ai-brain";
+import { computeFinanzKpis } from "@/lib/finance";
+import {
+  computeCashflowForecast,
+  computeEmptyMileage,
+  computeCeoRecommendations,
+} from "@/lib/ceo-intelligence";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { LiveFleetMapCard } from "@/components/gps/live-fleet-map-card";
 
@@ -51,122 +57,12 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-const stats = [
-  {
-    label: "Umsatz heute",
-    value: "8.420 €",
-    icon: Euro,
-    tone: "primary" as const,
-    trend: { value: "12 %", positive: true },
-    hint: "vs. gestern",
-  },
-  {
-    label: "Gewinn heute",
-    value: "2.180 €",
-    icon: TrendingUp,
-    tone: "success" as const,
-    trend: { value: "8 %", positive: true },
-    hint: "Marge 26 %",
-  },
-  {
-    label: "Offene Aufträge",
-    value: "14",
-    icon: ClipboardList,
-    tone: "info" as const,
-    hint: "5 dringend",
-  },
-  {
-    label: "Laufende Aufträge",
-    value: "9",
-    icon: Loader,
-    tone: "accent" as const,
-    hint: "in Bearbeitung",
-  },
-  {
-    label: "Fahrer unterwegs",
-    value: "11",
-    icon: UserCheck,
-    tone: "primary" as const,
-    hint: "von 18 aktiv",
-  },
-  {
-    label: "Freie Fahrer",
-    value: "7",
-    icon: UserPlus,
-    tone: "success" as const,
-    hint: "verfügbar",
-  },
-  {
-    label: "Fahrzeuge unterwegs",
-    value: "10",
-    icon: Truck,
-    tone: "info" as const,
-    hint: "von 16 Fahrzeugen",
-  },
-  {
-    label: "Freie Fahrzeuge",
-    value: "6",
-    icon: Car,
-    tone: "accent" as const,
-    hint: "einsatzbereit",
-  },
-  {
-    label: "Tankkosten",
-    value: "612 €",
-    icon: Fuel,
-    tone: "warning" as const,
-    trend: { value: "3 %", positive: false },
-    hint: "heute",
-  },
-  {
-    label: "Leerkilometer",
-    value: "184 km",
-    icon: Gauge,
-    tone: "warning" as const,
-    trend: { value: "5 %", positive: false },
-    hint: "Optimierung möglich",
-  },
-];
-
-const warnings = [
-  { text: "Fahrzeug B-KT 142 – TÜV in 6 Tagen fällig", level: "Hoch" },
-  { text: "Fahrer M. Keller – Führerschein-Prüfung überfällig", level: "Hoch" },
-  { text: "3 Rechnungen über Zahlungsziel", level: "Mittel" },
-];
-
-const recommendations = [
-  "Tour #A-204 kann mit #A-209 zusammengelegt werden – spart ca. 22 km Leerfahrt.",
-  "2 freie Fahrer für die Dialyse-Frühschicht morgen 06:00 einplanen.",
-  "Kraftstoffpreise heute günstig – Tankvorgänge vorziehen empfohlen.",
-];
-
-const appointments = [
-  { time: "08:30", text: "Dialyse-Sammeltour Zentrum Nord", tag: "Tour" },
-  { time: "11:00", text: "Wartungstermin B-KT 097", tag: "Werkstatt" },
-  { time: "14:15", text: "Kunde Klinikum West – Vertragsgespräch", tag: "Termin" },
-  { time: "16:45", text: "Rückfahrt Pflegeheim Sonnenhof", tag: "Auftrag" },
-];
-
-const aufgaben = [
-  { text: "3 Rechnungen über Zahlungsziel prüfen", to: "/rechnungen" },
-  { text: "Dialyse-Frühschicht morgen disponieren", to: "/tourenplanung" },
-  { text: "TÜV-Termin für B-KT 142 vereinbaren", to: "/wartung" },
-];
-
-const nachrichten = [
-  { von: "Klinikum West", text: "Rückfahrt 16:45 bestätigt", to: "/telefon" },
-  { von: "Fahrer M. Keller", text: "Verspätung 10 Min – Stau A100", to: "/fahrer" },
-];
-
-const genehmigungen = [
-  { text: "Überstundenfreigabe S. Aydin (12 h)", to: "/fahrer" },
-  { text: "Reparaturfreigabe B-KT 097 (480 €)", to: "/wartung" },
-];
-
-const kiAufgaben = [
-  { text: "Tour A-204 + A-209 zusammenlegen", to: "/tourenplanung" },
-  { text: "Tankstopp B-KT 211 vorschlagen", to: "/fahrzeuge" },
-];
+const stufeStyle: Record<HinweisStufe, string> = {
+  kritisch: "bg-destructive",
+  warnung: "bg-warning",
+  info: "bg-info",
+  positiv: "bg-success",
+};
 
 const schnellzugriffe = [
   { label: "Neuer Auftrag", to: "/auftraege", icon: ClipboardList },
@@ -175,23 +71,148 @@ const schnellzugriffe = [
   { label: "Tourenplanung", to: "/tourenplanung", icon: Activity },
   { label: "Rechnungen", to: "/rechnungen", icon: Euro },
   { label: "GHASI AI", to: "/ki-assistent", icon: Bot },
-];
+] as const;
 
-const stufeStyle: Record<HinweisStufe, string> = {
-  kritisch: "bg-destructive",
-  warnung: "bg-warning",
-  info: "bg-info",
-  positiv: "bg-success",
-};
+function istHeute(iso: string): boolean {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const n = new Date();
+  return (
+    d.getFullYear() === n.getFullYear() &&
+    d.getMonth() === n.getMonth() &&
+    d.getDate() === n.getDate()
+  );
+}
 
 function Dashboard() {
+  // Live-Hydration der geteilten Spiegel (Aufträge/Fahrer/Rechnungen/Anrufe),
+  // damit alle deterministischen Kennzahlen auf den echten Daten laufen.
+  const { data: auftraege = [] } = useOrders();
+  useDrivers();
+  const { data: rechnungen = [] } = useInvoices();
+  const { data: anrufe = [] } = useCalls();
+
   // Zeit-/datumsabhängige Hinweise erst nach Mount erzeugen (kein SSR-Mismatch).
   const [hinweise, setHinweise] = useState<Hinweis[]>([]);
-  useEffect(() => setHinweise(generateHinweise()), []);
-  const { data: auftraege = [] } = useOrders();
-  const auslastungFahrzeuge = 63;
-  const auslastungFahrer = 61;
-  const prognose = "11.900 €";
+  useEffect(() => setHinweise(generateHinweise()), [auftraege, rechnungen]);
+
+  const kpis = computeKpis();
+  const fin = computeFinanzKpis();
+  const empty = computeEmptyMileage();
+  const cashflow = computeCashflowForecast(kpis);
+  const recs = computeCeoRecommendations();
+  const prognose7 = cashflow[0];
+
+  const gesamtFahrer = kpis.aktiveFahrer + kpis.freieFahrer;
+  const gesamtFahrzeuge = kpis.aktiveFahrzeuge + kpis.freieFahrzeuge;
+
+  const stats = [
+    {
+      label: "Umsatz heute",
+      value: EUR(kpis.umsatzHeute),
+      icon: Euro,
+      tone: "primary" as const,
+      hint: `Monat ${EUR(kpis.umsatzMonat)}`,
+    },
+    {
+      label: "Gewinn heute",
+      value: EUR(kpis.gewinnHeute),
+      icon: TrendingUp,
+      tone: "success" as const,
+      hint: `Marge ${kpis.margeProzent} %`,
+    },
+    {
+      label: "Offene Aufträge",
+      value: String(kpis.offeneTransporte),
+      icon: ClipboardList,
+      tone: "info" as const,
+      hint: "neu & disponiert",
+    },
+    {
+      label: "Laufende Aufträge",
+      value: String(kpis.laufendeTransporte),
+      icon: Loader,
+      tone: "accent" as const,
+      hint: "in Bearbeitung",
+    },
+    {
+      label: "Fahrer unterwegs",
+      value: String(kpis.aktiveFahrer),
+      icon: UserCheck,
+      tone: "primary" as const,
+      hint: `von ${gesamtFahrer} aktiv`,
+    },
+    {
+      label: "Freie Fahrer",
+      value: String(kpis.freieFahrer),
+      icon: UserPlus,
+      tone: "success" as const,
+      hint: "verfügbar",
+    },
+    {
+      label: "Fahrzeuge unterwegs",
+      value: String(kpis.aktiveFahrzeuge),
+      icon: Truck,
+      tone: "info" as const,
+      hint: `von ${gesamtFahrzeuge} Fahrzeugen`,
+    },
+    {
+      label: "Freie Fahrzeuge",
+      value: String(kpis.freieFahrzeuge),
+      icon: Car,
+      tone: "accent" as const,
+      hint: "einsatzbereit",
+    },
+    {
+      label: "Kraftstoff / Monat",
+      value: EUR(fin.kosten.kraftstoffkosten),
+      icon: Fuel,
+      tone: "warning" as const,
+      hint: "geschätzt",
+    },
+    {
+      label: "Leerkilometer",
+      value: `${empty.leerKm} km`,
+      icon: Gauge,
+      tone: "warning" as const,
+      hint: `${empty.anteilProzent} % · Optimierung möglich`,
+    },
+  ];
+
+  // Warnungen aus echten Hinweisen (kritisch/warnung).
+  const warnungen = hinweise.filter((h) => h.stufe === "kritisch" || h.stufe === "warnung");
+
+  // Offene Aufgaben – dynamisch aus echten Signalen.
+  const aufgaben: { text: string; to: string }[] = [];
+  if (fin.anzahlUeberfaellig > 0)
+    aufgaben.push({
+      text: `${fin.anzahlUeberfaellig} überfällige Rechnung(en) prüfen (${EUR(fin.ueberfaelligeSumme)})`,
+      to: "/rechnungen",
+    });
+  const unbesetzt = auftraege.filter(
+    (a) => (a.status === "neu" || a.status === "disponiert") && !a.fahrer,
+  ).length;
+  if (unbesetzt > 0)
+    aufgaben.push({ text: `${unbesetzt} Auftrag/Aufträge ohne Fahrer disponieren`, to: "/tourenplanung" });
+  if (kpis.kritischeAlarme > 0)
+    aufgaben.push({
+      text: `${kpis.kritischeAlarme} Fahrzeug(e) mit ablaufender Frist (TÜV/Versicherung/Wartung)`,
+      to: "/warnungen",
+    });
+
+  // Neue Nachrichten – aus offenen/rückruf-pflichtigen Anrufen.
+  const offeneAnrufe = anrufe
+    .filter((a) => a.status === "offen" || a.status === "rueckruf")
+    .slice(0, 4);
+
+  // KI-Aufgaben – aus echten CEO-Empfehlungen.
+  const kiAufgaben = recs.slice(0, 3);
+
+  // Kalender heute – echte Termine aus den Aufträgen.
+  const termineHeute = [...auftraege]
+    .filter((a) => a.status !== "storniert" && istHeute(a.termin))
+    .sort((a, b) => new Date(a.termin).getTime() - new Date(b.termin).getTime())
+    .slice(0, 6);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -279,59 +300,61 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
               <TrendingUp className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base">Gewinnprognose</CardTitle>
+            <CardTitle className="text-base">Gewinnprognose (7 Tage)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-3xl font-bold tabular-nums">{prognose}</p>
-              <p className="text-sm text-muted-foreground">erwarteter Gewinn diese Woche</p>
+              <p className="text-3xl font-bold tabular-nums">{EUR(prognose7.gewinn)}</p>
+              <p className="text-sm text-muted-foreground">
+                erwarteter Gewinn · Umsatz {EUR(prognose7.umsatz)}
+              </p>
             </div>
-            <div>
-              <div className="mb-1.5 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Wochenziel</span>
-                <span className="font-semibold">79 %</span>
-              </div>
-              <Progress value={79} className="h-2" />
+            <div className="space-y-2 text-sm">
+              {cashflow.slice(1).map((c) => (
+                <div key={c.tage} className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Gewinn {c.label}</span>
+                  <span className="font-semibold tabular-nums">{EUR(c.gewinn)}</span>
+                </div>
+              ))}
             </div>
             <p className="rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
-              Bei aktueller Auslastung ({auslastungFahrzeuge}% Fahrzeuge / {auslastungFahrer}%
-              Fahrer) wird das Wochenziel voraussichtlich erreicht.
+              Prognose auf Basis der aktuellen Auslastung ({kpis.flottenauslastung} % Fahrzeuge /{" "}
+              {kpis.fahrerauslastung} % Fahrer).
             </p>
           </CardContent>
         </Card>
       </section>
 
-      {/* Offene Aufgaben / Nachrichten / Genehmigungen / KI-Aufgaben */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Offene Aufgaben / Nachrichten / KI-Aufgaben */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <DashboardListCard
           title="Offene Aufgaben"
           icon={ListTodo}
           tone="text-primary bg-primary/10"
           count={aufgaben.length}
           items={aufgaben.map((a) => ({ to: a.to, primary: a.text }))}
+          leer="Keine offenen Aufgaben."
         />
         <DashboardListCard
           title="Neue Nachrichten"
           icon={Inbox}
           tone="text-info bg-info/15"
-          count={nachrichten.length}
-          items={nachrichten.map((n) => ({ to: n.to, primary: n.text, secondary: n.von }))}
-        />
-        <DashboardListCard
-          title="Offene Genehmigungen"
-          icon={BadgeCheck}
-          tone="text-warning bg-warning/20"
-          count={genehmigungen.length}
-          items={genehmigungen.map((g) => ({ to: g.to, primary: g.text }))}
-          badge="Bestätigung nötig"
+          count={offeneAnrufe.length}
+          items={offeneAnrufe.map((n) => ({
+            to: "/telefon",
+            primary: n.notiz || n.kategorie,
+            secondary: n.name || n.nummer,
+          }))}
+          leer="Keine offenen Anrufe."
         />
         <DashboardListCard
           title="KI-Aufgaben"
           icon={Zap}
           tone="text-accent bg-accent/15"
           count={kiAufgaben.length}
-          items={kiAufgaben.map((k) => ({ to: k.to, primary: k.text }))}
+          items={kiAufgaben.map((k) => ({ to: k.to, primary: k.titel, secondary: k.impact }))}
           badge="Vorschlag"
+          leer="Aktuell keine KI-Vorschläge."
         />
       </section>
 
@@ -339,8 +362,6 @@ function Dashboard() {
       <section>
         <LiveFleetMapCard height="h-[360px]" />
       </section>
-
-
 
       <section className="grid gap-4 lg:grid-cols-3">
         {/* Auslastung */}
@@ -355,23 +376,23 @@ function Dashboard() {
             <div>
               <div className="mb-1.5 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Fahrzeuge</span>
-                <span className="font-semibold">63 %</span>
+                <span className="font-semibold">{kpis.flottenauslastung} %</span>
               </div>
-              <Progress value={63} className="h-2" />
+              <Progress value={kpis.flottenauslastung} className="h-2" />
             </div>
             <div>
               <div className="mb-1.5 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Fahrer</span>
-                <span className="font-semibold">61 %</span>
+                <span className="font-semibold">{kpis.fahrerauslastung} %</span>
               </div>
-              <Progress value={61} className="h-2" />
+              <Progress value={kpis.fahrerauslastung} className="h-2" />
             </div>
             <div>
               <div className="mb-1.5 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Tagesplan</span>
-                <span className="font-semibold">78 %</span>
+                <span className="text-muted-foreground">KI-Effizienz</span>
+                <span className="font-semibold">{kpis.aiEffizienz} %</span>
               </div>
-              <Progress value={78} className="h-2" />
+              <Progress value={kpis.aiEffizienz} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -385,22 +406,26 @@ function Dashboard() {
               </div>
               <CardTitle className="text-base">Warnungen</CardTitle>
             </div>
-            <Badge variant="secondary">{warnings.length}</Badge>
+            <Badge variant="secondary">{warnungen.length}</Badge>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {warnings.map((w) => (
-              <div
-                key={w.text}
-                className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/30 p-3"
+            {warnungen.slice(0, 6).map((w) => (
+              <Link
+                key={w.id}
+                to={w.to}
+                className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/30 p-3 transition-colors hover:bg-muted/60"
               >
                 <span
                   className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
-                    w.level === "Hoch" ? "bg-destructive" : "bg-warning"
+                    w.stufe === "kritisch" ? "bg-destructive" : "bg-warning"
                   }`}
                 />
-                <p className="text-sm leading-snug">{w.text}</p>
-              </div>
+                <p className="text-sm leading-snug">{w.titel}</p>
+              </Link>
             ))}
+            {warnungen.length === 0 && (
+              <p className="text-sm text-muted-foreground">Keine aktiven Warnungen.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -413,14 +438,20 @@ function Dashboard() {
             <CardTitle className="text-base text-primary-foreground">KI-Empfehlungen</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {recommendations.map((r) => (
+            {recs.slice(0, 3).map((r) => (
               <div
-                key={r}
+                key={r.id}
                 className="rounded-xl bg-white/10 p-3 text-sm leading-snug backdrop-blur"
               >
-                {r}
+                <p className="font-medium">{r.titel}</p>
+                <p className="mt-0.5 text-xs text-primary-foreground/80">{r.impact}</p>
               </div>
             ))}
+            {recs.length === 0 && (
+              <p className="rounded-xl bg-white/10 p-3 text-sm backdrop-blur">
+                Keine dringenden Empfehlungen – der Betrieb läuft rund.
+              </p>
+            )}
             <Button asChild variant="secondary" size="sm" className="mt-1 w-full rounded-full">
               <Link to="/ki-assistent">
                 Mehr mit GHASI AI <ArrowRight className="h-4 w-4" />
@@ -430,79 +461,39 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {/* Wetter */}
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info/15 text-info">
-              <CloudSun className="h-4 w-4" />
-            </div>
-            <CardTitle className="text-base">Wetter</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold tabular-nums">14°</p>
-                <p className="text-sm text-muted-foreground">Leicht bewölkt · Berlin</p>
-              </div>
-              <CloudSun className="h-12 w-12 text-info/70" />
-            </div>
-            <p className="mt-3 rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
-              Gute Fahrbedingungen – keine Einschränkungen erwartet.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Verkehr */}
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/20 text-warning">
-              <TrafficCone className="h-4 w-4" />
-            </div>
-            <CardTitle className="text-base">Verkehr</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5">
-            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
-              <span className="text-muted-foreground">A100 Richtung Mitte</span>
-              <Badge variant="secondary" className="bg-warning/20 text-warning">
-                Stau 8 km
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
-              <span className="text-muted-foreground">B96 Innenstadt</span>
-              <Badge variant="secondary" className="bg-success/15 text-success">
-                Frei
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-xl bg-muted/30 p-3 text-sm">
-              <span className="text-muted-foreground">Klinikum West</span>
-              <Badge variant="secondary" className="bg-success/15 text-success">
-                Flüssig
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Kalender */}
+      {/* Kalender heute (echte Termine aus Aufträgen) */}
+      <section>
         <Card className="border-border/70 shadow-sm">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
               <CalendarDays className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base">Kalender heute</CardTitle>
+            <CardTitle className="text-base">Termine heute</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {appointments.map((a) => (
-              <div key={a.time} className="flex items-center gap-3 rounded-xl bg-muted/30 p-2.5">
+            {termineHeute.map((a) => (
+              <Link
+                key={a.id}
+                to="/auftraege"
+                className="flex items-center gap-3 rounded-xl bg-muted/30 p-2.5 transition-colors hover:bg-muted/60"
+              >
                 <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-primary">
-                  {a.time}
+                  {new Date(a.termin).toLocaleTimeString("de-DE", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-sm">{a.text}</p>
+                <p className="min-w-0 flex-1 truncate text-sm">
+                  {a.patient} · {a.zielort || a.destination?.city || a.transportart}
+                </p>
                 <Badge variant="outline" className="shrink-0 text-[10px]">
-                  {a.tag}
+                  {a.transportart}
                 </Badge>
-              </div>
+              </Link>
             ))}
+            {termineHeute.length === 0 && (
+              <p className="text-sm text-muted-foreground">Keine Termine für heute geplant.</p>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -523,6 +514,7 @@ function DashboardListCard({
   count,
   items,
   badge,
+  leer,
 }: {
   title: string;
   icon: typeof Inbox;
@@ -530,6 +522,7 @@ function DashboardListCard({
   count: number;
   items: ListItem[];
   badge?: string;
+  leer: string;
 }) {
   return (
     <Card className="border-border/70 shadow-sm">
@@ -543,9 +536,8 @@ function DashboardListCard({
         <Badge variant="secondary">{count}</Badge>
       </CardHeader>
       <CardContent className="space-y-2">
-        {badge && (
+        {badge && items.length > 0 && (
           <Badge variant="outline" className="mb-1 text-[10px]">
-            <ClipboardCheck className="mr-1 h-3 w-3" />
             {badge}
           </Badge>
         )}
@@ -561,6 +553,7 @@ function DashboardListCard({
             <p className="text-sm leading-snug">{item.primary}</p>
           </Link>
         ))}
+        {items.length === 0 && <p className="text-sm text-muted-foreground">{leer}</p>}
       </CardContent>
     </Card>
   );

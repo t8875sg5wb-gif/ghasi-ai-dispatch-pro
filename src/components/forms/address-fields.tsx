@@ -93,7 +93,7 @@ export function AddressFields({
             id={`${idPrefix}-city`}
             value={value.city}
             onChange={(e) => set("city", e.target.value)}
-            placeholder="Berlin"
+            placeholder="Minden"
           />
         </div>
       </div>
