@@ -64,10 +64,13 @@ type TypFilter = Kunde["typ"] | "alle";
 
 function KundenSeite() {
   const { name: akteur } = useAuth();
-  const [kunden, setKunden] = useState<Kunde[]>(KUNDEN);
+  const { data: kunden = [] } = useCustomers();
+  const createMut = useCreateCustomer();
+  const updateMut = useUpdateCustomer();
+  const seedMut = useSeedCustomers();
   const [suche, setSuche] = useState("");
   const [typFilter, setTypFilter] = useState<TypFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(KUNDEN[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Kunde | null>(null);
 
@@ -89,22 +92,44 @@ function KundenSeite() {
   const hinweise = useMemo(() => buildHinweise(kunden), [kunden]);
 
   function speichern(values: Kunde) {
-    const istNeu = !kunden.some((k) => k.id === values.id);
-    setKunden((prev) =>
-      istNeu ? [...prev, values] : prev.map((k) => (k.id === values.id ? values : k)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: "Kunden",
-      entitaet: values.name,
-      aktion: istNeu ? "angelegt" : "bearbeitet",
-      beschreibung: `Kunde „${values.name}“ wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`Kunde ${istNeu ? "angelegt" : "gespeichert"}`);
+    const istNeu = !editTarget;
+    const { id: _id, ...write } = values;
+    void _id;
+    const onDone = (msg: string) => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Kunden",
+        entitaet: values.name,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `Kunde „${values.name}“ wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(msg);
+    };
+    if (istNeu) {
+      createMut.mutate(write, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone("Kunde angelegt");
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen"),
+      });
+    } else {
+      updateMut.mutate(
+        { id: editTarget.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(editTarget.id);
+            onDone("Kunde gespeichert");
+          },
+          onError: (e) => toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen"),
+        },
+      );
+    }
   }
+
+
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
