@@ -106,6 +106,9 @@ function InsightCard({ insight }: { insight: Insight }) {
 }
 
 function InsightsPage() {
+  useOrders();
+  useDrivers();
+  useInvoices();
   const insights = computeInsights();
   const hoch = insights.filter((i) => i.wirkung === "hoch").length;
 
