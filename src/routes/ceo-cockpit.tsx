@@ -28,6 +28,8 @@ import { Progress } from "@/components/ui/progress";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useCompanySettings } from "@/lib/company-settings-store";
+import { computeGewerbesteuer, computeGewinnNachSteuern, STEUER_DISCLAIMER } from "@/lib/steuer";
 import { computeKpis, computeBusinessHealth, EUR } from "@/lib/ai-brain";
 import {
   computeCashflowForecast,
