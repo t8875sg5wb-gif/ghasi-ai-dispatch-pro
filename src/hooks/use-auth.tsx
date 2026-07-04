@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => void ladeProfil(nextSession.user.id), 0);
       } else {
         setRollen([]);
+        setRollenGeladen(true);
         setName("");
       }
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
