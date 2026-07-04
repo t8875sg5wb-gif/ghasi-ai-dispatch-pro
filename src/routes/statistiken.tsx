@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { PieChart, TrendingUp, Activity, Truck, Users } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -9,6 +8,9 @@ import { ForecastAreaChart, ForecastBarChart } from "@/components/enterprise/for
 import { computePrognosen, computeKpis, type ForecastPoint } from "@/lib/ai-brain";
 import { INITIAL_AUFTRAEGE, TRANSPORTARTEN } from "@/lib/auftraege";
 import { computeFinanzKpis, EUR } from "@/lib/finance";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/statistiken")({
   head: () => ({
