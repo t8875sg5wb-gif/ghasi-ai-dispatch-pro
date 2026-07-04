@@ -384,6 +384,10 @@ function FilterSelect({
   placeholder: string;
   options: { value: string; label: string }[];
 }) {
+  // Radix <Select.Item> darf keinen leeren Wert haben. Optionen mit leerem
+  // Wert (z. B. Aufträge ohne Kostenträger, Fahrzeuge ohne Kennzeichen) würden
+  // sonst die ganze Seite crashen – deshalb hier defensiv herausfiltern.
+  const sichereOptionen = options.filter((o) => o.value.trim() !== "");
   return (
     <Select value={value ?? ALLE} onValueChange={(v) => onChange(v === ALLE ? null : v)}>
       <SelectTrigger className="h-9 w-[150px]">
@@ -391,7 +395,7 @@ function FilterSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={ALLE}>{placeholder}: Alle</SelectItem>
-        {options.map((o) => (
+        {sichereOptionen.map((o) => (
           <SelectItem key={o.value} value={o.value}>
             {o.label}
           </SelectItem>
