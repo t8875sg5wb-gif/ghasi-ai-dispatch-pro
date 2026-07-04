@@ -74,10 +74,13 @@ type ArtFilter = VersicherungsArt | "alle";
 
 function VersicherungenSeite() {
   const { name: akteur } = useAuth();
-  const [items, setItems] = useState<Versicherung[]>(INITIAL_VERSICHERUNGEN);
+  const { data: items = [] } = useInsurance();
+  const createMut = useCreateInsurance();
+  const updateMut = useUpdateInsurance();
+  const seedMut = useSeedInsurance();
   const [suche, setSuche] = useState("");
   const [artFilter, setArtFilter] = useState<ArtFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(INITIAL_VERSICHERUNGEN[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Versicherung | null>(null);
 
@@ -100,20 +103,42 @@ function VersicherungenSeite() {
 
   function speichern(values: Versicherung) {
     const istNeu = !items.some((v) => v.id === values.id);
-    setItems((prev) =>
-      istNeu ? [...prev, values] : prev.map((v) => (v.id === values.id ? values : v)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: "Versicherungen",
-      entitaet: `${values.art} · ${values.fahrzeug}`,
-      aktion: istNeu ? "angelegt" : "bearbeitet",
-      beschreibung: `Police ${values.policennummer} (${values.versicherer}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`Versicherung ${istNeu ? "angelegt" : "gespeichert"}`);
+    const { id: _id, ...write } = values;
+    void _id;
+    const onDone = () => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Versicherungen",
+        entitaet: `${values.art} · ${values.fahrzeug}`,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `Police ${values.policennummer} (${values.versicherer}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(`Versicherung ${istNeu ? "angelegt" : "gespeichert"}`);
+    };
+    const onErr = (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    if (istNeu) {
+      createMut.mutate(write as InsuranceWrite, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone();
+        },
+        onError: onErr,
+      });
+    } else {
+      updateMut.mutate(
+        { id: values.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(values.id);
+            onDone();
+          },
+          onError: onErr,
+        },
+      );
+    }
   }
 
   return (
