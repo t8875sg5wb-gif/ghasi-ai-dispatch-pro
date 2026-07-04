@@ -86,6 +86,7 @@ function CeoCockpit() {
   const recs = computeCeoRecommendations();
   const risks = computeRiskAlerts();
   const topFahrer = profitProFahrer().slice(0, 4);
+  const topAuftraege = profitProAuftrag().slice(0, 6);
   const briefing = buildCeoBriefing();
   const abend = buildEveningSummary();
 
