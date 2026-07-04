@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { HeartPulse, Search, Shield, UserCheck, FileText } from "lucide-react";
 
-import { PATIENTEN, type Patient } from "@/lib/stammdaten";
+import { type Patient } from "@/lib/stammdaten";
+import { usePatients, useSeedPatients } from "@/lib/patients-store";
+import { Button } from "@/components/ui/button";
 import {
   INITIAL_AUFTRAEGE,
   MOBILITAET_META,
