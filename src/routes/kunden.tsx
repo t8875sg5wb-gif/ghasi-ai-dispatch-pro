@@ -18,7 +18,13 @@ import {
   Receipt,
 } from "lucide-react";
 
-import { KUNDEN, KUNDEN_TYPEN, VERTRAGS_STATI, nextStammId, type Kunde } from "@/lib/stammdaten";
+import { KUNDEN_TYPEN, VERTRAGS_STATI, nextStammId, type Kunde } from "@/lib/stammdaten";
+import {
+  useCustomers,
+  useCreateCustomer,
+  useUpdateCustomer,
+  useSeedCustomers,
+} from "@/lib/customers-store";
 import { INITIAL_RECHNUNGEN, RECHNUNG_STATUS_META, EUR } from "@/lib/finance";
 import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
 import { logActivity } from "@/lib/protokoll";
