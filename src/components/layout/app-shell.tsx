@@ -38,6 +38,12 @@ function useHydrateStores() {
   useInvoices();
   useCustomers();
   useVehicles();
+  usePatients();
+  useFacilities();
+  useInsurers();
+  useInsurance();
+  useLeasing();
+  useCalls();
   return orders;
 }
 
