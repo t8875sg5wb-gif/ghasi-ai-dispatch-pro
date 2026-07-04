@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { Hospital, Droplets, Home, Building2 } from "lucide-react";
 
 import { EinrichtungModul } from "@/components/einrichtungen/einrichtung-modul";
