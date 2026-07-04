@@ -83,3 +83,27 @@ export function computeUst(betrag: number, modus: SteuerModus): SteuerErgebnis {
   const brutto = round2(netto + ust);
   return { netto, ust, satz, brutto, hinweis: STEUER_HINWEIS[modus] };
 }
+
+/* ------------------------------------------------------------------ *
+ * Gewerbesteuer (Schätzung, Einzelunternehmen)
+ * ------------------------------------------------------------------ */
+
+/** Steuermesszahl für den Gewerbeertrag (§ 11 GewStG). */
+export const GEWST_MESSZAHL = 0.035;
+/** Freibetrag für natürliche Personen/Personengesellschaften (§ 11 Abs. 1 GewStG). */
+export const GEWST_FREIBETRAG = 24_500;
+
+/**
+ * Schätzt die jährliche Gewerbesteuer für ein Einzelunternehmen:
+ * (Jahresgewinn − Freibetrag) × Steuermesszahl × Hebesatz.
+ * Nur eine grobe Orientierung — ersetzt keine steuerliche Beratung.
+ */
+export function computeGewerbesteuer(gewinnJahr: number, hebesatzProzent: number): number {
+  const ertrag = Math.max(0, gewinnJahr - GEWST_FREIBETRAG);
+  return Math.round(ertrag * GEWST_MESSZAHL * (hebesatzProzent / 100));
+}
+
+/** Geschätzter Jahresgewinn nach Gewerbesteuer. */
+export function computeGewinnNachSteuern(gewinnJahr: number, hebesatzProzent: number): number {
+  return Math.round(gewinnJahr - computeGewerbesteuer(gewinnJahr, hebesatzProzent));
+}
