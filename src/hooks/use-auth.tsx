@@ -108,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: hoechsteRolle(rollen),
     rollen,
     name: name || session?.user?.email?.split("@")[0] || "Benutzer",
+    rollenGeladen,
     loading,
     signInEmail,
     signUpEmail,
