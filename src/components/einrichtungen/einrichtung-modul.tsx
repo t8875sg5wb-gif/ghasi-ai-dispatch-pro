@@ -60,10 +60,14 @@ interface ModulConfig {
 
 export function EinrichtungModul({ config }: { config: ModulConfig }) {
   const { name: akteur } = useAuth();
-  const [items, setItems] = useState<Einrichtung[]>(config.daten);
+  const { data: alle = [] } = useFacilities();
+  const createMut = useCreateFacility();
+  const updateMut = useUpdateFacility();
+  const seedMut = useSeedFacilities();
+  const items = useMemo(() => alle.filter((e) => e.typ === config.typ), [alle, config.typ]);
   const [suche, setSuche] = useState("");
   const [nurAktiv, setNurAktiv] = useState(false);
-  const [aktiv, setAktiv] = useState<string | null>(config.daten[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Einrichtung | null>(null);
 
@@ -87,20 +91,43 @@ export function EinrichtungModul({ config }: { config: ModulConfig }) {
 
   function speichern(values: Einrichtung) {
     const istNeu = !items.some((e) => e.id === values.id);
-    setItems((prev) =>
-      istNeu ? [...prev, values] : prev.map((e) => (e.id === values.id ? values : e)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: config.titel,
-      entitaet: values.name,
-      aktion: istNeu ? "angelegt" : "bearbeitet",
-      beschreibung: `${config.einzahl} „${values.name}“ wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`${config.einzahl} ${istNeu ? "angelegt" : "gespeichert"}`);
+    const { id: _id, ...rest } = values;
+    void _id;
+    const write: FacilityWrite = { ...rest, typ: config.typ };
+    const onDone = () => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: config.titel,
+        entitaet: values.name,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `${config.einzahl} „${values.name}“ wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(`${config.einzahl} ${istNeu ? "angelegt" : "gespeichert"}`);
+    };
+    const onErr = (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    if (istNeu) {
+      createMut.mutate(write, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone();
+        },
+        onError: onErr,
+      });
+    } else {
+      updateMut.mutate(
+        { id: values.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(values.id);
+            onDone();
+          },
+          onError: onErr,
+        },
+      );
+    }
   }
 
   const Icon = config.icon;
