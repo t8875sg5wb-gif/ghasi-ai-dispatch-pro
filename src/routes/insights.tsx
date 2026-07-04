@@ -22,6 +22,9 @@ import {
   type InsightKategorie,
   type InsightWirkung,
 } from "@/lib/ai-brain";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/insights")({
   head: () => ({
