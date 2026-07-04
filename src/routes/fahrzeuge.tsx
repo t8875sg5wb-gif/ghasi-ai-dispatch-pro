@@ -120,8 +120,14 @@ function FahrzeugePage() {
   }
 
   function handleStatusChange(id: string, status: FahrzeugStatus) {
-    setFahrzeuge((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
-    toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`);
+    updateMut.mutate(
+      { id, values: { status } },
+      {
+        onSuccess: () =>
+          toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+      },
+    );
   }
 
   function openCreate() {
@@ -137,17 +143,29 @@ function FahrzeugePage() {
 
   function handleSubmit(values: FahrzeugFormValues) {
     if (editTarget) {
-      setFahrzeuge((prev) => prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)));
-      toast.success("Fahrzeug aktualisiert");
+      updateMut.mutate(
+        { id: editTarget.id, values },
+        {
+          onSuccess: () => {
+            toast.success("Fahrzeug aktualisiert");
+            setFormOpen(false);
+            setEditTarget(null);
+          },
+          onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+        },
+      );
     } else {
-      const id = nextFahrzeugId();
-      const nummer = `KFZ-${String(fahrzeuge.length + 1).padStart(3, "0")}`;
-      setFahrzeuge((prev) => [{ id, nummer, ...values }, ...prev]);
-      toast.success(`Fahrzeug ${nummer} angelegt`);
+      createMut.mutate(values, {
+        onSuccess: (row) => {
+          toast.success(`Fahrzeug ${row.nummer} angelegt`);
+          setFormOpen(false);
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+      });
     }
-    setFormOpen(false);
-    setEditTarget(null);
   }
+
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
