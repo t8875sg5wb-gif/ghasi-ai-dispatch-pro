@@ -348,12 +348,22 @@ export function nextRechnungId(): string {
   return `r-${idCounter}`;
 }
 
+/**
+ * Der gespeicherte `betrag` ist der Netto-Leistungsbetrag. Für den
+ * Krankentransport gilt i. d. R. § 4 Nr. 17b UStG (0 % USt), sodass
+ * Netto = Brutto ist. Nur bei Regelbesteuerung (mwstSatz > 0) wird USt
+ * aufgeschlagen.
+ */
 export function netto(r: Rechnung): number {
-  return round(r.betrag / (1 + r.mwstSatz / 100), 2);
+  return round(r.betrag, 2);
 }
 
 export function mwstBetrag(r: Rechnung): number {
-  return round(r.betrag - netto(r), 2);
+  return round(r.betrag * (r.mwstSatz / 100), 2);
+}
+
+export function brutto(r: Rechnung): number {
+  return round(netto(r) + mwstBetrag(r), 2);
 }
 
 /* ------------------------------------------------------------------ *
