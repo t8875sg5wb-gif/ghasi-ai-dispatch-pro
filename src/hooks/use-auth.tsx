@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [rollen, setRollen] = useState<AppRole[]>([]);
+  const [rollenGeladen, setRollenGeladen] = useState(false);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
 
