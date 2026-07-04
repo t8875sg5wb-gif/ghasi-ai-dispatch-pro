@@ -33,7 +33,8 @@ import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
 import { useCalls } from "@/lib/calls-store";
-import { computeKpis, computeFinanzKpis, EUR } from "@/lib/ai-brain";
+import { computeKpis, EUR } from "@/lib/ai-brain";
+import { computeFinanzKpis } from "@/lib/finance";
 import {
   computeCashflowForecast,
   computeEmptyMileage,
