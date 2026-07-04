@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import {
-  INITIAL_LEASING,
   LEASING_STATUS_META,
   abgeleiteterLeasingStatus,
   tageBisEnde,
@@ -23,6 +22,13 @@ import {
   formatEUR,
   type Leasingvertrag,
 } from "@/lib/leasing";
+import {
+  useLeasing,
+  useCreateLeasing,
+  useUpdateLeasing,
+  useSeedLeasing,
+} from "@/lib/leasing-store";
+import type { LeasingWrite } from "@/lib/leasing-shared";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
