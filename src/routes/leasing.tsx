@@ -73,11 +73,6 @@ const FAHRZEUG_OPTIONEN = INITIAL_FAHRZEUGE.map((f) => f.kennzeichen);
 
 function LeasingSeite() {
   const { name: akteur } = useAuth();
-  const [items, setItems] = useState<Leasingvertrag[]>(INITIAL_LEASING);
-  const [suche, setSuche] = useState("");
-  const [nurAktiv, setNurAktiv] = useState(false);
-function LeasingSeite() {
-  const { name: akteur } = useAuth();
   const { data: items = [] } = useLeasing();
   const createMut = useCreateLeasing();
   const updateMut = useUpdateLeasing();
