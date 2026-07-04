@@ -386,6 +386,57 @@ function CeoCockpit() {
         </CardContent>
       </Card>
 
+      {/* Profit je Auftrag (echt aus Rechnungen vs. Schätzung) */}
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Euro className="h-4 w-4" />
+          </span>
+          <CardTitle className="text-base">Profit je Auftrag</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {topAuftraege.length === 0 && (
+            <p className="text-sm text-muted-foreground">Noch keine Auftragsdaten geladen.</p>
+          )}
+          {topAuftraege.map((a) => (
+            <div
+              key={a.auftrag.id}
+              className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {a.auftrag.nummer} · {a.auftrag.patient}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Umsatz {EUR(a.umsatz)} · Kosten {EUR(a.kosten)} · Marge {a.marge} %
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold tabular-nums text-success">
+                  {EUR(a.gewinn)}
+                </span>
+                <Badge
+                  variant="outline"
+                  className={
+                    a.istSchaetzung
+                      ? "border-warning/30 bg-warning/10 text-warning"
+                      : "border-success/30 bg-success/10 text-success"
+                  }
+                >
+                  {a.istSchaetzung ? "Schätzung" : "Rechnung"}
+                </Badge>
+              </div>
+            </div>
+          ))}
+          <p className="pt-1 text-xs text-muted-foreground">
+            „Rechnung“ = Umsatz aus verknüpfter Rechnung. „Schätzung“ = Tarifkalkulation für noch
+            nicht berechnete Aufträge.
+          </p>
+        </CardContent>
+      </Card>
+
+
+
       <ExecutiveAnalysis />
     </div>
   );
