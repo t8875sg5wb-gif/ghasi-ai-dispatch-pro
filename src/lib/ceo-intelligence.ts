@@ -22,7 +22,13 @@ import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, reparaturkostenGesamt, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag, type Transportart } from "@/lib/auftraege";
 import { KUNDEN } from "@/lib/stammdaten";
-import { computeFinanzKpis, computeKostenaufstellung } from "@/lib/finance";
+import {
+  computeFinanzKpis,
+  computeKostenaufstellung,
+  netto,
+  INITIAL_RECHNUNGEN,
+  type Rechnung,
+} from "@/lib/finance";
 import { computeKpis, computeBusinessHealth, EUR, type BrainKpis } from "@/lib/ai-brain";
 
 const round = (n: number, d = 0) => {
