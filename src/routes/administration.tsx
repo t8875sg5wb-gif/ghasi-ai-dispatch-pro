@@ -257,11 +257,35 @@ function Rollenmatrix() {
 }
 
 function SystemStatus() {
-  const status: { label: string; wert: string; ok: boolean }[] = [
-    { label: "Datenbank", wert: "Verbunden", ok: true },
-    { label: "Authentifizierung", wert: "Aktiv", ok: true },
-    { label: "KI-Gateway", wert: "Verfügbar", ok: true },
-    { label: "Audit-Log", wert: "Aktiv", ok: true },
+  // Echte, leichte Health-Checks statt fest verdrahteter "grün"-Anzeige.
+  const dbCheck = useQuery({
+    queryKey: ["admin", "systemstatus", "db"],
+    queryFn: () => listeBenutzer(),
+    retry: 0,
+    staleTime: 30_000,
+  });
+  const ladeBenutzer = useServerFn(listeBenutzer);
+  void ladeBenutzer;
+  const { user } = useAuth();
+
+  const dbOk = !dbCheck.isError;
+  const dbPending = dbCheck.isLoading;
+  const authOk = Boolean(user);
+
+  const status: { label: string; wert: string; ok: boolean; pending?: boolean }[] = [
+    {
+      label: "Datenbank",
+      wert: dbPending ? "Prüfe…" : dbOk ? "Verbunden" : "Nicht erreichbar",
+      ok: dbOk,
+      pending: dbPending,
+    },
+    { label: "Authentifizierung", wert: authOk ? "Aktiv" : "Kein Benutzer", ok: authOk },
+    {
+      label: "Audit-Log",
+      wert: dbPending ? "Prüfe…" : dbOk ? "Aktiv" : "Unbekannt",
+      ok: dbOk,
+      pending: dbPending,
+    },
   ];
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -281,9 +305,11 @@ function SystemStatus() {
               <Badge
                 variant="outline"
                 className={cn(
-                  s.ok
-                    ? "border-success/30 bg-success/10 text-success"
-                    : "border-destructive/30 bg-destructive/10 text-destructive",
+                  s.pending
+                    ? "border-border bg-muted text-muted-foreground"
+                    : s.ok
+                      ? "border-success/30 bg-success/10 text-success"
+                      : "border-destructive/30 bg-destructive/10 text-destructive",
                 )}
               >
                 {s.wert}
@@ -292,6 +318,7 @@ function SystemStatus() {
           ))}
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader>
