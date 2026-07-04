@@ -10,6 +10,9 @@ import {
   ForecastLineChart,
 } from "@/components/enterprise/forecast-charts";
 import { computePrognosen, EUR } from "@/lib/ai-brain";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
 
 export const Route = createFileRoute("/prognosen")({
   head: () => ({
