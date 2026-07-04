@@ -53,7 +53,11 @@ function ChartCard({
 }
 
 function PrognosenPage() {
+  useOrders();
+  useDrivers();
+  useInvoices();
   const p = computePrognosen();
+
 
   const stats = [
     {
