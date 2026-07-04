@@ -42,11 +42,12 @@ const einrichtungConfigs = {
 type EinrichtungTab = keyof typeof einrichtungConfigs;
 
 export const Route = createFileRoute("/einrichtungen")({
-  validateSearch: zodValidator(
-    z.object({
-      tab: z.enum(["krankenhaeuser", "dialysezentren", "pflegeheime"]).default("krankenhaeuser"),
-    }),
-  ),
+  validateSearch: (search: Record<string, unknown>): { tab: EinrichtungTab } => {
+    const tab = search.tab;
+    const gueltig =
+      tab === "krankenhaeuser" || tab === "dialysezentren" || tab === "pflegeheime";
+    return { tab: gueltig ? (tab as EinrichtungTab) : "krankenhaeuser" };
+  },
   head: () => ({
     meta: [
       { title: "Einrichtungen – GHASI AI" },
