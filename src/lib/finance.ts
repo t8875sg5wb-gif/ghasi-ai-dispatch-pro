@@ -234,7 +234,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     bezahltAm: "2026-06-08",
     bezahlterBetrag: 540,
     bezugAuftrag: "A-2043",
-    positionen: [pos("Sitzendtransport Charlottenburg → Augenklinik", 1, 540)],
+    positionen: [pos("Sitzendtransport Bad Oeynhausen → Augenklinik", 1, 540)],
   },
   {
     id: "r-5",
@@ -283,7 +283,7 @@ export const SEED_RECHNUNGEN: Rechnung[] = [
     datum: "2026-06-20",
     faelligkeit: "2026-07-04",
     bezugAuftrag: "A-2044",
-    positionen: [pos("Notfalltransport Neukölln → Klinikum West", 1, 410)],
+    positionen: [pos("Notfalltransport Porta Westfalica → Klinikum West", 1, 410)],
   },
   {
     id: "r-8",
