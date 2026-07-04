@@ -144,14 +144,21 @@ export function EinrichtungModul({ config }: { config: ModulConfig }) {
             <p className="text-sm text-muted-foreground">{config.beschreibung}</p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> {config.einzahl} anlegen
-        </Button>
+        <div className="flex items-center gap-2">
+          {alle.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> {config.einzahl} anlegen
+          </Button>
+        </div>
       </div>
 
       {hinweise.length > 0 && (
