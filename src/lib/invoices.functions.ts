@@ -121,16 +121,13 @@ async function loadInvoices(supabase: SupabaseReadClient): Promise<Rechnung[]> {
   return (data ?? []).map((r: unknown) => rowToRechnung(r as InvoiceRow));
 }
 
-function abrechnungsartFuer(kostentraeger: string): {
-  art: "Krankenkasse" | "Patient" | "Kunde";
-  mwst: number;
-} {
+function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" | "Kunde" {
   const k = kostentraeger.toLowerCase();
   if (/kasse|aok|barmer|dak|tk|techniker|krankenkasse|kkh|ikk/.test(k)) {
-    return { art: "Krankenkasse", mwst: 7 };
+    return "Krankenkasse";
   }
-  if (/selbstzahler|patient|privat/.test(k)) return { art: "Patient", mwst: 19 };
-  return { art: "Kunde", mwst: 19 };
+  if (/selbstzahler|patient|privat/.test(k)) return "Patient";
+  return "Kunde";
 }
 
 /** Billing-ready completed transports that do not yet have an invoice. */
