@@ -28,6 +28,8 @@ function useHydrateStores() {
   useRecurring();
   useDrivers();
   useInvoices();
+  useCustomers();
+  useVehicles();
   return orders;
 }
 
