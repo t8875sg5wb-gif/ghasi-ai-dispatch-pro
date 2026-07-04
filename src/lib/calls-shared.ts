@@ -50,6 +50,6 @@ export function anrufToRow(w: Partial<CallWrite>): Record<string, unknown> {
   set("kategorie", w.kategorie);
   set("status", w.status);
   set("notiz", w.notiz ?? null);
-  set("auftrag_erstellt", w.auftragErstellt);
+  set("auftrag_erstellt", w.auftragErstellt ?? false);
   return row;
 }
