@@ -6,6 +6,7 @@
 // ============================================================
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 
@@ -103,6 +104,7 @@ function haversine(a: GeoPunkt, b: GeoPunkt): number {
  * ------------------------------------------------------------------ */
 
 export const geocodeAddress = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { address: string }) => z.object({ address: z.string().min(1) }).parse(d))
   .handler(async ({ data }): Promise<GeocodeErgebnis | null> => {
     const res = await fetch(
@@ -128,6 +130,7 @@ export const geocodeAddress = createServerFn({ method: "GET" })
   });
 
 export const reverseGeocode = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { lat: number; lng: number }) => punktSchema.parse(d))
   .handler(async ({ data }): Promise<GeocodeErgebnis | null> => {
     const res = await fetch(
@@ -170,6 +173,7 @@ async function computeRoutesRaw(body: Record<string, unknown>, fieldMask: string
 }
 
 export const computeRoute = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (d: { origin: OrtEingabe; destination: OrtEingabe; verkehr?: boolean; ohneMaut?: boolean }) =>
       z
@@ -219,6 +223,7 @@ export const computeRoute = createServerFn({ method: "POST" })
  * ------------------------------------------------------------------ */
 
 export const optimizeRoute = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (d: { origin: OrtEingabe; destination: OrtEingabe; stops: OrtEingabe[] }) =>
       z
@@ -268,6 +273,7 @@ export const optimizeRoute = createServerFn({ method: "POST" })
  * ------------------------------------------------------------------ */
 
 export const searchPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (d: {
       kategorie?: PlaceKategorie;
@@ -365,6 +371,7 @@ export const searchPlaces = createServerFn({ method: "POST" })
  * ------------------------------------------------------------------ */
 
 export const rankByDistance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { ziel: OrtEingabe; quellen: GeoPunkt[] }) =>
     z.object({ ziel: ortSchema, quellen: z.array(punktSchema).min(1).max(25) }).parse(d),
   )
