@@ -246,9 +246,11 @@ function RechnungenPage() {
                 <TableRow>
                   <TableHead>Nummer</TableHead>
                   <TableHead>Kunde</TableHead>
-                  <TableHead>Abrechnung</TableHead>
+                  <TableHead>Auftrag</TableHead>
                   <TableHead>Fällig</TableHead>
-                  <TableHead className="text-right">Betrag</TableHead>
+                  <TableHead className="text-right">Netto</TableHead>
+                  <TableHead className="text-right">USt</TableHead>
+                  <TableHead className="text-right">Brutto</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -258,16 +260,32 @@ function RechnungenPage() {
                   return (
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.nummer}</TableCell>
-                      <TableCell>{r.kunde}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.abrechnungsart}</TableCell>
+                      <TableCell>
+                        <Link to="/kunden" className="text-primary hover:underline">
+                          {r.kunde}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {r.bezugAuftrag ? (
+                          <Link to="/auftraege" className="text-primary hover:underline">
+                            {r.bezugAuftrag}
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDatum(r.faelligkeit)}
                         {tage > 0 && (
                           <span className="ml-1 text-xs text-destructive">+{tage}T</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-right tabular-nums">{EUR(netto(r))}</TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {r.mwstSatz > 0 ? `${EUR(mwstBetrag(r))} (${r.mwstSatz} %)` : "0 %"}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums font-medium">
-                        {EUR(r.betrag)}
+                        {EUR(brutto(r))}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -283,7 +301,7 @@ function RechnungenPage() {
                 {rechnungen.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={8}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       Keine Rechnungen gefunden.
@@ -293,8 +311,13 @@ function RechnungenPage() {
               </TableBody>
             </Table>
           </div>
+          <div className="mt-4 space-y-1 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            <p>{STEUER_HINWEIS.befreit_4_17b}</p>
+            <p className="italic">{STEUER_DISCLAIMER}</p>
+          </div>
         </CardContent>
       </Card>
+
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
