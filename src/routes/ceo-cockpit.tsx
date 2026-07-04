@@ -76,6 +76,7 @@ function CeoCockpit() {
   useDrivers();
   useInvoices();
 
+  const { data: firma } = useCompanySettings();
   const kpis = computeKpis();
   const health = computeBusinessHealth(kpis);
   const cashflow = computeCashflowForecast(kpis);
@@ -86,6 +87,12 @@ function CeoCockpit() {
   const topFahrer = profitProFahrer().slice(0, 4);
   const briefing = buildCeoBriefing();
   const abend = buildEveningSummary();
+
+  // Gewinn nach Steuern (Schätzung) auf Basis des Jahresgewinns (365-Tage-Prognose)
+  // und des Gewerbesteuer-Hebesatzes aus den Unternehmenseinstellungen.
+  const jahresGewinn = cashflow.find((c) => c.tage === 365)?.gewinn ?? 0;
+  const gewerbesteuer = computeGewerbesteuer(jahresGewinn, firma.gewerbesteuerHebesatz);
+  const gewinnNachSteuern = computeGewinnNachSteuern(jahresGewinn, firma.gewerbesteuerHebesatz);
 
   const stats = [
     {
