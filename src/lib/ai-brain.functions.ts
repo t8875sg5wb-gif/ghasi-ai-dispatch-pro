@@ -14,8 +14,9 @@ export interface ExecutiveAnalysis {
   fehler?: string;
 }
 
-export const generateExecutiveAnalysis = createServerFn({ method: "POST" }).handler(
-  async (): Promise<ExecutiveAnalysis> => {
+export const generateExecutiveAnalysis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<ExecutiveAnalysis> => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return {
