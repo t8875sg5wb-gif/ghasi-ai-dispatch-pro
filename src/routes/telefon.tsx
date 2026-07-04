@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import {
-  INITIAL_ANRUFE,
   ANRUF_RICHTUNG_META,
   ANRUF_STATUS_META,
   ANRUF_KATEGORIEN,
@@ -28,6 +27,13 @@ import {
   type AnrufStatus,
   type AnrufKategorie,
 } from "@/lib/telefon";
+import {
+  useCalls,
+  useCreateCall,
+  useUpdateCall,
+  useSeedCalls,
+} from "@/lib/calls-store";
+import type { CallWrite } from "@/lib/calls-shared";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
