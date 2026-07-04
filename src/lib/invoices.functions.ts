@@ -169,7 +169,9 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
       if (!abrechnungsBereitschaft(a).bereit) continue;
       if (berechnet.has(a.nummer)) continue;
       const betrag = preisFuer(a);
-      const { art, mwst } = abrechnungsartFuer(a.kostentraeger);
+      const art = abrechnungsartFuer(a.kostentraeger);
+      const modus = modusFuerTransportart(a.transportart);
+      const mwst = satzFuer(modus);
       const nummer = `RE-2026-${String(40 + lfd++).padStart(4, "0")}`;
       nummern.push(nummer);
       writes.push(
@@ -188,7 +190,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
           positionen: [
             { beschreibung: `${a.transportart} ${a.nummer}`, menge: 1, einzelpreis: betrag },
           ],
-          notiz: "Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe.",
+          notiz: `Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe. ${STEUER_HINWEIS[modus]}`,
         }),
       );
       berechnet.add(a.nummer);
