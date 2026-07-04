@@ -15,6 +15,7 @@ interface AuthContextValue {
   rollen: AppRole[];
   name: string;
   loading: boolean;
+  rollenGeladen: boolean;
   signInEmail: (email: string, password: string) => Promise<{ error: string | null }>;
   signUpEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signInGoogle: () => Promise<{ error: string | null }>;
