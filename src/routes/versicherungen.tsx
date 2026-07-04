@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 
 import {
-  INITIAL_VERSICHERUNGEN,
   VERSICHERUNGS_ARTEN,
   VERSICHERUNG_STATUS_META,
   abgeleiteterStatus,
@@ -23,6 +22,13 @@ import {
   type Versicherung,
   type VersicherungsArt,
 } from "@/lib/versicherungen";
+import {
+  useInsurance,
+  useCreateInsurance,
+  useUpdateInsurance,
+  useSeedInsurance,
+} from "@/lib/insurance-store";
+import type { InsuranceWrite } from "@/lib/insurance-shared";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
