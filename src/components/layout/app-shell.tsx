@@ -14,6 +14,8 @@ import { useOrders } from "@/lib/orders-store";
 import { useRecurring } from "@/lib/recurring-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useCustomers } from "@/lib/customers-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { syncOrderNotifications } from "@/lib/notifications";
 import { logActivity } from "@/lib/protokoll";
 
@@ -28,6 +30,8 @@ function useHydrateStores() {
   useRecurring();
   useDrivers();
   useInvoices();
+  useCustomers();
+  useVehicles();
   return orders;
 }
 

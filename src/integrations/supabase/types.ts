@@ -145,6 +145,66 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          adresse: string | null
+          aktiv: boolean
+          ansprechpartner: string
+          created_at: string
+          email: string | null
+          id: string
+          konditionen: string | null
+          kreditlimit: number | null
+          name: string
+          notiz: string | null
+          offene_rechnungen: number
+          telefon: string
+          typ: string
+          umsatz_jahr: number | null
+          updated_at: string
+          vertragsstatus: string | null
+          zahlungsziel_tage: number | null
+        }
+        Insert: {
+          adresse?: string | null
+          aktiv?: boolean
+          ansprechpartner?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          konditionen?: string | null
+          kreditlimit?: number | null
+          name: string
+          notiz?: string | null
+          offene_rechnungen?: number
+          telefon?: string
+          typ?: string
+          umsatz_jahr?: number | null
+          updated_at?: string
+          vertragsstatus?: string | null
+          zahlungsziel_tage?: number | null
+        }
+        Update: {
+          adresse?: string | null
+          aktiv?: boolean
+          ansprechpartner?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          konditionen?: string | null
+          kreditlimit?: number | null
+          name?: string
+          notiz?: string | null
+          offene_rechnungen?: number
+          telefon?: string
+          typ?: string
+          umsatz_jahr?: number | null
+          updated_at?: string
+          vertragsstatus?: string | null
+          zahlungsziel_tage?: number | null
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           adresse: string
@@ -244,6 +304,60 @@ export type Database = {
         }
         Relationships: []
       }
+      facilities: {
+        Row: {
+          adresse: string
+          aktiv: boolean
+          ansprechpartner: string
+          created_at: string
+          email: string | null
+          fachbereiche: Json
+          id: string
+          kapazitaet: number | null
+          kostentraeger: string | null
+          name: string
+          notiz: string | null
+          oeffnungszeiten: string | null
+          telefon: string
+          typ: string
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string
+          aktiv?: boolean
+          ansprechpartner?: string
+          created_at?: string
+          email?: string | null
+          fachbereiche?: Json
+          id?: string
+          kapazitaet?: number | null
+          kostentraeger?: string | null
+          name: string
+          notiz?: string | null
+          oeffnungszeiten?: string | null
+          telefon?: string
+          typ?: string
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string
+          aktiv?: boolean
+          ansprechpartner?: string
+          created_at?: string
+          email?: string | null
+          fachbereiche?: Json
+          id?: string
+          kapazitaet?: number | null
+          kostentraeger?: string | null
+          name?: string
+          notiz?: string | null
+          oeffnungszeiten?: string | null
+          telefon?: string
+          typ?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ghasi_memory: {
         Row: {
           bezug: string | null
@@ -274,6 +388,33 @@ export type Database = {
           quelle?: string
           updated_at?: string
           wichtigkeit?: number
+        }
+        Relationships: []
+      }
+      insurers: {
+        Row: {
+          created_at: string
+          id: string
+          kuerzel: string
+          name: string
+          updated_at: string
+          vertragsstatus: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kuerzel?: string
+          name: string
+          updated_at?: string
+          vertragsstatus?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kuerzel?: string
+          name?: string
+          updated_at?: string
+          vertragsstatus?: string
         }
         Relationships: []
       }
@@ -472,6 +613,45 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          begleitperson: boolean
+          created_at: string
+          hinweis: string
+          id: string
+          kostentraeger: string
+          medizinische_notiz: string | null
+          mobilitaet: string
+          name: string
+          patientennotiz: string | null
+          updated_at: string
+        }
+        Insert: {
+          begleitperson?: boolean
+          created_at?: string
+          hinweis?: string
+          id?: string
+          kostentraeger?: string
+          medizinische_notiz?: string | null
+          mobilitaet?: string
+          name: string
+          patientennotiz?: string | null
+          updated_at?: string
+        }
+        Update: {
+          begleitperson?: boolean
+          created_at?: string
+          hinweis?: string
+          id?: string
+          kostentraeger?: string
+          medizinische_notiz?: string | null
+          mobilitaet?: string
+          name?: string
+          patientennotiz?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -649,6 +829,129 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          baujahr: number
+          created_at: string
+          dokumente: Json
+          fahrer: string | null
+          fotos: Json
+          gps: Json
+          id: string
+          kennzeichen: string
+          kilometerstand: number
+          kosten_pro_km: number
+          kraftstoff: string
+          leasing_ende: string
+          leasingrate: number
+          liegend_geeignet: boolean
+          marke: string
+          modell: string
+          monatsgewinn: number
+          monatsumsatz: number
+          naechste_wartung: string
+          notizen: string
+          nummer: string
+          oelwechsel_bei: number
+          reichweite: number
+          reifenstatus: string
+          reparaturen: Json
+          rollstuhl_geeignet: boolean
+          sitzplaetze: number
+          standort: string
+          status: string
+          tagesgewinn: number
+          tagesumsatz: number
+          tankstand: number
+          tuev_bis: string
+          typ: string
+          updated_at: string
+          verbrauch: number
+          versicherung: string
+          versicherung_bis: string
+        }
+        Insert: {
+          baujahr?: number
+          created_at?: string
+          dokumente?: Json
+          fahrer?: string | null
+          fotos?: Json
+          gps?: Json
+          id?: string
+          kennzeichen?: string
+          kilometerstand?: number
+          kosten_pro_km?: number
+          kraftstoff?: string
+          leasing_ende?: string
+          leasingrate?: number
+          liegend_geeignet?: boolean
+          marke?: string
+          modell?: string
+          monatsgewinn?: number
+          monatsumsatz?: number
+          naechste_wartung?: string
+          notizen?: string
+          nummer?: string
+          oelwechsel_bei?: number
+          reichweite?: number
+          reifenstatus?: string
+          reparaturen?: Json
+          rollstuhl_geeignet?: boolean
+          sitzplaetze?: number
+          standort?: string
+          status?: string
+          tagesgewinn?: number
+          tagesumsatz?: number
+          tankstand?: number
+          tuev_bis?: string
+          typ?: string
+          updated_at?: string
+          verbrauch?: number
+          versicherung?: string
+          versicherung_bis?: string
+        }
+        Update: {
+          baujahr?: number
+          created_at?: string
+          dokumente?: Json
+          fahrer?: string | null
+          fotos?: Json
+          gps?: Json
+          id?: string
+          kennzeichen?: string
+          kilometerstand?: number
+          kosten_pro_km?: number
+          kraftstoff?: string
+          leasing_ende?: string
+          leasingrate?: number
+          liegend_geeignet?: boolean
+          marke?: string
+          modell?: string
+          monatsgewinn?: number
+          monatsumsatz?: number
+          naechste_wartung?: string
+          notizen?: string
+          nummer?: string
+          oelwechsel_bei?: number
+          reichweite?: number
+          reifenstatus?: string
+          reparaturen?: Json
+          rollstuhl_geeignet?: boolean
+          sitzplaetze?: number
+          standort?: string
+          status?: string
+          tagesgewinn?: number
+          tagesumsatz?: number
+          tankstand?: number
+          tuev_bis?: string
+          typ?: string
+          updated_at?: string
+          verbrauch?: number
+          versicherung?: string
+          versicherung_bis?: string
         }
         Relationships: []
       }

@@ -2,8 +2,10 @@
 // Lesen erfolgt clientseitig (öffentliche SELECT-Policy); Schreiben/Ändern/
 // Löschen läuft hier serverseitig über den Service-Role-Client (RLS-Bypass).
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const erstelleThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: { titel?: string }) => ({
     titel: (data?.titel ?? "Neue Unterhaltung").slice(0, 120),
   }))
@@ -19,6 +21,7 @@ export const erstelleThread = createServerFn({ method: "POST" })
   });
 
 export const benenneThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: { id: string; titel: string }) => {
     if (!data?.id) throw new Error("id ist erforderlich");
     return { id: data.id, titel: (data.titel ?? "Unterhaltung").slice(0, 120) };
@@ -34,6 +37,7 @@ export const benenneThread = createServerFn({ method: "POST" })
   });
 
 export const loescheThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: { id: string }) => {
     if (!data?.id) throw new Error("id ist erforderlich");
     return { id: data.id };

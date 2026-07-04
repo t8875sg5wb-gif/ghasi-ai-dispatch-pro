@@ -15,6 +15,7 @@ interface AuthContextValue {
   rollen: AppRole[];
   name: string;
   loading: boolean;
+  rollenGeladen: boolean;
   signInEmail: (email: string, password: string) => Promise<{ error: string | null }>;
   signUpEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signInGoogle: () => Promise<{ error: string | null }>;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [rollen, setRollen] = useState<AppRole[]>([]);
+  const [rollenGeladen, setRollenGeladen] = useState(false);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setRollen(((rollenData ?? []).map((r) => r.role) as AppRole[]) ?? []);
     if (profil?.name) setName(profil.name);
+    setRollenGeladen(true);
   }, []);
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => void ladeProfil(nextSession.user.id), 0);
       } else {
         setRollen([]);
+        setRollenGeladen(true);
         setName("");
       }
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
@@ -104,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: hoechsteRolle(rollen),
     rollen,
     name: name || session?.user?.email?.split("@")[0] || "Benutzer",
+    rollenGeladen,
     loading,
     signInEmail,
     signUpEmail,

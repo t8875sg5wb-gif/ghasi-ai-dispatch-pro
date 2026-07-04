@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -18,13 +18,17 @@ import {
   type FahrzeugStatus,
   FAHRZEUG_STATI,
   FAHRZEUG_STATUS_META,
-  INITIAL_FAHRZEUGE,
   empfehleFahrzeug,
   fahrzeugWarnungen,
   formatEUR,
   formatKm,
-  nextFahrzeugId,
 } from "@/lib/fahrzeuge";
+import {
+  useVehicles,
+  useCreateVehicle,
+  useUpdateVehicle,
+  useSeedVehicles,
+} from "@/lib/vehicles-store";
 import { FahrzeugForm, type FahrzeugFormValues } from "@/components/fahrzeuge/fahrzeug-form";
 import { FahrzeugDetail } from "@/components/fahrzeuge/fahrzeug-detail";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +62,10 @@ export const Route = createFileRoute("/fahrzeuge")({
 type StatusFilter = FahrzeugStatus | "alle";
 
 function FahrzeugePage() {
-  const [fahrzeuge, setFahrzeuge] = useState<Fahrzeug[]>(INITIAL_FAHRZEUGE);
+  const { data: fahrzeuge = [] } = useVehicles();
+  const createMut = useCreateVehicle();
+  const updateMut = useUpdateVehicle();
+  const seedMut = useSeedVehicles();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
 
@@ -67,28 +74,6 @@ function FahrzeugePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Fahrzeug | null>(null);
-
-  // Simulated realtime: vehicles "unterwegs" accumulate km, burn fuel, earn revenue.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFahrzeuge((prev) =>
-        prev.map((f) => {
-          if (f.status !== "unterwegs") return f;
-          const km = Math.round(Math.random() * 3);
-          const umsatz = km * 4;
-          return {
-            ...f,
-            kilometerstand: f.kilometerstand + km,
-            tankstand: Math.max(0, f.tankstand - km * 0.2),
-            reichweite: Math.max(0, f.reichweite - km),
-            tagesumsatz: f.tagesumsatz + umsatz,
-            tagesgewinn: f.tagesgewinn + Math.round(umsatz * 0.4),
-          };
-        }),
-      );
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   const empfehlungen = useMemo(() => empfehleFahrzeug(fahrzeuge, undefined, 3), [fahrzeuge]);
 
@@ -135,8 +120,14 @@ function FahrzeugePage() {
   }
 
   function handleStatusChange(id: string, status: FahrzeugStatus) {
-    setFahrzeuge((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
-    toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`);
+    updateMut.mutate(
+      { id, values: { status } },
+      {
+        onSuccess: () =>
+          toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+      },
+    );
   }
 
   function openCreate() {
@@ -152,17 +143,29 @@ function FahrzeugePage() {
 
   function handleSubmit(values: FahrzeugFormValues) {
     if (editTarget) {
-      setFahrzeuge((prev) => prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)));
-      toast.success("Fahrzeug aktualisiert");
+      updateMut.mutate(
+        { id: editTarget.id, values },
+        {
+          onSuccess: () => {
+            toast.success("Fahrzeug aktualisiert");
+            setFormOpen(false);
+            setEditTarget(null);
+          },
+          onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+        },
+      );
     } else {
-      const id = nextFahrzeugId();
-      const nummer = `KFZ-${String(fahrzeuge.length + 1).padStart(3, "0")}`;
-      setFahrzeuge((prev) => [{ id, nummer, ...values }, ...prev]);
-      toast.success(`Fahrzeug ${nummer} angelegt`);
+      createMut.mutate(values, {
+        onSuccess: (row) => {
+          toast.success(`Fahrzeug ${row.nummer} angelegt`);
+          setFormOpen(false);
+          setEditTarget(null);
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
+      });
     }
-    setFormOpen(false);
-    setEditTarget(null);
   }
+
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
@@ -206,10 +209,21 @@ function FahrzeugePage() {
             Flotte, Kosten, Wartung und Verfügbarkeit – mit KI-Fahrzeugvorschlag.
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Neues Fahrzeug
-        </Button>
+        <div className="flex items-center gap-2">
+          {fahrzeuge.length === 0 && (
+            <Button
+              variant="outline"
+              onClick={() => seedMut.mutate()}
+              disabled={seedMut.isPending}
+            >
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Neues Fahrzeug
+          </Button>
+        </div>
       </section>
 
       {/* Summary stats */}
