@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setRollen(((rollenData ?? []).map((r) => r.role) as AppRole[]) ?? []);
     if (profil?.name) setName(profil.name);
+    setRollenGeladen(true);
   }, []);
 
   useEffect(() => {
