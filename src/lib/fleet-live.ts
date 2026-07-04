@@ -74,7 +74,7 @@ export const FLEET_FARBEN: Record<
 };
 
 /* ------------------------------------------------------------------ *
- * Geokodierung (deterministisch, Berlin-Raum)
+ * Geokodierung (deterministischer Fallback, Raum Minden/Ostwestfalen)
  * ------------------------------------------------------------------ */
 
 export interface LatLng {
@@ -82,7 +82,11 @@ export interface LatLng {
   lng: number;
 }
 
-const BERLIN_BOUNDS = { latMin: 52.46, latMax: 52.55, lngMin: 13.3, lngMax: 13.47 };
+// Betriebsraum Minden (NRW) inkl. Umland (Bad Oeynhausen, Petershagen,
+// Porta Westfalica). Für statische Adressen nutzt die App die echte
+// Geokodierung (geocodeAddress-Serverfunktion); dieser deterministische
+// Fallback dient nur der SSR-stabilen Simulation ohne Netzaufruf.
+const MINDEN_BOUNDS = { latMin: 52.2, latMax: 52.42, lngMin: 8.75, lngMax: 9.1 };
 
 function hashStr(s: string): number {
   let h = 2166136261;
@@ -92,16 +96,17 @@ function hashStr(s: string): number {
   return h >>> 0;
 }
 
-/** Deterministische, plausible Koordinate für eine Adresse im Berliner Raum. */
+/** Deterministische, plausible Koordinate für eine Adresse im Raum Minden. */
 export function geocode(adresse: string): LatLng {
   const h = hashStr(adresse);
   const lat =
-    BERLIN_BOUNDS.latMin + ((h % 1000) / 1000) * (BERLIN_BOUNDS.latMax - BERLIN_BOUNDS.latMin);
+    MINDEN_BOUNDS.latMin + ((h % 1000) / 1000) * (MINDEN_BOUNDS.latMax - MINDEN_BOUNDS.latMin);
   const lng =
-    BERLIN_BOUNDS.lngMin +
-    (((h >>> 10) % 1000) / 1000) * (BERLIN_BOUNDS.lngMax - BERLIN_BOUNDS.lngMin);
+    MINDEN_BOUNDS.lngMin +
+    (((h >>> 10) % 1000) / 1000) * (MINDEN_BOUNDS.lngMax - MINDEN_BOUNDS.lngMin);
   return { lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) };
 }
+
 
 /** Erzeugt eine sanft gekrümmte Zwischenroute zwischen zwei Punkten. */
 function polyline(a: LatLng, b: LatLng, segmente = 6): LatLng[] {
