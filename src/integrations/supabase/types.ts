@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      calls: {
+        Row: {
+          auftrag_erstellt: boolean
+          created_at: string
+          dauer_sek: number
+          id: string
+          kategorie: string
+          name: string | null
+          notiz: string | null
+          nummer: string
+          richtung: string
+          status: string
+          updated_at: string
+          zeitpunkt: string
+        }
+        Insert: {
+          auftrag_erstellt?: boolean
+          created_at?: string
+          dauer_sek?: number
+          id?: string
+          kategorie?: string
+          name?: string | null
+          notiz?: string | null
+          nummer?: string
+          richtung?: string
+          status?: string
+          updated_at?: string
+          zeitpunkt?: string
+        }
+        Update: {
+          auftrag_erstellt?: boolean
+          created_at?: string
+          dauer_sek?: number
+          id?: string
+          kategorie?: string
+          name?: string | null
+          notiz?: string | null
+          nummer?: string
+          richtung?: string
+          status?: string
+          updated_at?: string
+          zeitpunkt?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -391,6 +436,54 @@ export type Database = {
         }
         Relationships: []
       }
+      insurance_policies: {
+        Row: {
+          ablauf: string
+          art: string
+          beginn: string
+          beitrag_monat: number
+          created_at: string
+          fahrzeug: string
+          id: string
+          notiz: string | null
+          policennummer: string
+          selbstbeteiligung: number
+          status: string
+          updated_at: string
+          versicherer: string
+        }
+        Insert: {
+          ablauf?: string
+          art?: string
+          beginn?: string
+          beitrag_monat?: number
+          created_at?: string
+          fahrzeug?: string
+          id?: string
+          notiz?: string | null
+          policennummer?: string
+          selbstbeteiligung?: number
+          status?: string
+          updated_at?: string
+          versicherer?: string
+        }
+        Update: {
+          ablauf?: string
+          art?: string
+          beginn?: string
+          beitrag_monat?: number
+          created_at?: string
+          fahrzeug?: string
+          id?: string
+          notiz?: string | null
+          policennummer?: string
+          selbstbeteiligung?: number
+          status?: string
+          updated_at?: string
+          versicherer?: string
+        }
+        Relationships: []
+      }
       insurers: {
         Row: {
           created_at: string
@@ -478,6 +571,60 @@ export type Database = {
           status?: string
           typ?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      leasing_contracts: {
+        Row: {
+          beginn: string
+          created_at: string
+          ende: string
+          fahrzeug: string
+          id: string
+          km_aktuell: number
+          km_inklusive: number
+          laufzeit_monate: number
+          leasinggeber: string
+          notiz: string | null
+          rate_monat: number
+          restwert: number
+          status: string
+          updated_at: string
+          vertragsnummer: string
+        }
+        Insert: {
+          beginn?: string
+          created_at?: string
+          ende?: string
+          fahrzeug?: string
+          id?: string
+          km_aktuell?: number
+          km_inklusive?: number
+          laufzeit_monate?: number
+          leasinggeber?: string
+          notiz?: string | null
+          rate_monat?: number
+          restwert?: number
+          status?: string
+          updated_at?: string
+          vertragsnummer?: string
+        }
+        Update: {
+          beginn?: string
+          created_at?: string
+          ende?: string
+          fahrzeug?: string
+          id?: string
+          km_aktuell?: number
+          km_inklusive?: number
+          laufzeit_monate?: number
+          leasinggeber?: string
+          notiz?: string | null
+          rate_monat?: number
+          restwert?: number
+          status?: string
+          updated_at?: string
+          vertragsnummer?: string
         }
         Relationships: []
       }

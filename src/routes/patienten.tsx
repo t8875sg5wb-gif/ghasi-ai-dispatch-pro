@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { HeartPulse, Search, Shield, UserCheck, FileText } from "lucide-react";
 
-import { PATIENTEN, type Patient } from "@/lib/stammdaten";
+import { type Patient } from "@/lib/stammdaten";
+import { usePatients, useSeedPatients } from "@/lib/patients-store";
+import { Button } from "@/components/ui/button";
 import {
   INITIAL_AUFTRAEGE,
   MOBILITAET_META,
@@ -42,28 +44,37 @@ function mobilitaetTyp(p: Patient): Mobilitaet {
 }
 
 function PatientenSeite() {
+  const { data: patienten = [] } = usePatients();
+  const seedMut = useSeedPatients();
   const [suche, setSuche] = useState("");
-  const [aktiv, setAktiv] = useState<string | null>(PATIENTEN[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
 
-  const gefiltert = PATIENTEN.filter(
+  const gefiltert = patienten.filter(
     (p) =>
       p.name.toLowerCase().includes(suche.toLowerCase()) ||
       p.kostentraeger.toLowerCase().includes(suche.toLowerCase()),
   );
-  const patient = PATIENTEN.find((p) => p.id === aktiv) ?? gefiltert[0] ?? null;
+  const patient = patienten.find((p) => p.id === aktiv) ?? gefiltert[0] ?? null;
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <HeartPulse className="h-5 w-5" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <HeartPulse className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Patienten</h1>
+            <p className="text-sm text-muted-foreground">
+              Patientenakten, Mobilität, Verordnung und Transportbedarf.
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold">Patienten</h1>
-          <p className="text-sm text-muted-foreground">
-            Patientenakten, Mobilität, Verordnung und Transportbedarf.
-          </p>
-        </div>
+        {patienten.length === 0 && (
+          <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+            Beispieldaten laden
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">

@@ -16,6 +16,12 @@ import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
 import { useCustomers } from "@/lib/customers-store";
 import { useVehicles } from "@/lib/vehicles-store";
+import { usePatients } from "@/lib/patients-store";
+import { useFacilities } from "@/lib/facilities-store";
+import { useInsurers } from "@/lib/insurers-store";
+import { useInsurance } from "@/lib/insurance-store";
+import { useLeasing } from "@/lib/leasing-store";
+import { useCalls } from "@/lib/calls-store";
 import { syncOrderNotifications } from "@/lib/notifications";
 import { logActivity } from "@/lib/protokoll";
 
@@ -32,6 +38,12 @@ function useHydrateStores() {
   useInvoices();
   useCustomers();
   useVehicles();
+  usePatients();
+  useFacilities();
+  useInsurers();
+  useInsurance();
+  useLeasing();
+  useCalls();
   return orders;
 }
 

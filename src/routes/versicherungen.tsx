@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 
 import {
-  INITIAL_VERSICHERUNGEN,
   VERSICHERUNGS_ARTEN,
   VERSICHERUNG_STATUS_META,
   abgeleiteterStatus,
@@ -23,6 +22,13 @@ import {
   type Versicherung,
   type VersicherungsArt,
 } from "@/lib/versicherungen";
+import {
+  useInsurance,
+  useCreateInsurance,
+  useUpdateInsurance,
+  useSeedInsurance,
+} from "@/lib/insurance-store";
+import type { InsuranceWrite } from "@/lib/insurance-shared";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,10 +74,13 @@ type ArtFilter = VersicherungsArt | "alle";
 
 function VersicherungenSeite() {
   const { name: akteur } = useAuth();
-  const [items, setItems] = useState<Versicherung[]>(INITIAL_VERSICHERUNGEN);
+  const { data: items = [] } = useInsurance();
+  const createMut = useCreateInsurance();
+  const updateMut = useUpdateInsurance();
+  const seedMut = useSeedInsurance();
   const [suche, setSuche] = useState("");
   const [artFilter, setArtFilter] = useState<ArtFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(INITIAL_VERSICHERUNGEN[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Versicherung | null>(null);
 
@@ -94,20 +103,42 @@ function VersicherungenSeite() {
 
   function speichern(values: Versicherung) {
     const istNeu = !items.some((v) => v.id === values.id);
-    setItems((prev) =>
-      istNeu ? [...prev, values] : prev.map((v) => (v.id === values.id ? values : v)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: "Versicherungen",
-      entitaet: `${values.art} · ${values.fahrzeug}`,
-      aktion: istNeu ? "angelegt" : "bearbeitet",
-      beschreibung: `Police ${values.policennummer} (${values.versicherer}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`Versicherung ${istNeu ? "angelegt" : "gespeichert"}`);
+    const { id: _id, ...write } = values;
+    void _id;
+    const onDone = () => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Versicherungen",
+        entitaet: `${values.art} · ${values.fahrzeug}`,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `Police ${values.policennummer} (${values.versicherer}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(`Versicherung ${istNeu ? "angelegt" : "gespeichert"}`);
+    };
+    const onErr = (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    if (istNeu) {
+      createMut.mutate(write as InsuranceWrite, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone();
+        },
+        onError: onErr,
+      });
+    } else {
+      updateMut.mutate(
+        { id: values.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(values.id);
+            onDone();
+          },
+          onError: onErr,
+        },
+      );
+    }
   }
 
   return (
@@ -124,14 +155,21 @@ function VersicherungenSeite() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Police anlegen
-        </Button>
+        <div className="flex items-center gap-2">
+          {items.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Police anlegen
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
