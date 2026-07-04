@@ -62,7 +62,10 @@ export const Route = createFileRoute("/fahrzeuge")({
 type StatusFilter = FahrzeugStatus | "alle";
 
 function FahrzeugePage() {
-  const [fahrzeuge, setFahrzeuge] = useState<Fahrzeug[]>(INITIAL_FAHRZEUGE);
+  const { data: fahrzeuge = [] } = useVehicles();
+  const createMut = useCreateVehicle();
+  const updateMut = useUpdateVehicle();
+  const seedMut = useSeedVehicles();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
 
@@ -71,28 +74,6 @@ function FahrzeugePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Fahrzeug | null>(null);
-
-  // Simulated realtime: vehicles "unterwegs" accumulate km, burn fuel, earn revenue.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFahrzeuge((prev) =>
-        prev.map((f) => {
-          if (f.status !== "unterwegs") return f;
-          const km = Math.round(Math.random() * 3);
-          const umsatz = km * 4;
-          return {
-            ...f,
-            kilometerstand: f.kilometerstand + km,
-            tankstand: Math.max(0, f.tankstand - km * 0.2),
-            reichweite: Math.max(0, f.reichweite - km),
-            tagesumsatz: f.tagesumsatz + umsatz,
-            tagesgewinn: f.tagesgewinn + Math.round(umsatz * 0.4),
-          };
-        }),
-      );
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   const empfehlungen = useMemo(() => empfehleFahrzeug(fahrzeuge, undefined, 3), [fahrzeuge]);
 
