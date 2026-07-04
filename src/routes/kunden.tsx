@@ -151,14 +151,25 @@ function KundenSeite() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Kunde anlegen
-        </Button>
+        <div className="flex items-center gap-2">
+          {kunden.length === 0 && (
+            <Button
+              variant="outline"
+              onClick={() => seedMut.mutate()}
+              disabled={seedMut.isPending}
+            >
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Kunde anlegen
+          </Button>
+        </div>
       </div>
 
       {hinweise.length > 0 && (
