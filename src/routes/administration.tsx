@@ -258,14 +258,13 @@ function Rollenmatrix() {
 
 function SystemStatus() {
   // Echte, leichte Health-Checks statt fest verdrahteter "grün"-Anzeige.
+  const ladeBenutzer = useServerFn(listeBenutzer);
   const dbCheck = useQuery({
     queryKey: ["admin", "systemstatus", "db"],
-    queryFn: () => listeBenutzer(),
+    queryFn: () => ladeBenutzer(),
     retry: 0,
     staleTime: 30_000,
   });
-  const ladeBenutzer = useServerFn(listeBenutzer);
-  void ladeBenutzer;
   const { user } = useAuth();
 
   const dbOk = !dbCheck.isError;
