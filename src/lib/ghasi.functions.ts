@@ -1,6 +1,7 @@
 // Server-Funktionen für GHASI AI Gedächtnis & Aktivitätsprotokoll.
 // Schreibzugriffe laufen serverseitig über den Service-Role-Client (RLS-Bypass).
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface MemoryInput {
   kategorie?: string;
@@ -20,6 +21,7 @@ export interface ProtokollInput {
 }
 
 export const speichereGedaechtnis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: MemoryInput) => {
     if (!data?.inhalt || typeof data.inhalt !== "string") {
       throw new Error("inhalt ist erforderlich");
@@ -44,6 +46,7 @@ export const speichereGedaechtnis = createServerFn({ method: "POST" })
   });
 
 export const protokolliere = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: ProtokollInput) => {
     if (!data?.bereich || !data?.aktion || !data?.beschreibung) {
       throw new Error("bereich, aktion und beschreibung sind erforderlich");
