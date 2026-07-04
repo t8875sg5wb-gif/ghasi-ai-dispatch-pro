@@ -107,7 +107,7 @@ export function GoogleFleetMap({
         if (abgebrochen || !containerRef.current || mapRef.current) return;
         mapsRef.current = maps;
         mapRef.current = new maps.Map(containerRef.current, {
-          center: BERLIN,
+          center: MINDEN,
           zoom: 12,
           mapTypeControl: false,
           streetViewControl: false,
