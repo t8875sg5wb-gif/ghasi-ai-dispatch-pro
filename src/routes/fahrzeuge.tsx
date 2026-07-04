@@ -209,10 +209,21 @@ function FahrzeugePage() {
             Flotte, Kosten, Wartung und Verfügbarkeit – mit KI-Fahrzeugvorschlag.
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Neues Fahrzeug
-        </Button>
+        <div className="flex items-center gap-2">
+          {fahrzeuge.length === 0 && (
+            <Button
+              variant="outline"
+              onClick={() => seedMut.mutate()}
+              disabled={seedMut.isPending}
+            >
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Neues Fahrzeug
+          </Button>
+        </div>
       </section>
 
       {/* Summary stats */}
