@@ -88,6 +88,9 @@ function HealthGauge({ score, stufe }: { score: number; stufe: HealthStufe }) {
 }
 
 function ControlCenter() {
+  useOrders();
+  useDrivers();
+  useInvoices();
   const k = computeKpis();
   const health = computeBusinessHealth(k);
 
