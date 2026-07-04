@@ -4,6 +4,8 @@
 // Read-only & advisory — the AI never executes or sends anything.
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 export interface ExecutiveAnalysis {
   lageeinschaetzung: string;
   chancen: string[];
