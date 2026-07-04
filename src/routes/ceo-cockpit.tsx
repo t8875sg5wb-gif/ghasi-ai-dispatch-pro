@@ -38,6 +38,7 @@ import {
   computeCeoRecommendations,
   computeRiskAlerts,
   profitProFahrer,
+  profitProAuftrag,
   buildCeoBriefing,
   buildEveningSummary,
   type CeoWirkung,
