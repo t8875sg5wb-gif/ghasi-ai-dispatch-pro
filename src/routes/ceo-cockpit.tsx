@@ -242,6 +242,44 @@ function CeoCockpit() {
         </CardContent>
       </Card>
 
+      {/* Gewinn nach Steuern (Schätzung) */}
+      <Card className="border-border/70 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
+            <TrendingUp className="h-4 w-4" />
+          </span>
+          <CardTitle className="text-base">Gewinn nach Steuern (Schätzung)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+              <p className="text-xs font-medium text-muted-foreground">Jahresgewinn (Prognose)</p>
+              <p className="mt-1 text-lg font-bold tabular-nums">{EUR(jahresGewinn)}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Gewerbesteuer (Hebesatz {firma.gewerbesteuerHebesatz} %)
+              </p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-destructive">
+                −{EUR(gewerbesteuer)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-success/30 bg-success/5 p-4">
+              <p className="text-xs font-medium text-muted-foreground">Gewinn nach Gewerbesteuer</p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-success">
+                {EUR(gewinnNachSteuern)}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Vereinfachte Schätzung (Freibetrag 24.500 €, Steuermesszahl 3,5 %). Einkommensteuer und
+            weitere Faktoren sind nicht berücksichtigt. {STEUER_DISCLAIMER}
+          </p>
+        </CardContent>
+      </Card>
+
+
+
       {/* Empfehlungen + Risiken */}
       <section className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border/70 shadow-sm">
