@@ -13,7 +13,7 @@ import {
   loadGoogleMaps,
 } from "@/lib/google-maps";
 
-const BERLIN: google.maps.LatLngLiteral = { lat: 52.51, lng: 13.4 };
+const MINDEN: google.maps.LatLngLiteral = { lat: 52.2887, lng: 8.9167 };
 
 function escapeHtml(s: string): string {
   return s.replace(
