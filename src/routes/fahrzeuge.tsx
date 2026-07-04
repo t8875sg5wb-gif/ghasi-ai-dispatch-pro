@@ -18,13 +18,17 @@ import {
   type FahrzeugStatus,
   FAHRZEUG_STATI,
   FAHRZEUG_STATUS_META,
-  INITIAL_FAHRZEUGE,
   empfehleFahrzeug,
   fahrzeugWarnungen,
   formatEUR,
   formatKm,
-  nextFahrzeugId,
 } from "@/lib/fahrzeuge";
+import {
+  useVehicles,
+  useCreateVehicle,
+  useUpdateVehicle,
+  useSeedVehicles,
+} from "@/lib/vehicles-store";
 import { FahrzeugForm, type FahrzeugFormValues } from "@/components/fahrzeuge/fahrzeug-form";
 import { FahrzeugDetail } from "@/components/fahrzeuge/fahrzeug-detail";
 import { Badge } from "@/components/ui/badge";
