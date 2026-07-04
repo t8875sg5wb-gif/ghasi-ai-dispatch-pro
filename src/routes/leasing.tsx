@@ -76,7 +76,15 @@ function LeasingSeite() {
   const [items, setItems] = useState<Leasingvertrag[]>(INITIAL_LEASING);
   const [suche, setSuche] = useState("");
   const [nurAktiv, setNurAktiv] = useState(false);
-  const [aktiv, setAktiv] = useState<string | null>(INITIAL_LEASING[0]?.id ?? null);
+function LeasingSeite() {
+  const { name: akteur } = useAuth();
+  const { data: items = [] } = useLeasing();
+  const createMut = useCreateLeasing();
+  const updateMut = useUpdateLeasing();
+  const seedMut = useSeedLeasing();
+  const [suche, setSuche] = useState("");
+  const [nurAktiv, setNurAktiv] = useState(false);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Leasingvertrag | null>(null);
 
@@ -99,20 +107,42 @@ function LeasingSeite() {
 
   function speichern(values: Leasingvertrag) {
     const istNeu = !items.some((l) => l.id === values.id);
-    setItems((prev) =>
-      istNeu ? [...prev, values] : prev.map((l) => (l.id === values.id ? values : l)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: "Leasing",
-      entitaet: `${values.vertragsnummer} · ${values.fahrzeug}`,
-      aktion: istNeu ? "angelegt" : "bearbeitet",
-      beschreibung: `Leasingvertrag ${values.vertragsnummer} (${values.leasinggeber}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`Leasingvertrag ${istNeu ? "angelegt" : "gespeichert"}`);
+    const { id: _id, ...write } = values;
+    void _id;
+    const onDone = () => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Leasing",
+        entitaet: `${values.vertragsnummer} · ${values.fahrzeug}`,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `Leasingvertrag ${values.vertragsnummer} (${values.leasinggeber}) wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(`Leasingvertrag ${istNeu ? "angelegt" : "gespeichert"}`);
+    };
+    const onErr = (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    if (istNeu) {
+      createMut.mutate(write as LeasingWrite, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone();
+        },
+        onError: onErr,
+      });
+    } else {
+      updateMut.mutate(
+        { id: values.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(values.id);
+            onDone();
+          },
+          onError: onErr,
+        },
+      );
+    }
   }
 
   return (
@@ -129,14 +159,21 @@ function LeasingSeite() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Vertrag anlegen
-        </Button>
+        <div className="flex items-center gap-2">
+          {items.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Vertrag anlegen
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
