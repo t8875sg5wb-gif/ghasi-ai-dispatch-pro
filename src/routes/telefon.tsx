@@ -78,11 +78,14 @@ type RichtungFilter = AnrufRichtung | "alle";
 function TelefonSeite() {
   const { name: akteur } = useAuth();
   const navigate = useNavigate();
-  const [anrufe, setAnrufe] = useState<Anruf[]>(INITIAL_ANRUFE);
+  const { data: anrufe = [] } = useCalls();
+  const createMut = useCreateCall();
+  const updateMut = useUpdateCall();
+  const seedMut = useSeedCalls();
   const [suche, setSuche] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
   const [richtungFilter, setRichtungFilter] = useState<RichtungFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(INITIAL_ANRUFE[0]?.id ?? null);
+  const [aktiv, setAktiv] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Anruf | null>(null);
 
@@ -109,39 +112,63 @@ function TelefonSeite() {
 
   function speichern(values: Anruf) {
     const istNeu = !anrufe.some((a) => a.id === values.id);
-    setAnrufe((prev) =>
-      istNeu ? [...prev, values] : prev.map((a) => (a.id === values.id ? values : a)),
-    );
-    setAktiv(values.id);
-    setFormOpen(false);
-    setEditTarget(null);
-    logActivity({
-      bereich: "Telefon",
-      entitaet: values.name ?? values.nummer,
-      aktion: istNeu ? "Anruf erfasst" : "Anruf bearbeitet",
-      beschreibung: `${ANRUF_RICHTUNG_META[values.richtung].label}er Anruf (${values.kategorie}) wurde ${istNeu ? "erfasst" : "aktualisiert"}.`,
-      akteur,
-    });
-    toast.success(`Anruf ${istNeu ? "erfasst" : "gespeichert"}`);
+    const { id: _id, ...write } = values;
+    void _id;
+    const onDone = () => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Telefon",
+        entitaet: values.name ?? values.nummer,
+        aktion: istNeu ? "Anruf erfasst" : "Anruf bearbeitet",
+        beschreibung: `${ANRUF_RICHTUNG_META[values.richtung].label}er Anruf (${values.kategorie}) wurde ${istNeu ? "erfasst" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(`Anruf ${istNeu ? "erfasst" : "gespeichert"}`);
+    };
+    const onErr = (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    if (istNeu) {
+      createMut.mutate(write as CallWrite, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone();
+        },
+        onError: onErr,
+      });
+    } else {
+      updateMut.mutate(
+        { id: values.id, values: write },
+        {
+          onSuccess: () => {
+            setAktiv(values.id);
+            onDone();
+          },
+          onError: onErr,
+        },
+      );
+    }
   }
 
   function setStatus(anruf: Anruf, status: AnrufStatus) {
-    setAnrufe((prev) => prev.map((a) => (a.id === anruf.id ? { ...a, status } : a)));
-    logActivity({
-      bereich: "Telefon",
-      entitaet: anruf.name ?? anruf.nummer,
-      aktion: "Status geändert",
-      beschreibung: `Anruf auf „${ANRUF_STATUS_META[status].label}“ gesetzt.`,
-      akteur,
-    });
+    updateMut.mutate(
+      { id: anruf.id, values: { status } },
+      {
+        onSuccess: () =>
+          logActivity({
+            bereich: "Telefon",
+            entitaet: anruf.name ?? anruf.nummer,
+            aktion: "Status geändert",
+            beschreibung: `Anruf auf „${ANRUF_STATUS_META[status].label}“ gesetzt.`,
+            akteur,
+          }),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen"),
+      },
+    );
   }
 
   function auftragAusAnruf(anruf: Anruf) {
-    setAnrufe((prev) =>
-      prev.map((a) =>
-        a.id === anruf.id ? { ...a, auftragErstellt: true, status: "erledigt" } : a,
-      ),
-    );
+    updateMut.mutate({ id: anruf.id, values: { auftragErstellt: true, status: "erledigt" } });
     logActivity({
       bereich: "Telefon",
       entitaet: anruf.name ?? anruf.nummer,
@@ -167,14 +194,21 @@ function TelefonSeite() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Anruf erfassen
-        </Button>
+        <div className="flex items-center gap-2">
+          {anrufe.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Anruf erfassen
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
