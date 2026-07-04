@@ -155,14 +155,21 @@ function VersicherungenSeite() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Police anlegen
-        </Button>
+        <div className="flex items-center gap-2">
+          {items.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Police anlegen
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
