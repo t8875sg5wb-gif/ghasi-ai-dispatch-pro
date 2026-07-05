@@ -354,6 +354,7 @@ ${buildKnowledgeSnapshot()}`;
               inhalt: textOf(responseMessage.parts),
               parts: responseMessage.parts as never,
               quellen: (webQuellen.length > 0 ? webQuellen : null) as never,
+              user_id: userId,
             });
             await supabaseAdmin
               .from("chat_threads")
