@@ -203,6 +203,7 @@ export const Route = createFileRoute("/api/chat")({
               rolle: "user",
               inhalt: userText,
               parts: last.parts as never,
+              user_id: userId,
             });
             // Titel aus erster Nutzer-Nachricht ableiten.
             const { data: t } = await supabaseAdmin
@@ -353,6 +354,7 @@ ${buildKnowledgeSnapshot()}`;
               inhalt: textOf(responseMessage.parts),
               parts: responseMessage.parts as never,
               quellen: (webQuellen.length > 0 ? webQuellen : null) as never,
+              user_id: userId,
             });
             await supabaseAdmin
               .from("chat_threads")
