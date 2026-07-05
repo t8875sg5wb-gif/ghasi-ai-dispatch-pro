@@ -9,11 +9,11 @@ export const erstelleThread = createServerFn({ method: "POST" })
   .validator((data: { titel?: string }) => ({
     titel: (data?.titel ?? "Neue Unterhaltung").slice(0, 120),
   }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("chat_threads")
-      .insert({ titel: data.titel })
+      .insert({ titel: data.titel, user_id: context.userId })
       .select()
       .single();
     if (error) throw new Error(error.message);
