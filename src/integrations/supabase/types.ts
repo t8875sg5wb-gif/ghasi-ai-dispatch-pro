@@ -137,6 +137,7 @@ export type Database = {
           quellen: Json | null
           rolle: string
           thread_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -146,6 +147,7 @@ export type Database = {
           quellen?: Json | null
           rolle: string
           thread_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -155,6 +157,7 @@ export type Database = {
           quellen?: Json | null
           rolle?: string
           thread_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -173,6 +176,7 @@ export type Database = {
           id: string
           titel: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           archiviert?: boolean
@@ -180,6 +184,7 @@ export type Database = {
           id?: string
           titel?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           archiviert?: boolean
@@ -187,6 +192,7 @@ export type Database = {
           id?: string
           titel?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
