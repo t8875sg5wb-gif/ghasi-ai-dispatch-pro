@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { Bot, Check, Clock, Gauge, Truck, User } from "lucide-react";
 
-import { type Auftrag, INITIAL_AUFTRAEGE } from "@/lib/auftraege";
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { type Auftrag } from "@/lib/auftraege";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { empfehleFuerAuftrag, type FahrerVorschlag } from "@/lib/driver-suggestion";
 import { fehlendeFelder } from "@/lib/order-urgency";
 import { Badge } from "@/components/ui/badge";
