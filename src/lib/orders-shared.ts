@@ -170,6 +170,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   };
   set("nummer", w.nummer);
   set("patient", w.patient);
+  set("telefon", w.telefon);
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);
   set("status", w.status);
