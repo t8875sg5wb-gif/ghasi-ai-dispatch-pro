@@ -23,19 +23,32 @@ import {
 import { useOrders, useCreateOrder, useUpdateOrder, useSeedOrders } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
 import {
-  gruppiereNachDatum,
+  gruppiereNachTab,
   warnStufe,
   minutenBis,
   formatCountdown,
   fehlendeFelder,
   istUnzugewiesen,
   hatWarnung,
+  auftragProbleme,
   WARN_META,
 } from "@/lib/order-urgency";
+import {
+  useRecurring,
+} from "@/lib/recurring-store";
+import { abgeleiteterStatus, RHYTHMUS_LABEL } from "@/lib/dauerauftraege";
 import { AuftragForm, type AuftragFormValues } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Repeat, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
