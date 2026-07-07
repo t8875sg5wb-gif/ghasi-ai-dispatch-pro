@@ -289,6 +289,18 @@ function Dashboard() {
         </div>
       </section>
 
+      {/* Geschäftsführer-Überblick */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Geschäftsführer-Überblick
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {chefStats.map((s) => (
+            <StatCard key={s.label} {...s} />
+          ))}
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <StatCard key={s.label} {...s} />
