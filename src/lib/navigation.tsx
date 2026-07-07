@@ -223,18 +223,6 @@ export const navGroups: NavGroup[] = [
         description: "Inspektionen, TÜV, Reparaturen und Servicehistorie.",
       },
       {
-        label: "Berichte",
-        to: "/berichte",
-        icon: BarChart3,
-        description: "Operative und finanzielle Reports auf Knopfdruck.",
-      },
-      {
-        label: "Statistiken",
-        to: "/statistiken",
-        icon: PieChart,
-        description: "Kennzahlen, Trends und Analysen im Zeitverlauf.",
-      },
-      {
         label: "Dokumente",
         to: "/dokumente",
         icon: FolderArchive,
