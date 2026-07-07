@@ -27,6 +27,7 @@ import {
 export interface OrderWrite {
   nummer?: string;
   patient?: string;
+  telefon?: string;
   transportart?: string;
   prioritaet?: string;
   status?: string;
