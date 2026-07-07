@@ -120,15 +120,27 @@ export function AuftragForm({ initial, onSubmit, onCancel, submitLabel }: Auftra
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="patient">Patient</Label>
-        <Input
-          id="patient"
-          value={values.patient}
-          onChange={(e) => set("patient", e.target.value)}
-          placeholder="Name des Patienten"
-          required
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="patient">Patient</Label>
+          <Input
+            id="patient"
+            value={values.patient}
+            onChange={(e) => set("patient", e.target.value)}
+            placeholder="Name des Patienten"
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="telefon">Telefonnummer</Label>
+          <Input
+            id="telefon"
+            type="tel"
+            value={values.telefon ?? ""}
+            onChange={(e) => set("telefon", e.target.value)}
+            placeholder="z. B. 0571 1234567"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
