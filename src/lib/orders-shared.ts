@@ -59,6 +59,7 @@ export interface OrderRow {
   id: string;
   nummer: string;
   patient: string;
+  telefon?: string | null;
   transportart: string;
   prioritaet: string;
   status: string;
