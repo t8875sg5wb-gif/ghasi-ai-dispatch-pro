@@ -31,18 +31,31 @@ export const Route = createFileRoute("/warnungen")({
 const PRIOS: AlarmPrioritaet[] = ["Kritisch", "Hoch", "Mittel", "Niedrig"];
 
 function AlertCenter() {
-  // Time-relative alerts: compute on the client only (no SSR mismatch).
-  const [alarme, setAlarme] = useState<Alarm[]>([]);
+  // Subscribe to the live stores so alerts recompute on every fresh fetch.
+  useOrders();
+  useDrivers();
+  useVehicles();
+  useInvoices();
+  useRecurring();
+  useCustomers();
   const [filter, setFilter] = useState<AlarmPrioritaet | "alle">("alle");
-  useEffect(() => setAlarme(computeAlarme()), []);
 
-  const counts = useMemo(() => {
-    const c: Record<AlarmPrioritaet, number> = { Kritisch: 0, Hoch: 0, Mittel: 0, Niedrig: 0 };
-    for (const a of alarme) c[a.prioritaet] += 1;
-    return c;
-  }, [alarme]);
+  // Alerts are time-relative → gate behind mount to avoid an SSR mismatch,
+  // then recompute unmemoized on each render (fresh store data included).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const alarme = mounted ? computeAlarme() : [];
+
+  const counts: Record<AlarmPrioritaet, number> = {
+    Kritisch: 0,
+    Hoch: 0,
+    Mittel: 0,
+    Niedrig: 0,
+  };
+  for (const a of alarme) counts[a.prioritaet] += 1;
 
   const gefiltert = filter === "alle" ? alarme : alarme.filter((a) => a.prioritaet === filter);
+
 
   return (
     <div className="animate-fade-in space-y-6">
