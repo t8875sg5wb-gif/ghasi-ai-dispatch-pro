@@ -1,75 +1,107 @@
 // ============================================================
-// GHASI AI — Communication Store
+// GHASI AI — Communication Store (Lovable Cloud backed)
 // ------------------------------------------------------------
-// Lightweight, framework-agnostic reactive store for the unified
-// communication layer. Holds inbox conversations and AI-generated
-// drafts in memory for the session and exposes actions that EVERY
-// module can reuse. Every communication event is mirrored into the
-// Audit Log (activity_log) via logActivity (fire-and-forget).
+// Persists the unified communication layer (inbox conversations
+// and AI drafts) in Supabase via TanStack Query. The public API
+// (hook + action names) is unchanged so posteingang.tsx,
+// aktions-center.tsx, conversation-panel.tsx and draft-card.tsx
+// keep working with real data underneath.
 //
 // No automatic sending: drafts only change state on explicit
-// Approve / Reject by the operator.
+// Approve / Reject by the operator. Every event is mirrored into
+// the Audit Log (activity_log) via logActivity.
 // ============================================================
-import { useSyncExternalStore } from "react";
+import { useEffect } from "react";
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import {
-  INITIAL_KONVERSATIONEN,
   generateEntwuerfe,
   letzteNachricht,
+  KANAL_META,
   type Konversation,
   type KommEntwurf,
   type KommNachricht,
   type KommKanal,
-  KANAL_META,
 } from "@/lib/communication";
+import { entwurfToRow } from "@/lib/communication-shared";
+import {
+  listConversations,
+  updateConversation,
+  markAllConversationsRead,
+  seedConversations,
+  listDrafts,
+  upsertDrafts,
+  updateDraft,
+} from "@/lib/communication.functions";
 import { logActivity } from "@/lib/protokoll";
 
-interface CommState {
-  konversationen: Konversation[];
-  entwuerfe: KommEntwurf[];
-  entwuerfeGeladen: boolean;
+export const CONVERSATIONS_QUERY_KEY = ["conversations"] as const;
+export const DRAFTS_QUERY_KEY = ["communication_drafts"] as const;
+
+/**
+ * Module-level QueryClient reference, captured while any store hook renders.
+ * Lets the imperative action functions (markiereGelesen, sendeAntwort, …)
+ * read/patch the cache without being hooks themselves — keeping the same
+ * call-sites the UI already uses.
+ */
+let qcRef: QueryClient | null = null;
+let convSeedInFlight = false;
+let draftSeedInFlight = false;
+
+/* ------------------------------------------------------------------ *
+ * Cache helpers
+ * ------------------------------------------------------------------ */
+
+function patchKonversationen(fn: (list: Konversation[]) => Konversation[]) {
+  if (!qcRef) return;
+  const current = qcRef.getQueryData<Konversation[]>(CONVERSATIONS_QUERY_KEY) ?? [];
+  qcRef.setQueryData(CONVERSATIONS_QUERY_KEY, fn(current));
 }
 
-let state: CommState = {
-  konversationen: INITIAL_KONVERSATIONEN,
-  entwuerfe: [],
-  entwuerfeGeladen: false,
-};
-
-const listeners = new Set<() => void>();
-
-function emit() {
-  for (const l of listeners) l();
-}
-
-function setState(next: Partial<CommState>) {
-  state = { ...state, ...next };
-  emit();
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
+function patchEntwuerfe(fn: (list: KommEntwurf[]) => KommEntwurf[]) {
+  if (!qcRef) return;
+  const current = qcRef.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY) ?? [];
+  qcRef.setQueryData(DRAFTS_QUERY_KEY, fn(current));
 }
 
 /* ------------------------------------------------------------------ *
- * Actions
+ * Actions (imperative — used from event handlers)
  * ------------------------------------------------------------------ */
 
-/** Loads the time-relative AI drafts once (client-only). */
+/** Seeds the AI drafts (client-relative) once when the table is empty. */
 export function ladeEntwuerfe() {
-  if (state.entwuerfeGeladen) return;
-  setState({ entwuerfe: generateEntwuerfe(), entwuerfeGeladen: true });
+  const qc = qcRef;
+  if (!qc) return;
+  const existing = qc.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY);
+  if (existing === undefined) return; // query not loaded yet
+  if (existing.length > 0 || draftSeedInFlight) return;
+  const drafts = generateEntwuerfe();
+  if (drafts.length === 0) return;
+  draftSeedInFlight = true;
+  upsertDrafts({ data: { drafts: drafts.map(entwurfToRow) } })
+    .then(() => qc.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY }))
+    .finally(() => {
+      draftSeedInFlight = false;
+    });
 }
 
 export function markiereGelesen(id: string, gelesen = true) {
-  setState({
-    konversationen: state.konversationen.map((k) => (k.id === id ? { ...k, gelesen } : k)),
+  patchKonversationen((list) => list.map((k) => (k.id === id ? { ...k, gelesen } : k)));
+  updateConversation({ data: { id, values: { gelesen } } }).catch(() => {
+    qcRef?.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
   });
 }
 
 export function alleGelesen() {
-  setState({ konversationen: state.konversationen.map((k) => ({ ...k, gelesen: true })) });
+  patchKonversationen((list) => list.map((k) => ({ ...k, gelesen: true })));
+  markAllConversationsRead()
+    .then(() => qcRef?.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY }))
+    .catch(() => qcRef?.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY }));
   logActivity({
     bereich: "Kommunikation",
     aktion: "gelesen",
@@ -79,7 +111,8 @@ export function alleGelesen() {
 
 /** Operator sends a manual reply inside a conversation (explicit user action). */
 export function sendeAntwort(konvId: string, text: string) {
-  const konv = state.konversationen.find((k) => k.id === konvId);
+  const list = qcRef?.getQueryData<Konversation[]>(CONVERSATIONS_QUERY_KEY) ?? [];
+  const konv = list.find((k) => k.id === konvId);
   if (!konv || !text.trim()) return;
   const nachricht: KommNachricht = {
     id: `n-${konvId}-${Date.now()}`,
@@ -90,11 +123,13 @@ export function sendeAntwort(konvId: string, text: string) {
     text: text.trim(),
     eigen: true,
   };
-  setState({
-    konversationen: state.konversationen.map((k) =>
-      k.id === konvId ? { ...k, gelesen: true, nachrichten: [...k.nachrichten, nachricht] } : k,
-    ),
-  });
+  const nachrichten = [...konv.nachrichten, nachricht];
+  patchKonversationen((l) =>
+    l.map((k) => (k.id === konvId ? { ...k, gelesen: true, nachrichten } : k)),
+  );
+  updateConversation({ data: { id: konvId, values: { gelesen: true, nachrichten } } })
+    .then(() => qcRef?.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY }))
+    .catch(() => qcRef?.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY }));
   logActivity({
     bereich: "Kommunikation",
     entitaet: konv.betreff,
@@ -105,18 +140,22 @@ export function sendeAntwort(konvId: string, text: string) {
 }
 
 export function bearbeiteEntwurf(id: string, nachricht: string) {
-  setState({
-    entwuerfe: state.entwuerfe.map((e) => (e.id === id ? { ...e, nachricht } : e)),
+  patchEntwuerfe((list) => list.map((e) => (e.id === id ? { ...e, nachricht } : e)));
+  updateDraft({ data: { id, values: { nachricht } } }).catch(() => {
+    qcRef?.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY });
   });
 }
 
-/** Approves a draft → marks it sent (manual confirmation) and logs to the audit trail. */
+/** Approves a draft → marks it sent (manual confirmation) + audit log. */
 export function genehmigeEntwurf(id: string) {
-  const entwurf = state.entwuerfe.find((e) => e.id === id);
+  const entwurf = (qcRef?.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY) ?? []).find(
+    (e) => e.id === id,
+  );
+  patchEntwuerfe((list) => list.map((e) => (e.id === id ? { ...e, status: "genehmigt" } : e)));
+  updateDraft({ data: { id, values: { status: "genehmigt" } } })
+    .then(() => qcRef?.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY }))
+    .catch(() => qcRef?.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY }));
   if (!entwurf) return;
-  setState({
-    entwuerfe: state.entwuerfe.map((e) => (e.id === id ? { ...e, status: "genehmigt" } : e)),
-  });
   logActivity({
     bereich: "Kommunikation",
     entitaet: entwurf.titel,
@@ -133,11 +172,14 @@ export function genehmigeEntwurf(id: string) {
 }
 
 export function lehneEntwurfAb(id: string) {
-  const entwurf = state.entwuerfe.find((e) => e.id === id);
+  const entwurf = (qcRef?.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY) ?? []).find(
+    (e) => e.id === id,
+  );
+  patchEntwuerfe((list) => list.map((e) => (e.id === id ? { ...e, status: "abgelehnt" } : e)));
+  updateDraft({ data: { id, values: { status: "abgelehnt" } } })
+    .then(() => qcRef?.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY }))
+    .catch(() => qcRef?.invalidateQueries({ queryKey: DRAFTS_QUERY_KEY }));
   if (!entwurf) return;
-  setState({
-    entwuerfe: state.entwuerfe.map((e) => (e.id === id ? { ...e, status: "abgelehnt" } : e)),
-  });
   logActivity({
     bereich: "Kommunikation",
     entitaet: entwurf.titel,
@@ -149,39 +191,56 @@ export function lehneEntwurfAb(id: string) {
 }
 
 /* ------------------------------------------------------------------ *
- * React hooks (useSyncExternalStore)
+ * React hooks (TanStack Query)
  * ------------------------------------------------------------------ */
 
-export function useKonversationen() {
-  return useSyncExternalStore(
-    subscribe,
-    () => state.konversationen,
-    () => state.konversationen,
-  );
+export function useKonversationen(): Konversation[] {
+  const qc = useQueryClient();
+  qcRef = qc;
+  const fetchFn = useServerFn(listConversations);
+  const seedFn = useServerFn(seedConversations);
+  const { data } = useQuery({
+    queryKey: CONVERSATIONS_QUERY_KEY,
+    queryFn: () => fetchFn(),
+    staleTime: 30_000,
+  });
+
+  // Seed once from the demo inbox when the table is still empty.
+  useEffect(() => {
+    if (data === undefined || data.length > 0 || convSeedInFlight) return;
+    convSeedInFlight = true;
+    seedFn()
+      .then((res) => {
+        if (res.seeded > 0) qc.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+      })
+      .finally(() => {
+        convSeedInFlight = false;
+      });
+  }, [data, qc, seedFn]);
+
+  return data ?? [];
 }
 
-export function useEntwuerfe() {
-  return useSyncExternalStore(
-    subscribe,
-    () => state.entwuerfe,
-    () => state.entwuerfe,
-  );
+export function useEntwuerfe(): KommEntwurf[] {
+  const qc = useQueryClient();
+  qcRef = qc;
+  const fetchFn = useServerFn(listDrafts);
+  const { data } = useQuery({
+    queryKey: DRAFTS_QUERY_KEY,
+    queryFn: () => fetchFn(),
+    staleTime: 30_000,
+  });
+  return data ?? [];
 }
 
-export function useUngeleseneAnzahl() {
-  return useSyncExternalStore(
-    subscribe,
-    () => state.konversationen.filter((k) => !k.gelesen).length,
-    () => 0,
-  );
+export function useUngeleseneAnzahl(): number {
+  const konversationen = useKonversationen();
+  return konversationen.filter((k) => !k.gelesen).length;
 }
 
-export function useOffeneEntwuerfeAnzahl() {
-  return useSyncExternalStore(
-    subscribe,
-    () => state.entwuerfe.filter((e) => e.status === "offen").length,
-    () => 0,
-  );
+export function useOffeneEntwuerfeAnzahl(): number {
+  const entwuerfe = useEntwuerfe();
+  return entwuerfe.filter((e) => e.status === "offen").length;
 }
 
 export { letzteNachricht };
