@@ -22,6 +22,7 @@ import { useInsurers } from "@/lib/insurers-store";
 import { useInsurance } from "@/lib/insurance-store";
 import { useLeasing } from "@/lib/leasing-store";
 import { useCalls } from "@/lib/calls-store";
+import { useKonversationen, useEntwuerfe, ladeEntwuerfe } from "@/lib/communication-store";
 import { syncOrderNotifications } from "@/lib/notifications";
 import { logActivity } from "@/lib/protokoll";
 
