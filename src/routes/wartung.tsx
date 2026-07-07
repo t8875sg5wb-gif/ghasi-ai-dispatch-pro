@@ -16,7 +16,6 @@ import {
 
 import {
   type Fahrzeug,
-  INITIAL_FAHRZEUGE,
   AKTION_META,
   REIFEN_META,
   fahrzeugWarnungen,
