@@ -97,8 +97,9 @@ function DispatchCenter() {
   const updateMut = useUpdateOrder();
 
   const [transporte, setTransporte] = useState<DispatchTransport[]>([]);
-  const [fahrer] = useState(() => INITIAL_FAHRER);
-  const [fahrzeuge] = useState(() => INITIAL_FAHRZEUGE);
+  // Live fleet from the persisted stores so KPIs/conflicts recompute on fresh data.
+  const { data: fahrer = [] } = useDrivers();
+  const { data: fahrzeuge = [] } = useVehicles();
   const [mounted, setMounted] = useState(false);
   const [aktiv, setAktiv] = useState<DispatchTransport | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
