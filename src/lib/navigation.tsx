@@ -60,36 +60,17 @@ export const navGroups: NavGroup[] = [
         description: "Zentrale Echtzeit-Übersicht über Ihr gesamtes Unternehmen.",
       },
       {
-        label: "CEO Cockpit",
+        label: "Analyse-Hub",
         to: "/ceo-cockpit",
         icon: Crown,
         description:
-          "Der digitale Geschäftsführer: Prognosen, Cashflow, Kapazität, Empfehlungen & Risiken mit finanzieller Wirkung.",
-      },
-      {
-        label: "Control Center",
-        to: "/control-center",
-        icon: Gauge,
-        description:
-          "Executive-Kommandozentrale: Live-KPIs, Business Health Score & KI-Lageanalyse.",
-      },
-      {
-        label: "KI-Insights",
-        to: "/insights",
-        icon: Lightbulb,
-        description: "Autonome Optimierungschancen mit Begründung – Kosten, Gewinn, Auslastung.",
+          "CEO Cockpit, Control Center, KI-Insights, Prognosen, Statistiken & Berichte – gebündelt in einem Hub.",
       },
       {
         label: "Alert-Center",
         to: "/warnungen",
         icon: ShieldAlert,
         description: "Smart Alert Center: alle Warnungen nach Priorität in Echtzeit.",
-      },
-      {
-        label: "Prognosen",
-        to: "/prognosen",
-        icon: LineChart,
-        description: "Predictive AI: Umsatz-, Auslastungs-, Personal- und Wartungsprognosen.",
       },
       {
         label: "KI-Assistent",
