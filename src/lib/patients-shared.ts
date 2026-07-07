@@ -36,6 +36,7 @@ export function patientToRow(w: Partial<PatientWrite>): Record<string, unknown> 
     if (v !== undefined) row[k] = v;
   };
   set("name", w.name);
+  set("telefon", w.telefon ?? null);
   set("mobilitaet", w.mobilitaet);
   set("kostentraeger", w.kostentraeger);
   set("hinweis", w.hinweis);
