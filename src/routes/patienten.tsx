@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { HeartPulse, Search, Shield, UserCheck, FileText } from "lucide-react";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import { usePatients, useSeedPatients } from "@/lib/patients-store";
