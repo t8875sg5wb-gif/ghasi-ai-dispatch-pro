@@ -196,6 +196,60 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_drafts: {
+        Row: {
+          betreff: string | null
+          bezug: Json | null
+          created_at: string
+          empfaenger: string
+          erklaerung: string
+          grund: string
+          id: string
+          kanal: string
+          kategorie: string
+          nachricht: string
+          prioritaet: string
+          quelldaten: Json
+          status: string
+          titel: string
+          updated_at: string
+        }
+        Insert: {
+          betreff?: string | null
+          bezug?: Json | null
+          created_at?: string
+          empfaenger?: string
+          erklaerung?: string
+          grund?: string
+          id: string
+          kanal?: string
+          kategorie?: string
+          nachricht?: string
+          prioritaet?: string
+          quelldaten?: Json
+          status?: string
+          titel?: string
+          updated_at?: string
+        }
+        Update: {
+          betreff?: string | null
+          bezug?: Json | null
+          created_at?: string
+          empfaenger?: string
+          erklaerung?: string
+          grund?: string
+          id?: string
+          kanal?: string
+          kategorie?: string
+          nachricht?: string
+          prioritaet?: string
+          quelldaten?: Json
+          status?: string
+          titel?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           adresse: string
@@ -244,6 +298,48 @@ export type Database = {
           telefon?: string
           updated_at?: string
           ust_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          betreff: string
+          bezug: Json | null
+          created_at: string
+          gelesen: boolean
+          id: string
+          kanal: string
+          kategorie: string
+          nachrichten: Json
+          partner: string
+          prioritaet: string
+          updated_at: string
+        }
+        Insert: {
+          betreff?: string
+          bezug?: Json | null
+          created_at?: string
+          gelesen?: boolean
+          id?: string
+          kanal?: string
+          kategorie?: string
+          nachrichten?: Json
+          partner?: string
+          prioritaet?: string
+          updated_at?: string
+        }
+        Update: {
+          betreff?: string
+          bezug?: Json | null
+          created_at?: string
+          gelesen?: boolean
+          id?: string
+          kanal?: string
+          kategorie?: string
+          nachrichten?: Json
+          partner?: string
+          prioritaet?: string
+          updated_at?: string
         }
         Relationships: []
       }
