@@ -266,8 +266,6 @@ export function CeoCockpit() {
         </CardContent>
       </Card>
 
-
-
       {/* Empfehlungen + Risiken */}
       <section className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border/70 shadow-sm">
@@ -313,7 +311,9 @@ export function CeoCockpit() {
           </CardHeader>
           <CardContent className="space-y-2.5">
             {risks.length === 0 && (
-              <p className="text-sm text-muted-foreground">Keine akuten Geschäftsrisiken erkannt.</p>
+              <p className="text-sm text-muted-foreground">
+                Keine akuten Geschäftsrisiken erkannt.
+              </p>
             )}
             {risks.map((r) => (
               <Link
@@ -420,8 +420,6 @@ export function CeoCockpit() {
           </p>
         </CardContent>
       </Card>
-
-
 
       <ExecutiveAnalysis />
     </div>

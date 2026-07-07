@@ -181,7 +181,6 @@ export const navGroups: NavGroup[] = [
         icon: Hospital,
         description: "Krankenhäuser, Dialysezentren und Pflegeheime an einem Ort.",
       },
-
     ],
   },
   {

@@ -23,7 +23,8 @@ const TAB_IDS = TABS.map((t) => t.id) as readonly string[];
 
 export const Route = createFileRoute("/ceo-cockpit")({
   validateSearch: (search: Record<string, unknown>): { tab: AnalyseTab } => {
-    const tab = typeof search.tab === "string" && TAB_IDS.includes(search.tab) ? search.tab : "cockpit";
+    const tab =
+      typeof search.tab === "string" && TAB_IDS.includes(search.tab) ? search.tab : "cockpit";
     return { tab: tab as AnalyseTab };
   },
   head: () => ({
@@ -47,9 +48,7 @@ function AnalyseHub() {
     <div className="animate-fade-in space-y-6">
       <Tabs
         value={tab}
-        onValueChange={(v) =>
-          navigate({ to: "/ceo-cockpit", search: { tab: v as AnalyseTab } })
-        }
+        onValueChange={(v) => navigate({ to: "/ceo-cockpit", search: { tab: v as AnalyseTab } })}
       >
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 overflow-x-auto">
           {TABS.map((t) => (

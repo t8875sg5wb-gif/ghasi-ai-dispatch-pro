@@ -43,7 +43,6 @@ export function PrognosenPage() {
   useInvoices();
   const p = computePrognosen();
 
-
   const stats = [
     {
       label: "Umsatz diese Woche",
