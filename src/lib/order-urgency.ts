@@ -8,7 +8,16 @@
 //   nach Termin & weiterhin nicht zugewiesen → überfällig (kritisch)
 // Zugewiesene, aber verspätete Aufträge bleiben sichtbar (orange) oben stehen.
 
-import type { Auftrag, AuftragStatus } from "@/lib/auftraege";
+import {
+  type Auftrag,
+  type AuftragStatus,
+  effektiveMobilitaet,
+  fahrzeugPasstZuMobilitaet,
+  MOBILITAET_META,
+  empfohlenerFahrzeugtyp,
+} from "@/lib/auftraege";
+import { adresseAusStrukturOderLegacy, adresseGefuellt } from "@/lib/address";
+import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 
 export type WarnStufe = "normal" | "gelb" | "orange" | "rot" | "ueberfaellig";
 
