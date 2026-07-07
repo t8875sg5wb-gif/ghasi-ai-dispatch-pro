@@ -51,6 +51,7 @@ const NONE = "__none__";
 function emptyValues(): AuftragFormValues {
   return {
     patient: "",
+    telefon: "",
     transportart: "Sitzendtransport",
     prioritaet: "normal",
     abholort: "",
