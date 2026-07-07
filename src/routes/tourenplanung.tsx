@@ -66,6 +66,8 @@ import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { Loader2 } from "lucide-react";
 
