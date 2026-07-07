@@ -272,6 +272,137 @@ function AuftraegePage() {
     { value: "storniert", label: STATUS_META.storniert.label },
   ];
 
+  function renderRow(a: Auftrag) {
+    const status = STATUS_META[a.status];
+    const prio = PRIORITAET_META[a.prioritaet];
+    const stufe = warnStufe(a);
+    const warn = WARN_META[stufe];
+    const zeigtWarnung = hatWarnung(stufe);
+    const unzugewiesen = istUnzugewiesen(a);
+    const m = minutenBis(a);
+    const fehlt = fehlendeFelder(a);
+    // Zusätzliche automatische Warnungen (Adresse/Telefon/Doppelbuchung).
+    const extraProbleme = auftragProbleme(a, auftraege).filter((p) =>
+      ["adresse_fehlt", "telefon_fehlt", "doppelt_eingeplant"].includes(p.typ),
+    );
+    return (
+      <TableRow
+        key={a.id}
+        className={cn("cursor-pointer", warn.row)}
+        onClick={() => openDetail(a)}
+      >
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                "h-2 w-2 shrink-0 rounded-full",
+                zeigtWarnung ? warn.dot : status.dot,
+              )}
+            />
+            <div className="min-w-0">
+              <p className="font-medium leading-tight">{a.patient}</p>
+              <p className="text-xs text-muted-foreground">
+                {a.nummer} · {a.transportart}
+              </p>
+              <MedizinBadges auftrag={a} className="mt-1.5" />
+              {unzugewiesen && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Nicht zugewiesen
+                  </Badge>
+                  {zeigtWarnung && (
+                    <Badge
+                      variant="outline"
+                      className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
+                    >
+                      {formatCountdown(m)}
+                    </Badge>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">
+                    Fehlt: {fehlt.join(" & ")}
+                  </span>
+                </div>
+              )}
+              {(fahrzeugMismatch(a) || extraProbleme.length > 0) && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {fahrzeugMismatch(a) && (
+                    <Badge
+                      variant="outline"
+                      className="h-5 gap-1 border-warning/40 bg-warning/10 px-1.5 text-[10px] text-warning"
+                    >
+                      <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+                    </Badge>
+                  )}
+                  {extraProbleme.map((p) => (
+                    <Badge
+                      key={p.typ}
+                      variant="outline"
+                      className={cn(
+                        "h-5 gap-1 px-1.5 text-[10px]",
+                        p.stufe === "kritisch"
+                          ? "border-destructive/30 bg-destructive/10 text-destructive"
+                          : "border-warning/40 bg-warning/10 text-warning",
+                      )}
+                    >
+                      <AlertTriangle className="h-3 w-3" /> {p.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="hidden max-w-[260px] md:table-cell">
+          <p className="truncate text-sm">{a.abholort}</p>
+          <p className="truncate text-xs text-muted-foreground">→ {a.zielort}</p>
+        </TableCell>
+        <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
+          {formatTermin(a.termin)}
+        </TableCell>
+        <TableCell className="hidden sm:table-cell">
+          <Badge variant="outline" className={prio.badge}>
+            {prio.label}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <Badge variant="outline" className={cn("gap-1", status.badge)}>
+            <status.icon className="h-3 w-3" />
+            {status.label}
+          </Badge>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  function renderTabelle(list: Auftrag[]) {
+    if (list.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+          <ClipboardList className="h-6 w-6 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Keine Fahrten in diesem Zeitraum.</p>
+        </div>
+      );
+    }
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Auftrag</TableHead>
+            <TableHead className="hidden md:table-cell">Strecke</TableHead>
+            <TableHead className="hidden lg:table-cell">Termin</TableHead>
+            <TableHead className="hidden sm:table-cell">Priorität</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>{list.map(renderRow)}</TableBody>
+      </Table>
+    );
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
