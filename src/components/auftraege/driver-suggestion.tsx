@@ -85,9 +85,12 @@ function VorschlagZeile({
 
 export function DriverSuggestion({ auftrag, onConfirm, disabled }: DriverSuggestionProps) {
   const fehlt = fehlendeFelder(auftrag);
+  const { data: fahrer = [] } = useDrivers();
+  const { data: fahrzeuge = [] } = useVehicles();
+  const { data: auftraege = [] } = useOrders();
   const { empfehlung, alternativen } = useMemo(
-    () => empfehleFuerAuftrag(auftrag, INITIAL_FAHRER, INITIAL_FAHRZEUGE, INITIAL_AUFTRAEGE),
-    [auftrag],
+    () => empfehleFuerAuftrag(auftrag, fahrer, fahrzeuge, auftraege),
+    [auftrag, fahrer, fahrzeuge, auftraege],
   );
 
   if (fehlt.length === 0) return null;
