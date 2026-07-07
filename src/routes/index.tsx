@@ -42,6 +42,8 @@ import {
 } from "@/lib/ceo-intelligence";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { LiveFleetMapCard } from "@/components/gps/live-fleet-map-card";
+import { istUnzugewiesen, auftragProbleme } from "@/lib/order-urgency";
+import { AlertTriangle as AlertTriangleIcon, FileWarning } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
