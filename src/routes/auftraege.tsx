@@ -147,7 +147,14 @@ function AuftraegePage() {
     });
   }, [auftraege, search, statusFilter, prioFilter]);
 
-  const gruppen = useMemo(() => gruppiereNachDatum(filtered), [filtered]);
+  const tabGruppen = useMemo(() => gruppiereNachTab(filtered), [filtered]);
+
+  // Aktive Daueraufträge für den Tab „Daueraufträge".
+  const { data: serien = [] } = useRecurring();
+  const aktiveSerien = useMemo(
+    () => serien.filter((d) => abgeleiteterStatus(d) === "aktiv"),
+    [serien],
+  );
 
   const detailAuftrag = auftraege.find((a) => a.id === detailId) ?? null;
 
