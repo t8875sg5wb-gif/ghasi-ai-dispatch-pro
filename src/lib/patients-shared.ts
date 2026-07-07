@@ -7,6 +7,7 @@ export type PatientWrite = Omit<Patient, "id">;
 export interface PatientRow {
   id: string;
   name: string;
+  telefon: string | null;
   mobilitaet: string;
   kostentraeger: string;
   hinweis: string;
