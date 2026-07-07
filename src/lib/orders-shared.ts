@@ -27,6 +27,7 @@ import {
 export interface OrderWrite {
   nummer?: string;
   patient?: string;
+  telefon?: string;
   transportart?: string;
   prioritaet?: string;
   status?: string;
@@ -58,6 +59,7 @@ export interface OrderRow {
   id: string;
   nummer: string;
   patient: string;
+  telefon?: string | null;
   transportart: string;
   prioritaet: string;
   status: string;
@@ -133,6 +135,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     id: r.id,
     nummer: r.nummer ?? "—",
     patient: r.patient ?? "Unbekannter Patient",
+    telefon: r.telefon ?? "",
     transportart,
     prioritaet,
     status,
@@ -167,6 +170,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   };
   set("nummer", w.nummer);
   set("patient", w.patient);
+  set("telefon", w.telefon);
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);
   set("status", w.status);

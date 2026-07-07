@@ -42,6 +42,8 @@ import {
 } from "@/lib/ceo-intelligence";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { LiveFleetMapCard } from "@/components/gps/live-fleet-map-card";
+import { istUnzugewiesen, auftragProbleme } from "@/lib/order-urgency";
+import { AlertTriangle as AlertTriangleIcon, FileWarning } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -214,6 +216,60 @@ function Dashboard() {
     .sort((a, b) => new Date(a.termin).getTime() - new Date(b.termin).getTime())
     .slice(0, 6);
 
+  // Geschäftsführer-Überblick: die sechs Kernzahlen des Tages.
+  const fahrtenHeute = auftraege.filter(
+    (a) => a.status !== "storniert" && istHeute(a.termin),
+  ).length;
+  const nichtZugewiesen = auftraege.filter(istUnzugewiesen).length;
+  const dringendeWarnungen = auftraege.filter((a) =>
+    auftragProbleme(a, auftraege).some((p) => p.stufe === "kritisch"),
+  ).length;
+
+  const chefStats = [
+    {
+      label: "Fahrten heute",
+      value: String(fahrtenHeute),
+      icon: CalendarDays,
+      tone: "primary" as const,
+      hint: "geplant für heute",
+    },
+    {
+      label: "Offene Fahrten",
+      value: String(kpis.offeneTransporte),
+      icon: ClipboardList,
+      tone: "info" as const,
+      hint: "neu & disponiert",
+    },
+    {
+      label: "Nicht zugewiesen",
+      value: String(nichtZugewiesen),
+      icon: UserPlus,
+      tone: nichtZugewiesen > 0 ? ("warning" as const) : ("success" as const),
+      hint: "ohne Fahrer/Fahrzeug",
+    },
+    {
+      label: "Dringende Warnungen",
+      value: String(dringendeWarnungen),
+      icon: AlertTriangleIcon,
+      tone: dringendeWarnungen > 0 ? ("warning" as const) : ("success" as const),
+      hint: "sofort prüfen",
+    },
+    {
+      label: "Einnahmen (Monat)",
+      value: EUR(kpis.umsatzMonat),
+      icon: Euro,
+      tone: "success" as const,
+      hint: "grob geschätzt",
+    },
+    {
+      label: "Offene Rechnungen",
+      value: String(fin.anzahlOffen),
+      icon: FileWarning,
+      tone: fin.anzahlUeberfaellig > 0 ? ("warning" as const) : ("accent" as const),
+      hint: EUR(fin.offenePosten),
+    },
+  ];
+
   return (
     <div className="animate-fade-in space-y-6">
       <section>
@@ -230,6 +286,18 @@ function Dashboard() {
               GHASI AI fragen
             </Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Geschäftsführer-Überblick */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Geschäftsführer-Überblick
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {chefStats.map((s) => (
+            <StatCard key={s.label} {...s} />
+          ))}
         </div>
       </section>
 

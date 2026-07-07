@@ -4,6 +4,7 @@ import {
   Calendar,
   CreditCard,
   MapPin,
+  Phone,
   Pencil,
   Truck,
   User,
@@ -253,6 +254,11 @@ export function AuftragDetail({
             <InfoRow icon={User} label="Fahrer" value={auftrag.fahrer ?? "Nicht zugewiesen"} />
             <InfoRow icon={Truck} label="Fahrzeug" value={auftrag.fahrzeug ?? "Nicht zugewiesen"} />
             <InfoRow icon={CreditCard} label="Kostenträger" value={auftrag.kostentraeger || "—"} />
+            <InfoRow
+              icon={Phone}
+              label="Telefon"
+              value={auftrag.telefon?.trim() ? auftrag.telefon : "—"}
+            />
             {fehlt.length > 0 && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
                 Fehlende Zuweisung: {fehlt.join(" & ")}

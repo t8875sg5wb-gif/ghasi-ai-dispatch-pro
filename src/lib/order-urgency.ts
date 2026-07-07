@@ -8,7 +8,16 @@
 //   nach Termin & weiterhin nicht zugewiesen → überfällig (kritisch)
 // Zugewiesene, aber verspätete Aufträge bleiben sichtbar (orange) oben stehen.
 
-import type { Auftrag, AuftragStatus } from "@/lib/auftraege";
+import {
+  type Auftrag,
+  type AuftragStatus,
+  effektiveMobilitaet,
+  fahrzeugPasstZuMobilitaet,
+  MOBILITAET_META,
+  empfohlenerFahrzeugtyp,
+} from "@/lib/auftraege";
+import { adresseAusStrukturOderLegacy, adresseGefuellt } from "@/lib/address";
+import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 
 export type WarnStufe = "normal" | "gelb" | "orange" | "rot" | "ueberfaellig";
 
@@ -226,4 +235,200 @@ export function dringendeUnzugewiesene(auftraege: Auftrag[], now = Date.now()): 
       if (rang !== 0) return rang;
       return terminMs(a) - terminMs(b);
     });
+}
+
+/* ------------------------------------------------------------------ *
+ * Automatische Auftrags-Warnungen
+ * ------------------------------------------------------------------ */
+
+export type ProblemTyp =
+  | "kein_fahrer"
+  | "adresse_fehlt"
+  | "telefon_fehlt"
+  | "fahrzeug_mismatch"
+  | "doppelt_eingeplant";
+
+export interface AuftragProblem {
+  typ: ProblemTyp;
+  label: string;
+  text: string;
+  /** kritisch = rot, warnung = gelb/orange */
+  stufe: "kritisch" | "warnung";
+}
+
+/** Angenommene Dauer eines Transports für die Doppelbuchungs-Erkennung. */
+const TRANSPORT_DAUER_MIN = 60;
+
+/** Ist die Abhol- oder Zieladresse unvollständig? */
+export function adresseFehlt(a: Auftrag): boolean {
+  const pickup = adresseAusStrukturOderLegacy(a.pickup, a.abholort);
+  const destination = adresseAusStrukturOderLegacy(a.destination, a.zielort);
+  return !adresseGefuellt(pickup) || !adresseGefuellt(destination);
+}
+
+/** Fehlt eine Telefonnummer? */
+export function telefonFehlt(a: Auftrag): boolean {
+  return !(a.telefon ?? "").trim();
+}
+
+/** Passt das zugewiesene Fahrzeug nicht zur Mobilität (Rollstuhl/Liegend)? */
+export function fahrzeugUnpassend(a: Auftrag): boolean {
+  if (!a.fahrzeug) return false;
+  const v = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === a.fahrzeug);
+  if (!v) return false;
+  const mob = effektiveMobilitaet(a);
+  return !fahrzeugPasstZuMobilitaet(mob, {
+    rollstuhlGeeignet: v.rollstuhlGeeignet,
+    liegendGeeignet: v.liegendGeeignet,
+  });
+}
+
+/** Ist der Fahrer im selben Zeitfenster mehrfach eingeplant? */
+export function doppeltEingeplant(a: Auftrag, alle: Auftrag[]): boolean {
+  if (!a.fahrer || !istAktiv(a)) return false;
+  const start = new Date(a.termin ?? "").getTime();
+  if (Number.isNaN(start)) return false;
+  const fenster = TRANSPORT_DAUER_MIN * 60000;
+  return alle.some((b) => {
+    if (b.id === a.id || b.fahrer !== a.fahrer || !istAktiv(b)) return false;
+    const bs = new Date(b.termin ?? "").getTime();
+    if (Number.isNaN(bs)) return false;
+    // Überschneidung zweier je TRANSPORT_DAUER langer Intervalle
+    return Math.abs(bs - start) < fenster;
+  });
+}
+
+/**
+ * Ermittelt alle automatischen Warnungen für einen Auftrag.
+ * `alle` wird nur für die Doppelbuchungs-Prüfung benötigt.
+ */
+export function auftragProbleme(
+  a: Auftrag,
+  alle: Auftrag[] = [],
+  now = Date.now(),
+): AuftragProblem[] {
+  const probleme: AuftragProblem[] = [];
+  if (!istAktiv(a)) return probleme;
+
+  const m = minutenBis(a, now);
+  if (!a.fahrer || !a.fahrzeug) {
+    const bald = m <= 60;
+    probleme.push({
+      typ: "kein_fahrer",
+      label: "Kein Fahrer/Fahrzeug",
+      text: bald
+        ? `Fahrt ${formatCountdown(m)}, aber ${fehlendeFelder(a).join(" & ")} fehlt.`
+        : `${fehlendeFelder(a).join(" & ")} noch nicht zugewiesen.`,
+      stufe: bald ? "kritisch" : "warnung",
+    });
+  }
+  if (adresseFehlt(a)) {
+    probleme.push({
+      typ: "adresse_fehlt",
+      label: "Adresse fehlt",
+      text: "Abhol- oder Zieladresse ist unvollständig.",
+      stufe: "kritisch",
+    });
+  }
+  if (telefonFehlt(a)) {
+    probleme.push({
+      typ: "telefon_fehlt",
+      label: "Telefonnummer fehlt",
+      text: "Keine Kontakt-Telefonnummer hinterlegt.",
+      stufe: "warnung",
+    });
+  }
+  if (fahrzeugUnpassend(a)) {
+    const mob = effektiveMobilitaet(a);
+    probleme.push({
+      typ: "fahrzeug_mismatch",
+      label: "Fahrzeugtyp prüfen",
+      text: `Fahrzeug passt nicht zur Mobilität „${MOBILITAET_META[mob].label}". Benötigt: ${empfohlenerFahrzeugtyp(mob)}.`,
+      stufe: "warnung",
+    });
+  }
+  if (doppeltEingeplant(a, alle)) {
+    probleme.push({
+      typ: "doppelt_eingeplant",
+      label: "Fahrer doppelt eingeplant",
+      text: `${a.fahrer} ist im selben Zeitfenster mehrfach eingeplant.`,
+      stufe: "kritisch",
+    });
+  }
+  return probleme;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tab-Gruppierung (Heute / Morgen / Übermorgen / Diese Woche / …)
+ * ------------------------------------------------------------------ */
+
+export type TabId =
+  | "heute"
+  | "morgen"
+  | "uebermorgen"
+  | "diese_woche"
+  | "naechste_woche"
+  | "weitere";
+
+export interface TabDef {
+  id: TabId;
+  label: string;
+}
+
+export const AUFTRAG_TABS: TabDef[] = [
+  { id: "heute", label: "Heute" },
+  { id: "morgen", label: "Morgen" },
+  { id: "uebermorgen", label: "Übermorgen" },
+  { id: "diese_woche", label: "Diese Woche" },
+  { id: "naechste_woche", label: "Nächste Woche" },
+  { id: "weitere", label: "Weitere" },
+];
+
+/** Start des Wochentags (Montag = Wochenbeginn) als Zeitstempel. */
+function wochenEnde(now: number): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  const dow = d.getDay(); // 0=So..6=Sa
+  const tageBisSonntag = dow === 0 ? 0 : 7 - dow;
+  return tagesStart(new Date(d.getTime() + tageBisSonntag * TAG_MS));
+}
+
+/** Ordnet einen Auftrag einem Tab zu. */
+export function auftragTab(a: Auftrag, now = Date.now()): TabId {
+  const termin = new Date(a.termin ?? "").getTime();
+  if (Number.isNaN(termin)) return "weitere";
+  const heute = tagesStart(new Date(now));
+  const terminTag = tagesStart(new Date(termin));
+  const diffTage = Math.round((terminTag - heute) / TAG_MS);
+
+  // Heutige und überfällige aktive Fahrten bleiben im Tab „Heute".
+  if (diffTage <= 0) return istAktiv(a) || diffTage === 0 ? "heute" : "weitere";
+  if (diffTage === 1) return "morgen";
+  if (diffTage === 2) return "uebermorgen";
+
+  const endeDieseWoche = wochenEnde(now);
+  const endeNaechsteWoche = endeDieseWoche + 7 * TAG_MS;
+  if (terminTag <= endeDieseWoche) return "diese_woche";
+  if (terminTag <= endeNaechsteWoche) return "naechste_woche";
+  return "weitere";
+}
+
+export interface TabGruppe extends TabDef {
+  auftraege: Auftrag[];
+}
+
+/** Gruppiert Aufträge in die Tabs und sortiert je Tab nach Dringlichkeit/Termin. */
+export function gruppiereNachTab(auftraege: Auftrag[], now = Date.now()): TabGruppe[] {
+  const byDringlichkeitDannTermin = (a: Auftrag, b: Auftrag) => {
+    const ar = WARN_META[warnStufe(a, now)].rang;
+    const br = WARN_META[warnStufe(b, now)].rang;
+    if (ar !== br) return ar - br;
+    return terminMs(a) - terminMs(b);
+  };
+  return AUFTRAG_TABS.map((t) => ({
+    ...t,
+    auftraege: auftraege
+      .filter((a) => auftragTab(a, now) === t.id)
+      .sort(byDringlichkeitDannTermin),
+  }));
 }

@@ -23,19 +23,32 @@ import {
 import { useOrders, useCreateOrder, useUpdateOrder, useSeedOrders } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
 import {
-  gruppiereNachDatum,
+  gruppiereNachTab,
   warnStufe,
   minutenBis,
   formatCountdown,
   fehlendeFelder,
   istUnzugewiesen,
   hatWarnung,
+  auftragProbleme,
   WARN_META,
 } from "@/lib/order-urgency";
+import {
+  useRecurring,
+} from "@/lib/recurring-store";
+import { abgeleiteterStatus, RHYTHMUS_LABEL } from "@/lib/dauerauftraege";
 import { AuftragForm, type AuftragFormValues } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Repeat, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -134,7 +147,14 @@ function AuftraegePage() {
     });
   }, [auftraege, search, statusFilter, prioFilter]);
 
-  const gruppen = useMemo(() => gruppiereNachDatum(filtered), [filtered]);
+  const tabGruppen = useMemo(() => gruppiereNachTab(filtered), [filtered]);
+
+  // Aktive Daueraufträge für den Tab „Daueraufträge".
+  const { data: serien = [] } = useRecurring();
+  const aktiveSerien = useMemo(
+    () => serien.filter((d) => abgeleiteterStatus(d) === "aktiv"),
+    [serien],
+  );
 
   const detailAuftrag = auftraege.find((a) => a.id === detailId) ?? null;
 
@@ -252,6 +272,137 @@ function AuftraegePage() {
     { value: "storniert", label: STATUS_META.storniert.label },
   ];
 
+  function renderRow(a: Auftrag) {
+    const status = STATUS_META[a.status];
+    const prio = PRIORITAET_META[a.prioritaet];
+    const stufe = warnStufe(a);
+    const warn = WARN_META[stufe];
+    const zeigtWarnung = hatWarnung(stufe);
+    const unzugewiesen = istUnzugewiesen(a);
+    const m = minutenBis(a);
+    const fehlt = fehlendeFelder(a);
+    // Zusätzliche automatische Warnungen (Adresse/Telefon/Doppelbuchung).
+    const extraProbleme = auftragProbleme(a, auftraege).filter((p) =>
+      ["adresse_fehlt", "telefon_fehlt", "doppelt_eingeplant"].includes(p.typ),
+    );
+    return (
+      <TableRow
+        key={a.id}
+        className={cn("cursor-pointer", warn.row)}
+        onClick={() => openDetail(a)}
+      >
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                "h-2 w-2 shrink-0 rounded-full",
+                zeigtWarnung ? warn.dot : status.dot,
+              )}
+            />
+            <div className="min-w-0">
+              <p className="font-medium leading-tight">{a.patient}</p>
+              <p className="text-xs text-muted-foreground">
+                {a.nummer} · {a.transportart}
+              </p>
+              <MedizinBadges auftrag={a} className="mt-1.5" />
+              {unzugewiesen && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Nicht zugewiesen
+                  </Badge>
+                  {zeigtWarnung && (
+                    <Badge
+                      variant="outline"
+                      className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
+                    >
+                      {formatCountdown(m)}
+                    </Badge>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">
+                    Fehlt: {fehlt.join(" & ")}
+                  </span>
+                </div>
+              )}
+              {(fahrzeugMismatch(a) || extraProbleme.length > 0) && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {fahrzeugMismatch(a) && (
+                    <Badge
+                      variant="outline"
+                      className="h-5 gap-1 border-warning/40 bg-warning/10 px-1.5 text-[10px] text-warning"
+                    >
+                      <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
+                    </Badge>
+                  )}
+                  {extraProbleme.map((p) => (
+                    <Badge
+                      key={p.typ}
+                      variant="outline"
+                      className={cn(
+                        "h-5 gap-1 px-1.5 text-[10px]",
+                        p.stufe === "kritisch"
+                          ? "border-destructive/30 bg-destructive/10 text-destructive"
+                          : "border-warning/40 bg-warning/10 text-warning",
+                      )}
+                    >
+                      <AlertTriangle className="h-3 w-3" /> {p.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="hidden max-w-[260px] md:table-cell">
+          <p className="truncate text-sm">{a.abholort}</p>
+          <p className="truncate text-xs text-muted-foreground">→ {a.zielort}</p>
+        </TableCell>
+        <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
+          {formatTermin(a.termin)}
+        </TableCell>
+        <TableCell className="hidden sm:table-cell">
+          <Badge variant="outline" className={prio.badge}>
+            {prio.label}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <Badge variant="outline" className={cn("gap-1", status.badge)}>
+            <status.icon className="h-3 w-3" />
+            {status.label}
+          </Badge>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  function renderTabelle(list: Auftrag[]) {
+    if (list.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+          <ClipboardList className="h-6 w-6 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Keine Fahrten in diesem Zeitraum.</p>
+        </div>
+      );
+    }
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Auftrag</TableHead>
+            <TableHead className="hidden md:table-cell">Strecke</TableHead>
+            <TableHead className="hidden lg:table-cell">Termin</TableHead>
+            <TableHead className="hidden sm:table-cell">Priorität</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>{list.map(renderRow)}</TableBody>
+      </Table>
+    );
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
@@ -365,20 +516,18 @@ function AuftraegePage() {
                 <RefreshCw className="h-4 w-4" /> Erneut versuchen
               </Button>
             </div>
-          ) : filtered.length === 0 ? (
+          ) : auftraege.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                 <ClipboardList className="h-6 w-6" />
               </div>
               <p className="text-base font-semibold">Keine Aufträge gefunden</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                {auftraege.length === 0
-                  ? canManage
-                    ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
-                    : "Noch keine Aufträge erfasst."
-                  : "Passen Sie Filter oder Suche an."}
+                {canManage
+                  ? "Noch keine Aufträge erfasst. Legen Sie einen neuen Auftrag an oder laden Sie die Beispieldaten."
+                  : "Noch keine Aufträge erfasst."}
               </p>
-              {auftraege.length === 0 && canManage && (
+              {canManage && (
                 <Button
                   variant="outline"
                   onClick={handleSeed}
@@ -395,116 +544,81 @@ function AuftraegePage() {
               )}
             </div>
           ) : (
-            <div className="space-y-4 p-3 sm:p-4">
-              {gruppen.map((gruppe) => (
-                <Card key={gruppe.id} className="border-border/70 shadow-none">
-                  <CardContent className="p-0">
-                    <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
-                      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        {gruppe.label}
-                      </h2>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                        {gruppe.auftraege.length}
+            <div className="p-3 sm:p-4">
+              <Tabs defaultValue="heute" className="w-full">
+                <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                  <TabsList className="inline-flex h-auto w-max flex-nowrap gap-1">
+                    {tabGruppen.map((t) => (
+                      <TabsTrigger key={t.id} value={t.id} className="gap-1.5 whitespace-nowrap">
+                        {t.label}
+                        <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums">
+                          {t.auftraege.length}
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                    <TabsTrigger value="dauerauftraege" className="gap-1.5 whitespace-nowrap">
+                      <Repeat className="h-3.5 w-3.5" />
+                      Daueraufträge
+                      <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums">
+                        {aktiveSerien.length}
                       </span>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                {tabGruppen.map((t) => (
+                  <TabsContent key={t.id} value={t.id} className="mt-3">
+                    {renderTabelle(t.auftraege)}
+                  </TabsContent>
+                ))}
+
+                <TabsContent value="dauerauftraege" className="mt-3">
+                  {aktiveSerien.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                      <Repeat className="h-6 w-6 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Keine aktiven Daueraufträge.
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="mt-1 gap-1.5">
+                        <Link to="/dauerauftraege">
+                          Daueraufträge verwalten <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
                     </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead>Auftrag</TableHead>
-                          <TableHead className="hidden md:table-cell">Strecke</TableHead>
-                          <TableHead className="hidden lg:table-cell">Termin</TableHead>
-                          <TableHead className="hidden sm:table-cell">Priorität</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {gruppe.auftraege.map((a) => {
-                          const status = STATUS_META[a.status];
-                          const prio = PRIORITAET_META[a.prioritaet];
-                          const stufe = warnStufe(a);
-                          const warn = WARN_META[stufe];
-                          const zeigtWarnung = hatWarnung(stufe);
-                          const unzugewiesen = istUnzugewiesen(a);
-                          const m = minutenBis(a);
-                          const fehlt = fehlendeFelder(a);
-                          return (
-                            <TableRow
-                              key={a.id}
-                              className={cn("cursor-pointer", warn.row)}
-                              onClick={() => openDetail(a)}
-                            >
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <span
-                                    className={cn(
-                                      "h-2 w-2 shrink-0 rounded-full",
-                                      zeigtWarnung ? warn.dot : status.dot,
-                                    )}
-                                  />
-                                  <div className="min-w-0">
-                                    <p className="font-medium leading-tight">{a.patient}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {a.nummer} · {a.transportart}
-                                    </p>
-                                    <MedizinBadges auftrag={a} className="mt-1.5" />
-                                    {unzugewiesen && (
-                                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                        <Badge
-                                          variant="outline"
-                                          className="h-5 gap-1 border-destructive/30 bg-destructive/10 px-1.5 text-[10px] text-destructive"
-                                        >
-                                          <AlertTriangle className="h-3 w-3" />
-                                          Nicht zugewiesen
-                                        </Badge>
-                                        {zeigtWarnung && (
-                                          <Badge
-                                            variant="outline"
-                                            className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
-                                          >
-                                            {formatCountdown(m)}
-                                          </Badge>
-                                        )}
-                                        <span className="text-[10px] text-muted-foreground">
-                                          Fehlt: {fehlt.join(" & ")}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                {fahrzeugMismatch(a) && (
-                                  <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-warning">
-                                    <AlertTriangle className="h-3 w-3" /> Fahrzeugtyp prüfen
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell className="hidden max-w-[260px] md:table-cell">
-                                <p className="truncate text-sm">{a.abholort}</p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                  → {a.zielort}
-                                </p>
-                              </TableCell>
-                              <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground lg:table-cell">
-                                {formatTermin(a.termin)}
-                              </TableCell>
-                              <TableCell className="hidden sm:table-cell">
-                                <Badge variant="outline" className={prio.badge}>
-                                  {prio.label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className={cn("gap-1", status.badge)}>
-                                  <status.icon className="h-3 w-3" />
-                                  {status.label}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              ))}
+                  ) : (
+                    <div className="space-y-2">
+                      {aktiveSerien.map((d) => (
+                        <Link
+                          key={d.id}
+                          to="/dauerauftraege"
+                          className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/50"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {d.patient}{" "}
+                              <span className="text-xs text-muted-foreground">· {d.kennung}</span>
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {d.abholort} → {d.zielort}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">
+                              {RHYTHMUS_LABEL[d.rhythmus]}
+                            </Badge>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </Link>
+                      ))}
+                      <Button asChild variant="ghost" size="sm" className="mt-1 w-full gap-1.5">
+                        <Link to="/dauerauftraege">
+                          Alle Daueraufträge verwalten <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </CardContent>

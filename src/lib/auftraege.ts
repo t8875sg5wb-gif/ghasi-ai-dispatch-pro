@@ -49,6 +49,8 @@ export interface Auftrag {
   id: string;
   nummer: string;
   patient: string;
+  /** Kontakt-Telefonnummer für den Transport (Patient/Angehörige/Einrichtung). */
+  telefon?: string;
   transportart: Transportart;
   prioritaet: AuftragPrioritaet;
   status: AuftragStatus;

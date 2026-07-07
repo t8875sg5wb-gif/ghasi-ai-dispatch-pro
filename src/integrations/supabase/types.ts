@@ -720,6 +720,7 @@ export type Database = {
           pickup_street: string
           prioritaet: string
           status: string
+          telefon: string
           termin: string
           transportart: string
           unterschrift: string | null
@@ -763,6 +764,7 @@ export type Database = {
           pickup_street?: string
           prioritaet?: string
           status?: string
+          telefon?: string
           termin?: string
           transportart?: string
           unterschrift?: string | null
@@ -806,6 +808,7 @@ export type Database = {
           pickup_street?: string
           prioritaet?: string
           status?: string
+          telefon?: string
           termin?: string
           transportart?: string
           unterschrift?: string | null
@@ -828,6 +831,7 @@ export type Database = {
           mobilitaet: string
           name: string
           patientennotiz: string | null
+          telefon: string
           updated_at: string
         }
         Insert: {
@@ -840,6 +844,7 @@ export type Database = {
           mobilitaet?: string
           name: string
           patientennotiz?: string | null
+          telefon?: string
           updated_at?: string
         }
         Update: {
@@ -852,6 +857,7 @@ export type Database = {
           mobilitaet?: string
           name?: string
           patientennotiz?: string | null
+          telefon?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,0 +1,2 @@
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS telefon text NOT NULL DEFAULT '';
+ALTER TABLE public.patients ADD COLUMN IF NOT EXISTS telefon text NOT NULL DEFAULT '';

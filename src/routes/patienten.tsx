@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { HeartPulse, Search, Shield, UserCheck, FileText } from "lucide-react";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import { usePatients, useSeedPatients } from "@/lib/patients-store";
@@ -148,6 +148,11 @@ function PatientProfil({ patient }: { patient: Patient }) {
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger} />
+            <ProfilZeile
+              icon={Phone}
+              label="Telefon"
+              value={patient.telefon?.trim() ? patient.telefon : "—"}
+            />
             <ProfilZeile
               icon={UserCheck}
               label="Begleitperson"
