@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useVehicles } from "@/lib/vehicles-store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
