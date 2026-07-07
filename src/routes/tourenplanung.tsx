@@ -453,7 +453,6 @@ function DispatchCenter() {
           <LiveFleetMapCard height="h-[60vh] min-h-[420px]" />
         </TabsContent>
 
-
         {/* Live-Board: 12-Spalten Enterprise-Dispatch mit Filter & Bulk */}
         <TabsContent value="live-board" className="mt-4">
           <LiveBoard

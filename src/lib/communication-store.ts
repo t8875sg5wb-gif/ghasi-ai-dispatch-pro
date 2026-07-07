@@ -12,11 +12,7 @@
 // the Audit Log (activity_log) via logActivity.
 // ============================================================
 import { useEffect } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {

@@ -56,7 +56,6 @@ function AlertCenter() {
 
   const gefiltert = filter === "alle" ? alarme : alarme.filter((a) => a.prioritaet === filter);
 
-
   return (
     <div className="animate-fade-in space-y-6">
       <PageHero
