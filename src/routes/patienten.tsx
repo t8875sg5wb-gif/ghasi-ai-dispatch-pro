@@ -149,6 +149,11 @@ function PatientProfil({ patient }: { patient: Patient }) {
           <div className="grid gap-3 sm:grid-cols-2">
             <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger} />
             <ProfilZeile
+              icon={Phone}
+              label="Telefon"
+              value={patient.telefon?.trim() ? patient.telefon : "—"}
+            />
+            <ProfilZeile
               icon={UserCheck}
               label="Begleitperson"
               value={patient.begleitperson ? "Ja – standardmäßig" : "Nein"}
