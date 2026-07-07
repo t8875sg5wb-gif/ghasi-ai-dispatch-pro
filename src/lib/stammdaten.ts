@@ -23,6 +23,8 @@ export interface Kunde {
 export interface Patient {
   id: string;
   name: string;
+  /** Telefonnummer des Patienten/Angehörigen. */
+  telefon?: string;
   mobilitaet: "Gehfähig" | "Rollstuhl" | "Liegend";
   kostentraeger: string;
   hinweis: string;
