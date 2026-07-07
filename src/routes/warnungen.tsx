@@ -1,12 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldAlert, ArrowRight } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { computeAlarme, ALARM_PRIO_META, type Alarm, type AlarmPrioritaet } from "@/lib/ai-brain";
+import { computeAlarme, ALARM_PRIO_META, type AlarmPrioritaet } from "@/lib/ai-brain";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useInvoices } from "@/lib/invoices-store";
+import { useRecurring } from "@/lib/recurring-store";
+import { useCustomers } from "@/lib/customers-store";
 
 export const Route = createFileRoute("/warnungen")({
   head: () => ({
@@ -25,16 +31,28 @@ export const Route = createFileRoute("/warnungen")({
 const PRIOS: AlarmPrioritaet[] = ["Kritisch", "Hoch", "Mittel", "Niedrig"];
 
 function AlertCenter() {
-  // Time-relative alerts: compute on the client only (no SSR mismatch).
-  const [alarme, setAlarme] = useState<Alarm[]>([]);
+  // Subscribe to the live stores so alerts recompute on every fresh fetch.
+  useOrders();
+  useDrivers();
+  useVehicles();
+  useInvoices();
+  useRecurring();
+  useCustomers();
   const [filter, setFilter] = useState<AlarmPrioritaet | "alle">("alle");
-  useEffect(() => setAlarme(computeAlarme()), []);
 
-  const counts = useMemo(() => {
-    const c: Record<AlarmPrioritaet, number> = { Kritisch: 0, Hoch: 0, Mittel: 0, Niedrig: 0 };
-    for (const a of alarme) c[a.prioritaet] += 1;
-    return c;
-  }, [alarme]);
+  // Alerts are time-relative → gate behind mount to avoid an SSR mismatch,
+  // then recompute unmemoized on each render (fresh store data included).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const alarme = mounted ? computeAlarme() : [];
+
+  const counts: Record<AlarmPrioritaet, number> = {
+    Kritisch: 0,
+    Hoch: 0,
+    Mittel: 0,
+    Niedrig: 0,
+  };
+  for (const a of alarme) counts[a.prioritaet] += 1;
 
   const gefiltert = filter === "alle" ? alarme : alarme.filter((a) => a.prioritaet === filter);
 

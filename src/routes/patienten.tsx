@@ -1,16 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { HeartPulse, Phone, Search, Shield, UserCheck, FileText } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
-import { usePatients, useSeedPatients } from "@/lib/patients-store";
+import {
+  usePatients,
+  useSeedPatients,
+  useCreatePatient,
+  useUpdatePatient,
+} from "@/lib/patients-store";
+import type { PatientWrite } from "@/lib/patients-shared";
 import { Button } from "@/components/ui/button";
 import {
   INITIAL_AUFTRAEGE,
   MOBILITAET_META,
   VERORDNUNG_META,
   STATUS_META,
-  effektiveMobilitaet,
   effektiveVerordnung,
   formatTermin,
   type Mobilitaet,
@@ -19,6 +25,26 @@ import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { logActivity } from "@/lib/protokoll";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/patienten")({
@@ -30,6 +56,8 @@ export const Route = createFileRoute("/patienten")({
   }),
   component: PatientenSeite,
 });
+
+const MOBILITAETEN: Patient["mobilitaet"][] = ["Gehfähig", "Rollstuhl", "Liegend"];
 
 /** Übersetzt das Stammdaten-Mobilitätslabel in den feineren Mobilitäts-Typ. */
 function mobilitaetTyp(p: Patient): Mobilitaet {
@@ -44,10 +72,15 @@ function mobilitaetTyp(p: Patient): Mobilitaet {
 }
 
 function PatientenSeite() {
+  const { name: akteur } = useAuth();
   const { data: patienten = [] } = usePatients();
   const seedMut = useSeedPatients();
+  const createMut = useCreatePatient();
+  const updateMut = useUpdatePatient();
   const [suche, setSuche] = useState("");
   const [aktiv, setAktiv] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Patient | null>(null);
 
   const gefiltert = patienten.filter(
     (p) =>
@@ -55,6 +88,42 @@ function PatientenSeite() {
       p.kostentraeger.toLowerCase().includes(suche.toLowerCase()),
   );
   const patient = patienten.find((p) => p.id === aktiv) ?? gefiltert[0] ?? null;
+
+  function speichern(values: PatientWrite) {
+    const istNeu = !editTarget;
+    const onDone = (msg: string) => {
+      setFormOpen(false);
+      setEditTarget(null);
+      logActivity({
+        bereich: "Patienten",
+        entitaet: values.name,
+        aktion: istNeu ? "angelegt" : "bearbeitet",
+        beschreibung: `Patient „${values.name}“ wurde ${istNeu ? "angelegt" : "aktualisiert"}.`,
+        akteur,
+      });
+      toast.success(msg);
+    };
+    if (istNeu) {
+      createMut.mutate(values, {
+        onSuccess: (row) => {
+          setAktiv(row.id);
+          onDone("Patient angelegt");
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen"),
+      });
+    } else {
+      updateMut.mutate(
+        { id: editTarget.id, values },
+        {
+          onSuccess: () => {
+            setAktiv(editTarget.id);
+            onDone("Patient gespeichert");
+          },
+          onError: (e) => toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen"),
+        },
+      );
+    }
+  }
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -70,11 +139,21 @@ function PatientenSeite() {
             </p>
           </div>
         </div>
-        {patienten.length === 0 && (
-          <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
-            Beispieldaten laden
+        <div className="flex items-center gap-2">
+          {patienten.length === 0 && (
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+              Beispieldaten laden
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Patient anlegen
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -123,13 +202,32 @@ function PatientenSeite() {
         </Card>
 
         {/* Profil */}
-        {patient && <PatientProfil patient={patient} />}
+        {patient && (
+          <PatientProfil
+            patient={patient}
+            onEdit={() => {
+              setEditTarget(patient);
+              setFormOpen(true);
+            }}
+          />
+        )}
       </div>
+
+      <PatientForm
+        open={formOpen}
+        target={editTarget}
+        onClose={() => {
+          setFormOpen(false);
+          setEditTarget(null);
+        }}
+        onSave={speichern}
+        saving={createMut.isPending || updateMut.isPending}
+      />
     </div>
   );
 }
 
-function PatientProfil({ patient }: { patient: Patient }) {
+function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => void }) {
   const mob = MOBILITAET_META[mobilitaetTyp(patient)];
   const transporte = INITIAL_AUFTRAEGE.filter((a) => a.patient === patient.name);
 
@@ -137,12 +235,17 @@ function PatientProfil({ patient }: { patient: Patient }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-2">
             <span>{patient.name}</span>
-            <Badge className={cn("gap-1", mob.badge)}>
-              <mob.icon className="h-3.5 w-3.5" />
-              {mob.label}
-            </Badge>
+            <span className="flex items-center gap-2">
+              <Badge className={cn("gap-1", mob.badge)}>
+                <mob.icon className="h-3.5 w-3.5" />
+                {mob.label}
+              </Badge>
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                Bearbeiten
+              </Button>
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -239,6 +342,149 @@ function ProfilZeile({
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-medium">{value}</p>
       </div>
+    </div>
+  );
+}
+
+function PatientForm({
+  open,
+  target,
+  onClose,
+  onSave,
+  saving,
+}: {
+  open: boolean;
+  target: Patient | null;
+  onClose: () => void;
+  onSave: (values: PatientWrite) => void;
+  saving: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{target ? "Patient bearbeiten" : "Patient anlegen"}</DialogTitle>
+          <DialogDescription>
+            Stammdaten, Mobilität und medizinische Hinweise für Disposition und Fahrer.
+          </DialogDescription>
+        </DialogHeader>
+        {open && (
+          <PatientFelder target={target} onClose={onClose} onSave={onSave} saving={saving} />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PatientFelder({
+  target,
+  onClose,
+  onSave,
+  saving,
+}: {
+  target: Patient | null;
+  onClose: () => void;
+  onSave: (values: PatientWrite) => void;
+  saving: boolean;
+}) {
+  const [name, setName] = useState(target?.name ?? "");
+  const [telefon, setTelefon] = useState(target?.telefon ?? "");
+  const [mobilitaet, setMobilitaet] = useState<Patient["mobilitaet"]>(
+    target?.mobilitaet ?? "Gehfähig",
+  );
+  const [kostentraeger, setKostentraeger] = useState(target?.kostentraeger ?? "");
+  const [hinweis, setHinweis] = useState(target?.hinweis ?? "");
+  const [begleitperson, setBegleitperson] = useState(target?.begleitperson ?? false);
+  const [medizinischeNotiz, setMedizinischeNotiz] = useState(target?.medizinischeNotiz ?? "");
+  const [patientennotiz, setPatientennotiz] = useState(target?.patientennotiz ?? "");
+
+  function submit() {
+    if (!name.trim()) {
+      toast.error("Name ist erforderlich.");
+      return;
+    }
+    onSave({
+      name: name.trim(),
+      telefon: telefon.trim() || undefined,
+      mobilitaet,
+      kostentraeger: kostentraeger.trim(),
+      hinweis: hinweis.trim(),
+      begleitperson,
+      medizinischeNotiz: medizinischeNotiz.trim() || undefined,
+      patientennotiz: patientennotiz.trim() || undefined,
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <Feld label="Name *">
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+      </Feld>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Feld label="Mobilität">
+          <Select
+            value={mobilitaet}
+            onValueChange={(v) => setMobilitaet(v as Patient["mobilitaet"])}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MOBILITAETEN.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Feld>
+        <Feld label="Telefon">
+          <Input value={telefon} onChange={(e) => setTelefon(e.target.value)} />
+        </Feld>
+        <div className="sm:col-span-2">
+          <Feld label="Kostenträger">
+            <Input value={kostentraeger} onChange={(e) => setKostentraeger(e.target.value)} />
+          </Feld>
+        </div>
+      </div>
+      <Feld label="Hinweis">
+        <Textarea value={hinweis} onChange={(e) => setHinweis(e.target.value)} rows={2} />
+      </Feld>
+      <Feld label="Medizinische Notiz">
+        <Textarea
+          value={medizinischeNotiz}
+          onChange={(e) => setMedizinischeNotiz(e.target.value)}
+          rows={2}
+        />
+      </Feld>
+      <Feld label="Patientennotiz">
+        <Textarea
+          value={patientennotiz}
+          onChange={(e) => setPatientennotiz(e.target.value)}
+          rows={2}
+        />
+      </Feld>
+      <label className="flex items-center gap-2 text-sm">
+        <Switch checked={begleitperson} onCheckedChange={setBegleitperson} /> Begleitperson
+        standardmäßig
+      </label>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose} disabled={saving}>
+          Abbrechen
+        </Button>
+        <Button onClick={submit} disabled={saving}>
+          {saving ? "Speichern…" : "Speichern"}
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+function Feld({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      {children}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useVehicles } from "@/lib/vehicles-store";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -15,7 +16,6 @@ import {
 
 import {
   type Fahrzeug,
-  INITIAL_FAHRZEUGE,
   AKTION_META,
   REIFEN_META,
   fahrzeugWarnungen,
@@ -94,7 +94,7 @@ function Row({ fahrzeug, right }: { fahrzeug: Fahrzeug; right: React.ReactNode }
 }
 
 function WartungPage() {
-  const fahrzeuge = INITIAL_FAHRZEUGE;
+  const { data: fahrzeuge = [] } = useVehicles();
 
   const oel = useMemo(() => fahrzeuge.filter((f) => oelwechselFaellig(f)), [fahrzeuge]);
   const tuev = useMemo(

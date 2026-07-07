@@ -66,6 +66,8 @@ import { AlarmCenter } from "@/components/dispatch/alarm-center";
 import { boardSpaltePatch, boardSpalteLabel, type BoardSpalte } from "@/lib/dispatch-board";
 import { geocode } from "@/lib/fleet-live";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { Loader2 } from "lucide-react";
 
@@ -95,8 +97,9 @@ function DispatchCenter() {
   const updateMut = useUpdateOrder();
 
   const [transporte, setTransporte] = useState<DispatchTransport[]>([]);
-  const [fahrer] = useState(() => INITIAL_FAHRER);
-  const [fahrzeuge] = useState(() => INITIAL_FAHRZEUGE);
+  // Live fleet from the persisted stores so KPIs/conflicts recompute on fresh data.
+  const { data: fahrer = [] } = useDrivers();
+  const { data: fahrzeuge = [] } = useVehicles();
   const [mounted, setMounted] = useState(false);
   const [aktiv, setAktiv] = useState<DispatchTransport | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -449,7 +452,6 @@ function DispatchCenter() {
         <TabsContent value="live-karte" className="mt-4">
           <LiveFleetMapCard height="h-[60vh] min-h-[420px]" />
         </TabsContent>
-
 
         {/* Live-Board: 12-Spalten Enterprise-Dispatch mit Filter & Bulk */}
         <TabsContent value="live-board" className="mt-4">
