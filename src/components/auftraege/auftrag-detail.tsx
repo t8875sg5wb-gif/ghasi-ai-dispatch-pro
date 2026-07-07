@@ -4,6 +4,7 @@ import {
   Calendar,
   CreditCard,
   MapPin,
+  Phone,
   Pencil,
   Truck,
   User,
