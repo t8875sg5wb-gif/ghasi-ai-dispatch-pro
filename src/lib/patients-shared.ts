@@ -20,6 +20,7 @@ export function rowToPatient(r: PatientRow): Patient {
   return {
     id: r.id,
     name: r.name ?? "",
+    telefon: r.telefon ?? undefined,
     mobilitaet: (r.mobilitaet as Patient["mobilitaet"]) ?? "Gehfähig",
     kostentraeger: r.kostentraeger ?? "",
     hinweis: r.hinweis ?? "",
