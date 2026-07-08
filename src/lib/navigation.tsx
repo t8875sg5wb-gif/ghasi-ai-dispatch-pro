@@ -263,6 +263,12 @@ export const navGroups: NavGroup[] = [
     label: "Verwaltung",
     items: [
       {
+        label: "Compliance-Cockpit",
+        to: "/compliance",
+        icon: ClipboardCheck,
+        description: "Fristen, Nachweise & Vollständigkeit (Schiene A).",
+      },
+      {
         label: "Wartung",
         to: "/wartung",
         icon: Wrench,
