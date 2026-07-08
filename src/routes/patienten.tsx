@@ -237,6 +237,8 @@ function PatientenSeite() {
 function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => void }) {
   const mob = MOBILITAET_META[mobilitaetTyp(patient)];
   const transporte = INITIAL_AUFTRAEGE.filter((a) => a.patient === patient.name);
+  const zuzahlung = fristStatus(patient.zuzahlungsbefreitBis ?? null);
+  const genehmigung = fristStatus(patient.genehmigungBis ?? null);
 
   return (
     <div className="space-y-6">
