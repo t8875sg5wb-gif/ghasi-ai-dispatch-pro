@@ -139,6 +139,12 @@ export const navGroups: NavGroup[] = [
           "Kliniken, Ärzte, Apotheken, Tank- & Ladesäulen finden – powered by Google Maps.",
       },
       {
+        label: "Schichtplan",
+        to: "/schichtplan",
+        icon: CalendarDays,
+        description: "Kalender für Fahrerdienste, Urlaub & Krankheit inkl. Doppelbelegungs-Prüfung.",
+      },
+      {
         label: "Telefon",
         to: "/telefon",
         icon: Phone,
