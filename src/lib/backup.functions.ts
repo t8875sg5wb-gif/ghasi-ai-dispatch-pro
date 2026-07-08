@@ -31,7 +31,7 @@ export type BackupData = Record<string, Record<string, unknown>[]>;
 
 export const exportAllData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<BackupData> => {
+  .handler(async ({ context }) => {
     // Admin gate (same pattern as the user administration functions).
     const { data: adminRolle, error: rollenFehler } = await context.supabase
       .from("user_roles")
