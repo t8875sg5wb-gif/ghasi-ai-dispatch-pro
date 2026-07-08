@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   Calculator,
   TrendingUp,
@@ -12,6 +13,7 @@ import {
   Car,
   ScrollText,
   ArrowRight,
+  FileDown,
 } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -20,8 +22,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { computeFinanzKpis, offenePostenJeKunde, INITIAL_RECHNUNGEN, EUR } from "@/lib/finance";
 import { useInvoices } from "@/lib/invoices-store";
+import { useCompanySettings } from "@/lib/company-settings-store";
+import { buildDatevBuchungsstapel, datevRechnungen } from "@/lib/datev-export";
+import { downloadText } from "@/lib/export-utils";
+import { toISODate } from "@/lib/shifts-shared";
+import { logActivity } from "@/lib/protokoll";
 
 export const Route = createFileRoute("/buchhaltung")({
   head: () => ({
@@ -54,9 +63,43 @@ const KOSTEN_LABEL = {
 
 function BuchhaltungPage() {
   const { data: invoiceData } = useInvoices();
+  const { data: company } = useCompanySettings();
   const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
   const kpis = useMemo(() => computeFinanzKpis(alleRechnungen), [alleRechnungen]);
   const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
+
+  const jahr = new Date().getFullYear();
+  const [von, setVon] = useState(`${jahr}-01-01`);
+  const [bis, setBis] = useState(toISODate(new Date()));
+
+  const datevAnzahl = useMemo(
+    () => datevRechnungen(alleRechnungen, new Date(von), new Date(bis)).length,
+    [alleRechnungen, von, bis],
+  );
+
+  function exportDatev() {
+    const result = buildDatevBuchungsstapel(alleRechnungen, {
+      beraterNr: company.datevBeraterNr,
+      mandantNr: company.datevMandantNr,
+      erloeskonto: company.datevErloeskonto,
+      gegenkonto: company.datevGegenkonto,
+      von: new Date(von),
+      bis: new Date(bis),
+      bezeichnung: `Buchungsstapel ${von} bis ${bis}`,
+    });
+    if (result.anzahl === 0) {
+      toast.error("Keine Buchungen im gewählten Zeitraum");
+      return;
+    }
+    downloadText(`DATEV_Buchungsstapel_${von}_${bis}.csv`, result.csv, "text/csv");
+    toast.success(`${result.anzahl} Buchungen exportiert (${EUR(result.summe)})`);
+    logActivity({
+      bereich: "Buchhaltung",
+      aktion: "DATEV-Export",
+      beschreibung: `DATEV-Buchungsstapel ${von}–${bis}: ${result.anzahl} Buchungen`,
+    });
+  }
+
 
   const kostenpositionen = (Object.keys(KOSTEN_LABEL) as (keyof typeof KOSTEN_LABEL)[]).map(
     (k) => ({
@@ -195,6 +238,43 @@ function BuchhaltungPage() {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* DATEV-Export */}
+      <Card className="border-border/70 shadow-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileDown className="h-4 w-4" /> DATEV-Export für den Steuerberater
+          </CardTitle>
+          <Badge variant="secondary">Buchungsstapel</Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Exportiert die Rechnungen als DATEV-Buchungsstapel (Format EXTF). Erlöse werden auf das
+            konfigurierte Erlöskonto (SKR03 {company.datevErloeskonto}, steuerfreie Umsätze §4
+            Nr.17b) gegen das Debitorenkonto {company.datevGegenkonto} gebucht.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Von</Label>
+              <Input type="date" value={von} onChange={(e) => setVon(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Bis</Label>
+              <Input type="date" value={bis} onChange={(e) => setBis(e.target.value)} />
+            </div>
+            <div className="flex items-end">
+              <Button className="w-full" onClick={exportDatev} disabled={datevAnzahl === 0}>
+                <FileDown className="h-4 w-4" /> {datevAnzahl} Buchungen exportieren
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+            <span className="font-semibold">Hinweis:</span> Die Kontenzuordnungen (SKR03) sind
+            Standardwerte und in den Einstellungen anpassbar. Bitte lassen Sie die Zuordnung von
+            Ihrem Steuerberater prüfen. Diese Angaben ersetzen keine steuerliche Beratung.
+          </div>
         </CardContent>
       </Card>
     </div>

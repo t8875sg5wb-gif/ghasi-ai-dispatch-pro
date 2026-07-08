@@ -22,7 +22,7 @@ import {
   formatEUR,
   initials,
   laeuftAb,
-  nextFahrerId,
+  
 } from "@/lib/fahrer";
 import { FahrerForm, type FahrerFormValues } from "@/components/fahrer/fahrer-form";
 import { FahrerDetail } from "@/components/fahrer/fahrer-detail";
@@ -76,26 +76,6 @@ function FahrerPage() {
   useEffect(() => {
     if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
   }, [dbFahrer]);
-
-  // Simulated realtime: drivers "unterwegs" accumulate km / revenue locally.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFahrer((prev) =>
-        prev.map((f) => {
-          if (f.status !== "unterwegs") return f;
-          const km = Math.round(Math.random() * 3);
-          const umsatz = km * 4;
-          return {
-            ...f,
-            kmHeute: f.kmHeute + km,
-            umsatzHeute: f.umsatzHeute + umsatz,
-            gewinnHeute: f.gewinnHeute + Math.round(umsatz * 0.4),
-          };
-        }),
-      );
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
 
@@ -173,13 +153,18 @@ function FahrerPage() {
       }
       toast.success("Fahrer aktualisiert");
     } else {
+      // Wait for the real server response before showing the driver — no fake
+      // client-side id/nummer (matches the vehicles create flow).
       createMut.mutate(values, {
+        onSuccess: (row) => {
+          setFahrer((prev) => [row, ...prev.filter((f) => f.id !== row.id)]);
+          toast.success(`Fahrer ${row.nummer} angelegt`);
+          setFormOpen(false);
+          setEditTarget(null);
+        },
         onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
       });
-      const id = nextFahrerId();
-      const nummer = `F-${String(fahrer.length + 1).padStart(3, "0")}`;
-      setFahrer((prev) => [{ id, nummer, ...values }, ...prev]);
-      toast.success(`Fahrer ${nummer} angelegt`);
+      return;
     }
     setFormOpen(false);
     setEditTarget(null);

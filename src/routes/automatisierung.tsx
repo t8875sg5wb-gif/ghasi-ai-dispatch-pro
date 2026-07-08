@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Workflow, ShieldCheck, ArrowRight, CheckCircle2, Pause, Play } from "lucide-react";
+
+import { useAutomationStates, useSetAutomationState } from "@/lib/automation-states-store";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -35,14 +37,31 @@ export const Route = createFileRoute("/automatisierung")({
 
 function AutomationPage() {
   const [autos, setAutos] = useState<Automation[]>(INITIAL_AUTOMATIONEN);
+  const { data: states } = useAutomationStates();
+  const setStateMut = useSetAutomationState();
   const aktiv = autos.filter((a) => a.status === "aktiv").length;
   const freigaben = offeneFreigabenGesamt(autos);
+
+  // Apply persisted on/off states over the declared defaults.
+  useEffect(() => {
+    if (!states) return;
+    setAutos((prev) =>
+      prev.map((a) => {
+        const s = states.find((x) => x.automationId === a.id);
+        return s ? { ...a, status: s.status } : a;
+      }),
+    );
+  }, [states]);
 
   const toggle = (id: string) => {
     setAutos((prev) =>
       prev.map((a) => {
         if (a.id !== id) return a;
         const next: AutomationStatus = a.status === "aktiv" ? "pausiert" : "aktiv";
+        setStateMut.mutate(
+          { automationId: id, status: next },
+          { onError: () => toast.error("Konnte nicht gespeichert werden") },
+        );
         toast.success(`„${a.name}" ${next === "aktiv" ? "aktiviert" : "pausiert"}`);
         logActivity({
           bereich: "Automatisierung",
@@ -54,6 +73,7 @@ function AutomationPage() {
       }),
     );
   };
+
 
   const freigeben = (a: Automation) => {
     toast.success("Entwürfe freigegeben", { description: a.vorschlag });

@@ -32,6 +32,8 @@ import {
   CalendarDays,
   BookText,
   Handshake,
+  Smartphone,
+  Database,
   type LucideIcon,
 } from "lucide-react";
 
@@ -150,6 +152,12 @@ export const navGroups: NavGroup[] = [
         icon: Phone,
         description: "Integrierte Telefonie, Anrufannahme und Protokolle.",
       },
+      {
+        label: "Fahrer-App",
+        to: "/fahrer-mobil",
+        icon: Smartphone,
+        description: "Mobile Ansicht für Fahrer: heutige Touren, Status-Updates und Navigation.",
+      },
     ],
   },
   {
@@ -242,6 +250,12 @@ export const navGroups: NavGroup[] = [
         to: "/dokumente",
         icon: FolderArchive,
         description: "Zentrales Dokumentenarchiv und Vorlagen.",
+      },
+      {
+        label: "Datenimport",
+        to: "/datenimport",
+        icon: Database,
+        description: "Fahrer, Fahrzeuge, Kunden & Patienten per CSV/Excel importieren.",
       },
       {
         label: "Automatisierung",

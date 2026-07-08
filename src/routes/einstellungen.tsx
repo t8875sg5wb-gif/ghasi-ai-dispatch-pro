@@ -295,6 +295,43 @@ function EinstellungenSeite() {
                 Cockpit.
               </p>
             </Feld>
+            <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="mb-3 text-sm font-medium">DATEV-Export (Steuerberater)</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Feld label="Berater-Nr.">
+                  <Input
+                    value={company.datevBeraterNr}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("datevBeraterNr", e.target.value)}
+                  />
+                </Feld>
+                <Feld label="Mandanten-Nr.">
+                  <Input
+                    value={company.datevMandantNr}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("datevMandantNr", e.target.value)}
+                  />
+                </Feld>
+                <Feld label="Erlöskonto (SKR03)">
+                  <Input
+                    value={company.datevErloeskonto}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("datevErloeskonto", e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Standard 8120: steuerfreie Umsätze §4 Nr.17b.
+                  </p>
+                </Feld>
+                <Feld label="Debitoren-/Gegenkonto">
+                  <Input
+                    value={company.datevGegenkonto}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("datevGegenkonto", e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">Standard 10000.</p>
+                </Feld>
+              </div>
+            </div>
             <p className="text-xs italic text-muted-foreground">{STEUER_DISCLAIMER}</p>
           </CardContent>
         </Card>
