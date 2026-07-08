@@ -451,16 +451,31 @@ function PatientFelder({
   onSave: (values: PatientWrite) => void;
   saving: boolean;
 }) {
+  const insurers = useInsurers().data ?? [];
+  const documents = useDocuments().data ?? [];
   const [name, setName] = useState(target?.name ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [mobilitaet, setMobilitaet] = useState<Patient["mobilitaet"]>(
     target?.mobilitaet ?? "Gehfähig",
   );
   const [kostentraeger, setKostentraeger] = useState(target?.kostentraeger ?? "");
+  const [kostentraegerId, setKostentraegerId] = useState<string>(target?.kostentraegerId ?? "");
+  const [versichertennummer, setVersichertennummer] = useState(target?.versichertennummer ?? "");
+  const [zuzahlungsbefreit, setZuzahlungsbefreit] = useState(target?.zuzahlungsbefreit ?? false);
+  const [zuzahlungsbefreitBis, setZuzahlungsbefreitBis] = useState(
+    target?.zuzahlungsbefreitBis ?? "",
+  );
+  const [verordnungVorhanden, setVerordnungVorhanden] = useState(target?.verordnungVorhanden ?? false);
+  const [verordnungDokumentId, setVerordnungDokumentId] = useState<string>(
+    target?.verordnungDokumentId ?? "",
+  );
+  const [genehmigungBis, setGenehmigungBis] = useState(target?.genehmigungBis ?? "");
   const [hinweis, setHinweis] = useState(target?.hinweis ?? "");
   const [begleitperson, setBegleitperson] = useState(target?.begleitperson ?? false);
   const [medizinischeNotiz, setMedizinischeNotiz] = useState(target?.medizinischeNotiz ?? "");
   const [patientennotiz, setPatientennotiz] = useState(target?.patientennotiz ?? "");
+
+  const KT_FREI = "__frei__";
 
   function submit() {
     if (!name.trim()) {
@@ -472,6 +487,13 @@ function PatientFelder({
       telefon: telefon.trim() || undefined,
       mobilitaet,
       kostentraeger: kostentraeger.trim(),
+      kostentraegerId: kostentraegerId || null,
+      versichertennummer: versichertennummer.trim() || undefined,
+      zuzahlungsbefreit,
+      zuzahlungsbefreitBis: zuzahlungsbefreit ? zuzahlungsbefreitBis || null : null,
+      verordnungVorhanden,
+      verordnungDokumentId: verordnungDokumentId || null,
+      genehmigungBis: genehmigungBis || null,
       hinweis: hinweis.trim(),
       begleitperson,
       medizinischeNotiz: medizinischeNotiz.trim() || undefined,
