@@ -69,6 +69,16 @@ export interface MahnEintrag {
   tageUeberfaellig: number;
 }
 
+/** A single recorded payment against an invoice (partial payments allowed). */
+export interface Zahlung {
+  /** ISO date the payment was received */
+  datum: string;
+  /** amount received in EUR (negative for credit notes) */
+  betrag: number;
+  /** optional reference / note (bank reference, cash, etc.) */
+  notiz?: string;
+}
+
 export interface Rechnung {
   id: string;
   nummer: string;
