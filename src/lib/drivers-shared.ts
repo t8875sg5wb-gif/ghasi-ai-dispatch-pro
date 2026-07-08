@@ -31,6 +31,10 @@ export interface DriverWrite {
   kmHeute: number;
   umsatzHeute: number;
   gewinnHeute: number;
+  pScheinGueltigBis?: string | null;
+  fuehrungszeugnisDatum?: string | null;
+  svAusweisVorhanden?: boolean;
+  steuerId?: string;
 }
 
 /** Minimal structural type of a row coming back from the `drivers` table. */
