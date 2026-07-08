@@ -7,6 +7,7 @@ import type {
   RechnungTyp,
   Abrechnungsart,
   RechnungPosition,
+  MahnEintrag,
 } from "@/lib/finance";
 import type { Auftrag } from "@/lib/auftraege";
 
@@ -27,6 +28,9 @@ export interface InvoiceWrite {
   bezugAuftrag?: string | null;
   positionen?: RechnungPosition[];
   notiz?: string | null;
+  mahnstufe?: number;
+  letzteMahnung?: string | null;
+  mahnHistorie?: MahnEintrag[];
 }
 
 /** Minimal structural type of a row coming back from the `invoices` table. */
@@ -47,6 +51,9 @@ export interface InvoiceRow {
   bezug_auftrag: string | null;
   positionen: RechnungPosition[] | null;
   notiz: string | null;
+  mahnstufe?: number | string | null;
+  letzte_mahnung?: string | null;
+  mahn_historie?: MahnEintrag[] | null;
 }
 
 const toNum = (v: number | string | null | undefined): number =>
@@ -70,6 +77,9 @@ export function rowToRechnung(r: InvoiceRow): Rechnung {
     bezugAuftrag: r.bezug_auftrag ?? undefined,
     positionen: Array.isArray(r.positionen) ? r.positionen : [],
     notiz: r.notiz ?? undefined,
+    mahnstufe: toNum(r.mahnstufe ?? 0),
+    letzteMahnung: r.letzte_mahnung ?? null,
+    mahnHistorie: Array.isArray(r.mahn_historie) ? r.mahn_historie : [],
   };
 }
 
@@ -90,6 +100,9 @@ export function rechnungToWrite(r: Rechnung): InvoiceWrite {
     bezugAuftrag: r.bezugAuftrag ?? null,
     positionen: r.positionen,
     notiz: r.notiz ?? null,
+    mahnstufe: r.mahnstufe ?? 0,
+    letzteMahnung: r.letzteMahnung ?? null,
+    mahnHistorie: r.mahnHistorie ?? [],
   };
 }
 
@@ -114,6 +127,9 @@ export function writeToInvoiceRow(w: Partial<InvoiceWrite>): Record<string, unkn
   set("bezug_auftrag", w.bezugAuftrag);
   set("positionen", w.positionen);
   set("notiz", w.notiz);
+  set("mahnstufe", w.mahnstufe);
+  set("letzte_mahnung", w.letzteMahnung);
+  set("mahn_historie", w.mahnHistorie);
   return row;
 }
 

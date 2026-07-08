@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
+
+import { useAuth } from "@/hooks/use-auth";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -85,10 +87,20 @@ function useOrderNotificationSync(auftraege: ReturnType<typeof useHydrateStores>
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { rollen, rollenGeladen } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   useGlobalSearchHotkey(setSearchOpen);
   const orders = useHydrateStores();
   useOrderNotificationSync(orders.data);
+
+  // Drivers (only the "fahrer" role) land on the simplified mobile view.
+  const nurFahrer = rollenGeladen && rollen.length === 1 && rollen[0] === "fahrer";
+  useEffect(() => {
+    if (nurFahrer && pathname === "/") {
+      navigate({ to: "/fahrer-mobil", replace: true });
+    }
+  }, [nurFahrer, pathname, navigate]);
 
   const current =
     allNavItems.find((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to))) ??

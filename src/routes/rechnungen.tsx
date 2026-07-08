@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   FileText,
   Euro,
@@ -10,6 +11,10 @@ import {
   ArrowRight,
   Sparkles,
   ShieldAlert,
+  Send,
+  Copy,
+  Download,
+  Loader2,
 } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -43,8 +48,28 @@ import {
   type RechnungStatus,
 } from "@/lib/finance";
 import { STEUER_HINWEIS, STEUER_DISCLAIMER } from "@/lib/steuer";
-import { useInvoices, useSeedInvoices, useGenerateBillingDrafts } from "@/lib/invoices-store";
+import {
+  useInvoices,
+  useSeedInvoices,
+  useGenerateBillingDrafts,
+  useUpdateInvoice,
+} from "@/lib/invoices-store";
 import { useOrders } from "@/lib/orders-store";
+import { useCompanySettings } from "@/lib/company-settings-store";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { buildMahnText, naechsteMahnstufe, mahnStufeLabel } from "@/lib/dunning";
+import { rechnungToWrite } from "@/lib/invoices-shared";
+import { downloadText } from "@/lib/export-utils";
+import { logActivity } from "@/lib/protokoll";
+import type { Rechnung, MahnEintrag } from "@/lib/finance";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -59,6 +84,15 @@ export const Route = createFileRoute("/rechnungen")({
   component: RechnungenPage,
 });
 
+/** True when an invoice is a normal, still-open, overdue invoice that can be dunned. */
+function istMahnbar(r: Rechnung, mounted: boolean): boolean {
+  if (!mounted) return false;
+  if (r.typ !== "rechnung") return false;
+  if (!["offen", "teilbezahlt", "ueberfaellig"].includes(r.status)) return false;
+  return tageUeberfaellig(r) > 0;
+}
+
+
 function RechnungenPage() {
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<RechnungStatus | "alle">("alle");
@@ -69,6 +103,49 @@ function RechnungenPage() {
   const { data: orderData } = useOrders();
   const seedMut = useSeedInvoices();
   const draftsMut = useGenerateBillingDrafts();
+  const updateMut = useUpdateInvoice();
+  const { data: company } = useCompanySettings();
+
+  // Mahnwesen-Dialog
+  const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
+  const [mahnText, setMahnText] = useState("");
+  const mahnStufe = mahnTarget ? naechsteMahnstufe(mahnTarget) : 0;
+
+  function openMahnung(r: Rechnung) {
+    const stufe = naechsteMahnstufe(r);
+    setMahnTarget(r);
+    setMahnText(buildMahnText(r, stufe, company));
+  }
+
+  function markiereMahnungVersendet() {
+    if (!mahnTarget) return;
+    const stufe = naechsteMahnstufe(mahnTarget);
+    const eintrag: MahnEintrag = {
+      stufe,
+      datum: new Date().toISOString(),
+      tageUeberfaellig: tageUeberfaellig(mahnTarget),
+    };
+    const write = rechnungToWrite(mahnTarget);
+    write.mahnstufe = stufe;
+    write.letzteMahnung = eintrag.datum;
+    write.mahnHistorie = [...(mahnTarget.mahnHistorie ?? []), eintrag];
+    updateMut.mutate(
+      { id: mahnTarget.id, values: write },
+      {
+        onSuccess: () => {
+          toast.success(`${mahnStufeLabel(stufe)} als versendet vermerkt`);
+          logActivity({
+            bereich: "Rechnungen",
+            entitaet: mahnTarget.nummer,
+            aktion: "Mahnung",
+            beschreibung: `${mahnStufeLabel(stufe)} für ${mahnTarget.nummer} (${mahnTarget.kunde}) erstellt`,
+          });
+          setMahnTarget(null);
+        },
+        onError: (e) => toast.error("Konnte nicht gespeichert werden", { description: String(e) }),
+      },
+    );
+  }
 
   const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
 
@@ -252,6 +329,8 @@ function RechnungenPage() {
                   <TableHead className="text-right">USt</TableHead>
                   <TableHead className="text-right">Brutto</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Mahnung</TableHead>
+                  <TableHead className="text-right">Aktion</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -303,13 +382,47 @@ function RechnungenPage() {
                           {RECHNUNG_STATUS_META[r.status].label}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {(r.mahnstufe ?? 0) > 0 ? (
+                          <div className="flex flex-col gap-0.5">
+                            <Badge
+                              variant="outline"
+                              className="border-warning/30 bg-warning/10 text-[10px] text-warning"
+                            >
+                              {mahnStufeLabel(r.mahnstufe ?? 0)}
+                            </Badge>
+                            {r.letzteMahnung && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatDatum(r.letzteMahnung)}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {istMahnbar(r, mounted) && (r.mahnstufe ?? 0) < 3 ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-full text-xs"
+                            onClick={() => openMahnung(r)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            {(r.mahnstufe ?? 0) === 0 ? "Mahnen" : "Nächste Stufe"}
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
                 {rechnungen.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={10}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       Keine Rechnungen gefunden.
@@ -346,6 +459,58 @@ function RechnungenPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mahnwesen-Dialog */}
+      <Dialog open={!!mahnTarget} onOpenChange={(o) => !o && setMahnTarget(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {mahnTarget ? `${mahnStufeLabel(mahnStufe)} – ${mahnTarget.nummer}` : "Mahnung"}
+            </DialogTitle>
+            <DialogDescription>
+              Fertiger Mahntext zum Kopieren oder Download. Der Versand erfolgt manuell – GHASI AI
+              versendet nichts automatisch.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={mahnText}
+            onChange={(e) => setMahnText(e.target.value)}
+            className="min-h-[320px] font-mono text-xs"
+          />
+          <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard?.writeText(mahnText);
+                  toast.success("Mahntext kopiert");
+                }}
+              >
+                <Copy className="h-4 w-4" /> Kopieren
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  mahnTarget &&
+                  downloadText(`Mahnung_${mahnTarget.nummer}.txt`, mahnText)
+                }
+              >
+                <Download className="h-4 w-4" /> Download
+              </Button>
+            </div>
+            <Button size="sm" disabled={updateMut.isPending} onClick={markiereMahnungVersendet}>
+              {updateMut.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Als versendet markieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

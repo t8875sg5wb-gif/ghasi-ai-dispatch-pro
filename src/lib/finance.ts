@@ -59,6 +59,16 @@ export interface RechnungPosition {
   einzelpreis: number;
 }
 
+/** A single dunning event recorded on an invoice. */
+export interface MahnEintrag {
+  /** dunning level 1/2/3 */
+  stufe: number;
+  /** ISO datetime the dunning was created */
+  datum: string;
+  /** overdue days at the time of dunning */
+  tageUeberfaellig: number;
+}
+
 export interface Rechnung {
   id: string;
   nummer: string;
@@ -82,6 +92,13 @@ export interface Rechnung {
   bezugAuftrag?: string;
   positionen: RechnungPosition[];
   notiz?: string;
+  // --- Mahnwesen (optional, additiv) ---
+  /** current dunning level 0–3 */
+  mahnstufe?: number;
+  /** ISO datetime of the last dunning */
+  letzteMahnung?: string | null;
+  /** history of dunning events */
+  mahnHistorie?: MahnEintrag[];
 }
 
 export interface RechnungStatusMeta {

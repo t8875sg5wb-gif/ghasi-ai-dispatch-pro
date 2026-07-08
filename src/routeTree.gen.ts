@@ -33,12 +33,14 @@ import { Route as KassenvertraegeRouteImport } from './routes/kassenvertraege'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
+import { Route as FahrerMobilRouteImport } from './routes/fahrer-mobil'
 import { Route as FahrerRouteImport } from './routes/fahrer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
+import { Route as DatenimportRouteImport } from './routes/datenimport'
 import { Route as ControlCenterRouteImport } from './routes/control-center'
 import { Route as CeoCockpitRouteImport } from './routes/ceo-cockpit'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
@@ -173,6 +175,11 @@ const FahrtenbuchRoute = FahrtenbuchRouteImport.update({
   path: '/fahrtenbuch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FahrerMobilRoute = FahrerMobilRouteImport.update({
+  id: '/fahrer-mobil',
+  path: '/fahrer-mobil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FahrerRoute = FahrerRouteImport.update({
   id: '/fahrer',
   path: '/fahrer',
@@ -201,6 +208,11 @@ const DialysezentrenRoute = DialysezentrenRouteImport.update({
 const DauerauftraegeRoute = DauerauftraegeRouteImport.update({
   id: '/dauerauftraege',
   path: '/dauerauftraege',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatenimportRoute = DatenimportRouteImport.update({
+  id: '/datenimport',
+  path: '/datenimport',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ControlCenterRoute = ControlCenterRouteImport.update({
@@ -280,12 +292,14 @@ export interface FileRoutesByFullPath {
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
@@ -325,12 +339,14 @@ export interface FileRoutesByTo {
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
@@ -370,12 +386,14 @@ export interface FileRoutesById {
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
@@ -417,12 +435,14 @@ export interface FileRouteTypes {
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/control-center'
+    | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
@@ -462,12 +482,14 @@ export interface FileRouteTypes {
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/control-center'
+    | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
@@ -506,12 +528,14 @@ export interface FileRouteTypes {
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/control-center'
+    | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
@@ -552,12 +576,14 @@ export interface RootRouteChildren {
   BuchhaltungRoute: typeof BuchhaltungRoute
   CeoCockpitRoute: typeof CeoCockpitRoute
   ControlCenterRoute: typeof ControlCenterRoute
+  DatenimportRoute: typeof DatenimportRoute
   DauerauftraegeRoute: typeof DauerauftraegeRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
   DokumenteRoute: typeof DokumenteRoute
   EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
+  FahrerMobilRoute: typeof FahrerMobilRoute
   FahrtenbuchRoute: typeof FahrtenbuchRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
   InsightsRoute: typeof InsightsRoute
@@ -755,6 +781,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FahrtenbuchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fahrer-mobil': {
+      id: '/fahrer-mobil'
+      path: '/fahrer-mobil'
+      fullPath: '/fahrer-mobil'
+      preLoaderRoute: typeof FahrerMobilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fahrer': {
       id: '/fahrer'
       path: '/fahrer'
@@ -795,6 +828,13 @@ declare module '@tanstack/react-router' {
       path: '/dauerauftraege'
       fullPath: '/dauerauftraege'
       preLoaderRoute: typeof DauerauftraegeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/datenimport': {
+      id: '/datenimport'
+      path: '/datenimport'
+      fullPath: '/datenimport'
+      preLoaderRoute: typeof DatenimportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/control-center': {
@@ -916,12 +956,14 @@ const rootRouteChildren: RootRouteChildren = {
   BuchhaltungRoute: BuchhaltungRoute,
   CeoCockpitRoute: CeoCockpitRoute,
   ControlCenterRoute: ControlCenterRoute,
+  DatenimportRoute: DatenimportRoute,
   DauerauftraegeRoute: DauerauftraegeRoute,
   DialysezentrenRoute: DialysezentrenRoute,
   DokumenteRoute: DokumenteRoute,
   EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
+  FahrerMobilRoute: FahrerMobilRoute,
   FahrtenbuchRoute: FahrtenbuchRoute,
   FahrzeugeRoute: FahrzeugeRoute,
   InsightsRoute: InsightsRoute,

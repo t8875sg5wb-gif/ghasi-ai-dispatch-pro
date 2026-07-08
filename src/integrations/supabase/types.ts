@@ -275,6 +275,10 @@ export type Database = {
         Row: {
           adresse: string
           created_at: string
+          datev_berater_nr: string
+          datev_erloeskonto: string
+          datev_gegenkonto: string
+          datev_mandant_nr: string
           email: string
           firma: string
           gewerbesteuer_hebesatz: number
@@ -291,6 +295,10 @@ export type Database = {
         Insert: {
           adresse?: string
           created_at?: string
+          datev_berater_nr?: string
+          datev_erloeskonto?: string
+          datev_gegenkonto?: string
+          datev_mandant_nr?: string
           email?: string
           firma?: string
           gewerbesteuer_hebesatz?: number
@@ -307,6 +315,10 @@ export type Database = {
         Update: {
           adresse?: string
           created_at?: string
+          datev_berater_nr?: string
+          datev_erloeskonto?: string
+          datev_gegenkonto?: string
+          datev_mandant_nr?: string
           email?: string
           firma?: string
           gewerbesteuer_hebesatz?: number
@@ -846,6 +858,9 @@ export type Database = {
           id: string
           kunde: string
           kunde_id: string
+          letzte_mahnung: string | null
+          mahn_historie: Json
+          mahnstufe: number
           mwst_satz: number
           notiz: string | null
           nummer: string
@@ -866,6 +881,9 @@ export type Database = {
           id?: string
           kunde?: string
           kunde_id?: string
+          letzte_mahnung?: string | null
+          mahn_historie?: Json
+          mahnstufe?: number
           mwst_satz?: number
           notiz?: string | null
           nummer: string
@@ -886,6 +904,9 @@ export type Database = {
           id?: string
           kunde?: string
           kunde_id?: string
+          letzte_mahnung?: string | null
+          mahn_historie?: Json
+          mahnstufe?: number
           mwst_satz?: number
           notiz?: string | null
           nummer?: string
