@@ -58,6 +58,15 @@ export interface Fahrer {
   kmHeute: number;
   umsatzHeute: number;
   gewinnHeute: number;
+  // --- Compliance (Schiene A) ---
+  /** Personenbeförderungsschein gültig bis (ISO-Datum). */
+  pScheinGueltigBis?: string | null;
+  /** Datum des zuletzt vorgelegten Führungszeugnisses (ISO-Datum). */
+  fuehrungszeugnisDatum?: string | null;
+  /** Sozialversicherungsausweis vorhanden? */
+  svAusweisVorhanden?: boolean;
+  /** Steuer-Identifikationsnummer. */
+  steuerId?: string;
 }
 
 export interface StatusMeta {
