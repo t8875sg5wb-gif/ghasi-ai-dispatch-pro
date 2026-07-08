@@ -705,6 +705,7 @@ function AuftraegePage() {
           </DialogHeader>
           <AuftragForm
             initial={editTarget ?? undefined}
+            prefill={prefill}
             onSubmit={handleSubmit}
             onCancel={() => setFormOpen(false)}
             submitLabel={saving ? "Speichern …" : editTarget ? "Speichern" : "Auftrag erstellen"}
