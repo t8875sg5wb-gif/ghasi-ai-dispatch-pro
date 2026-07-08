@@ -47,11 +47,15 @@ function popupHtml(v: FleetVehicle): string {
   const row = (label: string, value: string) =>
     `<div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;line-height:1.5;"><span style="color:#64748b;">${label}</span><span style="font-weight:600;text-align:right;">${escapeHtml(value)}</span></div>`;
   const farbe = FLEET_FARBEN[v.farbe];
+  const gpsBadge = v.istLive
+    ? `<span style="font-size:10px;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:9999px;padding:1px 7px;">● Live</span>`
+    : `<span style="font-size:10px;font-weight:600;color:#64748b;background:#e2e8f0;border-radius:9999px;padding:1px 7px;">simuliert</span>`;
   let html = `<div style="min-width:230px;font-family:inherit;color:#0f172a;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="width:10px;height:10px;border-radius:9999px;background:${farbe.hex};"></span>
       <strong style="font-size:14px;">${escapeHtml(v.kennzeichen)}</strong>
       <span style="font-size:11px;color:#64748b;">${escapeHtml(v.typ)}</span>
+      ${gpsBadge}
     </div>
     <div style="display:flex;flex-direction:column;gap:3px;">
       ${row("Fahrer", v.fahrer ?? "—")}
