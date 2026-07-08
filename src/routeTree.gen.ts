@@ -29,6 +29,7 @@ import { Route as LeasingRouteImport } from './routes/leasing'
 import { Route as KundenRouteImport } from './routes/kunden'
 import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
+import { Route as KassenvertraegeRouteImport } from './routes/kassenvertraege'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
@@ -150,6 +151,11 @@ const KrankenhaeuserRoute = KrankenhaeuserRouteImport.update({
 const KiAssistentRoute = KiAssistentRouteImport.update({
   id: '/ki-assistent',
   path: '/ki-assistent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KassenvertraegeRoute = KassenvertraegeRouteImport.update({
+  id: '/kassenvertraege',
+  path: '/kassenvertraege',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsRoute = InsightsRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
@@ -504,6 +515,7 @@ export interface FileRouteTypes {
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -549,6 +561,7 @@ export interface RootRouteChildren {
   FahrtenbuchRoute: typeof FahrtenbuchRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
   InsightsRoute: typeof InsightsRoute
+  KassenvertraegeRoute: typeof KassenvertraegeRoute
   KiAssistentRoute: typeof KiAssistentRouteWithChildren
   KrankenhaeuserRoute: typeof KrankenhaeuserRoute
   KundenRoute: typeof KundenRoute
@@ -712,6 +725,13 @@ declare module '@tanstack/react-router' {
       path: '/ki-assistent'
       fullPath: '/ki-assistent'
       preLoaderRoute: typeof KiAssistentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kassenvertraege': {
+      id: '/kassenvertraege'
+      path: '/kassenvertraege'
+      fullPath: '/kassenvertraege'
+      preLoaderRoute: typeof KassenvertraegeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights': {
@@ -905,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   FahrtenbuchRoute: FahrtenbuchRoute,
   FahrzeugeRoute: FahrzeugeRoute,
   InsightsRoute: InsightsRoute,
+  KassenvertraegeRoute: KassenvertraegeRoute,
   KiAssistentRoute: KiAssistentRouteWithChildren,
   KrankenhaeuserRoute: KrankenhaeuserRoute,
   KundenRoute: KundenRoute,
