@@ -33,6 +33,11 @@ export interface Fahrzeug {
   fahrer: string | null;
   standort: string;
   gps: { lat: number; lng: number };
+  /** Last real GPS position shared by the assigned driver (opt-in). */
+  lastRealLat?: number | null;
+  lastRealLng?: number | null;
+  /** ISO timestamp of the last real position report. */
+  lastRealAt?: string | null;
   kilometerstand: number;
   /** fuel level 0–100 % */
   tankstand: number;

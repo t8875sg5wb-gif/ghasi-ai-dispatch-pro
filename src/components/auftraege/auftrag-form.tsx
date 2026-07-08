@@ -41,6 +41,8 @@ export type AuftragFormValues = Omit<Auftrag, "id" | "nummer" | "status">;
 
 interface AuftragFormProps {
   initial?: Auftrag;
+  /** Prefilled defaults for a NEW order (ignored when `initial` is set). */
+  prefill?: Partial<AuftragFormValues>;
   onSubmit: (values: AuftragFormValues) => void;
   onCancel: () => void;
   submitLabel: string;
@@ -72,7 +74,7 @@ function emptyValues(): AuftragFormValues {
   };
 }
 
-export function AuftragForm({ initial, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
+export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
@@ -84,11 +86,11 @@ export function AuftragForm({ initial, onSubmit, onCancel, submitLabel }: Auftra
       setAbholAdr(initial.pickup ?? parseAdresse(initial.abholort));
       setZielAdr(initial.destination ?? parseAdresse(initial.zielort));
     } else {
-      setValues(emptyValues());
+      setValues({ ...emptyValues(), ...prefill });
       setAbholAdr(leereAdresse());
       setZielAdr(leereAdresse());
     }
-  }, [initial]);
+  }, [initial, prefill]);
 
   function set<K extends keyof AuftragFormValues>(key: K, value: AuftragFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));

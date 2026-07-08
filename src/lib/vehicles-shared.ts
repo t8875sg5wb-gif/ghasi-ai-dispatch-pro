@@ -27,6 +27,9 @@ export interface VehicleRow {
   fahrer: string | null;
   standort: string;
   gps: unknown;
+  last_real_lat: number | null;
+  last_real_lng: number | null;
+  last_real_at: string | null;
   kilometerstand: number;
   tankstand: number;
   kraftstoff: string;
@@ -76,6 +79,9 @@ export function rowToFahrzeug(r: VehicleRow): Fahrzeug {
     fahrer: r.fahrer ?? null,
     standort: r.standort ?? "",
     gps: { lat: num(gps.lat, 52.29), lng: num(gps.lng, 8.9) },
+    lastRealLat: r.last_real_lat ?? null,
+    lastRealLng: r.last_real_lng ?? null,
+    lastRealAt: r.last_real_at ?? null,
     kilometerstand: num(r.kilometerstand),
     tankstand: num(r.tankstand, 100),
     kraftstoff: (r.kraftstoff as Kraftstoffart) ?? "Diesel",

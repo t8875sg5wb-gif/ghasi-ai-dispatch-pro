@@ -200,6 +200,8 @@ export interface FleetVehicle {
   fahrerObj: Fahrer | null;
   standort: string;
   gps: LatLng;
+  /** true = echte, frische GPS-Position (Fahrer teilt Standort), false = simuliert */
+  istLive: boolean;
   tankstand: number;
   reichweite: number;
   /** km/h, 0 wenn steht/offline */
@@ -319,6 +321,15 @@ export function buildFleet(): FleetVehicle[] {
 
   return INITIAL_FAHRZEUGE.map((v) => {
     const h = hashStr(v.kennzeichen);
+    // Prefer a fresh (<5 min) real GPS position shared by the driver.
+    const realFresh =
+      v.lastRealAt != null &&
+      v.lastRealLat != null &&
+      v.lastRealLng != null &&
+      Date.now() - new Date(v.lastRealAt).getTime() < 5 * 60 * 1000;
+    const gpsPos: LatLng = realFresh
+      ? { lat: v.lastRealLat as number, lng: v.lastRealLng as number }
+      : v.gps;
     const offline = v.status === "werkstatt" || v.status === "nicht_verfuegbar";
 
     // aktiver Transport für dieses Fahrzeug (am weitesten in der Pipeline)
@@ -365,12 +376,12 @@ export function buildFleet(): FleetVehicle[] {
       routeGeplant = polyline(pickup, ziel, 8);
       if (patientAnBord) {
         // unterwegs zum Ziel: absolviert = Pickup -> aktuelle Position, Rest = Position -> Ziel
-        routeAbsolviert = polyline(pickup, v.gps, 5);
-        routeRest = polyline(v.gps, ziel, 6);
+        routeAbsolviert = polyline(pickup, gpsPos, 5);
+        routeRest = polyline(gpsPos, ziel, 6);
       } else {
         // Anfahrt zum Patienten: absolviert = Start -> Position, Rest = Position -> Pickup -> Ziel
         routeAbsolviert = [];
-        routeRest = [...polyline(v.gps, pickup, 5), ...polyline(pickup, ziel, 8)];
+        routeRest = [...polyline(gpsPos, pickup, 5), ...polyline(pickup, ziel, 8)];
       }
     }
 
@@ -392,7 +403,8 @@ export function buildFleet(): FleetVehicle[] {
       fahrer: v.fahrer,
       fahrerObj,
       standort: v.standort,
-      gps: v.gps,
+      gps: gpsPos,
+      istLive: realFresh,
       tankstand: v.tankstand,
       reichweite: v.reichweite,
       geschwindigkeit,

@@ -15,10 +15,14 @@ import {
 import {
   type Auftrag,
   type AuftragStatus,
+  type Mobilitaet,
+  type Transportart,
   PRIORITAET_META,
   STATUS_META,
   STATUS_PIPELINE,
   formatTermin,
+  istMobilitaet,
+  istTransportart,
 } from "@/lib/auftraege";
 import { useOrders, useCreateOrder, useUpdateOrder, useSeedOrders } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
@@ -81,10 +85,22 @@ import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten, darfAuftragStatusAendern } from "@/lib/roles";
 
 export const Route = createFileRoute("/auftraege")({
-  validateSearch: (search: Record<string, unknown>): { nummer?: string; id?: string; q?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
+    nummer?: string;
+    id?: string;
+    q?: string;
+    neuPatient?: string;
+    neuMobilitaet?: Mobilitaet;
+    neuTransportart?: Transportart;
+  } => ({
     nummer: typeof search.nummer === "string" ? search.nummer : undefined,
     id: typeof search.id === "string" ? search.id : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
+    neuPatient: typeof search.neuPatient === "string" ? search.neuPatient : undefined,
+    neuMobilitaet: istMobilitaet(search.neuMobilitaet) ? search.neuMobilitaet : undefined,
+    neuTransportart: istTransportart(search.neuTransportart) ? search.neuTransportart : undefined,
   }),
   head: () => ({
     meta: [
@@ -106,7 +122,14 @@ function AuftraegePage() {
   const canManage = darfAuftragVerwalten(role);
   const canChangeStatus = darfAuftragStatusAendern(role);
 
-  const { nummer: deepNummer, id: deepId, q: deepQ } = Route.useSearch();
+  const {
+    nummer: deepNummer,
+    id: deepId,
+    q: deepQ,
+    neuPatient,
+    neuMobilitaet,
+    neuTransportart,
+  } = Route.useSearch();
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } = useOrders();
   const createMut = useCreateOrder();
   const updateMut = useUpdateOrder();
@@ -121,6 +144,21 @@ function AuftraegePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Auftrag | null>(null);
+  const [prefill, setPrefill] = useState<Partial<AuftragFormValues> | undefined>();
+
+  // Deep-link from the Verordnungs-Scan: open a prefilled new-order form.
+  const [prefillDone, setPrefillDone] = useState(false);
+  useEffect(() => {
+    if (prefillDone || !neuPatient) return;
+    setEditTarget(null);
+    setPrefill({
+      patient: neuPatient,
+      mobilitaet: neuMobilitaet ?? "gehfaehig",
+      transportart: neuTransportart ?? "Sitzendtransport",
+    });
+    setFormOpen(true);
+    setPrefillDone(true);
+  }, [prefillDone, neuPatient, neuMobilitaet, neuTransportart]);
 
   // Deep-link: open the detail dialog for a specific order (by id or number).
   const [deepLinkDone, setDeepLinkDone] = useState(false);
@@ -667,6 +705,7 @@ function AuftraegePage() {
           </DialogHeader>
           <AuftragForm
             initial={editTarget ?? undefined}
+            prefill={prefill}
             onSubmit={handleSubmit}
             onCancel={() => setFormOpen(false)}
             submitLabel={saving ? "Speichern …" : editTarget ? "Speichern" : "Auftrag erstellen"}

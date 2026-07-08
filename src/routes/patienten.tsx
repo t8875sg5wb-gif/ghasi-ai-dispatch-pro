@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus, BadgeEuro, FileCheck2, CalendarCheck, AlertTriangle } from "lucide-react";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus, BadgeEuro, FileCheck2, CalendarCheck, AlertTriangle, ScanLine } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
 import { useDocuments } from "@/lib/documents-store";
+import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
 import type { PatientWrite } from "@/lib/patients-shared";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ function PatientenSeite() {
   const [suche, setSuche] = useState("");
   const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Patient | null>(null);
 
   const gefiltert = patienten.filter(
@@ -152,6 +154,9 @@ function PatientenSeite() {
               Beispieldaten laden
             </Button>
           )}
+          <Button variant="secondary" onClick={() => setScanOpen(true)}>
+            <ScanLine className="mr-1.5 h-4 w-4" /> Verordnung scannen
+          </Button>
           <Button
             onClick={() => {
               setEditTarget(null);
@@ -229,6 +234,11 @@ function PatientenSeite() {
         }}
         onSave={speichern}
         saving={createMut.isPending || updateMut.isPending}
+      />
+      <VerordnungScanDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        patientId={aktiv ?? undefined}
       />
     </div>
   );

@@ -16,6 +16,7 @@ import {
   Download,
   FileDown,
   Loader2,
+  Banknote,
 } from "lucide-react";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 
@@ -71,6 +72,7 @@ import { buildMahnText, naechsteMahnstufe, mahnStufeLabel } from "@/lib/dunning"
 import { rechnungToWrite } from "@/lib/invoices-shared";
 import { downloadText } from "@/lib/export-utils";
 import { RechnungDetailDialog } from "@/components/rechnungen/rechnung-detail-dialog";
+import { BankImportDialog } from "@/components/rechnungen/bank-import-dialog";
 import { logActivity } from "@/lib/protokoll";
 import type { Rechnung, MahnEintrag } from "@/lib/finance";
 
@@ -111,6 +113,7 @@ function RechnungenPage() {
 
   // Detail-/Zahlungsdialog
   const [detailTarget, setDetailTarget] = useState<Rechnung | null>(null);
+  const [bankOpen, setBankOpen] = useState(false);
 
   // Mahnwesen-Dialog
   const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
@@ -179,6 +182,11 @@ function RechnungenPage() {
         description="Abrechnung für Krankenkassen, Patienten und Kunden – inklusive KI-Rechnungsprüfung. GHASI AI versendet niemals automatisch."
         icon={FileText}
         badge="Finanzen"
+        right={
+          <Button className="rounded-full" variant="secondary" onClick={() => setBankOpen(true)}>
+            <Banknote className="h-4 w-4" /> Kontoauszug importieren
+          </Button>
+        }
       />
 
       {isError && (
@@ -495,6 +503,8 @@ function RechnungenPage() {
         }
         onClose={() => setDetailTarget(null)}
       />
+
+      <BankImportDialog open={bankOpen} onOpenChange={setBankOpen} />
 
 
 

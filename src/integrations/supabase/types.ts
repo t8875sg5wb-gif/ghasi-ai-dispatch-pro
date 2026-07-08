@@ -1559,6 +1559,9 @@ export type Database = {
           kilometerstand: number
           kosten_pro_km: number
           kraftstoff: string
+          last_real_at: string | null
+          last_real_lat: number | null
+          last_real_lng: number | null
           leasing_ende: string
           leasingrate: number
           liegend_geeignet: boolean
@@ -1602,6 +1605,9 @@ export type Database = {
           kilometerstand?: number
           kosten_pro_km?: number
           kraftstoff?: string
+          last_real_at?: string | null
+          last_real_lat?: number | null
+          last_real_lng?: number | null
           leasing_ende?: string
           leasingrate?: number
           liegend_geeignet?: boolean
@@ -1645,6 +1651,9 @@ export type Database = {
           kilometerstand?: number
           kosten_pro_km?: number
           kraftstoff?: string
+          last_real_at?: string | null
+          last_real_lat?: number | null
+          last_real_lng?: number | null
           leasing_ende?: string
           leasingrate?: number
           liegend_geeignet?: boolean

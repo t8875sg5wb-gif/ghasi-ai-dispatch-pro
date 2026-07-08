@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Navigation,
@@ -11,13 +12,17 @@ import {
   Clock,
   Smartphone,
   Loader2,
+  Radio,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { updateMyVehiclePosition } from "@/lib/fleet-tracking.functions";
 import { STATUS_META, type Auftrag } from "@/lib/auftraege";
 import { formatAdresse } from "@/lib/address";
 import { cn } from "@/lib/utils";
@@ -74,6 +79,67 @@ function FahrerMobilPage() {
 
   const offen = meineTouren.filter((o) => o.status !== "abgeschlossen").length;
 
+  // --- Opt-in real GPS sharing -----------------------------------------
+  const pushPosition = useServerFn(updateMyVehiclePosition);
+  const [teilen, setTeilen] = useState(false);
+  const [letzteMeldung, setLetzteMeldung] = useState<Date | null>(null);
+  const [gpsFehler, setGpsFehler] = useState<string | null>(null);
+  const watchId = useRef<number | null>(null);
+  const lastSent = useRef<number>(0);
+
+  useEffect(() => {
+    if (!teilen) {
+      if (watchId.current !== null && typeof navigator !== "undefined") {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGpsFehler("Standortdienst wird von diesem Gerät nicht unterstützt.");
+      setTeilen(false);
+      return;
+    }
+    setGpsFehler(null);
+    watchId.current = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const now = Date.now();
+        // Throttle server updates to at most once every 20 seconds.
+        if (now - lastSent.current < 20_000) return;
+        lastSent.current = now;
+        try {
+          const res = await pushPosition({
+            data: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          });
+          if (res.ok) {
+            setLetzteMeldung(new Date());
+            setGpsFehler(null);
+          } else {
+            setGpsFehler(res.fehler ?? "Position konnte nicht gesendet werden.");
+          }
+        } catch (e) {
+          setGpsFehler(String(e));
+        }
+      },
+      (err) => {
+        setGpsFehler(
+          err.code === err.PERMISSION_DENIED
+            ? "Standortfreigabe wurde abgelehnt."
+            : "Standort konnte nicht ermittelt werden.",
+        );
+        setTeilen(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+    );
+
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+    };
+  }, [teilen, pushPosition]);
+
   function setStatus(o: Auftrag, values: Parameters<typeof updateMut.mutate>[0]["values"], msg: string) {
     updateMut.mutate(
       { id: o.id, values },
@@ -96,6 +162,43 @@ function FahrerMobilPage() {
         </div>
         <Badge className="ml-auto bg-white/20 text-primary-foreground">{offen} offen</Badge>
       </div>
+
+      {/* Opt-in Standortfreigabe */}
+      <Card
+        className={cn(
+          "border-border/70 shadow-card transition-colors",
+          teilen && "border-success/50 bg-success/5",
+        )}
+      >
+        <CardContent className="flex items-center gap-3 p-4">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+              teilen ? "bg-success/15 text-success" : "bg-muted text-muted-foreground",
+            )}
+          >
+            <Radio className={cn("h-5 w-5", teilen && "animate-pulse")} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <Label htmlFor="gps-teilen" className="text-sm font-medium">
+              Standort teilen
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {teilen
+                ? letzteMeldung
+                  ? `Aktiv · zuletzt ${letzteMeldung.toLocaleTimeString("de-DE", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}`
+                  : "Aktiv · warte auf GPS-Signal …"
+                : "Nur während diese Ansicht geöffnet ist. Keine Hintergrund-Ortung."}
+            </p>
+            {gpsFehler && <p className="mt-0.5 text-xs text-destructive">{gpsFehler}</p>}
+          </div>
+          <Switch id="gps-teilen" checked={teilen} onCheckedChange={setTeilen} />
+        </CardContent>
+      </Card>
 
       {isLoading && (
         <p className="py-8 text-center text-sm text-muted-foreground">Touren werden geladen …</p>

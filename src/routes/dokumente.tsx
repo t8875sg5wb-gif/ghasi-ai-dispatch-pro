@@ -50,6 +50,7 @@ import {
 } from "@/lib/documents";
 import { useDocuments, useUploadDocument, useDeleteDocument } from "@/lib/documents-store";
 import { DocumentViewer } from "@/components/dokumente/document-viewer";
+import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export const Route = createFileRoute("/dokumente")({
@@ -91,6 +92,7 @@ function DokumentePage() {
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState<DokumentKategorie | "alle">("alle");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [viewer, setViewer] = useState<DokumentRecord | null>(null);
 
   const { data: dokumente = [], isLoading, isError, refetch } = useDocuments();
@@ -141,9 +143,14 @@ function DokumentePage() {
         icon={FolderArchive}
         badge="Enterprise DMS"
         right={
-          <Button className="rounded-full" variant="secondary" onClick={() => setUploadOpen(true)}>
-            <Upload className="h-4 w-4" /> Hochladen
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button className="rounded-full" onClick={() => setScanOpen(true)}>
+              <ScanLine className="h-4 w-4" /> Verordnung scannen
+            </Button>
+            <Button className="rounded-full" variant="secondary" onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4" /> Hochladen
+            </Button>
+          </div>
         }
       />
 
@@ -347,6 +354,7 @@ function DokumentePage() {
         onOpenChange={setUploadOpen}
         akteur={akteur ?? "Mitarbeiter"}
       />
+      <VerordnungScanDialog open={scanOpen} onOpenChange={setScanOpen} />
       <DocumentViewer
         dokument={viewer}
         open={viewer !== null}
