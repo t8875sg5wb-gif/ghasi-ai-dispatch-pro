@@ -111,6 +111,8 @@ export interface Rechnung {
   letzteMahnung?: string | null;
   /** history of dunning events */
   mahnHistorie?: MahnEintrag[];
+  /** recorded payments (partial payments allowed) */
+  zahlungen?: Zahlung[];
 }
 
 export interface RechnungStatusMeta {
