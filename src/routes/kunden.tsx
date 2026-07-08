@@ -73,13 +73,14 @@ type TypFilter = Kunde["typ"] | "alle";
 
 function KundenSeite() {
   const { name: akteur } = useAuth();
+  const { id: initialId } = Route.useSearch();
   const { data: kunden = [] } = useCustomers();
   const createMut = useCreateCustomer();
   const updateMut = useUpdateCustomer();
   const seedMut = useSeedCustomers();
   const [suche, setSuche] = useState("");
   const [typFilter, setTypFilter] = useState<TypFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Kunde | null>(null);
 
