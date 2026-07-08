@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus } from "lucide-react";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus, BadgeEuro, FileCheck2, CalendarCheck, AlertTriangle } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import {
@@ -10,6 +10,9 @@ import {
   useCreatePatient,
   useUpdatePatient,
 } from "@/lib/patients-store";
+import { useInsurers } from "@/lib/insurers-store";
+import { useDocuments } from "@/lib/documents-store";
+import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
 import type { PatientWrite } from "@/lib/patients-shared";
 import { Button } from "@/components/ui/button";
 import {
