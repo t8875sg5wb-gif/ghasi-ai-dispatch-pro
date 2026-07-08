@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Navigation,
@@ -11,13 +12,17 @@ import {
   Clock,
   Smartphone,
   Loader2,
+  Radio,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { updateMyVehiclePosition } from "@/lib/fleet-tracking.functions";
 import { STATUS_META, type Auftrag } from "@/lib/auftraege";
 import { formatAdresse } from "@/lib/address";
 import { cn } from "@/lib/utils";
