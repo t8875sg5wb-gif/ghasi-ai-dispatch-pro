@@ -67,7 +67,20 @@ export interface Fahrer {
   svAusweisVorhanden?: boolean;
   /** Steuer-Identifikationsnummer. */
   steuerId?: string;
+  // --- Lohn (Priority 4) ---
+  /** Beschäftigungsart für die Lohnberechnung. */
+  beschaeftigungsart?: Beschaeftigungsart;
+  /** Vereinbartes Monatsbrutto in EUR. */
+  monatsbrutto?: number;
 }
+
+export type Beschaeftigungsart = "minijob" | "midijob" | "svpflichtig";
+
+export const BESCHAEFTIGUNGSART_LABEL: Record<Beschaeftigungsart, string> = {
+  minijob: "Minijob (geringfügig)",
+  midijob: "Midijob (Übergangsbereich)",
+  svpflichtig: "Sozialversicherungspflichtig",
+};
 
 export interface StatusMeta {
   label: string;
