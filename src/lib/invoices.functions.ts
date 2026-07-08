@@ -53,6 +53,13 @@ export const updateInvoice = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
+    // Load the previous state first so we can log a GoBD-oriented audit trail.
+    const { data: before } = await context.supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+
     const row = writeToInvoiceRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("invoices")
@@ -61,8 +68,118 @@ export const updateInvoice = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    // Record every changed scalar field as an audit entry.
+    if (before) {
+      const akteur =
+        (typeof context.claims?.email === "string" ? context.claims.email : "") ||
+        context.userId;
+      const changes = diffInvoiceFields(
+        before as Record<string, unknown>,
+        updated as Record<string, unknown>,
+        row,
+      );
+      const entries = changes.map((c) => ({
+        invoice_id: data.id,
+        invoice_nummer: (updated as { nummer?: string }).nummer ?? null,
+        akteur,
+        feld: c.feld,
+        alt_wert: c.alt,
+        neu_wert: c.neu,
+      }));
+      if (entries.length > 0) {
+        await context.supabase.from("invoice_changes").insert(entries as never);
+      }
+    }
+
     return rowToRechnung(updated as unknown as InvoiceRow);
   });
+
+/** Human-readable labels for audited invoice fields. */
+const FELD_LABEL: Record<string, string> = {
+  status: "Status",
+  betrag: "Betrag",
+  mwst_satz: "USt-Satz",
+  datum: "Rechnungsdatum",
+  faelligkeit: "Fälligkeit",
+  leistungsdatum: "Leistungsdatum",
+  bezahlt_am: "Bezahlt am",
+  bezahlter_betrag: "Bezahlter Betrag",
+  kunde: "Kunde",
+  abrechnungsart: "Abrechnungsart",
+  notiz: "Notiz",
+  mahnstufe: "Mahnstufe",
+  zahlungen: "Zahlungen",
+};
+
+function diffInvoiceFields(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+  writtenRow: Record<string, unknown>,
+): { feld: string; alt: string; neu: string }[] {
+  const out: { feld: string; alt: string; neu: string }[] = [];
+  for (const key of Object.keys(writtenRow)) {
+    if (!(key in FELD_LABEL)) continue;
+    const oldVal = before[key];
+    const newVal = after[key];
+    const oldStr = normaliseAuditValue(oldVal);
+    const newStr = normaliseAuditValue(newVal);
+    if (oldStr === newStr) continue;
+    out.push({ feld: FELD_LABEL[key], alt: oldStr, neu: newStr });
+  }
+  return out;
+}
+
+function normaliseAuditValue(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (Array.isArray(v)) return `${v.length} Einträge`;
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+export interface InvoiceChangeEntry {
+  id: string;
+  feld: string;
+  altWert: string | null;
+  neuWert: string | null;
+  akteur: string | null;
+  createdAt: string;
+}
+
+/** Audit trail for a single invoice (newest first). */
+export const listInvoiceChanges = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { invoiceId: string }) => {
+    if (!data?.invoiceId) throw new Error("invoiceId ist erforderlich");
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<InvoiceChangeEntry[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("invoice_changes")
+      .select("*")
+      .eq("invoice_id", data.invoiceId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => {
+      const row = r as {
+        id: string;
+        feld: string;
+        alt_wert: string | null;
+        neu_wert: string | null;
+        akteur: string | null;
+        created_at: string;
+      };
+      return {
+        id: row.id,
+        feld: row.feld,
+        altWert: row.alt_wert,
+        neuWert: row.neu_wert,
+        akteur: row.akteur,
+        createdAt: row.created_at,
+      };
+    });
+  });
+
 
 export const deleteInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
