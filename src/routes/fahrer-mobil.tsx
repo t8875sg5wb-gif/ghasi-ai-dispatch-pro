@@ -79,6 +79,67 @@ function FahrerMobilPage() {
 
   const offen = meineTouren.filter((o) => o.status !== "abgeschlossen").length;
 
+  // --- Opt-in real GPS sharing -----------------------------------------
+  const pushPosition = useServerFn(updateMyVehiclePosition);
+  const [teilen, setTeilen] = useState(false);
+  const [letzteMeldung, setLetzteMeldung] = useState<Date | null>(null);
+  const [gpsFehler, setGpsFehler] = useState<string | null>(null);
+  const watchId = useRef<number | null>(null);
+  const lastSent = useRef<number>(0);
+
+  useEffect(() => {
+    if (!teilen) {
+      if (watchId.current !== null && typeof navigator !== "undefined") {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGpsFehler("Standortdienst wird von diesem Gerät nicht unterstützt.");
+      setTeilen(false);
+      return;
+    }
+    setGpsFehler(null);
+    watchId.current = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const now = Date.now();
+        // Throttle server updates to at most once every 20 seconds.
+        if (now - lastSent.current < 20_000) return;
+        lastSent.current = now;
+        try {
+          const res = await pushPosition({
+            data: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          });
+          if (res.ok) {
+            setLetzteMeldung(new Date());
+            setGpsFehler(null);
+          } else {
+            setGpsFehler(res.fehler ?? "Position konnte nicht gesendet werden.");
+          }
+        } catch (e) {
+          setGpsFehler(String(e));
+        }
+      },
+      (err) => {
+        setGpsFehler(
+          err.code === err.PERMISSION_DENIED
+            ? "Standortfreigabe wurde abgelehnt."
+            : "Standort konnte nicht ermittelt werden.",
+        );
+        setTeilen(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+    );
+
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+    };
+  }, [teilen, pushPosition]);
+
   function setStatus(o: Auftrag, values: Parameters<typeof updateMut.mutate>[0]["values"], msg: string) {
     updateMut.mutate(
       { id: o.id, values },
