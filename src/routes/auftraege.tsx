@@ -106,13 +106,13 @@ function AuftraegePage() {
   const canManage = darfAuftragVerwalten(role);
   const canChangeStatus = darfAuftragStatusAendern(role);
 
-  const { nummer: deepNummer, id: deepId } = Route.useSearch();
+  const { nummer: deepNummer, id: deepId, q: deepQ } = Route.useSearch();
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } = useOrders();
   const createMut = useCreateOrder();
   const updateMut = useUpdateOrder();
   const seedMut = useSeedOrders();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(deepQ ?? "");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
   const [prioFilter, setPrioFilter] = useState<string>("alle");
 
