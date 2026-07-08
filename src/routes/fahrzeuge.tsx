@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -46,6 +46,10 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/fahrzeuge")({
+  validateSearch: (search: Record<string, unknown>): { kennzeichen?: string; id?: string } => ({
+    kennzeichen: typeof search.kennzeichen === "string" ? search.kennzeichen : undefined,
+    id: typeof search.id === "string" ? search.id : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Fahrzeuge – GHASI AI" },
@@ -62,6 +66,7 @@ export const Route = createFileRoute("/fahrzeuge")({
 type StatusFilter = FahrzeugStatus | "alle";
 
 function FahrzeugePage() {
+  const { kennzeichen: deepKennzeichen, id: deepId } = Route.useSearch();
   const { data: fahrzeuge = [] } = useVehicles();
   const createMut = useCreateVehicle();
   const updateMut = useUpdateVehicle();
@@ -74,6 +79,18 @@ function FahrzeugePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Fahrzeug | null>(null);
+
+  const [deepLinkDone, setDeepLinkDone] = useState(false);
+  useEffect(() => {
+    if (deepLinkDone || (!deepKennzeichen && !deepId) || fahrzeuge.length === 0) return;
+    const ziel = fahrzeuge.find((f) => f.id === deepId || f.kennzeichen === deepKennzeichen);
+    if (ziel) {
+      setDetailId(ziel.id);
+      setDetailOpen(true);
+      setDeepLinkDone(true);
+    }
+  }, [deepLinkDone, deepKennzeichen, deepId, fahrzeuge]);
+
 
   const empfehlungen = useMemo(() => empfehleFahrzeug(fahrzeuge, undefined, 3), [fahrzeuge]);
 

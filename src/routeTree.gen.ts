@@ -18,6 +18,7 @@ import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
 import { Route as StandorteRouteImport } from './routes/standorte'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SchichtplanRouteImport } from './routes/schichtplan'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
@@ -28,8 +29,10 @@ import { Route as LeasingRouteImport } from './routes/leasing'
 import { Route as KundenRouteImport } from './routes/kunden'
 import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
+import { Route as KassenvertraegeRouteImport } from './routes/kassenvertraege'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
+import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
 import { Route as FahrerRouteImport } from './routes/fahrer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
@@ -95,6 +98,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SchichtplanRoute = SchichtplanRouteImport.update({
+  id: '/schichtplan',
+  path: '/schichtplan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RechnungenRoute = RechnungenRouteImport.update({
   id: '/rechnungen',
   path: '/rechnungen',
@@ -145,6 +153,11 @@ const KiAssistentRoute = KiAssistentRouteImport.update({
   path: '/ki-assistent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KassenvertraegeRoute = KassenvertraegeRouteImport.update({
+  id: '/kassenvertraege',
+  path: '/kassenvertraege',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -153,6 +166,11 @@ const InsightsRoute = InsightsRouteImport.update({
 const FahrzeugeRoute = FahrzeugeRouteImport.update({
   id: '/fahrzeuge',
   path: '/fahrzeuge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FahrtenbuchRoute = FahrtenbuchRouteImport.update({
+  id: '/fahrtenbuch',
+  path: '/fahrtenbuch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FahrerRoute = FahrerRouteImport.update({
@@ -268,8 +286,10 @@ export interface FileRoutesByFullPath {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -280,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -310,8 +331,10 @@ export interface FileRoutesByTo {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
@@ -321,6 +344,7 @@ export interface FileRoutesByTo {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -352,8 +376,10 @@ export interface FileRoutesById {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
@@ -364,6 +390,7 @@ export interface FileRoutesById {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -396,8 +423,10 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -408,6 +437,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -438,8 +468,10 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
@@ -449,6 +481,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -479,8 +512,10 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
@@ -491,6 +526,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -522,8 +558,10 @@ export interface RootRouteChildren {
   EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
+  FahrtenbuchRoute: typeof FahrtenbuchRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
   InsightsRoute: typeof InsightsRoute
+  KassenvertraegeRoute: typeof KassenvertraegeRoute
   KiAssistentRoute: typeof KiAssistentRouteWithChildren
   KrankenhaeuserRoute: typeof KrankenhaeuserRoute
   KundenRoute: typeof KundenRoute
@@ -534,6 +572,7 @@ export interface RootRouteChildren {
   PosteingangRoute: typeof PosteingangRoute
   PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
+  SchichtplanRoute: typeof SchichtplanRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StandorteRoute: typeof StandorteRoute
   StatistikenRoute: typeof StatistikenRoute
@@ -611,6 +650,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schichtplan': {
+      id: '/schichtplan'
+      path: '/schichtplan'
+      fullPath: '/schichtplan'
+      preLoaderRoute: typeof SchichtplanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rechnungen': {
       id: '/rechnungen'
       path: '/rechnungen'
@@ -681,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KiAssistentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kassenvertraege': {
+      id: '/kassenvertraege'
+      path: '/kassenvertraege'
+      fullPath: '/kassenvertraege'
+      preLoaderRoute: typeof KassenvertraegeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
@@ -693,6 +746,13 @@ declare module '@tanstack/react-router' {
       path: '/fahrzeuge'
       fullPath: '/fahrzeuge'
       preLoaderRoute: typeof FahrzeugeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fahrtenbuch': {
+      id: '/fahrtenbuch'
+      path: '/fahrtenbuch'
+      fullPath: '/fahrtenbuch'
+      preLoaderRoute: typeof FahrtenbuchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fahrer': {
@@ -862,8 +922,10 @@ const rootRouteChildren: RootRouteChildren = {
   EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
+  FahrtenbuchRoute: FahrtenbuchRoute,
   FahrzeugeRoute: FahrzeugeRoute,
   InsightsRoute: InsightsRoute,
+  KassenvertraegeRoute: KassenvertraegeRoute,
   KiAssistentRoute: KiAssistentRouteWithChildren,
   KrankenhaeuserRoute: KrankenhaeuserRoute,
   KundenRoute: KundenRoute,
@@ -874,6 +936,7 @@ const rootRouteChildren: RootRouteChildren = {
   PosteingangRoute: PosteingangRoute,
   PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
+  SchichtplanRoute: SchichtplanRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StandorteRoute: StandorteRoute,
   StatistikenRoute: StatistikenRoute,

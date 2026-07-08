@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus } from "lucide-react";
@@ -48,6 +48,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/patienten")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => ({
+    id: typeof search.id === "string" ? search.id : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Patienten – GHASI AI" },
@@ -73,12 +76,13 @@ function mobilitaetTyp(p: Patient): Mobilitaet {
 
 function PatientenSeite() {
   const { name: akteur } = useAuth();
+  const { id: initialId } = Route.useSearch();
   const { data: patienten = [] } = usePatients();
   const seedMut = useSeedPatients();
   const createMut = useCreatePatient();
   const updateMut = useUpdatePatient();
   const [suche, setSuche] = useState("");
-  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Patient | null>(null);
 
@@ -284,11 +288,18 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4" />
             Transporte & Verordnungen
           </CardTitle>
+          {transporte.length > 0 && (
+            <Button asChild variant="ghost" size="sm" className="rounded-full text-primary">
+              <Link to="/auftraege" search={{ q: patient.name }}>
+                Alle Aufträge
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-2">
           {transporte.length === 0 && (
@@ -298,7 +309,12 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
             const ver = VERORDNUNG_META[effektiveVerordnung(a)];
             const mismatch = fahrzeugMismatch(a);
             return (
-              <div key={a.id} className="rounded-xl border border-border/70 p-3">
+              <Link
+                key={a.id}
+                to="/auftraege"
+                search={{ nummer: a.nummer }}
+                className="block rounded-xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{a.nummer}</span>
                   <Badge variant="outline" className={cn("gap-1", STATUS_META[a.status].badge)}>
@@ -315,7 +331,7 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
                   <span className="font-medium">{ver.label}</span>
                 </div>
                 {mismatch && <p className="mt-1 text-xs font-medium text-warning">{mismatch}</p>}
-              </div>
+              </Link>
             );
           })}
         </CardContent>

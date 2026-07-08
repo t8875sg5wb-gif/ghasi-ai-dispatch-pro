@@ -29,6 +29,9 @@ import {
   Workflow,
   Repeat,
   Compass,
+  CalendarDays,
+  BookText,
+  Handshake,
   type LucideIcon,
 } from "lucide-react";
 
@@ -136,6 +139,12 @@ export const navGroups: NavGroup[] = [
           "Kliniken, Ärzte, Apotheken, Tank- & Ladesäulen finden – powered by Google Maps.",
       },
       {
+        label: "Schichtplan",
+        to: "/schichtplan",
+        icon: CalendarDays,
+        description: "Kalender für Fahrerdienste, Urlaub & Krankheit inkl. Doppelbelegungs-Prüfung.",
+      },
+      {
         label: "Telefon",
         to: "/telefon",
         icon: Phone,
@@ -194,6 +203,12 @@ export const navGroups: NavGroup[] = [
         description: "Abrechnung, Mahnwesen und offene Posten.",
       },
       {
+        label: "Kassenverträge",
+        to: "/kassenvertraege",
+        icon: Handshake,
+        description: "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung §4 Nr.17b.",
+      },
+      {
         label: "Versicherungen",
         to: "/versicherungen",
         icon: ShieldCheck,
@@ -215,6 +230,12 @@ export const navGroups: NavGroup[] = [
         to: "/wartung",
         icon: Wrench,
         description: "Inspektionen, TÜV, Reparaturen und Servicehistorie.",
+      },
+      {
+        label: "Fahrtenbuch",
+        to: "/fahrtenbuch",
+        icon: BookText,
+        description: "Kilometernachweis je Fahrzeug für Steuer & Prüfung.",
       },
       {
         label: "Dokumente",

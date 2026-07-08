@@ -2,6 +2,7 @@
 // Bietet Liste, Suche, Filter, Detailansicht, Anlegen/Bearbeiten und
 // verknüpfte Transporte – genutzt von Krankenhäusern, Dialysezentren und Pflegeheimen.
 import { useMemo, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Plus,
@@ -331,17 +332,29 @@ function EinrichtungDetail({
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4" /> Verknüpfte Transporte ({transporte.length})
           </CardTitle>
+          {transporte.length > 0 && (
+            <Button asChild variant="ghost" size="sm" className="rounded-full text-primary">
+              <Link to="/auftraege" search={{ q: einrichtung.name }}>
+                Alle
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-2">
           {transporte.length === 0 && (
             <p className="text-sm text-muted-foreground">Keine Transporte zu dieser Einrichtung.</p>
           )}
           {transporte.map((a) => (
-            <div key={a.id} className="rounded-xl border border-border/70 p-3">
+            <Link
+              key={a.id}
+              to="/auftraege"
+              search={{ nummer: a.nummer }}
+              className="block rounded-xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-semibold">
                   {a.nummer} · {a.patient}
@@ -353,7 +366,7 @@ function EinrichtungDetail({
               <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 {a.abholort} → {a.zielort} · {formatTermin(a.termin)}
               </p>
-            </div>
+            </Link>
           ))}
         </CardContent>
       </Card>

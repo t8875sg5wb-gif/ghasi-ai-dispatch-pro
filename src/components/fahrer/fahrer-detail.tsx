@@ -22,6 +22,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { Link } from "@tanstack/react-router";
+
 import {
   type Fahrer,
   type FahrerStatus,
@@ -327,7 +329,25 @@ export function FahrerDetail({
             <InfoRow icon={Phone} label="Telefon" value={fahrer.telefon || "—"} />
             <InfoRow icon={Mail} label="E-Mail" value={fahrer.email || "—"} />
             <InfoRow icon={MapPin} label="Adresse" value={fahrer.adresse || "—"} />
-            <InfoRow icon={Truck} label="Verfügbares Fahrzeug" value={fahrer.fahrzeug ?? "Keins"} />
+            {fahrer.fahrzeug ? (
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <Truck className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Verfügbares Fahrzeug</p>
+                  <Link
+                    to="/fahrzeuge"
+                    search={{ kennzeichen: fahrer.fahrzeug }}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    {fahrer.fahrzeug}
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <InfoRow icon={Truck} label="Verfügbares Fahrzeug" value="Keins" />
+            )}
             <InfoRow icon={Clock} label="Arbeitszeiten" value={fahrer.arbeitszeiten} />
             <InfoRow icon={CalendarDays} label="Schichtplan heute" value={fahrer.schicht} />
             <InfoRow icon={CreditCard} label="Arbeitsvertrag" value={fahrer.vertragsart} />

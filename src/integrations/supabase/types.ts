@@ -83,6 +83,27 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_states: {
+        Row: {
+          automation_id: string
+          created_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          automation_id: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          automation_id?: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           auftrag_erstellt: boolean
@@ -403,6 +424,101 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          bezug: Json | null
+          created_at: string
+          format: string
+          groesse_kb: number
+          hochgeladen_von: string
+          id: string
+          kategorie: string
+          name: string
+          ocr_text: string | null
+          ordner: string
+          storage_path: string
+          tags: Json
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          bezug?: Json | null
+          created_at?: string
+          format?: string
+          groesse_kb?: number
+          hochgeladen_von?: string
+          id?: string
+          kategorie?: string
+          name?: string
+          ocr_text?: string | null
+          ordner?: string
+          storage_path: string
+          tags?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          bezug?: Json | null
+          created_at?: string
+          format?: string
+          groesse_kb?: number
+          hochgeladen_von?: string
+          id?: string
+          kategorie?: string
+          name?: string
+          ocr_text?: string | null
+          ordner?: string
+          storage_path?: string
+          tags?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      driver_shifts: {
+        Row: {
+          bis: string
+          created_at: string
+          datum: string
+          driver_id: string
+          id: string
+          notiz: string
+          typ: string
+          updated_at: string
+          von: string
+        }
+        Insert: {
+          bis?: string
+          created_at?: string
+          datum: string
+          driver_id: string
+          id?: string
+          notiz?: string
+          typ?: string
+          updated_at?: string
+          von?: string
+        }
+        Update: {
+          bis?: string
+          created_at?: string
+          datum?: string
+          driver_id?: string
+          id?: string
+          notiz?: string
+          typ?: string
+          updated_at?: string
+          von?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           adresse: string
@@ -636,6 +752,59 @@ export type Database = {
           versicherer?: string
         }
         Relationships: []
+      }
+      insurer_contracts: {
+        Row: {
+          aktenzeichen: string
+          created_at: string
+          einheit: string
+          genehmigt: boolean
+          gueltig_ab: string | null
+          gueltig_bis: string | null
+          id: string
+          insurer_id: string
+          leistung: string
+          notiz: string
+          preis: number
+          updated_at: string
+        }
+        Insert: {
+          aktenzeichen?: string
+          created_at?: string
+          einheit?: string
+          genehmigt?: boolean
+          gueltig_ab?: string | null
+          gueltig_bis?: string | null
+          id?: string
+          insurer_id: string
+          leistung?: string
+          notiz?: string
+          preis?: number
+          updated_at?: string
+        }
+        Update: {
+          aktenzeichen?: string
+          created_at?: string
+          einheit?: string
+          genehmigt?: boolean
+          gueltig_ab?: string | null
+          gueltig_bis?: string | null
+          id?: string
+          insurer_id?: string
+          leistung?: string
+          notiz?: string
+          preis?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurer_contracts_insurer_id_fkey"
+            columns: ["insurer_id"]
+            isOneToOne: false
+            referencedRelation: "insurers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       insurers: {
         Row: {
@@ -1137,6 +1306,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vehicle_trips: {
+        Row: {
+          created_at: string
+          datum: string
+          fahrer: string
+          id: string
+          km_ende: number
+          km_start: number
+          notiz: string
+          updated_at: string
+          vehicle_id: string
+          zweck: string
+        }
+        Insert: {
+          created_at?: string
+          datum: string
+          fahrer?: string
+          id?: string
+          km_ende?: number
+          km_start?: number
+          notiz?: string
+          updated_at?: string
+          vehicle_id: string
+          zweck?: string
+        }
+        Update: {
+          created_at?: string
+          datum?: string
+          fahrer?: string
+          id?: string
+          km_ende?: number
+          km_start?: number
+          notiz?: string
+          updated_at?: string
+          vehicle_id?: string
+          zweck?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_trips_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {

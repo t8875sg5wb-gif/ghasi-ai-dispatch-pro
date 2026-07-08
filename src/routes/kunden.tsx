@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AddressFields } from "@/components/forms/address-fields";
@@ -54,6 +54,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/kunden")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => {
+    return { id: typeof search.id === "string" ? search.id : undefined };
+  },
   head: () => ({
     meta: [
       { title: "Kunden – GHASI AI" },
@@ -70,13 +73,14 @@ type TypFilter = Kunde["typ"] | "alle";
 
 function KundenSeite() {
   const { name: akteur } = useAuth();
+  const { id: initialId } = Route.useSearch();
   const { data: kunden = [] } = useCustomers();
   const createMut = useCreateCustomer();
   const updateMut = useUpdateCustomer();
   const seedMut = useSeedCustomers();
   const [suche, setSuche] = useState("");
   const [typFilter, setTypFilter] = useState<TypFilter>("alle");
-  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Kunde | null>(null);
 
@@ -377,7 +381,11 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
             {rechnungen.map((r) => {
               const meta = RECHNUNG_STATUS_META[r.status];
               return (
-                <div key={r.id} className="rounded-xl border border-border/70 p-3">
+                <Link
+                  key={r.id}
+                  to="/rechnungen"
+                  className="block rounded-xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold">{r.nummer}</span>
                     <Badge variant="outline" className={cn("text-[10px]", meta.badge)}>
@@ -385,24 +393,36 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
                     </Badge>
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{EUR(r.betrag)}</p>
-                </div>
+                </Link>
               );
             })}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4" /> Transporte ({transporte.length})
             </CardTitle>
+            {transporte.length > 0 && (
+              <Button asChild variant="ghost" size="sm" className="rounded-full text-primary">
+                <Link to="/auftraege" search={{ q: kunde.name }}>
+                  Alle
+                </Link>
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-2">
             {transporte.length === 0 && (
               <p className="text-sm text-muted-foreground">Keine Transporte.</p>
             )}
             {transporte.map((a) => (
-              <div key={a.id} className="rounded-xl border border-border/70 p-3">
+              <Link
+                key={a.id}
+                to="/auftraege"
+                search={{ nummer: a.nummer }}
+                className="block rounded-xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{a.nummer}</span>
                   <Badge
@@ -415,7 +435,7 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {a.patient} · {formatTermin(a.termin)}
                 </p>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>
