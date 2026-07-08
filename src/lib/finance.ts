@@ -398,6 +398,50 @@ export function brutto(r: Rechnung): number {
 }
 
 /* ------------------------------------------------------------------ *
+ * Payments / reconciliation (Priority 6)
+ * ------------------------------------------------------------------ */
+
+/** Sum of all recorded payments on an invoice. */
+export function summeZahlungen(r: Rechnung): number {
+  const list = r.zahlungen ?? [];
+  if (list.length > 0) return round(list.reduce((s, z) => s + z.betrag, 0), 2);
+  // fallback to the legacy single-payment fields
+  if (typeof r.bezahlterBetrag === "number") return round(r.bezahlterBetrag, 2);
+  return 0;
+}
+
+/** Remaining open amount (gross − payments). */
+export function offenerBetrag(r: Rechnung): number {
+  return round(brutto(r) - summeZahlungen(r), 2);
+}
+
+/** Date of the most recent payment, or the legacy bezahltAm, or null. */
+export function letzteZahlungDatum(r: Rechnung): string | null {
+  const list = r.zahlungen ?? [];
+  if (list.length > 0) {
+    return list.map((z) => z.datum).sort().at(-1) ?? null;
+  }
+  return r.bezahltAm ?? null;
+}
+
+/**
+ * Derives the effective payment status from recorded payments.
+ * "bezahlt" once payments ≥ gross; "teilbezahlt" for a partial amount;
+ * otherwise keeps offen/ueberfaellig (with live overdue check).
+ */
+export function abgeleiteterStatus(r: Rechnung): RechnungStatus {
+  if (r.status === "storniert" || r.status === "entwurf") return r.status;
+  const gezahlt = summeZahlungen(r);
+  const soll = brutto(r);
+  const eps = 0.01;
+  if (soll >= 0 ? gezahlt >= soll - eps : gezahlt <= soll + eps) return "bezahlt";
+  if (Math.abs(gezahlt) > eps) return "teilbezahlt";
+  return istUeberfaellig(r) ? "ueberfaellig" : "offen";
+}
+
+
+
+/* ------------------------------------------------------------------ *
  * Cost breakdown (derived from the live fleet & driver data)
  * ------------------------------------------------------------------ */
 
