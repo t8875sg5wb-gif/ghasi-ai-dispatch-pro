@@ -108,6 +108,9 @@ function RechnungenPage() {
   const updateMut = useUpdateInvoice();
   const { data: company } = useCompanySettings();
 
+  // Detail-/Zahlungsdialog
+  const [detailTarget, setDetailTarget] = useState<Rechnung | null>(null);
+
   // Mahnwesen-Dialog
   const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
   const [mahnText, setMahnText] = useState("");
