@@ -69,6 +69,7 @@ export function RechnungDetailDialog({ rechnung, onClose }: Props) {
       toast.error("Bitte einen gültigen Betrag eingeben");
       return;
     }
+    if (!rechnung) return;
     const next = [...zahlungen, { datum, betrag: wert, notiz: notiz || undefined }];
     try {
       await speichereZahlungen(next);
