@@ -200,6 +200,8 @@ export interface FleetVehicle {
   fahrerObj: Fahrer | null;
   standort: string;
   gps: LatLng;
+  /** true = echte, frische GPS-Position (Fahrer teilt Standort), false = simuliert */
+  istLive: boolean;
   tankstand: number;
   reichweite: number;
   /** km/h, 0 wenn steht/offline */
