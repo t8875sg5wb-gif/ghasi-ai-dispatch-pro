@@ -182,6 +182,11 @@ function RechnungenPage() {
         description="Abrechnung für Krankenkassen, Patienten und Kunden – inklusive KI-Rechnungsprüfung. GHASI AI versendet niemals automatisch."
         icon={FileText}
         badge="Finanzen"
+        right={
+          <Button className="rounded-full" variant="secondary" onClick={() => setBankOpen(true)}>
+            <Banknote className="h-4 w-4" /> Kontoauszug importieren
+          </Button>
+        }
       />
 
       {isError && (
