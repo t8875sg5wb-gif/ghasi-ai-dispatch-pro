@@ -122,7 +122,14 @@ function AuftraegePage() {
   const canManage = darfAuftragVerwalten(role);
   const canChangeStatus = darfAuftragStatusAendern(role);
 
-  const { nummer: deepNummer, id: deepId, q: deepQ } = Route.useSearch();
+  const {
+    nummer: deepNummer,
+    id: deepId,
+    q: deepQ,
+    neuPatient,
+    neuMobilitaet,
+    neuTransportart,
+  } = Route.useSearch();
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } = useOrders();
   const createMut = useCreateOrder();
   const updateMut = useUpdateOrder();
