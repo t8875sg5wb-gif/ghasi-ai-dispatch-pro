@@ -24,6 +24,7 @@ import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
+import { Route as LohnRouteImport } from './routes/lohn'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
 import { Route as LeasingRouteImport } from './routes/leasing'
 import { Route as KundenRouteImport } from './routes/kunden'
@@ -130,6 +131,11 @@ const PflegeheimeRoute = PflegeheimeRouteImport.update({
 const PatientenRoute = PatientenRouteImport.update({
   id: '/patienten',
   path: '/patienten',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LohnRoute = LohnRouteImport.update({
+  id: '/lohn',
+  path: '/lohn',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveGpsRoute = LiveGpsRouteImport.update({
@@ -323,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -569,6 +580,7 @@ export interface FileRouteTypes {
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   KundenRoute: typeof KundenRoute
   LeasingRoute: typeof LeasingRoute
   LiveGpsRoute: typeof LiveGpsRoute
+  LohnRoute: typeof LohnRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
   PosteingangRoute: typeof PosteingangRoute
@@ -742,6 +755,13 @@ declare module '@tanstack/react-router' {
       path: '/patienten'
       fullPath: '/patienten'
       preLoaderRoute: typeof PatientenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lohn': {
+      id: '/lohn'
+      path: '/lohn'
+      fullPath: '/lohn'
+      preLoaderRoute: typeof LohnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/live-gps': {
@@ -1015,6 +1035,7 @@ const rootRouteChildren: RootRouteChildren = {
   KundenRoute: KundenRoute,
   LeasingRoute: LeasingRoute,
   LiveGpsRoute: LiveGpsRoute,
+  LohnRoute: LohnRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
   PosteingangRoute: PosteingangRoute,
