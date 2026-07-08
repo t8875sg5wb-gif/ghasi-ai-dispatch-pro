@@ -538,6 +538,7 @@ export type Database = {
         Row: {
           adresse: string
           arbeitszeiten: string
+          beschaeftigungsart: string
           beschwerden: number
           bewertung: number
           created_at: string
@@ -553,6 +554,7 @@ export type Database = {
           km_heute: number
           krankheitstage: number
           lob: number
+          monatsbrutto: number
           name: string
           nummer: string
           p_schein: Json
@@ -574,6 +576,7 @@ export type Database = {
         Insert: {
           adresse?: string
           arbeitszeiten?: string
+          beschaeftigungsart?: string
           beschwerden?: number
           bewertung?: number
           created_at?: string
@@ -589,6 +592,7 @@ export type Database = {
           km_heute?: number
           krankheitstage?: number
           lob?: number
+          monatsbrutto?: number
           name?: string
           nummer: string
           p_schein?: Json
@@ -610,6 +614,7 @@ export type Database = {
         Update: {
           adresse?: string
           arbeitszeiten?: string
+          beschaeftigungsart?: string
           beschwerden?: number
           bewertung?: number
           created_at?: string
@@ -625,6 +630,7 @@ export type Database = {
           km_heute?: number
           krankheitstage?: number
           lob?: number
+          monatsbrutto?: number
           name?: string
           nummer?: string
           p_schein?: Json
@@ -992,6 +998,7 @@ export type Database = {
           status: string
           typ: string
           updated_at: string
+          zahlungen: Json
         }
         Insert: {
           abrechnungsart?: string
@@ -1016,6 +1023,7 @@ export type Database = {
           status?: string
           typ?: string
           updated_at?: string
+          zahlungen?: Json
         }
         Update: {
           abrechnungsart?: string
@@ -1040,6 +1048,7 @@ export type Database = {
           status?: string
           typ?: string
           updated_at?: string
+          zahlungen?: Json
         }
         Relationships: []
       }

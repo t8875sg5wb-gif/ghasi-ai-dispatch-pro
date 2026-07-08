@@ -70,6 +70,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildMahnText, naechsteMahnstufe, mahnStufeLabel } from "@/lib/dunning";
 import { rechnungToWrite } from "@/lib/invoices-shared";
 import { downloadText } from "@/lib/export-utils";
+import { RechnungDetailDialog } from "@/components/rechnungen/rechnung-detail-dialog";
 import { logActivity } from "@/lib/protokoll";
 import type { Rechnung, MahnEintrag } from "@/lib/finance";
 
@@ -107,6 +108,9 @@ function RechnungenPage() {
   const draftsMut = useGenerateBillingDrafts();
   const updateMut = useUpdateInvoice();
   const { data: company } = useCompanySettings();
+
+  // Detail-/Zahlungsdialog
+  const [detailTarget, setDetailTarget] = useState<Rechnung | null>(null);
 
   // Mahnwesen-Dialog
   const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
@@ -409,6 +413,14 @@ function RechnungenPage() {
                             size="sm"
                             variant="outline"
                             className="h-7 rounded-full text-xs"
+                            onClick={() => setDetailTarget(r)}
+                          >
+                            Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-full text-xs"
                             onClick={() => {
                               if (!company) {
                                 toast.error("Firmendaten werden geladen …");
@@ -476,6 +488,15 @@ function RechnungenPage() {
           </div>
         </CardContent>
       </Card>
+
+      <RechnungDetailDialog
+        rechnung={
+          detailTarget ? (alleRechnungen.find((r) => r.id === detailTarget.id) ?? detailTarget) : null
+        }
+        onClose={() => setDetailTarget(null)}
+      />
+
+
 
       {/* Mahnwesen-Dialog */}
       <Dialog open={!!mahnTarget} onOpenChange={(o) => !o && setMahnTarget(null)}>

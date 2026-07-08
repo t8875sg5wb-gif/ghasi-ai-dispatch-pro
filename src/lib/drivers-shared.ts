@@ -1,7 +1,13 @@
 // Client-safe mapping between the persisted `drivers` table (snake_case) and the
 // in-app `Fahrer` domain type (camelCase). No server-only imports here so this
 // module can be used from both server functions and the browser store.
-import type { Fahrer, FahrerStatus, Nachweis, Vertragsart } from "@/lib/fahrer";
+import type {
+  Fahrer,
+  FahrerStatus,
+  Nachweis,
+  Vertragsart,
+  Beschaeftigungsart,
+} from "@/lib/fahrer";
 
 /** Shape the client sends when creating/updating a driver. */
 export interface DriverWrite {
@@ -35,6 +41,8 @@ export interface DriverWrite {
   fuehrungszeugnisDatum?: string | null;
   svAusweisVorhanden?: boolean;
   steuerId?: string;
+  beschaeftigungsart?: Beschaeftigungsart;
+  monatsbrutto?: number;
 }
 
 /** Minimal structural type of a row coming back from the `drivers` table. */
@@ -70,6 +78,8 @@ export interface DriverRow {
   fuehrungszeugnis_datum: string | null;
   sv_ausweis_vorhanden: boolean | null;
   steuer_id: string | null;
+  beschaeftigungsart: string | null;
+  monatsbrutto: number | string | null;
 }
 
 function asNachweis(value: unknown): Nachweis {
@@ -115,6 +125,8 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     fuehrungszeugnisDatum: r.fuehrungszeugnis_datum ?? null,
     svAusweisVorhanden: Boolean(r.sv_ausweis_vorhanden),
     steuerId: r.steuer_id ?? undefined,
+    beschaeftigungsart: (r.beschaeftigungsart as Beschaeftigungsart) ?? "minijob",
+    monatsbrutto: Number(r.monatsbrutto ?? 0),
   };
 }
 
@@ -154,5 +166,7 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("fuehrungszeugnis_datum", w.fuehrungszeugnisDatum ?? null);
   set("sv_ausweis_vorhanden", w.svAusweisVorhanden);
   set("steuer_id", w.steuerId ?? null);
+  set("beschaeftigungsart", w.beschaeftigungsart);
+  set("monatsbrutto", w.monatsbrutto);
   return row;
 }

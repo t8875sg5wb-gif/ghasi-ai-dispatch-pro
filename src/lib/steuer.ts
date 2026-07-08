@@ -107,3 +107,47 @@ export function computeGewerbesteuer(gewinnJahr: number, hebesatzProzent: number
 export function computeGewinnNachSteuern(gewinnJahr: number, hebesatzProzent: number): number {
   return Math.round(gewinnJahr - computeGewerbesteuer(gewinnJahr, hebesatzProzent));
 }
+
+/* ------------------------------------------------------------------ *
+ * Einkommensteuer (Schätzung, Grundtarif)
+ * ------------------------------------------------------------------ */
+
+/** Grundfreibetrag 2026 (geplant, Schätzung). */
+export const EST_GRUNDFREIBETRAG_2026 = 12_348;
+
+/**
+ * Schätzt die Einkommensteuer (Grundtarif) nach dem progressiven Tarif
+ * (Formel angelehnt an den Einkommensteuertarif, mit Grundfreibetrag 2026).
+ * Nur eine grobe Orientierung — ersetzt keine steuerliche Beratung.
+ */
+export function computeEinkommensteuer(
+  zvE: number,
+  grundfreibetrag: number = EST_GRUNDFREIBETRAG_2026,
+): number {
+  const x = Math.max(0, Math.floor(zvE));
+  if (x <= grundfreibetrag) return 0;
+  // Tarifzonen (Konstanten angelehnt an den Tarif 2025).
+  const z2Start = 17_443;
+  const z3Start = 68_480;
+  const z4Start = 277_825;
+  let est: number;
+  if (x <= z2Start) {
+    const y = (x - grundfreibetrag) / 10_000;
+    est = (932.3 * y + 1_400) * y;
+  } else if (x <= z3Start) {
+    const zz = (x - z2Start) / 10_000;
+    est = (176.64 * zz + 2_397) * zz + 1_015.13;
+  } else if (x <= z4Start) {
+    est = 0.42 * x - 10_911.92;
+  } else {
+    est = 0.45 * x - 19_246.67;
+  }
+  return Math.max(0, Math.round(est));
+}
+
+/** Grober Solidaritätszuschlag (5,5 % auf ESt, Freigrenze berücksichtigt näherungsweise). */
+export function computeSoli(einkommensteuer: number): number {
+  // Freigrenze 2026 ca. 19.950 € ESt (Einzelveranlagung); darunter 0.
+  if (einkommensteuer <= 19_950) return 0;
+  return Math.round(einkommensteuer * 0.055);
+}

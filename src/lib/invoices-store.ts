@@ -5,6 +5,7 @@
 // persisted state.
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { listInvoiceChanges } from "@/lib/invoices.functions";
 
 import { INITIAL_RECHNUNGEN, type Rechnung } from "@/lib/finance";
 import {
@@ -80,5 +81,15 @@ export function useGenerateBillingDrafts() {
   return useMutation({
     mutationFn: () => fn(),
     onSuccess: () => qc.invalidateQueries({ queryKey: INVOICES_QUERY_KEY }),
+  });
+}
+
+export function useInvoiceChanges(invoiceId: string | null) {
+  const fn = useServerFn(listInvoiceChanges);
+  return useQuery({
+    queryKey: ["invoice-changes", invoiceId],
+    queryFn: () => fn({ data: { invoiceId: invoiceId as string } }),
+    enabled: !!invoiceId,
+    staleTime: 10_000,
   });
 }
