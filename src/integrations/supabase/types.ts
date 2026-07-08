@@ -732,6 +732,59 @@ export type Database = {
         }
         Relationships: []
       }
+      insurer_contracts: {
+        Row: {
+          aktenzeichen: string
+          created_at: string
+          einheit: string
+          genehmigt: boolean
+          gueltig_ab: string | null
+          gueltig_bis: string | null
+          id: string
+          insurer_id: string
+          leistung: string
+          notiz: string
+          preis: number
+          updated_at: string
+        }
+        Insert: {
+          aktenzeichen?: string
+          created_at?: string
+          einheit?: string
+          genehmigt?: boolean
+          gueltig_ab?: string | null
+          gueltig_bis?: string | null
+          id?: string
+          insurer_id: string
+          leistung?: string
+          notiz?: string
+          preis?: number
+          updated_at?: string
+        }
+        Update: {
+          aktenzeichen?: string
+          created_at?: string
+          einheit?: string
+          genehmigt?: boolean
+          gueltig_ab?: string | null
+          gueltig_bis?: string | null
+          id?: string
+          insurer_id?: string
+          leistung?: string
+          notiz?: string
+          preis?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurer_contracts_insurer_id_fkey"
+            columns: ["insurer_id"]
+            isOneToOne: false
+            referencedRelation: "insurers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurers: {
         Row: {
           created_at: string
