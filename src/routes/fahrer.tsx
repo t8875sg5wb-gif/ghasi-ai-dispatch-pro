@@ -77,26 +77,6 @@ function FahrerPage() {
     if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
   }, [dbFahrer]);
 
-  // Simulated realtime: drivers "unterwegs" accumulate km / revenue locally.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFahrer((prev) =>
-        prev.map((f) => {
-          if (f.status !== "unterwegs") return f;
-          const km = Math.round(Math.random() * 3);
-          const umsatz = km * 4;
-          return {
-            ...f,
-            kmHeute: f.kmHeute + km,
-            umsatzHeute: f.umsatzHeute + umsatz,
-            gewinnHeute: f.gewinnHeute + Math.round(umsatz * 0.4),
-          };
-        }),
-      );
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
 
   const stats = useMemo(() => {
