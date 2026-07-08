@@ -5,6 +5,7 @@
 // persisted state.
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { listInvoiceChanges } from "@/lib/invoices.functions";
 
 import { INITIAL_RECHNUNGEN, type Rechnung } from "@/lib/finance";
 import {
