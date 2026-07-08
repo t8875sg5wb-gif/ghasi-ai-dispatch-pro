@@ -35,6 +35,7 @@ import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
 import { Route as FahrerMobilRouteImport } from './routes/fahrer-mobil'
 import { Route as FahrerRouteImport } from './routes/fahrer'
+import { Route as EuerRouteImport } from './routes/euer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
@@ -186,6 +187,11 @@ const FahrerRoute = FahrerRouteImport.update({
   path: '/fahrer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EuerRoute = EuerRouteImport.update({
+  id: '/euer',
+  path: '/euer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EinstellungenRoute = EinstellungenRouteImport.update({
   id: '/einstellungen',
   path: '/einstellungen',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
@@ -546,6 +557,7 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
@@ -595,6 +607,7 @@ export interface RootRouteChildren {
   DokumenteRoute: typeof DokumenteRoute
   EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
+  EuerRoute: typeof EuerRoute
   FahrerRoute: typeof FahrerRoute
   FahrerMobilRoute: typeof FahrerMobilRoute
   FahrtenbuchRoute: typeof FahrtenbuchRoute
@@ -808,6 +821,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FahrerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/euer': {
+      id: '/euer'
+      path: '/euer'
+      fullPath: '/euer'
+      preLoaderRoute: typeof EuerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/einstellungen': {
       id: '/einstellungen'
       path: '/einstellungen'
@@ -983,6 +1003,7 @@ const rootRouteChildren: RootRouteChildren = {
   DokumenteRoute: DokumenteRoute,
   EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
+  EuerRoute: EuerRoute,
   FahrerRoute: FahrerRoute,
   FahrerMobilRoute: FahrerMobilRoute,
   FahrtenbuchRoute: FahrtenbuchRoute,
