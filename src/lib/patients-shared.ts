@@ -14,6 +14,13 @@ export interface PatientRow {
   begleitperson: boolean;
   medizinische_notiz: string | null;
   patientennotiz: string | null;
+  kostentraeger_id: string | null;
+  versichertennummer: string | null;
+  zuzahlungsbefreit: boolean | null;
+  zuzahlungsbefreit_bis: string | null;
+  verordnung_vorhanden: boolean | null;
+  verordnung_dokument_id: string | null;
+  genehmigung_bis: string | null;
 }
 
 export function rowToPatient(r: PatientRow): Patient {
@@ -27,6 +34,13 @@ export function rowToPatient(r: PatientRow): Patient {
     begleitperson: Boolean(r.begleitperson),
     medizinischeNotiz: r.medizinische_notiz ?? undefined,
     patientennotiz: r.patientennotiz ?? undefined,
+    kostentraegerId: r.kostentraeger_id ?? null,
+    versichertennummer: r.versichertennummer ?? undefined,
+    zuzahlungsbefreit: Boolean(r.zuzahlungsbefreit),
+    zuzahlungsbefreitBis: r.zuzahlungsbefreit_bis ?? null,
+    verordnungVorhanden: Boolean(r.verordnung_vorhanden),
+    verordnungDokumentId: r.verordnung_dokument_id ?? null,
+    genehmigungBis: r.genehmigung_bis ?? null,
   };
 }
 
@@ -43,5 +57,12 @@ export function patientToRow(w: Partial<PatientWrite>): Record<string, unknown> 
   set("begleitperson", w.begleitperson);
   set("medizinische_notiz", w.medizinischeNotiz ?? null);
   set("patientennotiz", w.patientennotiz ?? null);
+  set("kostentraeger_id", w.kostentraegerId ?? null);
+  set("versichertennummer", w.versichertennummer ?? null);
+  set("zuzahlungsbefreit", w.zuzahlungsbefreit);
+  set("zuzahlungsbefreit_bis", w.zuzahlungsbefreitBis ?? null);
+  set("verordnung_vorhanden", w.verordnungVorhanden);
+  set("verordnung_dokument_id", w.verordnungDokumentId ?? null);
+  set("genehmigung_bis", w.genehmigungBis ?? null);
   return row;
 }
