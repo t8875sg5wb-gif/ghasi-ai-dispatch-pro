@@ -144,6 +144,21 @@ function AuftraegePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Auftrag | null>(null);
+  const [prefill, setPrefill] = useState<Partial<AuftragFormValues> | undefined>();
+
+  // Deep-link from the Verordnungs-Scan: open a prefilled new-order form.
+  const [prefillDone, setPrefillDone] = useState(false);
+  useEffect(() => {
+    if (prefillDone || !neuPatient) return;
+    setEditTarget(null);
+    setPrefill({
+      patient: neuPatient,
+      mobilitaet: neuMobilitaet ?? "gehfaehig",
+      transportart: neuTransportart ?? "Sitzendtransport",
+    });
+    setFormOpen(true);
+    setPrefillDone(true);
+  }, [prefillDone, neuPatient, neuMobilitaet, neuTransportart]);
 
   // Deep-link: open the detail dialog for a specific order (by id or number).
   const [deepLinkDone, setDeepLinkDone] = useState(false);
