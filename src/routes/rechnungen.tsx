@@ -413,6 +413,14 @@ function RechnungenPage() {
                             size="sm"
                             variant="outline"
                             className="h-7 rounded-full text-xs"
+                            onClick={() => setDetailTarget(r)}
+                          >
+                            Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-full text-xs"
                             onClick={() => {
                               if (!company) {
                                 toast.error("Firmendaten werden geladen …");
