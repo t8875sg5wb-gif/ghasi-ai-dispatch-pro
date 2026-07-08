@@ -14,7 +14,12 @@ import {
   Search,
   Plus,
   X,
+  Loader2,
+  Download,
 } from "lucide-react";
+
+import { exportAllData } from "@/lib/backup.functions";
+import { downloadBackupZip } from "@/lib/backup-zip";
 
 import { listeBenutzer, setzeRolle, type BenutzerEintrag } from "@/lib/admin.functions";
 import { ROLE_LABELS, ROLE_BESCHREIBUNG, ROLE_BEREICHE, type AppRole } from "@/lib/roles";
