@@ -152,6 +152,9 @@ function PatientenSeite() {
               Beispieldaten laden
             </Button>
           )}
+          <Button variant="secondary" onClick={() => setScanOpen(true)}>
+            <ScanLine className="mr-1.5 h-4 w-4" /> Verordnung scannen
+          </Button>
           <Button
             onClick={() => {
               setEditTarget(null);
