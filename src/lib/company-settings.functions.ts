@@ -111,6 +111,10 @@ export const saveCompanySettings = createServerFn({ method: "POST" })
       ust_id: data.ustId,
       gewerbesteuer_hebesatz: data.gewerbesteuerHebesatz,
       steuer_modus: data.steuerModus,
+      datev_berater_nr: data.datevBeraterNr,
+      datev_mandant_nr: data.datevMandantNr,
+      datev_erloeskonto: data.datevErloeskonto,
+      datev_gegenkonto: data.datevGegenkonto,
     };
     const { data: saved, error } = await context.supabase
       .from("company_settings")
