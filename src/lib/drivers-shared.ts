@@ -111,6 +111,10 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     kmHeute: Number(r.km_heute),
     umsatzHeute: Number(r.umsatz_heute),
     gewinnHeute: Number(r.gewinn_heute),
+    pScheinGueltigBis: r.p_schein_gueltig_bis ?? null,
+    fuehrungszeugnisDatum: r.fuehrungszeugnis_datum ?? null,
+    svAusweisVorhanden: Boolean(r.sv_ausweis_vorhanden),
+    steuerId: r.steuer_id ?? undefined,
   };
 }
 
