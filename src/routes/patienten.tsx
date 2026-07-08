@@ -48,6 +48,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/patienten")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => ({
+    id: typeof search.id === "string" ? search.id : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Patienten – GHASI AI" },
