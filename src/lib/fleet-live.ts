@@ -376,12 +376,12 @@ export function buildFleet(): FleetVehicle[] {
       routeGeplant = polyline(pickup, ziel, 8);
       if (patientAnBord) {
         // unterwegs zum Ziel: absolviert = Pickup -> aktuelle Position, Rest = Position -> Ziel
-        routeAbsolviert = polyline(pickup, v.gps, 5);
-        routeRest = polyline(v.gps, ziel, 6);
+        routeAbsolviert = polyline(pickup, gpsPos, 5);
+        routeRest = polyline(gpsPos, ziel, 6);
       } else {
         // Anfahrt zum Patienten: absolviert = Start -> Position, Rest = Position -> Pickup -> Ziel
         routeAbsolviert = [];
-        routeRest = [...polyline(v.gps, pickup, 5), ...polyline(pickup, ziel, 8)];
+        routeRest = [...polyline(gpsPos, pickup, 5), ...polyline(pickup, ziel, 8)];
       }
     }
 
