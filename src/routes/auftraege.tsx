@@ -81,6 +81,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten, darfAuftragStatusAendern } from "@/lib/roles";
 
 export const Route = createFileRoute("/auftraege")({
+  validateSearch: (search: Record<string, unknown>): { nummer?: string; id?: string } => ({
+    nummer: typeof search.nummer === "string" ? search.nummer : undefined,
+    id: typeof search.id === "string" ? search.id : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Aufträge – GHASI AI" },
