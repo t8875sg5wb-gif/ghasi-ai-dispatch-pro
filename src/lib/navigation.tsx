@@ -34,6 +34,11 @@ import {
   Handshake,
   Smartphone,
   Database,
+  Receipt,
+  ScrollText,
+  Wallet,
+  ClipboardCheck,
+  CheckSquare,
   type LucideIcon,
 } from "lucide-react";
 
