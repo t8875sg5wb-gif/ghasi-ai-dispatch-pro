@@ -454,6 +454,50 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_shifts: {
+        Row: {
+          bis: string
+          created_at: string
+          datum: string
+          driver_id: string
+          id: string
+          notiz: string
+          typ: string
+          updated_at: string
+          von: string
+        }
+        Insert: {
+          bis?: string
+          created_at?: string
+          datum: string
+          driver_id: string
+          id?: string
+          notiz?: string
+          typ?: string
+          updated_at?: string
+          von?: string
+        }
+        Update: {
+          bis?: string
+          created_at?: string
+          datum?: string
+          driver_id?: string
+          id?: string
+          notiz?: string
+          typ?: string
+          updated_at?: string
+          von?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           adresse: string
