@@ -29,6 +29,9 @@ import {
   Workflow,
   Repeat,
   Compass,
+  CalendarDays,
+  BookText,
+  Handshake,
   type LucideIcon,
 } from "lucide-react";
 
