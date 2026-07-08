@@ -171,6 +171,45 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
         </div>
       </div>
 
+      <div className="rounded-xl border border-border/70 p-3">
+        <p className="mb-3 text-sm font-medium">Compliance-Nachweise (Schiene A)</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="pscheinbis">Personenbeförderungsschein gültig bis</Label>
+            <Input
+              id="pscheinbis"
+              type="date"
+              value={values.pScheinGueltigBis ?? ""}
+              onChange={(e) => set("pScheinGueltigBis", e.target.value || null)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="fz">Führungszeugnis vom</Label>
+            <Input
+              id="fz"
+              type="date"
+              value={values.fuehrungszeugnisDatum ?? ""}
+              onChange={(e) => set("fuehrungszeugnisDatum", e.target.value || null)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="steuerid">Steuer-ID</Label>
+            <Input
+              id="steuerid"
+              value={values.steuerId ?? ""}
+              onChange={(e) => set("steuerId", e.target.value)}
+            />
+          </div>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <Switch
+              checked={values.svAusweisVorhanden ?? false}
+              onCheckedChange={(c) => set("svAusweisVorhanden", c)}
+            />
+            SV-Ausweis vorhanden
+          </label>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Arbeitsvertrag</Label>
