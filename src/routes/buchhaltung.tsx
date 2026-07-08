@@ -240,6 +240,43 @@ function BuchhaltungPage() {
           ))}
         </CardContent>
       </Card>
+
+      {/* DATEV-Export */}
+      <Card className="border-border/70 shadow-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileDown className="h-4 w-4" /> DATEV-Export für den Steuerberater
+          </CardTitle>
+          <Badge variant="secondary">Buchungsstapel</Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Exportiert die Rechnungen als DATEV-Buchungsstapel (Format EXTF). Erlöse werden auf das
+            konfigurierte Erlöskonto (SKR03 {company.datevErloeskonto}, steuerfreie Umsätze §4
+            Nr.17b) gegen das Debitorenkonto {company.datevGegenkonto} gebucht.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Von</Label>
+              <Input type="date" value={von} onChange={(e) => setVon(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Bis</Label>
+              <Input type="date" value={bis} onChange={(e) => setBis(e.target.value)} />
+            </div>
+            <div className="flex items-end">
+              <Button className="w-full" onClick={exportDatev} disabled={datevAnzahl === 0}>
+                <FileDown className="h-4 w-4" /> {datevAnzahl} Buchungen exportieren
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+            <span className="font-semibold">Hinweis:</span> Die Kontenzuordnungen (SKR03) sind
+            Standardwerte und in den Einstellungen anpassbar. Bitte lassen Sie die Zuordnung von
+            Ihrem Steuerberater prüfen. Diese Angaben ersetzen keine steuerliche Beratung.
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
