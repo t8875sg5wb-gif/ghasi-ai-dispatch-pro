@@ -344,7 +344,18 @@ function VehicleDetail({ v }: { v: FleetVehicle }) {
         <CardTitle className="flex items-center gap-2 text-base">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: farbe.hex }} />
           {v.kennzeichen}
-          <Badge variant="secondary" className="ml-auto text-[10px]">
+          <Badge
+            variant="outline"
+            className={cn(
+              "ml-auto text-[10px]",
+              v.istLive
+                ? "border-success/30 bg-success/10 text-success"
+                : "border-border bg-muted text-muted-foreground",
+            )}
+          >
+            {v.istLive ? "● Live" : "simuliert"}
+          </Badge>
+          <Badge variant="secondary" className="text-[10px]">
             {v.typ}
           </Badge>
         </CardTitle>
