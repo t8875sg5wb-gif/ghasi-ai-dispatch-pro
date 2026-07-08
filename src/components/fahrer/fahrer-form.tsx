@@ -60,6 +60,10 @@ function emptyValues(): FahrerFormValues {
     kmHeute: 0,
     umsatzHeute: 0,
     gewinnHeute: 0,
+    pScheinGueltigBis: null,
+    fuehrungszeugnisDatum: null,
+    svAusweisVorhanden: false,
+    steuerId: "",
   };
 }
 
