@@ -204,7 +204,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
           <label className="flex items-center gap-2 self-end pb-2 text-sm">
             <Switch
               checked={values.svAusweisVorhanden ?? false}
-              onCheckedChange={(c) => set("svAusweisVorhanden", c)}
+              onCheckedChange={(c: boolean) => set("svAusweisVorhanden", c)}
             />
             SV-Ausweis vorhanden
           </label>
