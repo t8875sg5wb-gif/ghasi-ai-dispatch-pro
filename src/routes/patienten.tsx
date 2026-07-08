@@ -12,6 +12,7 @@ import {
 } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
 import { useDocuments } from "@/lib/documents-store";
+import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
 import type { PatientWrite } from "@/lib/patients-shared";
 import { Button } from "@/components/ui/button";
