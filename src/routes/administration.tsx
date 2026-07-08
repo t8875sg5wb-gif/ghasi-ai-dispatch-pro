@@ -92,6 +92,45 @@ function AdministrationSeite() {
   );
 }
 
+function Datensicherung() {
+  const exportFn = useServerFn(exportAllData);
+  const [busy, setBusy] = useState(false);
+
+  async function handleExport() {
+    setBusy(true);
+    try {
+      const res = await exportFn();
+      const data = JSON.parse(res.json) as Parameters<typeof downloadBackupZip>[0];
+      const { tables, rows } = await downloadBackupZip(data);
+      toast.success(`Backup erstellt: ${tables} Tabellen, ${rows} Datensätze`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Backup fehlgeschlagen");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Database className="h-4 w-4" /> Datensicherung
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Exportiert alle gespeicherten Daten (Aufträge, Kunden, Rechnungen u. v. m.) als
+          ZIP-Archiv mit einer CSV-Datei je Bereich.
+        </p>
+        <Button onClick={handleExport} disabled={busy} className="shrink-0">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Backup exportieren
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function Benutzerverwaltung() {
   const qc = useQueryClient();
   const { name: akteur } = useAuth();
