@@ -14,8 +14,10 @@ import {
   Send,
   Copy,
   Download,
+  FileDown,
   Loader2,
 } from "lucide-react";
+import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -402,19 +404,34 @@ function RechnungenPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {istMahnbar(r, mounted) && (r.mahnstufe ?? 0) < 3 ? (
+                        <div className="flex items-center justify-end gap-1.5">
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-7 rounded-full text-xs"
-                            onClick={() => openMahnung(r)}
+                            onClick={() => {
+                              if (!company) {
+                                toast.error("Firmendaten werden geladen …");
+                                return;
+                              }
+                              downloadInvoicePdf(r, company);
+                            }}
                           >
-                            <Send className="h-3.5 w-3.5" />
-                            {(r.mahnstufe ?? 0) === 0 ? "Mahnen" : "Nächste Stufe"}
+                            <FileDown className="h-3.5 w-3.5" />
+                            PDF
                           </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                          {istMahnbar(r, mounted) && (r.mahnstufe ?? 0) < 3 ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-full text-xs"
+                              onClick={() => openMahnung(r)}
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {(r.mahnstufe ?? 0) === 0 ? "Mahnen" : "Nächste Stufe"}
+                            </Button>
+                          ) : null}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

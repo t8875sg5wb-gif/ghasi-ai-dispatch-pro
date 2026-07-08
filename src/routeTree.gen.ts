@@ -24,17 +24,20 @@ import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
+import { Route as LohnRouteImport } from './routes/lohn'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
 import { Route as LeasingRouteImport } from './routes/leasing'
 import { Route as KundenRouteImport } from './routes/kunden'
 import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
 import { Route as KassenvertraegeRouteImport } from './routes/kassenvertraege'
+import { Route as JahresabschlussRouteImport } from './routes/jahresabschluss'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
 import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
 import { Route as FahrerMobilRouteImport } from './routes/fahrer-mobil'
 import { Route as FahrerRouteImport } from './routes/fahrer'
+import { Route as EuerRouteImport } from './routes/euer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
@@ -42,10 +45,12 @@ import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
 import { Route as DatenimportRouteImport } from './routes/datenimport'
 import { Route as ControlCenterRouteImport } from './routes/control-center'
+import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CeoCockpitRouteImport } from './routes/ceo-cockpit'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AutomatisierungRouteImport } from './routes/automatisierung'
+import { Route as AusgabenRouteImport } from './routes/ausgaben'
 import { Route as AuftraegeRouteImport } from './routes/auftraege'
 import { Route as AktivitaetenRouteImport } from './routes/aktivitaeten'
 import { Route as AktionsCenterRouteImport } from './routes/aktions-center'
@@ -130,6 +135,11 @@ const PatientenRoute = PatientenRouteImport.update({
   path: '/patienten',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LohnRoute = LohnRouteImport.update({
+  id: '/lohn',
+  path: '/lohn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LiveGpsRoute = LiveGpsRouteImport.update({
   id: '/live-gps',
   path: '/live-gps',
@@ -160,6 +170,11 @@ const KassenvertraegeRoute = KassenvertraegeRouteImport.update({
   path: '/kassenvertraege',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JahresabschlussRoute = JahresabschlussRouteImport.update({
+  id: '/jahresabschluss',
+  path: '/jahresabschluss',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -183,6 +198,11 @@ const FahrerMobilRoute = FahrerMobilRouteImport.update({
 const FahrerRoute = FahrerRouteImport.update({
   id: '/fahrer',
   path: '/fahrer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EuerRoute = EuerRouteImport.update({
+  id: '/euer',
+  path: '/euer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EinstellungenRoute = EinstellungenRouteImport.update({
@@ -220,6 +240,11 @@ const ControlCenterRoute = ControlCenterRouteImport.update({
   path: '/control-center',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComplianceRoute = ComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CeoCockpitRoute = CeoCockpitRouteImport.update({
   id: '/ceo-cockpit',
   path: '/ceo-cockpit',
@@ -238,6 +263,11 @@ const BerichteRoute = BerichteRouteImport.update({
 const AutomatisierungRoute = AutomatisierungRouteImport.update({
   id: '/automatisierung',
   path: '/automatisierung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AusgabenRoute = AusgabenRouteImport.update({
+  id: '/ausgaben',
+  path: '/ausgaben',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuftraegeRoute = AuftraegeRouteImport.update({
@@ -287,10 +317,12 @@ export interface FileRoutesByFullPath {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
+  '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
@@ -298,17 +330,20 @@ export interface FileRoutesByFullPath {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/jahresabschluss': typeof JahresabschlussRoute
   '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -334,10 +369,12 @@ export interface FileRoutesByTo {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
+  '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
@@ -345,16 +382,19 @@ export interface FileRoutesByTo {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/jahresabschluss': typeof JahresabschlussRoute
   '/kassenvertraege': typeof KassenvertraegeRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -381,10 +421,12 @@ export interface FileRoutesById {
   '/aktions-center': typeof AktionsCenterRoute
   '/aktivitaeten': typeof AktivitaetenRoute
   '/auftraege': typeof AuftraegeRoute
+  '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
+  '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
@@ -392,17 +434,20 @@ export interface FileRoutesById {
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/euer': typeof EuerRoute
   '/fahrer': typeof FahrerRoute
   '/fahrer-mobil': typeof FahrerMobilRoute
   '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
+  '/jahresabschluss': typeof JahresabschlussRoute
   '/kassenvertraege': typeof KassenvertraegeRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
   '/krankenhaeuser': typeof KrankenhaeuserRoute
   '/kunden': typeof KundenRoute
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
+  '/lohn': typeof LohnRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -430,10 +475,12 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/ceo-cockpit'
+    | '/compliance'
     | '/control-center'
     | '/datenimport'
     | '/dauerauftraege'
@@ -441,17 +488,20 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/jahresabschluss'
     | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -477,10 +527,12 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/ceo-cockpit'
+    | '/compliance'
     | '/control-center'
     | '/datenimport'
     | '/dauerauftraege'
@@ -488,16 +540,19 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/jahresabschluss'
     | '/kassenvertraege'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -523,10 +578,12 @@ export interface FileRouteTypes {
     | '/aktions-center'
     | '/aktivitaeten'
     | '/auftraege'
+    | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
     | '/buchhaltung'
     | '/ceo-cockpit'
+    | '/compliance'
     | '/control-center'
     | '/datenimport'
     | '/dauerauftraege'
@@ -534,17 +591,20 @@ export interface FileRouteTypes {
     | '/dokumente'
     | '/einrichtungen'
     | '/einstellungen'
+    | '/euer'
     | '/fahrer'
     | '/fahrer-mobil'
     | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
+    | '/jahresabschluss'
     | '/kassenvertraege'
     | '/ki-assistent'
     | '/krankenhaeuser'
     | '/kunden'
     | '/leasing'
     | '/live-gps'
+    | '/lohn'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -571,10 +631,12 @@ export interface RootRouteChildren {
   AktionsCenterRoute: typeof AktionsCenterRoute
   AktivitaetenRoute: typeof AktivitaetenRoute
   AuftraegeRoute: typeof AuftraegeRoute
+  AusgabenRoute: typeof AusgabenRoute
   AutomatisierungRoute: typeof AutomatisierungRoute
   BerichteRoute: typeof BerichteRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
   CeoCockpitRoute: typeof CeoCockpitRoute
+  ComplianceRoute: typeof ComplianceRoute
   ControlCenterRoute: typeof ControlCenterRoute
   DatenimportRoute: typeof DatenimportRoute
   DauerauftraegeRoute: typeof DauerauftraegeRoute
@@ -582,17 +644,20 @@ export interface RootRouteChildren {
   DokumenteRoute: typeof DokumenteRoute
   EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
+  EuerRoute: typeof EuerRoute
   FahrerRoute: typeof FahrerRoute
   FahrerMobilRoute: typeof FahrerMobilRoute
   FahrtenbuchRoute: typeof FahrtenbuchRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
   InsightsRoute: typeof InsightsRoute
+  JahresabschlussRoute: typeof JahresabschlussRoute
   KassenvertraegeRoute: typeof KassenvertraegeRoute
   KiAssistentRoute: typeof KiAssistentRouteWithChildren
   KrankenhaeuserRoute: typeof KrankenhaeuserRoute
   KundenRoute: typeof KundenRoute
   LeasingRoute: typeof LeasingRoute
   LiveGpsRoute: typeof LiveGpsRoute
+  LohnRoute: typeof LohnRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
   PosteingangRoute: typeof PosteingangRoute
@@ -718,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatientenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lohn': {
+      id: '/lohn'
+      path: '/lohn'
+      fullPath: '/lohn'
+      preLoaderRoute: typeof LohnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/live-gps': {
       id: '/live-gps'
       path: '/live-gps'
@@ -760,6 +832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KassenvertraegeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jahresabschluss': {
+      id: '/jahresabschluss'
+      path: '/jahresabschluss'
+      fullPath: '/jahresabschluss'
+      preLoaderRoute: typeof JahresabschlussRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
@@ -793,6 +872,13 @@ declare module '@tanstack/react-router' {
       path: '/fahrer'
       fullPath: '/fahrer'
       preLoaderRoute: typeof FahrerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/euer': {
+      id: '/euer'
+      path: '/euer'
+      fullPath: '/euer'
+      preLoaderRoute: typeof EuerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/einstellungen': {
@@ -844,6 +930,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControlCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compliance': {
+      id: '/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof ComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ceo-cockpit': {
       id: '/ceo-cockpit'
       path: '/ceo-cockpit'
@@ -870,6 +963,13 @@ declare module '@tanstack/react-router' {
       path: '/automatisierung'
       fullPath: '/automatisierung'
       preLoaderRoute: typeof AutomatisierungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ausgaben': {
+      id: '/ausgaben'
+      path: '/ausgaben'
+      fullPath: '/ausgaben'
+      preLoaderRoute: typeof AusgabenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auftraege': {
@@ -951,10 +1051,12 @@ const rootRouteChildren: RootRouteChildren = {
   AktionsCenterRoute: AktionsCenterRoute,
   AktivitaetenRoute: AktivitaetenRoute,
   AuftraegeRoute: AuftraegeRoute,
+  AusgabenRoute: AusgabenRoute,
   AutomatisierungRoute: AutomatisierungRoute,
   BerichteRoute: BerichteRoute,
   BuchhaltungRoute: BuchhaltungRoute,
   CeoCockpitRoute: CeoCockpitRoute,
+  ComplianceRoute: ComplianceRoute,
   ControlCenterRoute: ControlCenterRoute,
   DatenimportRoute: DatenimportRoute,
   DauerauftraegeRoute: DauerauftraegeRoute,
@@ -962,17 +1064,20 @@ const rootRouteChildren: RootRouteChildren = {
   DokumenteRoute: DokumenteRoute,
   EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
+  EuerRoute: EuerRoute,
   FahrerRoute: FahrerRoute,
   FahrerMobilRoute: FahrerMobilRoute,
   FahrtenbuchRoute: FahrtenbuchRoute,
   FahrzeugeRoute: FahrzeugeRoute,
   InsightsRoute: InsightsRoute,
+  JahresabschlussRoute: JahresabschlussRoute,
   KassenvertraegeRoute: KassenvertraegeRoute,
   KiAssistentRoute: KiAssistentRouteWithChildren,
   KrankenhaeuserRoute: KrankenhaeuserRoute,
   KundenRoute: KundenRoute,
   LeasingRoute: LeasingRoute,
   LiveGpsRoute: LiveGpsRoute,
+  LohnRoute: LohnRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
   PosteingangRoute: PosteingangRoute,

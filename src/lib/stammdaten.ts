@@ -34,6 +34,21 @@ export interface Patient {
   medizinischeNotiz?: string;
   /** Hinweise zum Patienten (z. B. Kommunikation, Verhalten). */
   patientennotiz?: string;
+  // --- Abrechnung & Compliance (§133 SGB V / §4 Nr.17b) ---
+  /** Verknüpfung zum Kostenträger (Versicherer) – leer bei Privatzahler. */
+  kostentraegerId?: string | null;
+  /** Versichertennummer bei der Krankenkasse. */
+  versichertennummer?: string;
+  /** Von Zuzahlungen befreit? */
+  zuzahlungsbefreit?: boolean;
+  /** Zuzahlungsbefreiung gültig bis (ISO-Datum). */
+  zuzahlungsbefreitBis?: string | null;
+  /** Liegt eine gültige ärztliche Verordnung (Muster 4) vor? */
+  verordnungVorhanden?: boolean;
+  /** Verknüpftes Verordnungs-Dokument. */
+  verordnungDokumentId?: string | null;
+  /** Patientenbezogene Genehmigung für Dauerfahrten gültig bis (ISO-Datum). */
+  genehmigungBis?: string | null;
 }
 
 export type EinrichtungTyp = "krankenhaus" | "dialyse" | "pflegeheim";

@@ -372,6 +372,28 @@ export function FahrerDetail({
               label="Erste-Hilfe-Nachweis"
               iso={fahrer.ersteHilfe.gueltigBis}
             />
+            <NachweisRow
+              icon={ShieldCheck}
+              label="Personenbeförderungsschein (Compliance)"
+              iso={fahrer.pScheinGueltigBis ?? ""}
+            />
+            <NachweisRow
+              icon={CreditCard}
+              label="Führungszeugnis vom"
+              iso={fahrer.fuehrungszeugnisDatum ?? ""}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <InfoRow
+                icon={ShieldCheck}
+                label="SV-Ausweis"
+                value={fahrer.svAusweisVorhanden ? "Vorhanden" : "Fehlt"}
+              />
+              <InfoRow
+                icon={CreditCard}
+                label="Steuer-ID"
+                value={fahrer.steuerId?.trim() ? fahrer.steuerId : "—"}
+              />
+            </div>
           </div>
 
           <Separator />

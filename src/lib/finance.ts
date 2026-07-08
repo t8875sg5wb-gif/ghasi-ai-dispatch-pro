@@ -85,6 +85,8 @@ export interface Rechnung {
   datum: string;
   /** ISO date due */
   faelligkeit: string;
+  /** ISO date of service delivery (Leistungsdatum, §14 UStG) */
+  leistungsdatum?: string | null;
   /** ISO date paid (when applicable) */
   bezahltAm?: string;
   bezahlterBetrag?: number;

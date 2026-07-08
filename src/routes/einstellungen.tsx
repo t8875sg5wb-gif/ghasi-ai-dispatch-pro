@@ -249,6 +249,14 @@ function EinstellungenSeite() {
                   onChange={(e) => setC("ustId", e.target.value)}
                 />
               </Feld>
+              <Feld label="Institutionskennzeichen (IK-Nr., für §133 SGB V)">
+                <Input
+                  value={company.ikNummer}
+                  disabled={!istAdmin}
+                  onChange={(e) => setC("ikNummer", e.target.value)}
+                  placeholder="z. B. 460123456"
+                />
+              </Feld>
             </div>
           </CardContent>
         </Card>

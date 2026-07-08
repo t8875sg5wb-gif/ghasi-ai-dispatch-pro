@@ -23,6 +23,7 @@ export interface InvoiceWrite {
   status?: RechnungStatus;
   datum?: string;
   faelligkeit?: string;
+  leistungsdatum?: string | null;
   bezahltAm?: string | null;
   bezahlterBetrag?: number | null;
   bezugAuftrag?: string | null;
@@ -46,6 +47,7 @@ export interface InvoiceRow {
   status: string;
   datum: string;
   faelligkeit: string;
+  leistungsdatum: string | null;
   bezahlt_am: string | null;
   bezahlter_betrag: number | string | null;
   bezug_auftrag: string | null;
@@ -72,6 +74,7 @@ export function rowToRechnung(r: InvoiceRow): Rechnung {
     status: r.status as RechnungStatus,
     datum: r.datum,
     faelligkeit: r.faelligkeit,
+    leistungsdatum: r.leistungsdatum ?? null,
     bezahltAm: r.bezahlt_am ?? undefined,
     bezahlterBetrag: r.bezahlter_betrag === null ? undefined : toNum(r.bezahlter_betrag),
     bezugAuftrag: r.bezug_auftrag ?? undefined,
@@ -95,6 +98,7 @@ export function rechnungToWrite(r: Rechnung): InvoiceWrite {
     status: r.status,
     datum: r.datum,
     faelligkeit: r.faelligkeit,
+    leistungsdatum: r.leistungsdatum ?? null,
     bezahltAm: r.bezahltAm ?? null,
     bezahlterBetrag: r.bezahlterBetrag ?? null,
     bezugAuftrag: r.bezugAuftrag ?? null,
@@ -122,6 +126,7 @@ export function writeToInvoiceRow(w: Partial<InvoiceWrite>): Record<string, unkn
   set("status", w.status);
   set("datum", w.datum);
   set("faelligkeit", w.faelligkeit);
+  set("leistungsdatum", w.leistungsdatum);
   set("bezahlt_am", w.bezahltAm);
   set("bezahlter_betrag", w.bezahlterBetrag);
   set("bezug_auftrag", w.bezugAuftrag);

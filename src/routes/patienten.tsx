@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus } from "lucide-react";
+import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus, BadgeEuro, FileCheck2, CalendarCheck, AlertTriangle } from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import {
@@ -10,6 +10,9 @@ import {
   useCreatePatient,
   useUpdatePatient,
 } from "@/lib/patients-store";
+import { useInsurers } from "@/lib/insurers-store";
+import { useDocuments } from "@/lib/documents-store";
+import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
 import type { PatientWrite } from "@/lib/patients-shared";
 import { Button } from "@/components/ui/button";
 import {
@@ -234,6 +237,8 @@ function PatientenSeite() {
 function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => void }) {
   const mob = MOBILITAET_META[mobilitaetTyp(patient)];
   const transporte = INITIAL_AUFTRAEGE.filter((a) => a.patient === patient.name);
+  const zuzahlung = fristStatus(patient.zuzahlungsbefreitBis ?? null);
+  const genehmigung = fristStatus(patient.genehmigungBis ?? null);
 
   return (
     <div className="space-y-6">
@@ -254,7 +259,12 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger} />
+            <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger || "—"} />
+            <ProfilZeile
+              icon={BadgeEuro}
+              label="Versichertennummer"
+              value={patient.versichertennummer?.trim() ? patient.versichertennummer : "—"}
+            />
             <ProfilZeile
               icon={Phone}
               label="Telefon"
@@ -266,6 +276,44 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
               value={patient.begleitperson ? "Ja – standardmäßig" : "Nein"}
             />
           </div>
+
+          {/* Abrechnungs-/Compliance-Status */}
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant="outline"
+              className={cn(
+                "gap-1",
+                patient.verordnungVorhanden ? FRIST_BADGE.ok : FRIST_BADGE.abgelaufen,
+              )}
+            >
+              <FileCheck2 className="h-3.5 w-3.5" />
+              {patient.verordnungVorhanden ? "Verordnung liegt vor" : "Keine Verordnung"}
+            </Badge>
+            {patient.zuzahlungsbefreit && (
+              <Badge variant="outline" className={cn("gap-1", FRIST_BADGE[zuzahlung.status === "fehlt" ? "ok" : zuzahlung.status])}>
+                <BadgeEuro className="h-3.5 w-3.5" />
+                Zuzahlungsbefreit{patient.zuzahlungsbefreitBis ? ` bis ${formatDatumDE(patient.zuzahlungsbefreitBis)}` : ""}
+              </Badge>
+            )}
+            {patient.genehmigungBis && (
+              <Badge variant="outline" className={cn("gap-1", FRIST_BADGE[genehmigung.status])}>
+                <CalendarCheck className="h-3.5 w-3.5" />
+                Genehmigung {genehmigung.label}
+              </Badge>
+            )}
+          </div>
+          {(zuzahlung.status === "abgelaufen" || zuzahlung.status === "bald") && patient.zuzahlungsbefreit && (
+            <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              Zuzahlungsbefreiung {zuzahlung.label}.
+            </div>
+          )}
+          {(genehmigung.status === "abgelaufen" || genehmigung.status === "bald") && (
+            <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              Dauerfahrten-Genehmigung {genehmigung.label}.
+            </div>
+          )}
           {patient.hinweis && (
             <div className="rounded-xl border border-border/70 bg-muted/40 p-3">
               <p className="text-xs font-medium text-muted-foreground">Hinweis</p>
@@ -403,16 +451,31 @@ function PatientFelder({
   onSave: (values: PatientWrite) => void;
   saving: boolean;
 }) {
+  const insurers = useInsurers().data ?? [];
+  const documents = useDocuments().data ?? [];
   const [name, setName] = useState(target?.name ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [mobilitaet, setMobilitaet] = useState<Patient["mobilitaet"]>(
     target?.mobilitaet ?? "Gehfähig",
   );
   const [kostentraeger, setKostentraeger] = useState(target?.kostentraeger ?? "");
+  const [kostentraegerId, setKostentraegerId] = useState<string>(target?.kostentraegerId ?? "");
+  const [versichertennummer, setVersichertennummer] = useState(target?.versichertennummer ?? "");
+  const [zuzahlungsbefreit, setZuzahlungsbefreit] = useState(target?.zuzahlungsbefreit ?? false);
+  const [zuzahlungsbefreitBis, setZuzahlungsbefreitBis] = useState(
+    target?.zuzahlungsbefreitBis ?? "",
+  );
+  const [verordnungVorhanden, setVerordnungVorhanden] = useState(target?.verordnungVorhanden ?? false);
+  const [verordnungDokumentId, setVerordnungDokumentId] = useState<string>(
+    target?.verordnungDokumentId ?? "",
+  );
+  const [genehmigungBis, setGenehmigungBis] = useState(target?.genehmigungBis ?? "");
   const [hinweis, setHinweis] = useState(target?.hinweis ?? "");
   const [begleitperson, setBegleitperson] = useState(target?.begleitperson ?? false);
   const [medizinischeNotiz, setMedizinischeNotiz] = useState(target?.medizinischeNotiz ?? "");
   const [patientennotiz, setPatientennotiz] = useState(target?.patientennotiz ?? "");
+
+  const KT_FREI = "__frei__";
 
   function submit() {
     if (!name.trim()) {
@@ -424,6 +487,13 @@ function PatientFelder({
       telefon: telefon.trim() || undefined,
       mobilitaet,
       kostentraeger: kostentraeger.trim(),
+      kostentraegerId: kostentraegerId || null,
+      versichertennummer: versichertennummer.trim() || undefined,
+      zuzahlungsbefreit,
+      zuzahlungsbefreitBis: zuzahlungsbefreit ? zuzahlungsbefreitBis || null : null,
+      verordnungVorhanden,
+      verordnungDokumentId: verordnungDokumentId || null,
+      genehmigungBis: genehmigungBis || null,
       hinweis: hinweis.trim(),
       begleitperson,
       medizinischeNotiz: medizinischeNotiz.trim() || undefined,
@@ -458,10 +528,94 @@ function PatientFelder({
           <Input value={telefon} onChange={(e) => setTelefon(e.target.value)} />
         </Feld>
         <div className="sm:col-span-2">
-          <Feld label="Kostenträger">
-            <Input value={kostentraeger} onChange={(e) => setKostentraeger(e.target.value)} />
+          <Feld label="Kostenträger (Krankenkasse)">
+            <Select
+              value={kostentraegerId || KT_FREI}
+              onValueChange={(v) => {
+                if (v === KT_FREI) {
+                  setKostentraegerId("");
+                } else {
+                  setKostentraegerId(v);
+                  const ins = insurers.find((i) => i.id === v);
+                  if (ins) setKostentraeger(ins.name);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Kostenträger wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={KT_FREI}>Privatzahler / Freitext</SelectItem>
+                {insurers.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Feld>
         </div>
+        {!kostentraegerId && (
+          <div className="sm:col-span-2">
+            <Feld label="Kostenträger (Freitext, z. B. Privatzahler)">
+              <Input value={kostentraeger} onChange={(e) => setKostentraeger(e.target.value)} />
+            </Feld>
+          </div>
+        )}
+        <Feld label="Versichertennummer">
+          <Input
+            value={versichertennummer}
+            onChange={(e) => setVersichertennummer(e.target.value)}
+          />
+        </Feld>
+        <Feld label="Genehmigung (Dauerfahrten) gültig bis">
+          <Input
+            type="date"
+            value={genehmigungBis ?? ""}
+            onChange={(e) => setGenehmigungBis(e.target.value)}
+          />
+        </Feld>
+      </div>
+
+      {/* Verordnung & Zuzahlung */}
+      <div className="space-y-3 rounded-xl border border-border/70 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Switch checked={verordnungVorhanden} onCheckedChange={setVerordnungVorhanden} />
+          Ärztliche Verordnung (Muster 4) liegt vor
+        </label>
+        {verordnungVorhanden && (
+          <Feld label="Verknüpftes Verordnungs-Dokument (optional)">
+            <Select
+              value={verordnungDokumentId || "__none__"}
+              onValueChange={(v) => setVerordnungDokumentId(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Dokument wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Kein Dokument</SelectItem>
+                {documents.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Feld>
+        )}
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Switch checked={zuzahlungsbefreit} onCheckedChange={setZuzahlungsbefreit} />
+          Von Zuzahlungen befreit
+        </label>
+        {zuzahlungsbefreit && (
+          <Feld label="Zuzahlungsbefreiung gültig bis">
+            <Input
+              type="date"
+              value={zuzahlungsbefreitBis ?? ""}
+              onChange={(e) => setZuzahlungsbefreitBis(e.target.value)}
+            />
+          </Feld>
+        )}
       </div>
       <Feld label="Hinweis">
         <Textarea value={hinweis} onChange={(e) => setHinweis(e.target.value)} rows={2} />

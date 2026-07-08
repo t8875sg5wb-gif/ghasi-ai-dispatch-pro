@@ -31,6 +31,10 @@ export interface DriverWrite {
   kmHeute: number;
   umsatzHeute: number;
   gewinnHeute: number;
+  pScheinGueltigBis?: string | null;
+  fuehrungszeugnisDatum?: string | null;
+  svAusweisVorhanden?: boolean;
+  steuerId?: string;
 }
 
 /** Minimal structural type of a row coming back from the `drivers` table. */
@@ -62,6 +66,10 @@ export interface DriverRow {
   km_heute: number | string;
   umsatz_heute: number | string;
   gewinn_heute: number | string;
+  p_schein_gueltig_bis: string | null;
+  fuehrungszeugnis_datum: string | null;
+  sv_ausweis_vorhanden: boolean | null;
+  steuer_id: string | null;
 }
 
 function asNachweis(value: unknown): Nachweis {
@@ -103,6 +111,10 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     kmHeute: Number(r.km_heute),
     umsatzHeute: Number(r.umsatz_heute),
     gewinnHeute: Number(r.gewinn_heute),
+    pScheinGueltigBis: r.p_schein_gueltig_bis ?? null,
+    fuehrungszeugnisDatum: r.fuehrungszeugnis_datum ?? null,
+    svAusweisVorhanden: Boolean(r.sv_ausweis_vorhanden),
+    steuerId: r.steuer_id ?? undefined,
   };
 }
 
@@ -138,5 +150,9 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("km_heute", w.kmHeute);
   set("umsatz_heute", w.umsatzHeute);
   set("gewinn_heute", w.gewinnHeute);
+  set("p_schein_gueltig_bis", w.pScheinGueltigBis ?? null);
+  set("fuehrungszeugnis_datum", w.fuehrungszeugnisDatum ?? null);
+  set("sv_ausweis_vorhanden", w.svAusweisVorhanden);
+  set("steuer_id", w.steuerId ?? null);
   return row;
 }

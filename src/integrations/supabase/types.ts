@@ -283,6 +283,7 @@ export type Database = {
           firma: string
           gewerbesteuer_hebesatz: number
           id: string
+          ik_nummer: string | null
           inhaber: string
           rechtsform: string
           singleton: number
@@ -303,6 +304,7 @@ export type Database = {
           firma?: string
           gewerbesteuer_hebesatz?: number
           id?: string
+          ik_nummer?: string | null
           inhaber?: string
           rechtsform?: string
           singleton?: number
@@ -323,6 +325,7 @@ export type Database = {
           firma?: string
           gewerbesteuer_hebesatz?: number
           id?: string
+          ik_nummer?: string | null
           inhaber?: string
           rechtsform?: string
           singleton?: number
@@ -543,6 +546,7 @@ export type Database = {
           fahrzeug: string | null
           foto: string | null
           fuehrerschein: Json
+          fuehrungszeugnis_datum: string | null
           gewinn_heute: number
           gps: Json
           id: string
@@ -552,10 +556,13 @@ export type Database = {
           name: string
           nummer: string
           p_schein: Json
+          p_schein_gueltig_bis: string | null
           puenktlichkeit: number
           schicht: string
           standort: string
           status: string
+          steuer_id: string | null
+          sv_ausweis_vorhanden: boolean
           telefon: string
           ueberstunden: number
           umsatz_heute: number
@@ -575,6 +582,7 @@ export type Database = {
           fahrzeug?: string | null
           foto?: string | null
           fuehrerschein?: Json
+          fuehrungszeugnis_datum?: string | null
           gewinn_heute?: number
           gps?: Json
           id?: string
@@ -584,10 +592,13 @@ export type Database = {
           name?: string
           nummer: string
           p_schein?: Json
+          p_schein_gueltig_bis?: string | null
           puenktlichkeit?: number
           schicht?: string
           standort?: string
           status?: string
+          steuer_id?: string | null
+          sv_ausweis_vorhanden?: boolean
           telefon?: string
           ueberstunden?: number
           umsatz_heute?: number
@@ -607,6 +618,7 @@ export type Database = {
           fahrzeug?: string | null
           foto?: string | null
           fuehrerschein?: Json
+          fuehrungszeugnis_datum?: string | null
           gewinn_heute?: number
           gps?: Json
           id?: string
@@ -616,10 +628,13 @@ export type Database = {
           name?: string
           nummer?: string
           p_schein?: Json
+          p_schein_gueltig_bis?: string | null
           puenktlichkeit?: number
           schicht?: string
           standort?: string
           status?: string
+          steuer_id?: string | null
+          sv_ausweis_vorhanden?: boolean
           telefon?: string
           ueberstunden?: number
           umsatz_heute?: number
@@ -629,6 +644,73 @@ export type Database = {
           vertragsart?: string
         }
         Relationships: []
+      }
+      expenses: {
+        Row: {
+          beleg_dokument_id: string | null
+          betrag_brutto: number
+          created_at: string
+          datum: string
+          fahrer_id: string | null
+          fahrzeug_id: string | null
+          id: string
+          kategorie: string
+          lieferant: string
+          notiz: string | null
+          updated_at: string
+          ust_satz: number
+        }
+        Insert: {
+          beleg_dokument_id?: string | null
+          betrag_brutto?: number
+          created_at?: string
+          datum?: string
+          fahrer_id?: string | null
+          fahrzeug_id?: string | null
+          id?: string
+          kategorie?: string
+          lieferant?: string
+          notiz?: string | null
+          updated_at?: string
+          ust_satz?: number
+        }
+        Update: {
+          beleg_dokument_id?: string | null
+          betrag_brutto?: number
+          created_at?: string
+          datum?: string
+          fahrer_id?: string | null
+          fahrzeug_id?: string | null
+          id?: string
+          kategorie?: string
+          lieferant?: string
+          notiz?: string | null
+          updated_at?: string
+          ust_satz?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_beleg_dokument_id_fkey"
+            columns: ["beleg_dokument_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_fahrer_id_fkey"
+            columns: ["fahrer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_fahrzeug_id_fkey"
+            columns: ["fahrzeug_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       facilities: {
         Row: {
@@ -845,6 +927,47 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_changes: {
+        Row: {
+          akteur: string | null
+          alt_wert: string | null
+          created_at: string
+          feld: string
+          id: string
+          invoice_id: string
+          invoice_nummer: string | null
+          neu_wert: string | null
+        }
+        Insert: {
+          akteur?: string | null
+          alt_wert?: string | null
+          created_at?: string
+          feld: string
+          id?: string
+          invoice_id: string
+          invoice_nummer?: string | null
+          neu_wert?: string | null
+        }
+        Update: {
+          akteur?: string | null
+          alt_wert?: string | null
+          created_at?: string
+          feld?: string
+          id?: string
+          invoice_id?: string
+          invoice_nummer?: string | null
+          neu_wert?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_changes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           abrechnungsart: string
@@ -858,6 +981,7 @@ export type Database = {
           id: string
           kunde: string
           kunde_id: string
+          leistungsdatum: string | null
           letzte_mahnung: string | null
           mahn_historie: Json
           mahnstufe: number
@@ -881,6 +1005,7 @@ export type Database = {
           id?: string
           kunde?: string
           kunde_id?: string
+          leistungsdatum?: string | null
           letzte_mahnung?: string | null
           mahn_historie?: Json
           mahnstufe?: number
@@ -904,6 +1029,7 @@ export type Database = {
           id?: string
           kunde?: string
           kunde_id?: string
+          leistungsdatum?: string | null
           letzte_mahnung?: string | null
           mahn_historie?: Json
           mahnstufe?: number
@@ -1110,43 +1236,79 @@ export type Database = {
         Row: {
           begleitperson: boolean
           created_at: string
+          genehmigung_bis: string | null
           hinweis: string
           id: string
           kostentraeger: string
+          kostentraeger_id: string | null
           medizinische_notiz: string | null
           mobilitaet: string
           name: string
           patientennotiz: string | null
           telefon: string
           updated_at: string
+          verordnung_dokument_id: string | null
+          verordnung_vorhanden: boolean
+          versichertennummer: string | null
+          zuzahlungsbefreit: boolean
+          zuzahlungsbefreit_bis: string | null
         }
         Insert: {
           begleitperson?: boolean
           created_at?: string
+          genehmigung_bis?: string | null
           hinweis?: string
           id?: string
           kostentraeger?: string
+          kostentraeger_id?: string | null
           medizinische_notiz?: string | null
           mobilitaet?: string
           name: string
           patientennotiz?: string | null
           telefon?: string
           updated_at?: string
+          verordnung_dokument_id?: string | null
+          verordnung_vorhanden?: boolean
+          versichertennummer?: string | null
+          zuzahlungsbefreit?: boolean
+          zuzahlungsbefreit_bis?: string | null
         }
         Update: {
           begleitperson?: boolean
           created_at?: string
+          genehmigung_bis?: string | null
           hinweis?: string
           id?: string
           kostentraeger?: string
+          kostentraeger_id?: string | null
           medizinische_notiz?: string | null
           mobilitaet?: string
           name?: string
           patientennotiz?: string | null
           telefon?: string
           updated_at?: string
+          verordnung_dokument_id?: string | null
+          verordnung_vorhanden?: boolean
+          versichertennummer?: string | null
+          zuzahlungsbefreit?: boolean
+          zuzahlungsbefreit_bis?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patients_kostentraeger_id_fkey"
+            columns: ["kostentraeger_id"]
+            isOneToOne: false
+            referencedRelation: "insurers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_verordnung_dokument_id_fkey"
+            columns: ["verordnung_dokument_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1399,6 +1561,9 @@ export type Database = {
           notizen: string
           nummer: string
           oelwechsel_bei: number
+          real_gps_at: string | null
+          real_lat: number | null
+          real_lng: number | null
           reichweite: number
           reifenstatus: string
           reparaturen: Json
@@ -1439,6 +1604,9 @@ export type Database = {
           notizen?: string
           nummer?: string
           oelwechsel_bei?: number
+          real_gps_at?: string | null
+          real_lat?: number | null
+          real_lng?: number | null
           reichweite?: number
           reifenstatus?: string
           reparaturen?: Json
@@ -1479,6 +1647,9 @@ export type Database = {
           notizen?: string
           nummer?: string
           oelwechsel_bei?: number
+          real_gps_at?: string | null
+          real_lat?: number | null
+          real_lng?: number | null
           reichweite?: number
           reifenstatus?: string
           reparaturen?: Json
