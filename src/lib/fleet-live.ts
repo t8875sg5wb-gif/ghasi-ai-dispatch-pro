@@ -321,6 +321,15 @@ export function buildFleet(): FleetVehicle[] {
 
   return INITIAL_FAHRZEUGE.map((v) => {
     const h = hashStr(v.kennzeichen);
+    // Prefer a fresh (<5 min) real GPS position shared by the driver.
+    const realFresh =
+      v.lastRealAt != null &&
+      v.lastRealLat != null &&
+      v.lastRealLng != null &&
+      Date.now() - new Date(v.lastRealAt).getTime() < 5 * 60 * 1000;
+    const gpsPos: LatLng = realFresh
+      ? { lat: v.lastRealLat as number, lng: v.lastRealLng as number }
+      : v.gps;
     const offline = v.status === "werkstatt" || v.status === "nicht_verfuegbar";
 
     // aktiver Transport für dieses Fahrzeug (am weitesten in der Pipeline)
