@@ -58,5 +58,7 @@ export const exportAllData = createServerFn({ method: "GET" })
         result[table] = [];
       }
     }
-    return result;
+    // Return as a JSON string to keep the RPC return type serializable.
+    return { json: JSON.stringify(result) };
   });
+
