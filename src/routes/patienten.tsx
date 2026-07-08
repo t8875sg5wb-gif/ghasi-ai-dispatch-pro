@@ -76,12 +76,13 @@ function mobilitaetTyp(p: Patient): Mobilitaet {
 
 function PatientenSeite() {
   const { name: akteur } = useAuth();
+  const { id: initialId } = Route.useSearch();
   const { data: patienten = [] } = usePatients();
   const seedMut = useSeedPatients();
   const createMut = useCreatePatient();
   const updateMut = useUpdatePatient();
   const [suche, setSuche] = useState("");
-  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Patient | null>(null);
 
