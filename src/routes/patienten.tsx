@@ -528,10 +528,94 @@ function PatientFelder({
           <Input value={telefon} onChange={(e) => setTelefon(e.target.value)} />
         </Feld>
         <div className="sm:col-span-2">
-          <Feld label="Kostenträger">
-            <Input value={kostentraeger} onChange={(e) => setKostentraeger(e.target.value)} />
+          <Feld label="Kostenträger (Krankenkasse)">
+            <Select
+              value={kostentraegerId || KT_FREI}
+              onValueChange={(v) => {
+                if (v === KT_FREI) {
+                  setKostentraegerId("");
+                } else {
+                  setKostentraegerId(v);
+                  const ins = insurers.find((i) => i.id === v);
+                  if (ins) setKostentraeger(ins.name);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Kostenträger wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={KT_FREI}>Privatzahler / Freitext</SelectItem>
+                {insurers.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Feld>
         </div>
+        {!kostentraegerId && (
+          <div className="sm:col-span-2">
+            <Feld label="Kostenträger (Freitext, z. B. Privatzahler)">
+              <Input value={kostentraeger} onChange={(e) => setKostentraeger(e.target.value)} />
+            </Feld>
+          </div>
+        )}
+        <Feld label="Versichertennummer">
+          <Input
+            value={versichertennummer}
+            onChange={(e) => setVersichertennummer(e.target.value)}
+          />
+        </Feld>
+        <Feld label="Genehmigung (Dauerfahrten) gültig bis">
+          <Input
+            type="date"
+            value={genehmigungBis ?? ""}
+            onChange={(e) => setGenehmigungBis(e.target.value)}
+          />
+        </Feld>
+      </div>
+
+      {/* Verordnung & Zuzahlung */}
+      <div className="space-y-3 rounded-xl border border-border/70 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Switch checked={verordnungVorhanden} onCheckedChange={setVerordnungVorhanden} />
+          Ärztliche Verordnung (Muster 4) liegt vor
+        </label>
+        {verordnungVorhanden && (
+          <Feld label="Verknüpftes Verordnungs-Dokument (optional)">
+            <Select
+              value={verordnungDokumentId || "__none__"}
+              onValueChange={(v) => setVerordnungDokumentId(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Dokument wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Kein Dokument</SelectItem>
+                {documents.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Feld>
+        )}
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Switch checked={zuzahlungsbefreit} onCheckedChange={setZuzahlungsbefreit} />
+          Von Zuzahlungen befreit
+        </label>
+        {zuzahlungsbefreit && (
+          <Feld label="Zuzahlungsbefreiung gültig bis">
+            <Input
+              type="date"
+              value={zuzahlungsbefreitBis ?? ""}
+              onChange={(e) => setZuzahlungsbefreitBis(e.target.value)}
+            />
+          </Feld>
+        )}
       </div>
       <Feld label="Hinweis">
         <Textarea value={hinweis} onChange={(e) => setHinweis(e.target.value)} rows={2} />
