@@ -10,11 +10,10 @@ import type { Fahrer } from "@/lib/fahrer";
 import type { Fahrzeug } from "@/lib/fahrzeuge";
 import type { Versicherung } from "@/lib/versicherungen";
 import type { Leasingvertrag } from "@/lib/leasing";
-import type { Patient } from "@/lib/stammdaten";
+import type { Patient, Krankenkasse } from "@/lib/stammdaten";
 import type { Auftrag } from "@/lib/auftraege";
 import type { Rechnung } from "@/lib/finance";
 import type { Kassenvertrag } from "@/lib/insurer-contracts-shared";
-import type { Krankenkasse } from "@/lib/insurers-shared";
 import type { CompanySettings } from "@/lib/company-settings.functions";
 import { brutto, summeZahlungen, tageUeberfaellig } from "@/lib/finance";
 
