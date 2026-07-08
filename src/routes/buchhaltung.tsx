@@ -63,9 +63,43 @@ const KOSTEN_LABEL = {
 
 function BuchhaltungPage() {
   const { data: invoiceData } = useInvoices();
+  const { data: company } = useCompanySettings();
   const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
   const kpis = useMemo(() => computeFinanzKpis(alleRechnungen), [alleRechnungen]);
   const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
+
+  const jahr = new Date().getFullYear();
+  const [von, setVon] = useState(`${jahr}-01-01`);
+  const [bis, setBis] = useState(toISODate(new Date()));
+
+  const datevAnzahl = useMemo(
+    () => datevRechnungen(alleRechnungen, new Date(von), new Date(bis)).length,
+    [alleRechnungen, von, bis],
+  );
+
+  function exportDatev() {
+    const result = buildDatevBuchungsstapel(alleRechnungen, {
+      beraterNr: company.datevBeraterNr,
+      mandantNr: company.datevMandantNr,
+      erloeskonto: company.datevErloeskonto,
+      gegenkonto: company.datevGegenkonto,
+      von: new Date(von),
+      bis: new Date(bis),
+      bezeichnung: `Buchungsstapel ${von} bis ${bis}`,
+    });
+    if (result.anzahl === 0) {
+      toast.error("Keine Buchungen im gewählten Zeitraum");
+      return;
+    }
+    downloadText(`DATEV_Buchungsstapel_${von}_${bis}.csv`, result.csv, "text/csv");
+    toast.success(`${result.anzahl} Buchungen exportiert (${EUR(result.summe)})`);
+    logActivity({
+      bereich: "Buchhaltung",
+      aktion: "DATEV-Export",
+      beschreibung: `DATEV-Buchungsstapel ${von}–${bis}: ${result.anzahl} Buchungen`,
+    });
+  }
+
 
   const kostenpositionen = (Object.keys(KOSTEN_LABEL) as (keyof typeof KOSTEN_LABEL)[]).map(
     (k) => ({
