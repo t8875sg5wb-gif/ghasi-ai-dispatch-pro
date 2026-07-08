@@ -22,7 +22,7 @@ import {
   formatEUR,
   initials,
   laeuftAb,
-  nextFahrerId,
+  
 } from "@/lib/fahrer";
 import { FahrerForm, type FahrerFormValues } from "@/components/fahrer/fahrer-form";
 import { FahrerDetail } from "@/components/fahrer/fahrer-detail";
