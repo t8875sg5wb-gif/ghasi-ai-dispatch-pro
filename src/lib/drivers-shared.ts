@@ -66,6 +66,10 @@ export interface DriverRow {
   km_heute: number | string;
   umsatz_heute: number | string;
   gewinn_heute: number | string;
+  p_schein_gueltig_bis: string | null;
+  fuehrungszeugnis_datum: string | null;
+  sv_ausweis_vorhanden: boolean | null;
+  steuer_id: string | null;
 }
 
 function asNachweis(value: unknown): Nachweis {
