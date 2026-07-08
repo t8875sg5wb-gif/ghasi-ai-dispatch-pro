@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Workflow, ShieldCheck, ArrowRight, CheckCircle2, Pause, Play } from "lucide-react";
+
+import { useAutomationStates, useSetAutomationState } from "@/lib/automation-states-store";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
