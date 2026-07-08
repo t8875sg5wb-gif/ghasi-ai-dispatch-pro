@@ -216,6 +216,30 @@ export const navGroups: NavGroup[] = [
         description: "Abrechnung, Mahnwesen und offene Posten.",
       },
       {
+        label: "Ausgaben",
+        to: "/ausgaben",
+        icon: Receipt,
+        description: "Belege, Kategorien und Vorsteuer-Hinweis (§4 Nr.17b).",
+      },
+      {
+        label: "EÜR",
+        to: "/euer",
+        icon: ScrollText,
+        description: "Einnahmen-Überschuss-Rechnung – Vorbereitung für ELSTER.",
+      },
+      {
+        label: "Lohn-Rechner",
+        to: "/lohn",
+        icon: Wallet,
+        description: "Netto, Arbeitgeberkosten & Minijob-Prüfung (Näherung).",
+      },
+      {
+        label: "Jahresabschluss",
+        to: "/jahresabschluss",
+        icon: CheckSquare,
+        description: "Steuerschätzung, Fristen & Jahresabschluss-Checkliste.",
+      },
+      {
         label: "Kassenverträge",
         to: "/kassenvertraege",
         icon: Handshake,
