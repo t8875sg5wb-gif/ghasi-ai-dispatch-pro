@@ -489,6 +489,15 @@ function RechnungenPage() {
         </CardContent>
       </Card>
 
+      <RechnungDetailDialog
+        rechnung={
+          detailTarget ? (alleRechnungen.find((r) => r.id === detailTarget.id) ?? detailTarget) : null
+        }
+        onClose={() => setDetailTarget(null)}
+      />
+
+
+
       {/* Mahnwesen-Dialog */}
       <Dialog open={!!mahnTarget} onOpenChange={(o) => !o && setMahnTarget(null)}>
         <DialogContent className="max-w-2xl">
