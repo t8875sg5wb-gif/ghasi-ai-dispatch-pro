@@ -153,13 +153,18 @@ function FahrerPage() {
       }
       toast.success("Fahrer aktualisiert");
     } else {
+      // Wait for the real server response before showing the driver — no fake
+      // client-side id/nummer (matches the vehicles create flow).
       createMut.mutate(values, {
+        onSuccess: (row) => {
+          setFahrer((prev) => [row, ...prev.filter((f) => f.id !== row.id)]);
+          toast.success(`Fahrer ${row.nummer} angelegt`);
+          setFormOpen(false);
+          setEditTarget(null);
+        },
         onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
       });
-      const id = nextFahrerId();
-      const nummer = `F-${String(fahrer.length + 1).padStart(3, "0")}`;
-      setFahrer((prev) => [{ id, nummer, ...values }, ...prev]);
-      toast.success(`Fahrer ${nummer} angelegt`);
+      return;
     }
     setFormOpen(false);
     setEditTarget(null);
