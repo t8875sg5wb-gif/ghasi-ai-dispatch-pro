@@ -261,13 +261,21 @@ function RechnungenPage() {
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.nummer}</TableCell>
                       <TableCell>
-                        <Link to="/kunden" className="text-primary hover:underline">
+                        <Link
+                          to="/kunden"
+                          search={{ id: r.kundeId || undefined }}
+                          className="text-primary hover:underline"
+                        >
                           {r.kunde}
                         </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {r.bezugAuftrag ? (
-                          <Link to="/auftraege" className="text-primary hover:underline">
+                          <Link
+                            to="/auftraege"
+                            search={{ nummer: r.bezugAuftrag }}
+                            className="text-primary hover:underline"
+                          >
                             {r.bezugAuftrag}
                           </Link>
                         ) : (
