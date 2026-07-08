@@ -15,6 +15,8 @@ export interface CompanySettings {
   email: string;
   steuernummer: string;
   ustId: string;
+  /** Institutionskennzeichen (IK) für die §133-SGB-V-Abrechnung. */
+  ikNummer: string;
   gewerbesteuerHebesatz: number;
   steuerModus: SteuerModus;
   // DATEV-Export (Steuerberater)
