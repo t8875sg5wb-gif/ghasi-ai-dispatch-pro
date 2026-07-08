@@ -232,6 +232,12 @@ export const navGroups: NavGroup[] = [
         description: "Inspektionen, TÜV, Reparaturen und Servicehistorie.",
       },
       {
+        label: "Fahrtenbuch",
+        to: "/fahrtenbuch",
+        icon: BookText,
+        description: "Kilometernachweis je Fahrzeug für Steuer & Prüfung.",
+      },
+      {
         label: "Dokumente",
         to: "/dokumente",
         icon: FolderArchive,
