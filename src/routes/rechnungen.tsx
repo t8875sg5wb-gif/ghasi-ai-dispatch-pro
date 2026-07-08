@@ -72,6 +72,7 @@ import { buildMahnText, naechsteMahnstufe, mahnStufeLabel } from "@/lib/dunning"
 import { rechnungToWrite } from "@/lib/invoices-shared";
 import { downloadText } from "@/lib/export-utils";
 import { RechnungDetailDialog } from "@/components/rechnungen/rechnung-detail-dialog";
+import { BankImportDialog } from "@/components/rechnungen/bank-import-dialog";
 import { logActivity } from "@/lib/protokoll";
 import type { Rechnung, MahnEintrag } from "@/lib/finance";
 
