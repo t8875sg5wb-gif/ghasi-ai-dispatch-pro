@@ -83,3 +83,13 @@ export function useGenerateBillingDrafts() {
     onSuccess: () => qc.invalidateQueries({ queryKey: INVOICES_QUERY_KEY }),
   });
 }
+
+export function useInvoiceChanges(invoiceId: string | null) {
+  const fn = useServerFn(listInvoiceChanges);
+  return useQuery({
+    queryKey: ["invoice-changes", invoiceId],
+    queryFn: () => fn({ data: { invoiceId: invoiceId as string } }),
+    enabled: !!invoiceId,
+    staleTime: 10_000,
+  });
+}
