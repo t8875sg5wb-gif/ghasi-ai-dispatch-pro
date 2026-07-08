@@ -27,6 +27,9 @@ export interface VehicleRow {
   fahrer: string | null;
   standort: string;
   gps: unknown;
+  last_real_lat: number | null;
+  last_real_lng: number | null;
+  last_real_at: string | null;
   kilometerstand: number;
   tankstand: number;
   kraftstoff: string;
