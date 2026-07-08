@@ -234,6 +234,11 @@ function PatientenSeite() {
         onSave={speichern}
         saving={createMut.isPending || updateMut.isPending}
       />
+      <VerordnungScanDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        patientId={aktiv ?? undefined}
+      />
     </div>
   );
 }
