@@ -84,6 +84,7 @@ function AdministrationSeite() {
         <>
           <Benutzerverwaltung />
           <Rollenmatrix />
+          <Datensicherung />
           <SystemStatus />
         </>
       )}
