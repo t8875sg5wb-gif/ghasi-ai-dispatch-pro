@@ -203,6 +203,12 @@ export const navGroups: NavGroup[] = [
         description: "Abrechnung, Mahnwesen und offene Posten.",
       },
       {
+        label: "Kassenverträge",
+        to: "/kassenvertraege",
+        icon: Handshake,
+        description: "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung §4 Nr.17b.",
+      },
+      {
         label: "Versicherungen",
         to: "/versicherungen",
         icon: ShieldCheck,
