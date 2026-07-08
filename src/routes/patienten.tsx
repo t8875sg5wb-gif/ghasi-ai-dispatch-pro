@@ -87,6 +87,7 @@ function PatientenSeite() {
   const [suche, setSuche] = useState("");
   const [aktiv, setAktiv] = useState<string | null>(initialId ?? null);
   const [formOpen, setFormOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Patient | null>(null);
 
   const gefiltert = patienten.filter(
