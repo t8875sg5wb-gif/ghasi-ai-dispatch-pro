@@ -105,6 +105,7 @@ function AuftraegePage() {
   const canManage = darfAuftragVerwalten(role);
   const canChangeStatus = darfAuftragStatusAendern(role);
 
+  const { nummer: deepNummer, id: deepId } = Route.useSearch();
   const { data: auftraege = [], isLoading, isError, error, refetch, isFetching } = useOrders();
   const createMut = useCreateOrder();
   const updateMut = useUpdateOrder();
@@ -119,6 +120,18 @@ function AuftraegePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Auftrag | null>(null);
+
+  // Deep-link: open the detail dialog for a specific order (by id or number).
+  const [deepLinkDone, setDeepLinkDone] = useState(false);
+  useEffect(() => {
+    if (deepLinkDone || (!deepNummer && !deepId) || auftraege.length === 0) return;
+    const ziel = auftraege.find((a) => a.id === deepId || a.nummer === deepNummer);
+    if (ziel) {
+      setDetailId(ziel.id);
+      setDetailOpen(true);
+      setDeepLinkDone(true);
+    }
+  }, [deepLinkDone, deepNummer, deepId, auftraege]);
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
