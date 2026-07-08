@@ -18,6 +18,7 @@ import { Route as TelefonRouteImport } from './routes/telefon'
 import { Route as StatistikenRouteImport } from './routes/statistiken'
 import { Route as StandorteRouteImport } from './routes/standorte'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SchichtplanRouteImport } from './routes/schichtplan'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
@@ -93,6 +94,11 @@ const StandorteRoute = StandorteRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchichtplanRoute = SchichtplanRouteImport.update({
+  id: '/schichtplan',
+  path: '/schichtplan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RechnungenRoute = RechnungenRouteImport.update({
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -364,6 +372,7 @@ export interface FileRoutesById {
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
   '/rechnungen': typeof RechnungenRoute
+  '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/standorte': typeof StandorteRoute
   '/statistiken': typeof StatistikenRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/posteingang'
     | '/prognosen'
     | '/rechnungen'
+    | '/schichtplan'
     | '/sitemap.xml'
     | '/standorte'
     | '/statistiken'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   PosteingangRoute: typeof PosteingangRoute
   PrognosenRoute: typeof PrognosenRoute
   RechnungenRoute: typeof RechnungenRoute
+  SchichtplanRoute: typeof SchichtplanRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StandorteRoute: typeof StandorteRoute
   StatistikenRoute: typeof StatistikenRoute
@@ -609,6 +622,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schichtplan': {
+      id: '/schichtplan'
+      path: '/schichtplan'
+      fullPath: '/schichtplan'
+      preLoaderRoute: typeof SchichtplanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rechnungen': {
@@ -874,6 +894,7 @@ const rootRouteChildren: RootRouteChildren = {
   PosteingangRoute: PosteingangRoute,
   PrognosenRoute: PrognosenRoute,
   RechnungenRoute: RechnungenRoute,
+  SchichtplanRoute: SchichtplanRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StandorteRoute: StandorteRoute,
   StatistikenRoute: StatistikenRoute,
