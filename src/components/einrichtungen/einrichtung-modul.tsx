@@ -2,6 +2,7 @@
 // Bietet Liste, Suche, Filter, Detailansicht, Anlegen/Bearbeiten und
 // verknüpfte Transporte – genutzt von Krankenhäusern, Dialysezentren und Pflegeheimen.
 import { useMemo, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Plus,
