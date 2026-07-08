@@ -1233,6 +1233,53 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_trips: {
+        Row: {
+          created_at: string
+          datum: string
+          fahrer: string
+          id: string
+          km_ende: number
+          km_start: number
+          notiz: string
+          updated_at: string
+          vehicle_id: string
+          zweck: string
+        }
+        Insert: {
+          created_at?: string
+          datum: string
+          fahrer?: string
+          id?: string
+          km_ende?: number
+          km_start?: number
+          notiz?: string
+          updated_at?: string
+          vehicle_id: string
+          zweck?: string
+        }
+        Update: {
+          created_at?: string
+          datum?: string
+          fahrer?: string
+          id?: string
+          km_ende?: number
+          km_start?: number
+          notiz?: string
+          updated_at?: string
+          vehicle_id?: string
+          zweck?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_trips_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           baujahr: number
