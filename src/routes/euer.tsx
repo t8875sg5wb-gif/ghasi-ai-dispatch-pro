@@ -110,7 +110,7 @@ function EuerPage() {
           label={euer.gewinn >= 0 ? "Gewinn" : "Verlust"}
           value={EUR2(euer.gewinn)}
           icon={Euro}
-          tone={euer.gewinn >= 0 ? "primary" : "destructive"}
+          tone={euer.gewinn >= 0 ? "primary" : "warning"}
         />
       </section>
 
