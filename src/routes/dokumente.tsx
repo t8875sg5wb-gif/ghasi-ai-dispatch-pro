@@ -143,9 +143,14 @@ function DokumentePage() {
         icon={FolderArchive}
         badge="Enterprise DMS"
         right={
-          <Button className="rounded-full" variant="secondary" onClick={() => setUploadOpen(true)}>
-            <Upload className="h-4 w-4" /> Hochladen
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button className="rounded-full" onClick={() => setScanOpen(true)}>
+              <ScanLine className="h-4 w-4" /> Verordnung scannen
+            </Button>
+            <Button className="rounded-full" variant="secondary" onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4" /> Hochladen
+            </Button>
+          </div>
         }
       />
 
