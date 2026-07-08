@@ -163,6 +163,43 @@ function FahrerMobilPage() {
         <Badge className="ml-auto bg-white/20 text-primary-foreground">{offen} offen</Badge>
       </div>
 
+      {/* Opt-in Standortfreigabe */}
+      <Card
+        className={cn(
+          "border-border/70 shadow-card transition-colors",
+          teilen && "border-success/50 bg-success/5",
+        )}
+      >
+        <CardContent className="flex items-center gap-3 p-4">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+              teilen ? "bg-success/15 text-success" : "bg-muted text-muted-foreground",
+            )}
+          >
+            <Radio className={cn("h-5 w-5", teilen && "animate-pulse")} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <Label htmlFor="gps-teilen" className="text-sm font-medium">
+              Standort teilen
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {teilen
+                ? letzteMeldung
+                  ? `Aktiv · zuletzt ${letzteMeldung.toLocaleTimeString("de-DE", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}`
+                  : "Aktiv · warte auf GPS-Signal …"
+                : "Nur während diese Ansicht geöffnet ist. Keine Hintergrund-Ortung."}
+            </p>
+            {gpsFehler && <p className="mt-0.5 text-xs text-destructive">{gpsFehler}</p>}
+          </div>
+          <Switch id="gps-teilen" checked={teilen} onCheckedChange={setTeilen} />
+        </CardContent>
+      </Card>
+
       {isLoading && (
         <p className="py-8 text-center text-sm text-muted-foreground">Touren werden geladen …</p>
       )}
