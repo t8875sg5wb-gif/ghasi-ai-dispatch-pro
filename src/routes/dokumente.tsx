@@ -354,6 +354,7 @@ function DokumentePage() {
         onOpenChange={setUploadOpen}
         akteur={akteur ?? "Mitarbeiter"}
       />
+      <VerordnungScanDialog open={scanOpen} onOpenChange={setScanOpen} />
       <DocumentViewer
         dokument={viewer}
         open={viewer !== null}
