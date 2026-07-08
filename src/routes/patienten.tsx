@@ -259,7 +259,12 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger} />
+            <ProfilZeile icon={Shield} label="Kostenträger" value={patient.kostentraeger || "—"} />
+            <ProfilZeile
+              icon={BadgeEuro}
+              label="Versichertennummer"
+              value={patient.versichertennummer?.trim() ? patient.versichertennummer : "—"}
+            />
             <ProfilZeile
               icon={Phone}
               label="Telefon"
@@ -271,6 +276,44 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
               value={patient.begleitperson ? "Ja – standardmäßig" : "Nein"}
             />
           </div>
+
+          {/* Abrechnungs-/Compliance-Status */}
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant="outline"
+              className={cn(
+                "gap-1",
+                patient.verordnungVorhanden ? FRIST_BADGE.ok : FRIST_BADGE.abgelaufen,
+              )}
+            >
+              <FileCheck2 className="h-3.5 w-3.5" />
+              {patient.verordnungVorhanden ? "Verordnung liegt vor" : "Keine Verordnung"}
+            </Badge>
+            {patient.zuzahlungsbefreit && (
+              <Badge variant="outline" className={cn("gap-1", FRIST_BADGE[zuzahlung.status === "fehlt" ? "ok" : zuzahlung.status])}>
+                <BadgeEuro className="h-3.5 w-3.5" />
+                Zuzahlungsbefreit{patient.zuzahlungsbefreitBis ? ` bis ${formatDatumDE(patient.zuzahlungsbefreitBis)}` : ""}
+              </Badge>
+            )}
+            {patient.genehmigungBis && (
+              <Badge variant="outline" className={cn("gap-1", FRIST_BADGE[genehmigung.status])}>
+                <CalendarCheck className="h-3.5 w-3.5" />
+                Genehmigung {genehmigung.label}
+              </Badge>
+            )}
+          </div>
+          {(zuzahlung.status === "abgelaufen" || zuzahlung.status === "bald") && patient.zuzahlungsbefreit && (
+            <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              Zuzahlungsbefreiung {zuzahlung.label}.
+            </div>
+          )}
+          {(genehmigung.status === "abgelaufen" || genehmigung.status === "bald") && (
+            <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              Dauerfahrten-Genehmigung {genehmigung.label}.
+            </div>
+          )}
           {patient.hinweis && (
             <div className="rounded-xl border border-border/70 bg-muted/40 p-3">
               <p className="text-xs font-medium text-muted-foreground">Hinweis</p>
