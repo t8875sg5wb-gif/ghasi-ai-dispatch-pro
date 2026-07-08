@@ -16,6 +16,7 @@ import {
   Download,
   FileDown,
   Loader2,
+  Banknote,
 } from "lucide-react";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 
