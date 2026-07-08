@@ -83,6 +83,27 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_states: {
+        Row: {
+          automation_id: string
+          created_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          automation_id: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          automation_id?: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           auftrag_erstellt: boolean
