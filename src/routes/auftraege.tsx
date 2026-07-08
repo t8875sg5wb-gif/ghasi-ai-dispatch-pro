@@ -15,10 +15,14 @@ import {
 import {
   type Auftrag,
   type AuftragStatus,
+  type Mobilitaet,
+  type Transportart,
   PRIORITAET_META,
   STATUS_META,
   STATUS_PIPELINE,
   formatTermin,
+  istMobilitaet,
+  istTransportart,
 } from "@/lib/auftraege";
 import { useOrders, useCreateOrder, useUpdateOrder, useSeedOrders } from "@/lib/orders-store";
 import type { OrderWrite } from "@/lib/orders-shared";
