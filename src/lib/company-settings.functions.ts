@@ -37,6 +37,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   email: "kontakt@krankentransport-minden.de",
   steuernummer: "",
   ustId: "",
+  ikNummer: "",
   gewerbesteuerHebesatz: 460,
   steuerModus: DEFAULT_STEUER_MODUS,
   datevBeraterNr: "",
@@ -54,6 +55,7 @@ interface CompanyRow {
   email: string;
   steuernummer: string;
   ust_id: string;
+  ik_nummer?: string;
   gewerbesteuer_hebesatz: number;
   steuer_modus: string;
   datev_berater_nr?: string;
@@ -72,6 +74,7 @@ function rowToSettings(r: CompanyRow): CompanySettings {
     email: r.email ?? "",
     steuernummer: r.steuernummer ?? "",
     ustId: r.ust_id ?? "",
+    ikNummer: r.ik_nummer ?? "",
     gewerbesteuerHebesatz: Number(r.gewerbesteuer_hebesatz ?? 460),
     steuerModus: (r.steuer_modus as SteuerModus) ?? DEFAULT_STEUER_MODUS,
     datevBeraterNr: r.datev_berater_nr ?? "",
@@ -111,6 +114,7 @@ export const saveCompanySettings = createServerFn({ method: "POST" })
       email: data.email,
       steuernummer: data.steuernummer,
       ust_id: data.ustId,
+      ik_nummer: data.ikNummer,
       gewerbesteuer_hebesatz: data.gewerbesteuerHebesatz,
       steuer_modus: data.steuerModus,
       datev_berater_nr: data.datevBeraterNr,
