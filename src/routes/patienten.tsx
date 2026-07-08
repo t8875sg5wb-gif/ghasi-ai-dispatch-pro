@@ -288,11 +288,18 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4" />
             Transporte & Verordnungen
           </CardTitle>
+          {transporte.length > 0 && (
+            <Button asChild variant="ghost" size="sm" className="rounded-full text-primary">
+              <Link to="/auftraege" search={{ q: patient.name }}>
+                Alle Aufträge
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-2">
           {transporte.length === 0 && (
@@ -302,7 +309,12 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
             const ver = VERORDNUNG_META[effektiveVerordnung(a)];
             const mismatch = fahrzeugMismatch(a);
             return (
-              <div key={a.id} className="rounded-xl border border-border/70 p-3">
+              <Link
+                key={a.id}
+                to="/auftraege"
+                search={{ nummer: a.nummer }}
+                className="block rounded-xl border border-border/70 p-3 transition-colors hover:bg-muted/40"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{a.nummer}</span>
                   <Badge variant="outline" className={cn("gap-1", STATUS_META[a.status].badge)}>
@@ -319,7 +331,7 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
                   <span className="font-medium">{ver.label}</span>
                 </div>
                 {mismatch && <p className="mt-1 text-xs font-medium text-warning">{mismatch}</p>}
-              </div>
+              </Link>
             );
           })}
         </CardContent>
