@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   Calculator,
   TrendingUp,
@@ -12,6 +13,7 @@ import {
   Car,
   ScrollText,
   ArrowRight,
+  FileDown,
 } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -20,8 +22,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { computeFinanzKpis, offenePostenJeKunde, INITIAL_RECHNUNGEN, EUR } from "@/lib/finance";
 import { useInvoices } from "@/lib/invoices-store";
+import { useCompanySettings } from "@/lib/company-settings-store";
+import { buildDatevBuchungsstapel, datevRechnungen } from "@/lib/datev-export";
+import { downloadText } from "@/lib/export-utils";
+import { toISODate } from "@/lib/shifts-shared";
+import { logActivity } from "@/lib/protokoll";
 
 export const Route = createFileRoute("/buchhaltung")({
   head: () => ({
