@@ -50,6 +50,7 @@ import {
 } from "@/lib/documents";
 import { useDocuments, useUploadDocument, useDeleteDocument } from "@/lib/documents-store";
 import { DocumentViewer } from "@/components/dokumente/document-viewer";
+import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export const Route = createFileRoute("/dokumente")({
