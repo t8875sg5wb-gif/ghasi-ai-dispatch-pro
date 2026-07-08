@@ -81,9 +81,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten, darfAuftragStatusAendern } from "@/lib/roles";
 
 export const Route = createFileRoute("/auftraege")({
-  validateSearch: (search: Record<string, unknown>): { nummer?: string; id?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { nummer?: string; id?: string; q?: string } => ({
     nummer: typeof search.nummer === "string" ? search.nummer : undefined,
     id: typeof search.id === "string" ? search.id : undefined,
+    q: typeof search.q === "string" ? search.q : undefined,
   }),
   head: () => ({
     meta: [
