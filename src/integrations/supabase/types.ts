@@ -403,6 +403,57 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          bezug: Json | null
+          created_at: string
+          format: string
+          groesse_kb: number
+          hochgeladen_von: string
+          id: string
+          kategorie: string
+          name: string
+          ocr_text: string | null
+          ordner: string
+          storage_path: string
+          tags: Json
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          bezug?: Json | null
+          created_at?: string
+          format?: string
+          groesse_kb?: number
+          hochgeladen_von?: string
+          id?: string
+          kategorie?: string
+          name?: string
+          ocr_text?: string | null
+          ordner?: string
+          storage_path: string
+          tags?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          bezug?: Json | null
+          created_at?: string
+          format?: string
+          groesse_kb?: number
+          hochgeladen_von?: string
+          id?: string
+          kategorie?: string
+          name?: string
+          ocr_text?: string | null
+          ordner?: string
+          storage_path?: string
+          tags?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           adresse: string
