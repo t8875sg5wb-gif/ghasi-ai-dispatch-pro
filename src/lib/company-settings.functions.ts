@@ -17,6 +17,13 @@ export interface CompanySettings {
   ustId: string;
   gewerbesteuerHebesatz: number;
   steuerModus: SteuerModus;
+  // DATEV-Export (Steuerberater)
+  datevBeraterNr: string;
+  datevMandantNr: string;
+  /** SKR03 Erlöskonto für steuerfreie Umsätze §4 Nr.17b (Standard 8120). */
+  datevErloeskonto: string;
+  /** Debitoren-Sammelkonto / Gegenkonto (Standard 10000). */
+  datevGegenkonto: string;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -30,6 +37,10 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   ustId: "",
   gewerbesteuerHebesatz: 460,
   steuerModus: DEFAULT_STEUER_MODUS,
+  datevBeraterNr: "",
+  datevMandantNr: "",
+  datevErloeskonto: "8120",
+  datevGegenkonto: "10000",
 };
 
 interface CompanyRow {
@@ -43,6 +54,10 @@ interface CompanyRow {
   ust_id: string;
   gewerbesteuer_hebesatz: number;
   steuer_modus: string;
+  datev_berater_nr?: string;
+  datev_mandant_nr?: string;
+  datev_erloeskonto?: string;
+  datev_gegenkonto?: string;
 }
 
 function rowToSettings(r: CompanyRow): CompanySettings {
@@ -57,6 +72,10 @@ function rowToSettings(r: CompanyRow): CompanySettings {
     ustId: r.ust_id ?? "",
     gewerbesteuerHebesatz: Number(r.gewerbesteuer_hebesatz ?? 460),
     steuerModus: (r.steuer_modus as SteuerModus) ?? DEFAULT_STEUER_MODUS,
+    datevBeraterNr: r.datev_berater_nr ?? "",
+    datevMandantNr: r.datev_mandant_nr ?? "",
+    datevErloeskonto: r.datev_erloeskonto ?? "8120",
+    datevGegenkonto: r.datev_gegenkonto ?? "10000",
   };
 }
 
