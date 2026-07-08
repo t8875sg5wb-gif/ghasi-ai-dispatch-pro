@@ -31,6 +31,7 @@ import { Route as KrankenhaeuserRouteImport } from './routes/krankenhaeuser'
 import { Route as KiAssistentRouteImport } from './routes/ki-assistent'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FahrzeugeRouteImport } from './routes/fahrzeuge'
+import { Route as FahrtenbuchRouteImport } from './routes/fahrtenbuch'
 import { Route as FahrerRouteImport } from './routes/fahrer'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
@@ -161,6 +162,11 @@ const FahrzeugeRoute = FahrzeugeRouteImport.update({
   path: '/fahrzeuge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FahrtenbuchRoute = FahrtenbuchRouteImport.update({
+  id: '/fahrtenbuch',
+  path: '/fahrtenbuch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FahrerRoute = FahrerRouteImport.update({
   id: '/fahrer',
   path: '/fahrer',
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
   '/krankenhaeuser': typeof KrankenhaeuserRoute
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/einrichtungen': typeof EinrichtungenRoute
   '/einstellungen': typeof EinstellungenRoute
   '/fahrer': typeof FahrerRoute
+  '/fahrtenbuch': typeof FahrtenbuchRoute
   '/fahrzeuge': typeof FahrzeugeRoute
   '/insights': typeof InsightsRoute
   '/ki-assistent': typeof KiAssistentRouteWithChildren
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
     | '/ki-assistent'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
     | '/krankenhaeuser'
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/einrichtungen'
     | '/einstellungen'
     | '/fahrer'
+    | '/fahrtenbuch'
     | '/fahrzeuge'
     | '/insights'
     | '/ki-assistent'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   EinrichtungenRoute: typeof EinrichtungenRoute
   EinstellungenRoute: typeof EinstellungenRoute
   FahrerRoute: typeof FahrerRoute
+  FahrtenbuchRoute: typeof FahrtenbuchRoute
   FahrzeugeRoute: typeof FahrzeugeRoute
   InsightsRoute: typeof InsightsRoute
   KiAssistentRoute: typeof KiAssistentRouteWithChildren
@@ -715,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FahrzeugeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fahrtenbuch': {
+      id: '/fahrtenbuch'
+      path: '/fahrtenbuch'
+      fullPath: '/fahrtenbuch'
+      preLoaderRoute: typeof FahrtenbuchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fahrer': {
       id: '/fahrer'
       path: '/fahrer'
@@ -882,6 +902,7 @@ const rootRouteChildren: RootRouteChildren = {
   EinrichtungenRoute: EinrichtungenRoute,
   EinstellungenRoute: EinstellungenRoute,
   FahrerRoute: FahrerRoute,
+  FahrtenbuchRoute: FahrtenbuchRoute,
   FahrzeugeRoute: FahrzeugeRoute,
   InsightsRoute: InsightsRoute,
   KiAssistentRoute: KiAssistentRouteWithChildren,
