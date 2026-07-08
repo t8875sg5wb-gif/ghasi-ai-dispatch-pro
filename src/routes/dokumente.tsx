@@ -92,6 +92,7 @@ function DokumentePage() {
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState<DokumentKategorie | "alle">("alle");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [viewer, setViewer] = useState<DokumentRecord | null>(null);
 
   const { data: dokumente = [], isLoading, isError, refetch } = useDocuments();
