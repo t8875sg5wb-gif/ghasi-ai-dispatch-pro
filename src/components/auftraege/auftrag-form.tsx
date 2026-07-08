@@ -41,6 +41,8 @@ export type AuftragFormValues = Omit<Auftrag, "id" | "nummer" | "status">;
 
 interface AuftragFormProps {
   initial?: Auftrag;
+  /** Prefilled defaults for a NEW order (ignored when `initial` is set). */
+  prefill?: Partial<AuftragFormValues>;
   onSubmit: (values: AuftragFormValues) => void;
   onCancel: () => void;
   submitLabel: string;
