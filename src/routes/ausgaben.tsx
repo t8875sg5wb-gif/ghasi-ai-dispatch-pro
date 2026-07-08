@@ -251,7 +251,7 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
       if (file) {
         const doc = await uploadMut.mutateAsync({
           file,
-          kategorie: "beleg",
+          kategorie: "wartungsbeleg",
           ordner: "Belege",
           tags: ["Ausgabe", kategorie],
           hochgeladenVon: name,
