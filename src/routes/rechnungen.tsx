@@ -14,8 +14,10 @@ import {
   Send,
   Copy,
   Download,
+  FileDown,
   Loader2,
 } from "lucide-react";
+import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
