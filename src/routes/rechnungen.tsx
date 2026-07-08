@@ -504,6 +504,8 @@ function RechnungenPage() {
         onClose={() => setDetailTarget(null)}
       />
 
+      <BankImportDialog open={bankOpen} onOpenChange={setBankOpen} />
+
 
 
       {/* Mahnwesen-Dialog */}
