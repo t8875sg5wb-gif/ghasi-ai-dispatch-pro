@@ -113,6 +113,7 @@ function RechnungenPage() {
 
   // Detail-/Zahlungsdialog
   const [detailTarget, setDetailTarget] = useState<Rechnung | null>(null);
+  const [bankOpen, setBankOpen] = useState(false);
 
   // Mahnwesen-Dialog
   const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
