@@ -100,7 +100,8 @@ function LeasingSeite() {
 
   const selektiert = items.find((l) => l.id === aktiv) ?? gefiltert[0] ?? null;
   const monatsrate = items.reduce((s, l) => s + l.rateMonat, 0);
-  const hinweise = useMemo(() => buildHinweise(items), [items]);
+  const { data: vehicles = [] } = useVehicles();
+  const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
   function speichern(values: Leasingvertrag) {
     const istNeu = !items.some((l) => l.id === values.id);
@@ -255,6 +256,7 @@ function LeasingSeite() {
         {selektiert && (
           <LeasingDetail
             vertrag={selektiert}
+            vehicles={vehicles}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
