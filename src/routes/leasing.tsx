@@ -437,9 +437,10 @@ function LeasingFelder({
   onClose: () => void;
   onSave: (l: Leasingvertrag) => void;
 }) {
+  const fahrzeugOpt = useVehicleOptions();
   const [leasinggeber, setLeasinggeber] = useState(target?.leasinggeber ?? "");
   const [vertragsnummer, setVertragsnummer] = useState(target?.vertragsnummer ?? "");
-  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? FAHRZEUG_OPTIONEN[0] ?? "");
+  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? "");
   const [rateMonat, setRateMonat] = useState(String(target?.rateMonat ?? ""));
   const [restwert, setRestwert] = useState(String(target?.restwert ?? ""));
   const [laufzeit, setLaufzeit] = useState(String(target?.laufzeitMonate ?? "36"));
