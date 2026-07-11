@@ -431,10 +431,11 @@ function VersicherungFelder({
   onClose: () => void;
   onSave: (v: Versicherung) => void;
 }) {
+  const fahrzeugOpt = useVehicleOptions();
   const [versicherer, setVersicherer] = useState(target?.versicherer ?? "");
   const [policennummer, setPolicennummer] = useState(target?.policennummer ?? "");
   const [art, setArt] = useState<VersicherungsArt>(target?.art ?? "Haftpflicht");
-  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? FAHRZEUG_OPTIONEN[1] ?? "Flotte");
+  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? "Flotte");
   const [beitragMonat, setBeitragMonat] = useState(String(target?.beitragMonat ?? ""));
   const [selbstbeteiligung, setSelbstbeteiligung] = useState(
     String(target?.selbstbeteiligung ?? "0"),
