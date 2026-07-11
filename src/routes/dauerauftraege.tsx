@@ -127,7 +127,7 @@ const leereVorlage = (): Dauerauftrag => ({
   mobilitaet: "gehfaehig",
   begleitperson: false,
   verordnungErforderlich: true,
-  kostentraeger: KUNDEN[0]?.name ?? "",
+  kostentraeger: "",
   krankenkasse: KRANKENKASSEN[0]?.name ?? "",
   bevorzugtesFahrzeug: null,
   bevorzugterFahrer: null,
