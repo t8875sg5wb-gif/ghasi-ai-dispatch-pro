@@ -487,11 +487,15 @@ function LeasingFelder({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrzeugOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">{fahrzeugOpt.hinweis}</div>
+              ) : (
+                fahrzeugOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </Feld>
