@@ -54,7 +54,7 @@ export function LiveFleetMapCard({
   }, []);
 
   const zaehler = useMemo(() => {
-    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, notfall: 0, offline: 0 };
+    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, offline: 0 };
     for (const v of fleet) z[v.farbe] += 1;
     return z;
   }, [fleet]);
@@ -69,7 +69,7 @@ export function LiveFleetMapCard({
           <div>
             <p className="text-sm font-semibold leading-tight">Live-Flotte (Google Maps)</p>
             <p className="text-xs text-muted-foreground">
-              {zaehler.fahrt} unterwegs · {zaehler.frei} frei · {zaehler.notfall} Notfall
+              {zaehler.fahrt} unterwegs · {zaehler.frei} frei · {zaehler.wartet} warten
             </p>
           </div>
         </div>
