@@ -35,7 +35,7 @@ import {
  * Farb-Status der Live-Marker
  * ------------------------------------------------------------------ */
 
-export type FleetFarbe = "frei" | "fahrt" | "wartet" | "notfall" | "offline";
+export type FleetFarbe = "frei" | "fahrt" | "wartet" | "offline";
 
 export const FLEET_FARBEN: Record<
   FleetFarbe,
@@ -58,12 +58,6 @@ export const FLEET_FARBEN: Record<
     hex: "#ea580c",
     badge: "border-warning/30 bg-warning/10 text-warning",
     dot: "bg-warning",
-  },
-  notfall: {
-    label: "Notfall",
-    hex: "#dc2626",
-    badge: "border-destructive/30 bg-destructive/10 text-destructive",
-    dot: "bg-destructive",
   },
   offline: {
     label: "Offline",
@@ -217,7 +211,6 @@ export interface FleetVehicle {
 
 function farbeVon(v: Fahrzeug, a: FleetAssignment | null): FleetFarbe {
   if (v.status === "werkstatt" || v.status === "nicht_verfuegbar") return "offline";
-  if (a?.transport.istNotfall) return "notfall";
   if (a && (a.liveStatus === "am_abholort" || a.liveStatus === "am_ziel")) return "wartet";
   if (v.status === "unterwegs") return "fahrt";
   return "frei";
