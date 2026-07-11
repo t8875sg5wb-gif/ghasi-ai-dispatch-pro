@@ -28,6 +28,22 @@ import {
 } from "@/lib/finance";
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
 import { buildGpsSnapshot } from "@/lib/fleet-live";
+import {
+  RECHTSSTAND,
+  MINDESTLOHN,
+  MINIJOB_GRENZE_MONAT,
+  MINIJOB_GRENZE_JAHR,
+  MIDIJOB_UNTERGRENZE,
+  MIDIJOB_OBERGRENZE,
+  SV_SAETZE_2026,
+  MINIJOB_PAUSCHALEN_2026,
+  BBG_KV_PV_MONAT,
+  BEZUGSGROESSE_MONAT,
+  GRUNDFREIBETRAG,
+  AUFBEWAHRUNG_JAHRE,
+  NEUERUNGEN_2026,
+  RECHTSGRUNDLAGEN_KI,
+} from "@/lib/gesetzeswerte";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
