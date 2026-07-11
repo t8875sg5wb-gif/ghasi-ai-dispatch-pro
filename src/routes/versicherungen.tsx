@@ -493,9 +493,10 @@ function VersicherungFelder({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
+              <SelectItem value="Flotte">Flotte (gesamt)</SelectItem>
+              {fahrzeugOpt.options.map((f) => (
+                <SelectItem key={f.value} value={f.value}>
+                  {f.label}
                 </SelectItem>
               ))}
             </SelectContent>
