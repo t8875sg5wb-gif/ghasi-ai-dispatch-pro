@@ -13,7 +13,7 @@ const einrichtungConfigs = {
     beschreibung: "Kliniken, Fachbereiche, Ansprechpartner und Transporte.",
     icon: Hospital,
     idPrefix: "kh",
-    daten: KRANKENHAEUSER,
+    
     kapazitaetLabel: "Betten",
   },
   dialysezentren: {
@@ -23,7 +23,7 @@ const einrichtungConfigs = {
     beschreibung: "Zentren, Schichtzeiten, Behandlungsplätze und Sammeltouren.",
     icon: Droplets,
     idPrefix: "dz",
-    daten: DIALYSEZENTREN,
+    
     kapazitaetLabel: "Behandlungsplätze",
   },
   pflegeheime: {
@@ -33,7 +33,7 @@ const einrichtungConfigs = {
     beschreibung: "Einrichtungen, Plätze, Ansprechpartner und Transporte.",
     icon: Home,
     idPrefix: "ph",
-    daten: PFLEGEHEIME,
+    
     kapazitaetLabel: "Plätze",
   },
 };
