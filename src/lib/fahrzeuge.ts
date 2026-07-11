@@ -4,7 +4,7 @@ import type { Transportart } from "@/lib/auftraege";
 
 export type FahrzeugStatus = "frei" | "unterwegs" | "werkstatt" | "nicht_verfuegbar";
 
-export type Fahrzeugtyp = "KTW" | "RTW" | "Rollstuhlbus" | "Tragestuhlwagen" | "PKW";
+export type Fahrzeugtyp = "PKW" | "Rollstuhlfahrzeug" | "LMW";
 
 export type Kraftstoffart = "Diesel" | "Benzin" | "Elektro" | "Hybrid";
 
@@ -114,13 +114,7 @@ export const FAHRZEUG_STATI: FahrzeugStatus[] = [
   "nicht_verfuegbar",
 ];
 
-export const FAHRZEUGTYPEN: Fahrzeugtyp[] = [
-  "KTW",
-  "RTW",
-  "Rollstuhlbus",
-  "Tragestuhlwagen",
-  "PKW",
-];
+export const FAHRZEUGTYPEN: Fahrzeugtyp[] = ["PKW", "Rollstuhlfahrzeug", "LMW"];
 
 export const KRAFTSTOFFARTEN: Kraftstoffart[] = ["Diesel", "Benzin", "Elektro", "Hybrid"];
 
@@ -225,7 +219,6 @@ export function nextFahrzeugId(): string {
 function passtZuAuftrag(f: Fahrzeug, transportart: Transportart): boolean {
   switch (transportart) {
     case "Liegendtransport":
-    case "Notfall":
       return f.liegendGeeignet;
     case "Rollstuhl":
       return f.rollstuhlGeeignet;
