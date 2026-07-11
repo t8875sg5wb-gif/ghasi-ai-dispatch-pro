@@ -207,9 +207,9 @@ export const PATIENTEN: Patient[] = [
   {
     id: "p-5",
     name: "Anna Klein",
-    mobilitaet: "Liegend",
+    mobilitaet: "Tragestuhl",
     kostentraeger: "Selbstzahler",
-    hinweis: "Notfallpatientin",
+    hinweis: "Tragestuhl erforderlich",
     begleitperson: true,
     medizinischeNotiz: "Tragestuhl für Treppenhaus erforderlich.",
     patientennotiz: "Wohnung im 3. OG ohne Aufzug.",

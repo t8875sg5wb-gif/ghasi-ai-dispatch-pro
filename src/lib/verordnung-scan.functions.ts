@@ -26,7 +26,7 @@ exakt in diesem Format:
  "dauerfahrt": boolean|null, "gueltigVon": string|null, "gueltigBis": string|null, "arzt": string|null}
 Regeln:
 - Datumsangaben als ISO (YYYY-MM-DD) wenn erkennbar, sonst null.
-- transportart: "liegend" für Liegendtransport/KTW-Liege, "Rollstuhl" bzw. "Tragestuhl" für Sitz-/Rollstuhl,
+- transportart: "liegend" für Liegendtransport (Liegend-Mietwagen), "Rollstuhl" bzw. "Tragestuhl" für Sitz-/Rollstuhl,
   "sitzend" für gehfähigen Sitztransport im Taxi/Mietwagen.
 - dauerfahrt: true wenn eine Serien-/Dauerbehandlung (z. B. Dialyse, Bestrahlung, Chemo) oder ein
   Zeitraum mit mehreren Fahrten angekreuzt ist, sonst false.
