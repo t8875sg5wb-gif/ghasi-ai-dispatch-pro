@@ -633,7 +633,6 @@ export interface DispatchKpis {
   wartend: number;
   verspaetet: number;
   storniert: number;
-  notfall: number;
   freieFahrer: number;
   freieFahrzeuge: number;
   umsatzHeute: number;
@@ -656,9 +655,7 @@ export function berechneKpis(
   const aktiv = transporte.filter((t) => spalteVon(t) === "aktiv").length;
   const wartend = transporte.filter((t) => spalteVon(t) === "warten").length;
   const verspaetet = transporte.filter((t) => spalteVon(t) === "verspaetet").length;
-  const notfall = transporte.filter(
-    (t) => t.istNotfall && t.liveStatus !== "abgeschlossen" && t.liveStatus !== "storniert",
-  ).length;
+
 
   const umsatzHeute = transporte
     .filter((t) => t.liveStatus !== "storniert")
