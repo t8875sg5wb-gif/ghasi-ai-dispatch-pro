@@ -154,7 +154,6 @@ const PREIS_REGEL: Record<string, number> = {
   Sitzendtransport: 110,
   Rollstuhl: 95,
   Dialysefahrt: 96,
-  Notfall: 410,
 };
 
 /** Returns the base price for an order, or 0 when no price rule exists. */
@@ -163,8 +162,8 @@ export function preisFuer(a: Auftrag): number {
 }
 
 /** True when a prescription is required for this transport type. */
-function verordnungErforderlich(a: Auftrag): boolean {
-  return a.transportart !== "Notfall";
+function verordnungErforderlich(_a: Auftrag): boolean {
+  return true;
 }
 
 export interface AbrechnungsBereitschaft {

@@ -52,7 +52,6 @@ const TARIF: Record<Transportart, { grund: number; proKm: number; avgKm: number 
   Sitzendtransport: { grund: 25, proKm: 1.3, avgKm: 12 },
   Rollstuhl: { grund: 35, proKm: 1.6, avgKm: 14 },
   Dialysefahrt: { grund: 30, proKm: 1.4, avgKm: 16 },
-  Notfall: { grund: 90, proKm: 3.0, avgKm: 20 },
 };
 
 const AKTIVE_STATUS: Auftrag["status"][] = ["neu", "disponiert", "unterwegs"];
