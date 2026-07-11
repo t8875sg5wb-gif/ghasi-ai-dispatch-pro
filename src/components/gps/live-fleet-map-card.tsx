@@ -16,7 +16,7 @@ import {
 } from "@/lib/fleet-live";
 
 function naechsterPunkt(v: FleetVehicle): LatLng | null {
-  if (v.farbe !== "fahrt" && v.farbe !== "notfall") return null;
+  if (v.farbe !== "fahrt") return null;
   const ziel = v.routeRest[1] ?? v.routeRest[0] ?? v.assignment?.pickup ?? null;
   if (!ziel) return null;
   const dlat = ziel.lat - v.gps.lat;
