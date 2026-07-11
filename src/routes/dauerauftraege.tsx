@@ -987,11 +987,15 @@ function DauerauftragForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {KUNDEN.map((k) => (
-                  <SelectItem key={k.id} value={k.name}>
-                    {k.name}
-                  </SelectItem>
-                ))}
+                {kundeOpt.leer ? (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">{kundeOpt.hinweis}</div>
+                ) : (
+                  kundeOpt.options.map((k) => (
+                    <SelectItem key={k.value} value={k.value}>
+                      {k.label}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -1021,9 +1025,9 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
-                {FAHRZEUG_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>
-                    {x}
+                {fahrzeugOpt.options.map((x) => (
+                  <SelectItem key={x.value} value={x.value}>
+                    {x.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1040,9 +1044,9 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
-                {FAHRER_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>
-                    {x}
+                {fahrerOpt.options.map((x) => (
+                  <SelectItem key={x.value} value={x.value}>
+                    {x.label}
                   </SelectItem>
                 ))}
               </SelectContent>
