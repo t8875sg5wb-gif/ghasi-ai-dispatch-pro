@@ -13,7 +13,7 @@ import {
   REIFENSTATI,
   REIFEN_META,
 } from "@/lib/fahrzeuge";
-import { FAHRER_OPTIONEN } from "@/lib/auftraege";
+import { useDriverOptions } from "@/hooks/use-entity-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,6 +79,7 @@ function emptyValues(): FahrzeugFormValues {
 
 export function FahrzeugForm({ initial, onSubmit, onCancel, submitLabel }: FahrzeugFormProps) {
   const [values, setValues] = useState<FahrzeugFormValues>(emptyValues);
+  const fahrerOpt = useDriverOptions();
 
   useEffect(() => {
     if (initial) {
@@ -224,11 +225,15 @@ export function FahrzeugForm({ initial, onSubmit, onCancel, submitLabel }: Fahrz
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Kein Fahrer</SelectItem>
-              {FAHRER_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrerOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">{fahrerOpt.hinweis}</div>
+              ) : (
+                fahrerOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
