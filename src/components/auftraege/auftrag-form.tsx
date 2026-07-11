@@ -75,6 +75,8 @@ function emptyValues(): AuftragFormValues {
 
 export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
+  const fahrerOpt = useDriverOptions();
+  const fahrzeugOpt = useVehicleOptions();
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
