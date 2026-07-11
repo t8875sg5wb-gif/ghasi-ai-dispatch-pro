@@ -70,7 +70,7 @@ export const Route = createFileRoute("/versicherungen")({
   component: VersicherungenSeite,
 });
 
-const FAHRZEUG_OPTIONEN = ["Flotte", ...INITIAL_FAHRZEUGE.map((f) => f.kennzeichen)];
+
 
 type ArtFilter = VersicherungsArt | "alle";
 
@@ -101,7 +101,8 @@ function VersicherungenSeite() {
 
   const selektiert = items.find((v) => v.id === aktiv) ?? gefiltert[0] ?? null;
   const monatsbeitrag = items.reduce((s, v) => s + v.beitragMonat, 0);
-  const hinweise = useMemo(() => buildHinweise(items), [items]);
+  const { data: vehicles = [] } = useVehicles();
+  const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
   function speichern(values: Versicherung) {
     const istNeu = !items.some((v) => v.id === values.id);
