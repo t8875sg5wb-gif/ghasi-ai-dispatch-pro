@@ -498,7 +498,3 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
  * production source of truth — never the demo `SEED_AUFTRAEGE` above.
  */
 export const INITIAL_AUFTRAEGE: Auftrag[] = [];
-
-export const FAHRER_OPTIONEN = ["M. Keller", "S. Yilmaz", "P. Richter", "L. Schäfer", "T. Wolf"];
-
-export const FAHRZEUG_OPTIONEN = ["B-KT 142", "B-KT 097", "B-KT 204", "B-KT 311", "B-KT 358"];
