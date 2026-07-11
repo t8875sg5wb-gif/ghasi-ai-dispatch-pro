@@ -699,7 +699,6 @@ export function berechneKpis(
     wartend,
     verspaetet,
     storniert,
-    notfall,
     freieFahrer,
     freieFahrzeuge,
     umsatzHeute,
