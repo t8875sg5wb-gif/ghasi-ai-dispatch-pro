@@ -29,7 +29,9 @@ import {
   useSeedLeasing,
 } from "@/lib/leasing-store";
 import type { LeasingWrite } from "@/lib/leasing-shared";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { type Fahrzeug } from "@/lib/fahrzeuge";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useVehicleOptions } from "@/hooks/use-entity-options";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +71,7 @@ export const Route = createFileRoute("/leasing")({
   component: LeasingSeite,
 });
 
-const FAHRZEUG_OPTIONEN = INITIAL_FAHRZEUGE.map((f) => f.kennzeichen);
+
 
 function LeasingSeite() {
   const { name: akteur } = useAuth();
