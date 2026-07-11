@@ -29,7 +29,9 @@ import {
   useSeedInsurance,
 } from "@/lib/insurance-store";
 import type { InsuranceWrite } from "@/lib/insurance-shared";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { type Fahrzeug } from "@/lib/fahrzeuge";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useVehicleOptions } from "@/hooks/use-entity-options";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
