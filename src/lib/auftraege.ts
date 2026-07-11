@@ -24,8 +24,7 @@ export type Transportart =
   | "Liegendtransport"
   | "Sitzendtransport"
   | "Rollstuhl"
-  | "Dialysefahrt"
-  | "Notfall";
+  | "Dialysefahrt";
 
 /* ------------------------------------------------------------------ *
  * Medizinische Transportdetails (additiv)
@@ -242,7 +241,6 @@ export function effektiveMobilitaet(a: Pick<Auftrag, "mobilitaet" | "transportar
   if (a.mobilitaet) return a.mobilitaet;
   switch (a.transportart) {
     case "Liegendtransport":
-    case "Notfall":
       return "liegend";
     case "Rollstuhl":
       return "rollstuhl";
@@ -272,7 +270,7 @@ export function fahrzeugPasstZuMobilitaet(m: Mobilitaet | undefined, f: Fahrzeug
 /** Empfohlener Fahrzeugtyp in Klartext für die KI / Disposition. */
 export function empfohlenerFahrzeugtyp(m: Mobilitaet | undefined): string {
   const bedarf = MOBILITAET_META[m ?? "gehfaehig"].benoetigtFahrzeug;
-  if (bedarf === "liegend") return "Liegend-/KTW-Fahrzeug (Trage)";
+  if (bedarf === "liegend") return "Liegend-Mietwagen (LMW)";
   if (bedarf === "rollstuhl") return "Rollstuhl-/Tragestuhl-taugliches Fahrzeug";
   return "Standard-Sitzendtransport";
 }
@@ -307,7 +305,6 @@ export const TRANSPORTARTEN: Transportart[] = [
   "Sitzendtransport",
   "Rollstuhl",
   "Dialysefahrt",
-  "Notfall",
 ];
 
 export const PRIORITAETEN: AuftragPrioritaet[] = ["niedrig", "normal", "hoch", "dringend"];
