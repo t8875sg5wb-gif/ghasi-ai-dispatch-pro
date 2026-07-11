@@ -14,7 +14,6 @@ import {
   MapPin,
   Printer,
   Search,
-  Siren,
   UserCheck,
   UserX,
   X,

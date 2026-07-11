@@ -11,7 +11,6 @@ import {
   Clock,
   Euro,
   Gauge,
-  Siren,
   Wand2,
   GripVertical,
   ArrowRight,
