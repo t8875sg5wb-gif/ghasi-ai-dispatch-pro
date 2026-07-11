@@ -261,6 +261,7 @@ function VersicherungenSeite() {
         {selektiert && (
           <VersicherungDetail
             versicherung={selektiert}
+            vehicles={vehicles}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
@@ -283,7 +284,7 @@ function VersicherungenSeite() {
   );
 }
 
-function buildHinweise(items: Versicherung[]): string[] {
+function buildHinweise(items: Versicherung[], vehicles: Fahrzeug[]): string[] {
   const out: string[] = [];
   for (const v of items) {
     const tage = tageBisAblauf(v.ablauf);
@@ -293,7 +294,7 @@ function buildHinweise(items: Versicherung[]): string[] {
       );
     }
   }
-  const ohne = INITIAL_FAHRZEUGE.filter(
+  const ohne = vehicles.filter(
     (f) => !items.some((v) => v.fahrzeug === f.kennzeichen && v.art === "Haftpflicht"),
   );
   if (ohne.length > 0)
@@ -306,14 +307,16 @@ function buildHinweise(items: Versicherung[]): string[] {
 
 function VersicherungDetail({
   versicherung: v,
+  vehicles,
   onEdit,
 }: {
   versicherung: Versicherung;
+  vehicles: Fahrzeug[];
   onEdit: () => void;
 }) {
   const status = abgeleiteterStatus(v);
   const meta = VERSICHERUNG_STATUS_META[status];
-  const fahrzeug = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === v.fahrzeug);
+  const fahrzeug = vehicles.find((f) => f.kennzeichen === v.fahrzeug);
   const tage = tageBisAblauf(v.ablauf);
 
   return (
