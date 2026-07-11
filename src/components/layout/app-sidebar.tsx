@@ -14,11 +14,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { navGroups } from "@/lib/navigation";
+import { navGroupsForRole } from "@/lib/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 export function AppSidebar() {
   const { setOpenMobile, isMobile } = useSidebar();
+  const { role } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const groups = navGroupsForRole(role);
 
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
 
@@ -45,7 +48,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="gap-0">
-        {navGroups.map((group) => (
+        {groups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-sidebar-foreground/50">
               {group.label}
