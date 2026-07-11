@@ -19,7 +19,8 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { searchAll, type SearchItem } from "@/lib/ghasi-knowledge";
-import { allNavItems } from "@/lib/navigation";
+import { navItemsForRole, darfNavItem } from "@/lib/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 const bereichIcon: Record<string, typeof Users> = {
   Aufträge: ClipboardList,
@@ -40,9 +41,13 @@ export function GlobalSearch({
   onOpenChange: (open: boolean) => void;
 }) {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [query, setQuery] = useState("");
 
-  const results = useMemo(() => searchAll(query, 24), [query]);
+  const results = useMemo(
+    () => searchAll(query, 24).filter((r) => darfNavItem(role, r.to)),
+    [query, role],
+  );
 
   const grouped = useMemo(() => {
     const map = new Map<string, SearchItem[]>();
@@ -95,7 +100,7 @@ export function GlobalSearch({
 
         {!query && (
           <CommandGroup heading="Bereiche">
-            {allNavItems.map((nav) => (
+            {navItemsForRole(role).map((nav) => (
               <CommandItem key={nav.to} value={`bereich ${nav.label}`} onSelect={() => go(nav.to)}>
                 <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                 {nav.label}
