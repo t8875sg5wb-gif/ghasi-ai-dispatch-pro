@@ -379,7 +379,7 @@ export function buildFleet(): FleetVehicle[] {
     }
 
     const farbe = farbeVon(v, assignment);
-    const faehrt = farbe === "fahrt" || farbe === "notfall";
+    const faehrt = farbe === "fahrt";
     const gpsVerloren = !offline && h % 17 === 0; // seltenes, deterministisches Signal-Aussetzen
     const geschwindigkeit = gpsVerloren ? 0 : faehrt ? 22 + (h % 38) : 0;
     const fahrerObj = INITIAL_FAHRER.find((f) => f.name === v.fahrer) ?? null;
@@ -449,13 +449,12 @@ export function buildGpsSnapshot(): string {
     frei: 0,
     fahrt: 0,
     wartet: 0,
-    notfall: 0,
     offline: 0,
   };
   for (const v of fleet) zaehler[v.farbe] += 1;
   lines.push(
     `Status: ${zaehler.frei} frei (grün), ${zaehler.fahrt} fahren (blau), ${zaehler.wartet} warten (orange), ` +
-      `${zaehler.notfall} Notfall (rot), ${zaehler.offline} offline (grau).`,
+      `${zaehler.offline} offline (grau).`,
   );
 
   lines.push(`\n## Fahrzeuge live`);
