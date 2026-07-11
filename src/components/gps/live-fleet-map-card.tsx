@@ -16,7 +16,7 @@ import {
 } from "@/lib/fleet-live";
 
 function naechsterPunkt(v: FleetVehicle): LatLng | null {
-  if (v.farbe !== "fahrt" && v.farbe !== "notfall") return null;
+  if (v.farbe !== "fahrt") return null;
   const ziel = v.routeRest[1] ?? v.routeRest[0] ?? v.assignment?.pickup ?? null;
   if (!ziel) return null;
   const dlat = ziel.lat - v.gps.lat;
@@ -54,7 +54,7 @@ export function LiveFleetMapCard({
   }, []);
 
   const zaehler = useMemo(() => {
-    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, notfall: 0, offline: 0 };
+    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, offline: 0 };
     for (const v of fleet) z[v.farbe] += 1;
     return z;
   }, [fleet]);
@@ -69,7 +69,7 @@ export function LiveFleetMapCard({
           <div>
             <p className="text-sm font-semibold leading-tight">Live-Flotte (Google Maps)</p>
             <p className="text-xs text-muted-foreground">
-              {zaehler.fahrt} unterwegs · {zaehler.frei} frei · {zaehler.notfall} Notfall
+              {zaehler.fahrt} unterwegs · {zaehler.frei} frei · {zaehler.wartet} warten
             </p>
           </div>
         </div>

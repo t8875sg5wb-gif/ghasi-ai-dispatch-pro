@@ -14,7 +14,6 @@ import {
   MapPin,
   Printer,
   Search,
-  Siren,
   UserCheck,
   UserX,
   X,
@@ -451,7 +450,6 @@ function BoardCard({
           className="flex min-w-0 flex-1 cursor-grab items-center gap-1.5 active:cursor-grabbing"
         >
           <span className="truncate text-xs font-semibold tabular-nums">{t.nummer}</span>
-          {t.istNotfall && <Siren className="h-3.5 w-3.5 shrink-0 text-destructive" />}
           {hatKonflikt && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
           <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
             {t.abholzeit}

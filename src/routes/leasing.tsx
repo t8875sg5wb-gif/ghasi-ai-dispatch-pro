@@ -29,7 +29,9 @@ import {
   useSeedLeasing,
 } from "@/lib/leasing-store";
 import type { LeasingWrite } from "@/lib/leasing-shared";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { type Fahrzeug } from "@/lib/fahrzeuge";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useVehicleOptions } from "@/hooks/use-entity-options";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +71,7 @@ export const Route = createFileRoute("/leasing")({
   component: LeasingSeite,
 });
 
-const FAHRZEUG_OPTIONEN = INITIAL_FAHRZEUGE.map((f) => f.kennzeichen);
+
 
 function LeasingSeite() {
   const { name: akteur } = useAuth();
@@ -98,7 +100,8 @@ function LeasingSeite() {
 
   const selektiert = items.find((l) => l.id === aktiv) ?? gefiltert[0] ?? null;
   const monatsrate = items.reduce((s, l) => s + l.rateMonat, 0);
-  const hinweise = useMemo(() => buildHinweise(items), [items]);
+  const { data: vehicles = [] } = useVehicles();
+  const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
   function speichern(values: Leasingvertrag) {
     const istNeu = !items.some((l) => l.id === values.id);
@@ -253,6 +256,7 @@ function LeasingSeite() {
         {selektiert && (
           <LeasingDetail
             vertrag={selektiert}
+            vehicles={vehicles}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
@@ -275,7 +279,7 @@ function LeasingSeite() {
   );
 }
 
-function buildHinweise(items: Leasingvertrag[]): string[] {
+function buildHinweise(items: Leasingvertrag[], vehicles: Fahrzeug[]): string[] {
   const out: string[] = [];
   for (const l of items) {
     const tage = tageBisEnde(l.ende);
@@ -288,7 +292,7 @@ function buildHinweise(items: Leasingvertrag[]): string[] {
         `${l.fahrzeug}: ${kmAuslastung(l)} % der Inklusiv-Kilometer erreicht – Mehrkilometer drohen.`,
       );
   }
-  const ohne = INITIAL_FAHRZEUGE.filter((f) => !items.some((l) => l.fahrzeug === f.kennzeichen));
+  const ohne = vehicles.filter((f) => !items.some((l) => l.fahrzeug === f.kennzeichen));
   if (ohne.length > 0)
     out.push(
       `${ohne.length} Fahrzeug(e) ohne Leasingvertrag (evtl. Eigentum): ${ohne.map((f) => f.kennzeichen).join(", ")}.`,
@@ -297,10 +301,18 @@ function buildHinweise(items: Leasingvertrag[]): string[] {
   return out.slice(0, 4);
 }
 
-function LeasingDetail({ vertrag: l, onEdit }: { vertrag: Leasingvertrag; onEdit: () => void }) {
+function LeasingDetail({
+  vertrag: l,
+  vehicles,
+  onEdit,
+}: {
+  vertrag: Leasingvertrag;
+  vehicles: Fahrzeug[];
+  onEdit: () => void;
+}) {
   const status = abgeleiteterLeasingStatus(l);
   const meta = LEASING_STATUS_META[status];
-  const fahrzeug = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === l.fahrzeug);
+  const fahrzeug = vehicles.find((f) => f.kennzeichen === l.fahrzeug);
   const auslastung = kmAuslastung(l);
   const tage = tageBisEnde(l.ende);
 
@@ -425,9 +437,10 @@ function LeasingFelder({
   onClose: () => void;
   onSave: (l: Leasingvertrag) => void;
 }) {
+  const fahrzeugOpt = useVehicleOptions();
   const [leasinggeber, setLeasinggeber] = useState(target?.leasinggeber ?? "");
   const [vertragsnummer, setVertragsnummer] = useState(target?.vertragsnummer ?? "");
-  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? FAHRZEUG_OPTIONEN[0] ?? "");
+  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? "");
   const [rateMonat, setRateMonat] = useState(String(target?.rateMonat ?? ""));
   const [restwert, setRestwert] = useState(String(target?.restwert ?? ""));
   const [laufzeit, setLaufzeit] = useState(String(target?.laufzeitMonate ?? "36"));
@@ -474,11 +487,15 @@ function LeasingFelder({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrzeugOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">{fahrzeugOpt.hinweis}</div>
+              ) : (
+                fahrzeugOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </Feld>

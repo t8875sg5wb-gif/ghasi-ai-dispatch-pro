@@ -55,7 +55,6 @@ interface ModulConfig {
   beschreibung: string;
   icon: LucideIcon;
   idPrefix: string;
-  daten: Einrichtung[];
   kapazitaetLabel: string;
 }
 

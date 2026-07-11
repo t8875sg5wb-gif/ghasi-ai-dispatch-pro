@@ -8,18 +8,37 @@
 // ============================================================
 import type { Beschaeftigungsart } from "@/lib/fahrer";
 import { computeEinkommensteuer } from "@/lib/steuer";
+import {
+  MINIJOB_GRENZE_MONAT,
+  MIDIJOB_OBERGRENZE,
+  SV_SAETZE_2026,
+  MINIJOB_PAUSCHAL_AG_PROZENT,
+} from "@/lib/gesetzeswerte";
 
-/** Minijob-Grenze 2026 (556 €/Monat). */
-export const MINIJOB_GRENZE_2026 = 556;
-/** Obergrenze Übergangsbereich (Midijob) 2026. */
-export const MIDIJOB_GRENZE = 2_000;
+/** Minijob-Grenze (€/Monat) – zentral aus gesetzeswerte.ts (Stand Juli 2026: 603 €). */
+export const MINIJOB_GRENZE_2026 = MINIJOB_GRENZE_MONAT.wert;
+/** Obergrenze Übergangsbereich (Midijob). */
+export const MIDIJOB_GRENZE = MIDIJOB_OBERGRENZE.wert;
 
-/** Näherungssätze Sozialversicherung (Arbeitnehmer-Anteil gesamt). */
-const SV_AN = 0.205;
-/** Näherungssätze Sozialversicherung (Arbeitgeber-Anteil inkl. Umlagen). */
-const SV_AG = 0.212;
-/** Minijob: pauschale Arbeitgeberabgaben (KV 13 % + RV 15 % + Steuer 2 % + Umlagen ~1,4 %). */
-const MINIJOB_PAUSCHAL_AG = 0.314;
+/** Näherungssätze Sozialversicherung (Arbeitnehmer-Anteil gesamt, 2026). */
+const SV_AN =
+  (SV_SAETZE_2026.kvAllgemein / 2 +
+    SV_SAETZE_2026.kvZusatzbeitragDurchschnitt / 2 +
+    SV_SAETZE_2026.pv / 2 +
+    SV_SAETZE_2026.rv / 2 +
+    SV_SAETZE_2026.av / 2) /
+  100;
+/** Näherungssätze Sozialversicherung (Arbeitgeber-Anteil inkl. Umlagen ~1,4 %). */
+const SV_AG =
+  (SV_SAETZE_2026.kvAllgemein / 2 +
+    SV_SAETZE_2026.kvZusatzbeitragDurchschnitt / 2 +
+    SV_SAETZE_2026.pvArbeitgeber +
+    SV_SAETZE_2026.rv / 2 +
+    SV_SAETZE_2026.av / 2) /
+    100 +
+  0.014;
+/** Minijob: pauschale Arbeitgeberabgaben (KV 13 % + RV 15 % + Steuer 2 % + Umlagen). */
+const MINIJOB_PAUSCHAL_AG = MINIJOB_PAUSCHAL_AG_PROZENT / 100;
 /** Arbeitnehmer-Pauschbetrag (Werbungskosten) pro Jahr. */
 const AN_PAUSCHBETRAG = 1_230;
 

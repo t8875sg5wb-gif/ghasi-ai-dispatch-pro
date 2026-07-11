@@ -42,6 +42,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { AppRole } from "@/lib/roles";
+
 export interface NavItem {
   label: string;
   to: string;
@@ -321,3 +323,58 @@ export const navGroups: NavGroup[] = [
 ];
 
 export const allNavItems: NavItem[] = navGroups.flatMap((group) => group.items);
+
+/* ------------------------------------------------------------------ *
+ * Rollenbasierte Sichtbarkeit der Navigation.
+ * Single source of truth für Sidebar UND Command-Palette (⌘K).
+ *   - admin: alles
+ *   - disposition: operative Bereiche ohne Finanzen
+ *   - finanz: Finanzen + relevante Übersicht/Kunden, keine operative Dispo
+ *   - fahrer: nur die mobile Fahrer-Ansicht (wird ohnehin dorthin geleitet)
+ * ------------------------------------------------------------------ */
+
+/** Welche Rollen dürfen einen Navigationseintrag sehen? */
+function itemRoles(groupLabel: string, to: string): AppRole[] {
+  // Mobile Fahrer-Ansicht: einzige Seite für die Fahrer-Rolle.
+  if (to === "/fahrer-mobil") return ["admin", "disposition", "fahrer"];
+  // Nur Admins verwalten Nutzer/Systemkonfiguration & Verbindungen.
+  if (to === "/administration" || to === "/verbindungen") return ["admin"];
+  // Finanzbereich: Admin + Finanzrolle.
+  if (groupLabel === "Finanzen") return ["admin", "finanz"];
+  // Übersicht & Kommunikation: alle Innendienst-Rollen.
+  if (groupLabel === "Übersicht" || groupLabel === "Kommunikation") {
+    return ["admin", "disposition", "finanz"];
+  }
+  // Kunden sieht auch die Finanzrolle (Abrechnung).
+  if (to === "/kunden") return ["admin", "disposition", "finanz"];
+  // Einstellungen/Dokumente: Innendienst inkl. Finanzen.
+  if (to === "/einstellungen" || to === "/dokumente") {
+    return ["admin", "disposition", "finanz"];
+  }
+  // Alles Übrige (Betrieb, Stammdaten, Verwaltung): operativer Innendienst.
+  return ["admin", "disposition"];
+}
+
+export function darfNavItem(role: AppRole | null | undefined, to: string): boolean {
+  const effektiv: AppRole = role ?? "fahrer";
+  const group = navGroups.find((g) => g.items.some((i) => i.to === to));
+  if (!group) return false;
+  return itemRoles(group.label, to).includes(effektiv);
+}
+
+/** Navigationsgruppen, gefiltert nach Rolle (leere Gruppen entfallen). */
+export function navGroupsForRole(role: AppRole | null | undefined): NavGroup[] {
+  const effektiv: AppRole = role ?? "fahrer";
+  return navGroups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((it) => itemRoles(g.label, it.to).includes(effektiv)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
+/** Flache Liste der für die Rolle sichtbaren Navigationseinträge. */
+export function navItemsForRole(role: AppRole | null | undefined): NavItem[] {
+  return navGroupsForRole(role).flatMap((g) => g.items);
+}
+

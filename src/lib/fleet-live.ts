@@ -35,7 +35,7 @@ import {
  * Farb-Status der Live-Marker
  * ------------------------------------------------------------------ */
 
-export type FleetFarbe = "frei" | "fahrt" | "wartet" | "notfall" | "offline";
+export type FleetFarbe = "frei" | "fahrt" | "wartet" | "offline";
 
 export const FLEET_FARBEN: Record<
   FleetFarbe,
@@ -58,12 +58,6 @@ export const FLEET_FARBEN: Record<
     hex: "#ea580c",
     badge: "border-warning/30 bg-warning/10 text-warning",
     dot: "bg-warning",
-  },
-  notfall: {
-    label: "Notfall",
-    hex: "#dc2626",
-    badge: "border-destructive/30 bg-destructive/10 text-destructive",
-    dot: "bg-destructive",
   },
   offline: {
     label: "Offline",
@@ -217,7 +211,6 @@ export interface FleetVehicle {
 
 function farbeVon(v: Fahrzeug, a: FleetAssignment | null): FleetFarbe {
   if (v.status === "werkstatt" || v.status === "nicht_verfuegbar") return "offline";
-  if (a?.transport.istNotfall) return "notfall";
   if (a && (a.liveStatus === "am_abholort" || a.liveStatus === "am_ziel")) return "wartet";
   if (v.status === "unterwegs") return "fahrt";
   return "frei";
@@ -386,7 +379,7 @@ export function buildFleet(): FleetVehicle[] {
     }
 
     const farbe = farbeVon(v, assignment);
-    const faehrt = farbe === "fahrt" || farbe === "notfall";
+    const faehrt = farbe === "fahrt";
     const gpsVerloren = !offline && h % 17 === 0; // seltenes, deterministisches Signal-Aussetzen
     const geschwindigkeit = gpsVerloren ? 0 : faehrt ? 22 + (h % 38) : 0;
     const fahrerObj = INITIAL_FAHRER.find((f) => f.name === v.fahrer) ?? null;
@@ -456,13 +449,12 @@ export function buildGpsSnapshot(): string {
     frei: 0,
     fahrt: 0,
     wartet: 0,
-    notfall: 0,
     offline: 0,
   };
   for (const v of fleet) zaehler[v.farbe] += 1;
   lines.push(
     `Status: ${zaehler.frei} frei (grün), ${zaehler.fahrt} fahren (blau), ${zaehler.wartet} warten (orange), ` +
-      `${zaehler.notfall} Notfall (rot), ${zaehler.offline} offline (grau).`,
+      `${zaehler.offline} offline (grau).`,
   );
 
   lines.push(`\n## Fahrzeuge live`);

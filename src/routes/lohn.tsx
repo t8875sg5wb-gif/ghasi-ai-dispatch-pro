@@ -229,8 +229,8 @@ function LohnPage() {
       <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
         <span className="font-semibold">Wichtig:</span> Die offizielle Lohnabrechnung und die Meldungen
         an Sozialversicherung/Finanzamt erfordern zertifizierte Software oder einen Lohnservice. Dieser
-        Rechner bereitet alle Werte für die Übergabe vor (Näherung, Minijob-Grenze {MINIJOB_GRENZE_2026}{" "}
-        €/Monat). {STEUER_DISCLAIMER}
+        Rechner bereitet alle Werte für die Übergabe vor (Näherung, Stand Juli 2026, Minijob-Grenze{" "}
+        {MINIJOB_GRENZE_2026} €/Monat, Mindestlohn 13,90 €/h). {STEUER_DISCLAIMER}
       </div>
     </div>
   );

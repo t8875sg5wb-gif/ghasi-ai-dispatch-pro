@@ -39,10 +39,13 @@ import {
   MOBILITAET_META,
   MOBILITAET_OPTIONEN,
   type Mobilitaet,
-  FAHRER_OPTIONEN,
-  FAHRZEUG_OPTIONEN,
 } from "@/lib/auftraege";
-import { KRANKENKASSEN, KUNDEN } from "@/lib/stammdaten";
+import { KRANKENKASSEN } from "@/lib/stammdaten";
+import {
+  useDriverOptions,
+  useVehicleOptions,
+  useCustomerOptions,
+} from "@/hooks/use-entity-options";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -124,7 +127,7 @@ const leereVorlage = (): Dauerauftrag => ({
   mobilitaet: "gehfaehig",
   begleitperson: false,
   verordnungErforderlich: true,
-  kostentraeger: KUNDEN[0]?.name ?? "",
+  kostentraeger: "",
   krankenkasse: KRANKENKASSEN[0]?.name ?? "",
   bevorzugtesFahrzeug: null,
   bevorzugterFahrer: null,
@@ -763,6 +766,9 @@ function DauerauftragForm({
     destination: d.destination ?? parseAdresse(d.zielort),
   });
   const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
+  const fahrerOpt = useDriverOptions();
+  const fahrzeugOpt = useVehicleOptions();
+  const kundeOpt = useCustomerOptions();
 
   useEffect(() => {
     setF(normalisiere(initial));
@@ -981,11 +987,15 @@ function DauerauftragForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {KUNDEN.map((k) => (
-                  <SelectItem key={k.id} value={k.name}>
-                    {k.name}
-                  </SelectItem>
-                ))}
+                {kundeOpt.leer ? (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">{kundeOpt.hinweis}</div>
+                ) : (
+                  kundeOpt.options.map((k) => (
+                    <SelectItem key={k.value} value={k.value}>
+                      {k.label}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -1015,9 +1025,9 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
-                {FAHRZEUG_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>
-                    {x}
+                {fahrzeugOpt.options.map((x) => (
+                  <SelectItem key={x.value} value={x.value}>
+                    {x.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1034,9 +1044,9 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Keine Vorgabe</SelectItem>
-                {FAHRER_OPTIONEN.map((x) => (
-                  <SelectItem key={x} value={x}>
-                    {x}
+                {fahrerOpt.options.map((x) => (
+                  <SelectItem key={x.value} value={x.value}>
+                    {x.label}
                   </SelectItem>
                 ))}
               </SelectContent>

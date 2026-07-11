@@ -9,6 +9,7 @@
 // WICHTIG: Diese Angaben ersetzen keine steuerliche Beratung.
 // ============================================================
 import type { Transportart } from "@/lib/auftraege";
+import { GRUNDFREIBETRAG } from "@/lib/gesetzeswerte";
 
 export type SteuerModus = "befreit_4_17b" | "kleinunternehmer_19" | "regulaer_19";
 
@@ -112,8 +113,8 @@ export function computeGewinnNachSteuern(gewinnJahr: number, hebesatzProzent: nu
  * Einkommensteuer (Schätzung, Grundtarif)
  * ------------------------------------------------------------------ */
 
-/** Grundfreibetrag 2026 (geplant, Schätzung). */
-export const EST_GRUNDFREIBETRAG_2026 = 12_348;
+/** Grundfreibetrag 2026 – zentral aus gesetzeswerte.ts (Stand Juli 2026). */
+export const EST_GRUNDFREIBETRAG_2026 = GRUNDFREIBETRAG.wert;
 
 /**
  * Schätzt die Einkommensteuer (Grundtarif) nach dem progressiven Tarif

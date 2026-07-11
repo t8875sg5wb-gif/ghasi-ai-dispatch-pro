@@ -24,8 +24,7 @@ export type Transportart =
   | "Liegendtransport"
   | "Sitzendtransport"
   | "Rollstuhl"
-  | "Dialysefahrt"
-  | "Notfall";
+  | "Dialysefahrt";
 
 /* ------------------------------------------------------------------ *
  * Medizinische Transportdetails (additiv)
@@ -242,7 +241,6 @@ export function effektiveMobilitaet(a: Pick<Auftrag, "mobilitaet" | "transportar
   if (a.mobilitaet) return a.mobilitaet;
   switch (a.transportart) {
     case "Liegendtransport":
-    case "Notfall":
       return "liegend";
     case "Rollstuhl":
       return "rollstuhl";
@@ -272,7 +270,7 @@ export function fahrzeugPasstZuMobilitaet(m: Mobilitaet | undefined, f: Fahrzeug
 /** Empfohlener Fahrzeugtyp in Klartext für die KI / Disposition. */
 export function empfohlenerFahrzeugtyp(m: Mobilitaet | undefined): string {
   const bedarf = MOBILITAET_META[m ?? "gehfaehig"].benoetigtFahrzeug;
-  if (bedarf === "liegend") return "Liegend-/KTW-Fahrzeug (Trage)";
+  if (bedarf === "liegend") return "Liegend-Mietwagen (LMW)";
   if (bedarf === "rollstuhl") return "Rollstuhl-/Tragestuhl-taugliches Fahrzeug";
   return "Standard-Sitzendtransport";
 }
@@ -307,7 +305,6 @@ export const TRANSPORTARTEN: Transportart[] = [
   "Sitzendtransport",
   "Rollstuhl",
   "Dialysefahrt",
-  "Notfall",
 ];
 
 export const PRIORITAETEN: AuftragPrioritaet[] = ["niedrig", "normal", "hoch", "dringend"];
@@ -389,9 +386,9 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     zielort: "Reha-Klinik Porta, Minden",
     termin: "2026-06-26T10:15",
     fahrer: "M. Keller",
-    fahrzeug: "B-KT 142",
+    fahrzeug: "MI-KT 142",
     kostentraeger: "Techniker Krankenkasse",
-    notiz: "Sauerstoffgerät erforderlich.",
+    notiz: "Patient bringt eigenes tragbares Sauerstoffgerät mit.",
     verordnung: "hochgeladen",
     verordnungDokumentId: "d-9",
     mobilitaet: "liegend",
@@ -399,7 +396,7 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     abholanforderung: "Station 4B, Bett 2. Übergabe durch Pflege.",
     zielanforderung: "Patientenaufnahme, Trage bis ins Zimmer.",
     patientennotiz: "Ehefrau begleitet den Transport.",
-    medizinischeNotiz: "Sauerstoff 2 l/min, Monitor während Fahrt beobachten.",
+    medizinischeNotiz: "Patient nutzt eigenes tragbares O₂-Gerät – keine Begleitung/Überwachung nötig (Schiene A).",
   },
   {
     id: "a-3",
@@ -412,7 +409,7 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     zielort: "Augenklinik Mitte, Minden",
     termin: "2026-06-26T11:00",
     fahrer: "S. Yilmaz",
-    fahrzeug: "B-KT 097",
+    fahrzeug: "MI-KT 097",
     kostentraeger: "Barmer",
     notiz: "",
     verordnung: "erhalten",
@@ -435,7 +432,7 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     zielort: "Hausarztpraxis Dr. Lang, Minden",
     termin: "2026-06-25T14:30",
     fahrer: "P. Richter",
-    fahrzeug: "B-KT 204",
+    fahrzeug: "MI-KT 204",
     kostentraeger: "DAK Gesundheit",
     notiz: "Rückfahrt separat gebucht.",
     verordnung: "erhalten",
@@ -451,24 +448,24 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     id: "a-5",
     nummer: "A-2044",
     patient: "Anna Klein",
-    transportart: "Notfall",
+    transportart: "Sitzendtransport",
     prioritaet: "dringend",
     status: "neu",
     abholort: "Privatadresse Porta Westfalica",
-    zielort: "Klinikum West, Notaufnahme",
+    zielort: "Klinikum West, Ambulanz",
     termin: "2026-06-26T07:45",
     fahrer: null,
     fahrzeug: null,
     kostentraeger: "Selbstzahler",
-    notiz: "Sofortige Disposition erforderlich.",
+    notiz: "Kurzfristiger Termin heute – zeitnah disponieren.",
     verordnung: "fehlt",
     verordnungDokumentId: null,
-    mobilitaet: "liegend",
+    mobilitaet: "tragestuhl",
     begleitperson: false,
-    abholanforderung: "3. OG ohne Aufzug – Tragestuhl/Trage erforderlich.",
-    zielanforderung: "Direkt Notaufnahme, Anmeldung vorab telefonisch.",
+    abholanforderung: "3. OG ohne Aufzug – Tragestuhl erforderlich.",
+    zielanforderung: "Ambulanz, Anmeldung vorab telefonisch.",
     patientennotiz: "Patientin allein zu Hause, Nachbarin öffnet.",
-    medizinischeNotiz: "Verdacht Sturzverletzung – Verordnung wird nachgereicht.",
+    medizinischeNotiz: "Verordnung wird nachgereicht.",
   },
   {
     id: "a-6",
@@ -501,7 +498,3 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
  * production source of truth — never the demo `SEED_AUFTRAEGE` above.
  */
 export const INITIAL_AUFTRAEGE: Auftrag[] = [];
-
-export const FAHRER_OPTIONEN = ["M. Keller", "S. Yilmaz", "P. Richter", "L. Schäfer", "T. Wolf"];
-
-export const FAHRZEUG_OPTIONEN = ["B-KT 142", "B-KT 097", "B-KT 204", "B-KT 311", "B-KT 358"];

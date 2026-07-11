@@ -4,7 +4,7 @@ import type { Transportart } from "@/lib/auftraege";
 
 export type FahrzeugStatus = "frei" | "unterwegs" | "werkstatt" | "nicht_verfuegbar";
 
-export type Fahrzeugtyp = "KTW" | "RTW" | "Rollstuhlbus" | "Tragestuhlwagen" | "PKW";
+export type Fahrzeugtyp = "PKW" | "Rollstuhlfahrzeug" | "LMW";
 
 export type Kraftstoffart = "Diesel" | "Benzin" | "Elektro" | "Hybrid";
 
@@ -114,13 +114,7 @@ export const FAHRZEUG_STATI: FahrzeugStatus[] = [
   "nicht_verfuegbar",
 ];
 
-export const FAHRZEUGTYPEN: Fahrzeugtyp[] = [
-  "KTW",
-  "RTW",
-  "Rollstuhlbus",
-  "Tragestuhlwagen",
-  "PKW",
-];
+export const FAHRZEUGTYPEN: Fahrzeugtyp[] = ["PKW", "Rollstuhlfahrzeug", "LMW"];
 
 export const KRAFTSTOFFARTEN: Kraftstoffart[] = ["Diesel", "Benzin", "Elektro", "Hybrid"];
 
@@ -225,7 +219,6 @@ export function nextFahrzeugId(): string {
 function passtZuAuftrag(f: Fahrzeug, transportart: Transportart): boolean {
   switch (transportart) {
     case "Liegendtransport":
-    case "Notfall":
       return f.liegendGeeignet;
     case "Rollstuhl":
       return f.rollstuhlGeeignet;
@@ -372,11 +365,11 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
   {
     id: "kfz-1",
     nummer: "KFZ-001",
-    kennzeichen: "B-KT 142",
+    kennzeichen: "MI-KT 142",
     marke: "Mercedes-Benz",
     modell: "Sprinter 314 CDI",
     baujahr: 2021,
-    typ: "KTW",
+    typ: "LMW",
     rollstuhlGeeignet: true,
     liegendGeeignet: true,
     sitzplaetze: 2,
@@ -410,11 +403,11 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
   {
     id: "kfz-2",
     nummer: "KFZ-002",
-    kennzeichen: "B-KT 097",
+    kennzeichen: "MI-KT 097",
     marke: "Volkswagen",
     modell: "Crafter 35",
     baujahr: 2020,
-    typ: "Rollstuhlbus",
+    typ: "Rollstuhlfahrzeug",
     rollstuhlGeeignet: true,
     liegendGeeignet: false,
     sitzplaetze: 4,
@@ -451,11 +444,11 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
   {
     id: "kfz-3",
     nummer: "KFZ-003",
-    kennzeichen: "B-KT 204",
+    kennzeichen: "MI-KT 204",
     marke: "Ford",
     modell: "Transit Custom",
     baujahr: 2019,
-    typ: "Tragestuhlwagen",
+    typ: "Rollstuhlfahrzeug",
     rollstuhlGeeignet: true,
     liegendGeeignet: false,
     sitzplaetze: 3,
@@ -493,11 +486,11 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
   {
     id: "kfz-4",
     nummer: "KFZ-004",
-    kennzeichen: "B-KT 311",
+    kennzeichen: "MI-KT 311",
     marke: "Mercedes-Benz",
     modell: "Vito Tourer",
     baujahr: 2023,
-    typ: "KTW",
+    typ: "LMW",
     rollstuhlGeeignet: true,
     liegendGeeignet: true,
     sitzplaetze: 2,
@@ -531,11 +524,11 @@ export const INITIAL_FAHRZEUGE: Fahrzeug[] = [
   {
     id: "kfz-5",
     nummer: "KFZ-005",
-    kennzeichen: "B-KT 358",
+    kennzeichen: "MI-KT 358",
     marke: "Renault",
     modell: "Master",
     baujahr: 2015,
-    typ: "Rollstuhlbus",
+    typ: "Rollstuhlfahrzeug",
     rollstuhlGeeignet: true,
     liegendGeeignet: false,
     sitzplaetze: 5,

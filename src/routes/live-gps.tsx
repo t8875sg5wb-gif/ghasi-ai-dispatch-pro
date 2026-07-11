@@ -47,7 +47,7 @@ export const Route = createFileRoute("/live-gps")({
 
 /** Bewegt fahrende Fahrzeuge ein kleines Stück Richtung nächstes Routenziel. */
 function naechsterPunkt(v: FleetVehicle): LatLng | null {
-  if (v.farbe !== "fahrt" && v.farbe !== "notfall") return null;
+  if (v.farbe !== "fahrt") return null;
   const ziel = v.routeRest[1] ?? v.routeRest[0] ?? v.assignment?.pickup ?? null;
   if (!ziel) return null;
   const dlat = ziel.lat - v.gps.lat;
@@ -98,7 +98,7 @@ function LiveGps() {
   const ausgewaehlt = fleet.find((v) => v.id === selected) ?? null;
 
   const zaehler = useMemo(() => {
-    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, notfall: 0, offline: 0 };
+    const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, offline: 0 };
     for (const v of fleet) z[v.farbe] += 1;
     return z;
   }, [fleet]);

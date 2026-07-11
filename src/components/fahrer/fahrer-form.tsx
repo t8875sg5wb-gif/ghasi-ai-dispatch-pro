@@ -8,7 +8,7 @@ import {
   FAHRER_STATUS_META,
   VERTRAGSARTEN,
 } from "@/lib/fahrer";
-import { FAHRZEUG_OPTIONEN } from "@/lib/auftraege";
+import { useVehicleOptions } from "@/hooks/use-entity-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +70,7 @@ function emptyValues(): FahrerFormValues {
 
 export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerFormProps) {
   const [values, setValues] = useState<FahrerFormValues>(emptyValues);
+  const fahrzeugOpt = useVehicleOptions();
   const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(""));
 
   useEffect(() => {
@@ -268,11 +269,17 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Kein Fahrzeug</SelectItem>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrzeugOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {fahrzeugOpt.hinweis}
+                </div>
+              ) : (
+                fahrzeugOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>

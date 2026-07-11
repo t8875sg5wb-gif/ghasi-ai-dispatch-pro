@@ -224,7 +224,6 @@ export interface DispatchTransport extends Auftrag {
   erloes: number;
   rollstuhl: boolean;
   liegend: boolean;
-  istNotfall: boolean;
   /** Fahrer hat den Auftrag bestätigt (Live-Board-Spalte „Fahrer akzeptiert"). */
   fahrerAkzeptiert?: boolean;
   /** Transport ist abgerechnet/abrechnungsbereit (Spalte „Abrechnung bereit"). */
@@ -251,12 +250,10 @@ const STATUS_MAP: Record<Auftrag["status"], LiveStatus> = {
   storniert: "storniert",
 };
 
-function abgeleiteteFelder(
-  a: Auftrag,
-): Pick<DispatchTransport, "rollstuhl" | "liegend" | "istNotfall"> {
-  const liegend = a.transportart === "Liegendtransport" || a.transportart === "Notfall";
+function abgeleiteteFelder(a: Auftrag): Pick<DispatchTransport, "rollstuhl" | "liegend"> {
+  const liegend = a.transportart === "Liegendtransport";
   const rollstuhl = a.transportart === "Rollstuhl";
-  return { liegend, rollstuhl, istNotfall: a.transportart === "Notfall" };
+  return { liegend, rollstuhl };
 }
 
 function uhrzeit(iso: string): string {
@@ -302,7 +299,6 @@ function auftragZuTransport(a: Auftrag, idx: number): DispatchTransport {
     wiederkehrend: a.transportart === "Dialysefahrt" || !!a.dauerauftragId,
     serie: a.transportart === "Dialysefahrt" ? "Dialyse" : undefined,
     erloes: 95 + distanz * 6,
-    istNotfall: abgeleitet.istNotfall,
     abrechnungBereit: a.abrechnungStatus === "bereit" || a.abrechnungStatus === "abgerechnet",
   };
 }
@@ -609,13 +605,13 @@ export function erkenneKonflikte(
         transportId: t.id,
       });
     }
-    // Notfall ohne Disposition
-    if (t.istNotfall && (!t.fahrer || !t.fahrzeug)) {
+    // Dringender Transport ohne vollständige Disposition
+    if (t.prioritaet === "dringend" && (!t.fahrer || !t.fahrzeug)) {
       konflikte.push({
-        id: `not-${t.id}`,
+        id: `dring-${t.id}`,
         typ: "fahrer_nicht_verfuegbar",
         schwere: "kritisch",
-        text: `Notfall ${t.nummer} ist noch nicht vollständig disponiert!`,
+        text: `Dringender Transport ${t.nummer} ist noch nicht vollständig disponiert!`,
         transportId: t.id,
       });
     }
@@ -637,7 +633,6 @@ export interface DispatchKpis {
   wartend: number;
   verspaetet: number;
   storniert: number;
-  notfall: number;
   freieFahrer: number;
   freieFahrzeuge: number;
   umsatzHeute: number;
@@ -660,9 +655,7 @@ export function berechneKpis(
   const aktiv = transporte.filter((t) => spalteVon(t) === "aktiv").length;
   const wartend = transporte.filter((t) => spalteVon(t) === "warten").length;
   const verspaetet = transporte.filter((t) => spalteVon(t) === "verspaetet").length;
-  const notfall = transporte.filter(
-    (t) => t.istNotfall && t.liveStatus !== "abgeschlossen" && t.liveStatus !== "storniert",
-  ).length;
+
 
   const umsatzHeute = transporte
     .filter((t) => t.liveStatus !== "storniert")
@@ -706,7 +699,6 @@ export function berechneKpis(
     wartend,
     verspaetet,
     storniert,
-    notfall,
     freieFahrer,
     freieFahrzeuge,
     umsatzHeute,

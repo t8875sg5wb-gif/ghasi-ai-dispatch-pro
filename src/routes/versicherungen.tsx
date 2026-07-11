@@ -29,7 +29,9 @@ import {
   useSeedInsurance,
 } from "@/lib/insurance-store";
 import type { InsuranceWrite } from "@/lib/insurance-shared";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { type Fahrzeug } from "@/lib/fahrzeuge";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useVehicleOptions } from "@/hooks/use-entity-options";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +70,7 @@ export const Route = createFileRoute("/versicherungen")({
   component: VersicherungenSeite,
 });
 
-const FAHRZEUG_OPTIONEN = ["Flotte", ...INITIAL_FAHRZEUGE.map((f) => f.kennzeichen)];
+
 
 type ArtFilter = VersicherungsArt | "alle";
 
@@ -99,7 +101,8 @@ function VersicherungenSeite() {
 
   const selektiert = items.find((v) => v.id === aktiv) ?? gefiltert[0] ?? null;
   const monatsbeitrag = items.reduce((s, v) => s + v.beitragMonat, 0);
-  const hinweise = useMemo(() => buildHinweise(items), [items]);
+  const { data: vehicles = [] } = useVehicles();
+  const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
   function speichern(values: Versicherung) {
     const istNeu = !items.some((v) => v.id === values.id);
@@ -258,6 +261,7 @@ function VersicherungenSeite() {
         {selektiert && (
           <VersicherungDetail
             versicherung={selektiert}
+            vehicles={vehicles}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
@@ -280,7 +284,7 @@ function VersicherungenSeite() {
   );
 }
 
-function buildHinweise(items: Versicherung[]): string[] {
+function buildHinweise(items: Versicherung[], vehicles: Fahrzeug[]): string[] {
   const out: string[] = [];
   for (const v of items) {
     const tage = tageBisAblauf(v.ablauf);
@@ -290,7 +294,7 @@ function buildHinweise(items: Versicherung[]): string[] {
       );
     }
   }
-  const ohne = INITIAL_FAHRZEUGE.filter(
+  const ohne = vehicles.filter(
     (f) => !items.some((v) => v.fahrzeug === f.kennzeichen && v.art === "Haftpflicht"),
   );
   if (ohne.length > 0)
@@ -303,14 +307,16 @@ function buildHinweise(items: Versicherung[]): string[] {
 
 function VersicherungDetail({
   versicherung: v,
+  vehicles,
   onEdit,
 }: {
   versicherung: Versicherung;
+  vehicles: Fahrzeug[];
   onEdit: () => void;
 }) {
   const status = abgeleiteterStatus(v);
   const meta = VERSICHERUNG_STATUS_META[status];
-  const fahrzeug = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === v.fahrzeug);
+  const fahrzeug = vehicles.find((f) => f.kennzeichen === v.fahrzeug);
   const tage = tageBisAblauf(v.ablauf);
 
   return (
@@ -425,10 +431,11 @@ function VersicherungFelder({
   onClose: () => void;
   onSave: (v: Versicherung) => void;
 }) {
+  const fahrzeugOpt = useVehicleOptions();
   const [versicherer, setVersicherer] = useState(target?.versicherer ?? "");
   const [policennummer, setPolicennummer] = useState(target?.policennummer ?? "");
   const [art, setArt] = useState<VersicherungsArt>(target?.art ?? "Haftpflicht");
-  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? FAHRZEUG_OPTIONEN[1] ?? "Flotte");
+  const [fahrzeug, setFahrzeug] = useState(target?.fahrzeug ?? "Flotte");
   const [beitragMonat, setBeitragMonat] = useState(String(target?.beitragMonat ?? ""));
   const [selbstbeteiligung, setSelbstbeteiligung] = useState(
     String(target?.selbstbeteiligung ?? "0"),
@@ -486,9 +493,10 @@ function VersicherungFelder({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
+              <SelectItem value="Flotte">Flotte (gesamt)</SelectItem>
+              {fahrzeugOpt.options.map((f) => (
+                <SelectItem key={f.value} value={f.value}>
+                  {f.label}
                 </SelectItem>
               ))}
             </SelectContent>

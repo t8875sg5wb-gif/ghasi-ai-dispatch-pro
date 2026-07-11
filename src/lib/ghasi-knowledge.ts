@@ -28,6 +28,22 @@ import {
 } from "@/lib/finance";
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
 import { buildGpsSnapshot } from "@/lib/fleet-live";
+import {
+  RECHTSSTAND,
+  MINDESTLOHN,
+  MINIJOB_GRENZE_MONAT,
+  MINIJOB_GRENZE_JAHR,
+  MIDIJOB_UNTERGRENZE,
+  MIDIJOB_OBERGRENZE,
+  SV_SAETZE_2026,
+  MINIJOB_PAUSCHALEN_2026,
+  BBG_KV_PV_MONAT,
+  BEZUGSGROESSE_MONAT,
+  GRUNDFREIBETRAG,
+  AUFBEWAHRUNG_JAHRE,
+  NEUERUNGEN_2026,
+  RECHTSGRUNDLAGEN_KI,
+} from "@/lib/gesetzeswerte";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
@@ -234,6 +250,44 @@ export function buildKnowledgeSnapshot(): string {
 
   // Live-GPS & Transport-Execution (Fahrzeugpositionen, Status, ETA, Alerts)
   lines.push(`\n${buildGpsSnapshot()}`);
+
+  // Rechts- & Gesetzeswerte (Schiene A) – für ALLE Rollen; jeweils mit Stand.
+  const pct = (n: number) => `${n.toString().replace(".", ",")} %`;
+  lines.push(`\n## Rechts- & Gesetzeswerte (${RECHTSSTAND})`);
+  lines.push(
+    `- Geschäftsmodell: Schiene A – Krankenfahrten OHNE medizinische Betreuung während der Fahrt. ` +
+      `Einfacher Liegend-/Tragestuhltransport ist Teil der Rahmenverträge; KEIN Notfall-/Rettungsdienst, KEINE KTW/RTW.`,
+  );
+  lines.push(
+    `- Mindestlohn: ${MINDESTLOHN.wert.toFixed(2).replace(".", ",")} €/h (seit 01.01.2026; ${MINDESTLOHN.hinweis}).`,
+  );
+  lines.push(
+    `- Minijob-Grenze: ${MINIJOB_GRENZE_MONAT.wert} €/Monat bzw. ${MINIJOB_GRENZE_JAHR.wert.toLocaleString("de-DE")} €/Jahr (seit 01.01.2026; 2027: 633 €).`,
+  );
+  lines.push(
+    `- Midijob/Übergangsbereich: ${MIDIJOB_UNTERGRENZE.wert.toFixed(2).replace(".", ",")} – ${MIDIJOB_OBERGRENZE.wert.toLocaleString("de-DE")} €.`,
+  );
+  lines.push(
+    `- SV-Beitragssätze 2026: KV ${pct(SV_SAETZE_2026.kvAllgemein)} + Zusatzbeitrag Ø ${pct(SV_SAETZE_2026.kvZusatzbeitragDurchschnitt)}, ` +
+      `PV ${pct(SV_SAETZE_2026.pv)} (kinderlos +${pct(SV_SAETZE_2026.pvKinderlosZuschlag)}), RV ${pct(SV_SAETZE_2026.rv)}, AV ${pct(SV_SAETZE_2026.av)}.`,
+  );
+  lines.push(
+    `- Minijob-Pauschalen AG (Minijob-Zentrale): KV ${pct(MINIJOB_PAUSCHALEN_2026.kv)}, RV ${pct(MINIJOB_PAUSCHALEN_2026.rv)}, ` +
+      `Steuer ${pct(MINIJOB_PAUSCHALEN_2026.steuer)}, U1 ${pct(MINIJOB_PAUSCHALEN_2026.u1)}, U2 ${pct(MINIJOB_PAUSCHALEN_2026.u2)}, Insolvenzgeldumlage ${pct(MINIJOB_PAUSCHALEN_2026.insolvenzgeld)}.`,
+  );
+  lines.push(
+    `- BBG KV/PV 2026: ${BBG_KV_PV_MONAT.wert.toLocaleString("de-DE")} €/Monat; Bezugsgröße ${BEZUGSGROESSE_MONAT.wert.toLocaleString("de-DE")} €/Monat.`,
+  );
+  lines.push(`- Grundfreibetrag ESt 2026: ${GRUNDFREIBETRAG.wert.toLocaleString("de-DE")} €.`);
+  lines.push(
+    `- Aufbewahrung: Rechnungen/Belege ${AUFBEWAHRUNG_JAHRE.rechnungenBelege} J., Bücher ${AUFBEWAHRUNG_JAHRE.buecher} J., ` +
+      `Lohnkonten ${AUFBEWAHRUNG_JAHRE.lohnkonten} J., Arbeitszeitnachweise ${AUFBEWAHRUNG_JAHRE.arbeitszeitnachweise} J.`,
+  );
+  lines.push(`- Neuerungen 2026: ${NEUERUNGEN_2026.join(" ")}`);
+  lines.push(`- Rechtsgrundlagen: ${RECHTSGRUNDLAGEN_KI.join(" ")}`);
+  lines.push(
+    `Alle vorstehenden Rechts-/Gesetzeswerte gelten mit „${RECHTSSTAND}“ und sind Näherungen ohne Rechts-/Steuerberatung.`,
+  );
 
   return lines.join("\n");
 }

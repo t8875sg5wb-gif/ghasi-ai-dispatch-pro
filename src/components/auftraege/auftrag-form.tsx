@@ -6,8 +6,6 @@ import {
   type Mobilitaet,
   type Transportart,
   type VerordnungStatus,
-  FAHRER_OPTIONEN,
-  FAHRZEUG_OPTIONEN,
   MOBILITAET_META,
   MOBILITAET_OPTIONEN,
   PRIORITAETEN,
@@ -16,6 +14,7 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
+import { useDriverOptions, useVehicleOptions } from "@/hooks/use-entity-options";
 import {
   type AdresseStruktur,
   parseAdresse,
@@ -76,6 +75,8 @@ function emptyValues(): AuftragFormValues {
 
 export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
+  const fahrerOpt = useDriverOptions();
+  const fahrzeugOpt = useVehicleOptions();
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
@@ -235,11 +236,15 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Nicht zugewiesen</SelectItem>
-              {FAHRER_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrerOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">{fahrerOpt.hinweis}</div>
+              ) : (
+                fahrerOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -254,11 +259,17 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Nicht zugewiesen</SelectItem>
-              {FAHRZEUG_OPTIONEN.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
+              {fahrzeugOpt.leer ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {fahrzeugOpt.hinweis}
+                </div>
+              ) : (
+                fahrzeugOpt.options.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
