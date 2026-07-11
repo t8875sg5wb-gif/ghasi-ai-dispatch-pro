@@ -81,7 +81,7 @@ export function buildBusinessTools(role: AppRole | null) {
       inputSchema: z.object({
         status: z.enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]).optional(),
         transportart: z
-          .enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt", "Notfall"])
+          .enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt"])
           .optional(),
         fahrer: z.string().optional().describe("Name oder Teil des Fahrernamens"),
         zeitraum: z.enum(["heute", "morgen", "alle"]).optional(),
@@ -317,7 +317,7 @@ export function buildBusinessTools(role: AppRole | null) {
 
     tools.live_gps_abrufen = tool({
       description:
-        "Liefert ECHTE Live-GPS- & Transport-Execution-Daten: aktuelle Fahrzeugposition, Status (frei/fährt/wartet/Notfall/offline), Geschwindigkeit, Tankstand, letzte Aktualisierung, zugewiesener Transport mit Phase/ETA, Mobilität, Verordnungsstatus, Begleitperson, Fahrzeug-Eignung sowie aktive Alerts. Beantwortet Fragen wie 'Wo ist Fahrzeug B-KT 142?', 'Hat der Fahrer die Verordnung erhalten?', 'Ist der Patient Rollstuhl oder liegend?', 'Welche Transporte sind verspätet?', 'Welche Verordnungen fehlen?', 'Welches Fahrzeug ist offline?'.",
+        "Liefert ECHTE Live-GPS- & Transport-Execution-Daten: aktuelle Fahrzeugposition, Status (frei/fährt/wartet/offline), Geschwindigkeit, Tankstand, letzte Aktualisierung, zugewiesener Transport mit Phase/ETA, Mobilität, Verordnungsstatus, Begleitperson, Fahrzeug-Eignung sowie aktive Alerts. Beantwortet Fragen wie 'Wo ist Fahrzeug MI-KT 142?', 'Hat der Fahrer die Verordnung erhalten?', 'Ist der Patient Rollstuhl oder liegend?', 'Welche Transporte sind verspätet?', 'Welche Verordnungen fehlen?', 'Welches Fahrzeug ist offline?'.",
       inputSchema: z.object({
         kennzeichen: z
           .string()
