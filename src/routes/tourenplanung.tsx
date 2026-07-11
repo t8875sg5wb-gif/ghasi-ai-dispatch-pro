@@ -400,7 +400,7 @@ function DispatchCenter() {
         <Card className="border-border/70">
           <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
-              <Siren className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
             </div>
             <CardTitle className="text-base">
               Konflikte
@@ -717,7 +717,6 @@ function TransportCard({
         <div className="flex min-w-0 items-center gap-1.5">
           {draggable && <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />}
           <span className="truncate text-xs font-semibold tabular-nums">{t.nummer}</span>
-          {t.istNotfall && <Siren className="h-3.5 w-3.5 shrink-0 text-destructive" />}
           {hatKonflikt && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
         </div>
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t.abholzeit}</span>
@@ -813,7 +812,6 @@ function TransportDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {t.nummer}
-            {t.istNotfall && <Siren className="h-4 w-4 text-destructive" />}
           </DialogTitle>
           <DialogDescription>
             {t.patient} · {t.transportart}
