@@ -277,7 +277,7 @@ function LeasingSeite() {
   );
 }
 
-function buildHinweise(items: Leasingvertrag[]): string[] {
+function buildHinweise(items: Leasingvertrag[], vehicles: Fahrzeug[]): string[] {
   const out: string[] = [];
   for (const l of items) {
     const tage = tageBisEnde(l.ende);
@@ -290,7 +290,7 @@ function buildHinweise(items: Leasingvertrag[]): string[] {
         `${l.fahrzeug}: ${kmAuslastung(l)} % der Inklusiv-Kilometer erreicht – Mehrkilometer drohen.`,
       );
   }
-  const ohne = INITIAL_FAHRZEUGE.filter((f) => !items.some((l) => l.fahrzeug === f.kennzeichen));
+  const ohne = vehicles.filter((f) => !items.some((l) => l.fahrzeug === f.kennzeichen));
   if (ohne.length > 0)
     out.push(
       `${ohne.length} Fahrzeug(e) ohne Leasingvertrag (evtl. Eigentum): ${ohne.map((f) => f.kennzeichen).join(", ")}.`,
@@ -299,10 +299,18 @@ function buildHinweise(items: Leasingvertrag[]): string[] {
   return out.slice(0, 4);
 }
 
-function LeasingDetail({ vertrag: l, onEdit }: { vertrag: Leasingvertrag; onEdit: () => void }) {
+function LeasingDetail({
+  vertrag: l,
+  vehicles,
+  onEdit,
+}: {
+  vertrag: Leasingvertrag;
+  vehicles: Fahrzeug[];
+  onEdit: () => void;
+}) {
   const status = abgeleiteterLeasingStatus(l);
   const meta = LEASING_STATUS_META[status];
-  const fahrzeug = INITIAL_FAHRZEUGE.find((f) => f.kennzeichen === l.fahrzeug);
+  const fahrzeug = vehicles.find((f) => f.kennzeichen === l.fahrzeug);
   const auslastung = kmAuslastung(l);
   const tage = tageBisEnde(l.ende);
 
