@@ -42,6 +42,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { AppRole } from "@/lib/roles";
+
 export interface NavItem {
   label: string;
   to: string;
