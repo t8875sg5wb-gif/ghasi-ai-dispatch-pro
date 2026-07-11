@@ -6,8 +6,6 @@ import {
   type Mobilitaet,
   type Transportart,
   type VerordnungStatus,
-  FAHRER_OPTIONEN,
-  FAHRZEUG_OPTIONEN,
   MOBILITAET_META,
   MOBILITAET_OPTIONEN,
   PRIORITAETEN,
@@ -16,6 +14,7 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
+import { useDriverOptions, useVehicleOptions } from "@/hooks/use-entity-options";
 import {
   type AdresseStruktur,
   parseAdresse,
