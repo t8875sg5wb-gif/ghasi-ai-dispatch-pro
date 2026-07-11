@@ -39,10 +39,13 @@ import {
   MOBILITAET_META,
   MOBILITAET_OPTIONEN,
   type Mobilitaet,
-  FAHRER_OPTIONEN,
-  FAHRZEUG_OPTIONEN,
 } from "@/lib/auftraege";
-import { KRANKENKASSEN, KUNDEN } from "@/lib/stammdaten";
+import { KRANKENKASSEN } from "@/lib/stammdaten";
+import {
+  useDriverOptions,
+  useVehicleOptions,
+  useCustomerOptions,
+} from "@/hooks/use-entity-options";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -763,6 +766,9 @@ function DauerauftragForm({
     destination: d.destination ?? parseAdresse(d.zielort),
   });
   const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
+  const fahrerOpt = useDriverOptions();
+  const fahrzeugOpt = useVehicleOptions();
+  const kundeOpt = useCustomerOptions();
 
   useEffect(() => {
     setF(normalisiere(initial));
