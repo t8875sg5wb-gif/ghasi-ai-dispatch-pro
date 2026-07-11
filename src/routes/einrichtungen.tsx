@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Hospital, Droplets, Home, Building2 } from "lucide-react";
 
 import { EinrichtungModul } from "@/components/einrichtungen/einrichtung-modul";
-import { KRANKENHAEUSER, DIALYSEZENTREN, PFLEGEHEIME } from "@/lib/stammdaten";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHero } from "@/components/enterprise/page-hero";
 
