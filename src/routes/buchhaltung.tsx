@@ -66,9 +66,38 @@ const KOSTEN_LABEL = {
 function BuchhaltungPage() {
   const { data: invoiceData } = useInvoices();
   const { data: company } = useCompanySettings();
+  const { data: expenseData } = useExpenses();
   const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
-  const kpis = useMemo(() => computeFinanzKpis(alleRechnungen), [alleRechnungen]);
+
+  // Echte Kraftstoffkosten des laufenden Monats aus dem Ausgaben-Modul.
+  const echteKraftstoffkostenMonat = useMemo(() => {
+    const jetzt = new Date();
+    const monat = jetzt.getMonth();
+    const jahr = jetzt.getFullYear();
+    return (expenseData ?? [])
+      .filter((a) => {
+        if (a.kategorie !== "Kraftstoff") return false;
+        const d = new Date(a.datum);
+        return d.getMonth() === monat && d.getFullYear() === jahr;
+      })
+      .reduce((s, a) => s + a.betragBrutto, 0);
+  }, [expenseData]);
+
+  const kostenConfig = useMemo(
+    () => ({
+      dieselpreis: company?.dieselpreis,
+      arbeitstageMonat: company?.arbeitstageMonat,
+      echteKraftstoffkostenMonat,
+    }),
+    [company?.dieselpreis, company?.arbeitstageMonat, echteKraftstoffkostenMonat],
+  );
+
+  const kpis = useMemo(
+    () => computeFinanzKpis(alleRechnungen, kostenConfig),
+    [alleRechnungen, kostenConfig],
+  );
   const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
+
 
   const jahr = new Date().getFullYear();
   const [von, setVon] = useState(`${jahr}-01-01`);
