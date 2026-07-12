@@ -23,9 +23,12 @@ import {
 import type { UIMessage } from "ai";
 import { toast } from "sonner";
 
+import { useServerFn } from "@tanstack/react-start";
+
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ki/markdown";
 import { Button } from "@/components/ui/button";
+import { speichereGedaechtnis, type MemoryTyp } from "@/lib/ghasi.functions";
 
 interface WebQuelle {
   titel: string;
@@ -325,18 +328,13 @@ export function ChatMessage({ message }: { message: UIMessage }) {
             if (p.type.startsWith("tool-web_seite_lesen")) {
               return <ToolHinweis key={i} icon={Globe} text="Liest eine Webseite …" />;
             }
-            if (p.type.startsWith("tool-gedaechtnis_speichern")) {
-              const ok =
-                "output" in p && (p.output as { gespeichert?: boolean } | undefined)?.gespeichert;
-              if (ok)
-                return (
-                  <ToolHinweis
-                    key={i}
-                    icon={BrainCircuit}
-                    text="Ins Langzeitgedächtnis übernommen"
-                  />
-                );
-              return null;
+            if (p.type.startsWith("tool-gedaechtnis_vorschlagen")) {
+              const out =
+                "output" in p && p.output && typeof p.output === "object"
+                  ? (p.output as GedaechtnisVorschlagOutput)
+                  : undefined;
+              if (!out) return null;
+              return <GedaechtnisVorschlag key={i} vorschlag={out} />;
             }
             if (p.type.startsWith("tool-aktion_vorbereiten")) {
               const out =
@@ -376,6 +374,97 @@ export function ChatMessage({ message }: { message: UIMessage }) {
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+interface GedaechtnisVorschlagOutput {
+  vorgeschlagen: boolean;
+  grund?: string;
+  typ?: MemoryTyp;
+  kategorie?: string;
+  inhalt?: string;
+  wichtigkeit?: number;
+  bezug?: string | null;
+  hinweis?: string;
+}
+
+const MEMORY_TYP_LABEL: Record<MemoryTyp, string> = {
+  personal: "Persönlich",
+  company_rule: "Unternehmensregel",
+  professional_correction: "Fachliche Korrektur",
+  temporary: "Temporär",
+  observation: "Beobachtung",
+};
+
+// Gedächtnis-Vorschlag: NICHTS wird automatisch gespeichert. Der Nutzer muss
+// ausdrücklich bestätigen; erst dann speichert die abgesicherte Server-Funktion.
+function GedaechtnisVorschlag({ vorschlag }: { vorschlag: GedaechtnisVorschlagOutput }) {
+  const [status, setStatus] = useState<"offen" | "speichert" | "gespeichert" | "verworfen">(
+    "offen",
+  );
+  const speichern = useServerFn(speichereGedaechtnis);
+
+  if (!vorschlag.vorgeschlagen) {
+    return (
+      <ToolHinweis
+        icon={ShieldAlert}
+        text={vorschlag.grund ?? "Kann nicht ins Gedächtnis übernommen werden."}
+      />
+    );
+  }
+
+  if (status === "gespeichert") {
+    return <ToolHinweis icon={CheckCircle2} text="Ins Langzeitgedächtnis übernommen" />;
+  }
+  if (status === "verworfen") {
+    return <ToolHinweis icon={XCircle} text="Vorschlag verworfen – nichts gespeichert." />;
+  }
+
+  const bestaetigen = async () => {
+    if (!vorschlag.inhalt || !vorschlag.typ) return;
+    setStatus("speichert");
+    try {
+      await speichern({
+        data: {
+          typ: vorschlag.typ,
+          kategorie: vorschlag.kategorie,
+          inhalt: vorschlag.inhalt,
+          wichtigkeit: vorschlag.wichtigkeit,
+          bezug: vorschlag.bezug ?? undefined,
+        },
+      });
+      setStatus("gespeichert");
+      toast.success("Gespeichert.");
+    } catch (e) {
+      setStatus("offen");
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-sm">
+      <div className="mb-1 flex items-center gap-1.5 font-medium">
+        <BrainCircuit className="h-4 w-4 text-primary" />
+        Vorschlag fürs Gedächtnis
+        {vorschlag.typ && (
+          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+            {MEMORY_TYP_LABEL[vorschlag.typ]}
+          </span>
+        )}
+      </div>
+      <p className="text-foreground">{vorschlag.inhalt}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {vorschlag.hinweis ?? "Bitte ausdrücklich bestätigen, damit ich es dauerhaft speichere."}
+      </p>
+      <div className="mt-2 flex gap-2">
+        <Button size="sm" onClick={bestaetigen} disabled={status === "speichert"}>
+          {status === "speichert" ? "Speichert …" : "Bestätigen & speichern"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setStatus("verworfen")}>
+          Verwerfen
+        </Button>
       </div>
     </div>
   );

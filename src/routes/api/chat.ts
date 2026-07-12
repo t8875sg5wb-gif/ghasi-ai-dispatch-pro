@@ -8,13 +8,7 @@ import { generateHinweise } from "@/lib/ghasi-hinweise";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
 import { buildBusinessTools } from "@/lib/ghasi-tools";
 import { hydrateServerMirrors } from "@/lib/server-mirror.server";
-import {
-  type AppRole,
-  hoechsteRolle,
-  ROLE_LABELS,
-  ROLE_BESCHREIBUNG,
-  erlaubteBereiche,
-} from "@/lib/roles";
+import { ROLE_LABELS, ROLE_BESCHREIBUNG, erlaubteBereiche } from "@/lib/roles";
 
 const SYSTEM_PROMPT = `Du bist GHASI AI – der digitale Geschäftsführer und persönliche Executive-Assistent
 eines Krankentransportunternehmens. Du agierst wie ein erfahrener Operations Director, der jeden
@@ -54,8 +48,11 @@ ECHTZEIT-WISSEN:
 - Für aktuelle externe Infos (News, Wetter, Verkehr, Börse, Spritpreise, Feiertage, Fakten von heute)
   nutzt du "web_suche"; zum Auslesen einer konkreten Seite "web_seite_lesen". Kennzeichne Online-Quellen klar.
 
-GEDÄCHTNIS:
-- Wichtige Entscheidungen, bestätigte Korrekturen oder Vorlieben speicherst du mit "gedaechtnis_speichern".
+GEDÄCHTNIS (nur mit ausdrücklicher Bestätigung):
+- Du speicherst NIEMALS eigenmächtig. Wenn etwas dauerhaft gemerkt werden sollte, machst du mit
+  "gedaechtnis_vorschlagen" einen Vorschlag und bittest den Nutzer um ausdrückliche Bestätigung.
+  Erst nach seiner Bestätigung wird gespeichert. Sensible Daten (Passwörter, Bankdaten, unnötige
+  Gesundheitsdaten) schlägst du nie zur Speicherung vor.
 
 SMART ACTIONS & SICHERHEIT (unbedingt einhalten):
 - Du DARFST analysieren, recherchieren und Aktionen als ENTWURF vorbereiten – ausschließlich über das
@@ -138,22 +135,17 @@ function sammleVorbereiteteAktionen(parts: UIMessage["parts"] | undefined) {
   return aktionen;
 }
 
-/** Verifiziert das Bearer-Token und ermittelt die höchste Rolle des Nutzers. */
-async function authentifiziere(
+/** Verifiziert das Bearer-Token serverseitig und gibt die Nutzer-ID zurück. */
+async function verifiziereToken(
   request: Request,
   admin: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
-): Promise<{ userId: string | null; role: AppRole | null }> {
+): Promise<string | null> {
   const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
   const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
-  if (!token) return { userId: null, role: null };
+  if (!token) return null;
   const { data, error } = await admin.auth.getUser(token);
-  if (error || !data.user) return { userId: null, role: null };
-  const { data: rollen } = await admin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", data.user.id);
-  const role = hoechsteRolle((rollen ?? []).map((r) => r.role) as AppRole[]);
-  return { userId: data.user.id, role };
+  if (error || !data.user) return null;
+  return data.user.id;
 }
 
 export const Route = createFileRoute("/api/chat")({
@@ -173,10 +165,13 @@ export const Route = createFileRoute("/api/chat")({
           threadId?: string;
         };
 
+        const startZeit = Date.now();
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { resolveActor, threadGehoert, buildDriverSnapshot, istSensibel } =
+          await import("@/lib/ghasi-security.server");
 
-        // SICHERHEIT: Authentifizierung & Rolle ermitteln. Ohne gültige Session kein Zugriff.
-        const { userId, role } = await authentifiziere(request, supabaseAdmin);
+        // SICHERHEIT: Token serverseitig verifizieren. Ohne gültige Session kein Zugriff.
+        const userId = await verifiziereToken(request, supabaseAdmin);
         if (!userId) {
           return new Response(JSON.stringify({ error: "Nicht angemeldet" }), {
             status: 401,
@@ -184,20 +179,32 @@ export const Route = createFileRoute("/api/chat")({
           });
         }
 
-        // AI Brain: load real persisted data into the in-memory mirrors so every
-        // knowledge snapshot and business tool reads the database, never demo seeds.
-        await hydrateServerMirrors();
+        // Rolle & Fahrer-Verknüpfung IMMER serverseitig auflösen (nie aus dem Client).
+        const { role, driverId } = await resolveActor(userId);
 
-        // Frage für das Audit-Protokoll festhalten.
+        // SICHERHEIT: Thread-Besitz serverseitig prüfen. Fremde/nicht existierende
+        // Threads werden mit derselben generischen Meldung abgewiesen (keine Preisgabe).
+        if (threadId) {
+          const eigen = await threadGehoert(threadId, userId);
+          if (!eigen) {
+            return new Response(JSON.stringify({ error: "Kein Zugriff auf diese Unterhaltung." }), {
+              status: 403,
+              headers: { "content-type": "application/json" },
+            });
+          }
+        }
 
-        let frage = "";
+        // Fahrer arbeiten mit einem request-scoped Eigen-Kontext (keine Mirrors).
+        // Alle übrigen Rollen lesen die (unternehmensweit gleichen) Mirror-Daten.
+        if (role !== "fahrer") {
+          await hydrateServerMirrors();
+        }
 
-        // Eingehende Nutzer-Nachricht sofort sichern (geht bei Fehlern nicht verloren).
+        // Eingehende Nutzer-Nachricht sofort im (verifiziert eigenen) Thread sichern.
         if (threadId && messages.length > 0) {
           const last = messages[messages.length - 1];
           if (last?.role === "user") {
             const userText = textOf(last.parts);
-            frage = userText;
             await supabaseAdmin.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "user",
@@ -205,35 +212,40 @@ export const Route = createFileRoute("/api/chat")({
               parts: last.parts as never,
               user_id: userId,
             });
-            // Titel aus erster Nutzer-Nachricht ableiten.
+            // Titel aus erster Nutzer-Nachricht ableiten (nur eigener Thread).
             const { data: t } = await supabaseAdmin
               .from("chat_threads")
               .select("titel")
               .eq("id", threadId)
-              .single();
+              .eq("user_id", userId)
+              .maybeSingle();
             if (t && (t.titel === "Neue Unterhaltung" || !t.titel) && userText.trim()) {
               await supabaseAdmin
                 .from("chat_threads")
                 .update({ titel: userText.slice(0, 60) })
-                .eq("id", threadId);
+                .eq("id", threadId)
+                .eq("user_id", userId);
             }
           }
         }
-        if (!frage) {
-          const lastUser = [...messages].reverse().find((m) => m.role === "user");
-          frage = textOf(lastUser?.parts);
-        }
 
-        const { data: memory } = await supabaseAdmin
+        // Gedächtnis: NUR eigene Erinnerungen + admin-freigegebene Unternehmensregeln laden.
+        const { data: memoryRoh } = await supabaseAdmin
           .from("ghasi_memory")
-          .select("kategorie, inhalt, wichtigkeit")
+          .select("kategorie, inhalt, wichtigkeit, typ, expires_at")
+          .or(`user_id.eq.${userId},and(typ.eq.company_rule,genehmigt.eq.true)`)
           .order("wichtigkeit", { ascending: false })
           .order("updated_at", { ascending: false })
           .limit(40);
 
+        const jetzt = Date.now();
+        const memory = (memoryRoh ?? []).filter(
+          (m) => !m.expires_at || new Date(m.expires_at).getTime() > jetzt,
+        );
+
         const erinnerungen =
-          memory && memory.length > 0
-            ? memory.map((m) => `- (${m.kategorie}) ${m.inhalt}`).join("\n")
+          memory.length > 0
+            ? memory.map((m) => `- (${m.typ}/${m.kategorie}) ${m.inhalt}`).join("\n")
             : "Noch keine gespeicherten Erinnerungen.";
 
         const hinweise = generateHinweise()
@@ -249,11 +261,16 @@ export const Route = createFileRoute("/api/chat")({
         });
 
         const rollenLabel = role ? ROLE_LABELS[role] : "Unbekannt";
-        const bereiche = erlaubteBereiche(role).join(", ");
+        const bereiche = erlaubteBereiche(role).join(", ") || "keine";
         const rollenKontext = `## Aktuelle Rolle des Nutzers
 Rolle: ${rollenLabel} – ${role ? ROLE_BESCHREIBUNG[role] : "Keine Rolle zugewiesen."}
 Erlaubte Datenbereiche (nur diese Werkzeuge stehen zur Verfügung): ${bereiche}
 Beachte diese Berechtigungen strikt. Stehen für einen Bereich keine Werkzeuge bereit, darf die Rolle ihn nicht einsehen.`;
+
+        const snapshot =
+          role === "fahrer"
+            ? await buildDriverSnapshot(userId, driverId)
+            : buildKnowledgeSnapshot(role);
 
         const kontext = `${SYSTEM_PROMPT}
 
@@ -268,7 +285,7 @@ ${erinnerungen}
 ## Aktuelle proaktive Hinweise
 ${hinweise}
 
-${buildKnowledgeSnapshot()}`;
+${snapshot}`;
 
         const provider = createLovableAiGatewayProvider(apiKey);
 
@@ -295,30 +312,55 @@ ${buildKnowledgeSnapshot()}`;
               }),
               execute: async ({ url }) => firecrawlScrape(url),
             }),
-            gedaechtnis_speichern: tool({
+            gedaechtnis_vorschlagen: tool({
               description:
-                "Speichert eine wichtige Entscheidung, Korrektur, Vorliebe oder einen wiederkehrenden Ablauf dauerhaft im Langzeitgedächtnis.",
+                "Schlägt vor, eine Information dauerhaft ins Langzeitgedächtnis zu übernehmen. " +
+                "WICHTIG: Dieses Werkzeug speichert NICHTS. Es erstellt nur einen Vorschlag, den der " +
+                "Nutzer ausdrücklich bestätigen muss, bevor gespeichert wird. Niemals eigenmächtig speichern.",
               inputSchema: z.object({
+                typ: z
+                  .enum([
+                    "personal",
+                    "company_rule",
+                    "professional_correction",
+                    "temporary",
+                    "observation",
+                  ])
+                  .describe(
+                    "personal=persönliche Vorliebe, company_rule=Unternehmensregel (nur Admin), " +
+                      "professional_correction=fachliche Korrektur, temporary=temporär, observation=Beobachtung",
+                  ),
                 kategorie: z
                   .string()
-                  .describe("z.B. entscheidung, kunde, fahrer, fahrzeug, ablauf, vorliebe"),
+                  .describe("z.B. entscheidung, kunde, fahrer, ablauf, vorliebe"),
                 inhalt: z.string().describe("Was genau gemerkt werden soll, in einem Satz."),
                 wichtigkeit: z.number().min(1).max(5).describe("1=gering, 5=sehr wichtig"),
-                bezug: z
-                  .string()
-                  .optional()
-                  .describe("optionaler Bezug, z.B. Fahrername oder Kennzeichen"),
+                bezug: z.string().optional().describe("optionaler Bezug"),
               }),
-              execute: async ({ kategorie, inhalt, wichtigkeit, bezug }) => {
-                const { error } = await supabaseAdmin.from("ghasi_memory").insert({
+              execute: async ({ typ, kategorie, inhalt, wichtigkeit, bezug }) => {
+                if (istSensibel(inhalt)) {
+                  return {
+                    vorgeschlagen: false,
+                    grund:
+                      "Dieser Inhalt enthält sensible Daten (Zugangs-/Bank-/unnötige Gesundheitsdaten) und darf nicht gespeichert werden.",
+                  };
+                }
+                if (typ === "company_rule" && role !== "admin") {
+                  return {
+                    vorgeschlagen: false,
+                    grund: "Nur Administratoren dürfen Unternehmensregeln anlegen.",
+                  };
+                }
+                return {
+                  vorgeschlagen: true,
+                  typ,
                   kategorie,
                   inhalt,
                   wichtigkeit: Math.min(5, Math.max(1, Math.round(wichtigkeit))),
-                  quelle: "korrektur",
                   bezug: bezug ?? null,
-                });
-                if (error) return { gespeichert: false, fehler: error.message };
-                return { gespeichert: true };
+                  hinweis:
+                    "Vorschlag – bitte ausdrücklich bestätigen, damit ich ihn dauerhaft speichere.",
+                };
               },
             }),
           },
@@ -331,14 +373,23 @@ ${buildKnowledgeSnapshot()}`;
             const webQuellen = sammleQuellen(responseMessage.parts);
             const businessQuellen = sammleBusinessQuellen(responseMessage.parts);
             const vorbereiteteAktionen = sammleVorbereiteteAktionen(responseMessage.parts);
+            const werkzeuge = [
+              ...new Set(
+                (responseMessage.parts ?? [])
+                  .filter((p) => typeof p.type === "string" && p.type.startsWith("tool-"))
+                  .map((p) => (p.type as string).replace(/^tool-/, "")),
+              ),
+            ];
 
-            // AUDIT: jede KI-Anfrage protokollieren (ohne private Inhalte).
+            // AUDIT: nur Metadaten – KEINE Roh-Prompts/Antworten (Constitution Art. 15, P6).
             await supabaseAdmin.from("ai_audit_log").insert({
               user_id: userId,
               rolle: role,
-              frage: (frage || "—").slice(0, 2000),
               modell: "google/gemini-2.5-flash",
               thread_id: threadId ?? null,
+              werkzeuge: werkzeuge.length > 0 ? werkzeuge : null,
+              dauer_ms: Date.now() - startZeit,
+              erfolg: true,
               quellen: ([...businessQuellen, ...webQuellen.map((q) => q.url)].length > 0
                 ? { datenquellen: businessQuellen, web: webQuellen.map((q) => q.url) }
                 : null) as never,
@@ -359,7 +410,8 @@ ${buildKnowledgeSnapshot()}`;
             await supabaseAdmin
               .from("chat_threads")
               .update({ updated_at: new Date().toISOString() })
-              .eq("id", threadId);
+              .eq("id", threadId)
+              .eq("user_id", userId);
           },
         });
       },

@@ -44,6 +44,7 @@ import {
   NEUERUNGEN_2026,
   RECHTSGRUNDLAGEN_KI,
 } from "@/lib/gesetzeswerte";
+import { type AppRole } from "@/lib/roles";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
@@ -178,8 +179,22 @@ export function searchAll(query: string, limit = 12): SearchItem[] {
     .map((r) => r.item);
 }
 
-/** Kompakter Wissens-Snapshot für den Kontext der KI. */
-export function buildKnowledgeSnapshot(): string {
+/**
+ * Kompakter Wissens-Snapshot für den Kontext der KI – rollenbeschränkt.
+ * Least-Privilege (Constitution Art. 15, AI-Blueprint):
+ * - admin: vollständiger Kontext.
+ * - disposition: Betrieb (Fahrer, Fahrzeuge, Aufträge, Patienten, Kunden, GPS) – KEINE Finanz-Internas.
+ * - finanz: Finanzen & Kunden/Kennzahlen – KEINE operativen/medizinischen Daten, KEIN GPS, KEINE Fahrerbewertungen.
+ * - fahrer: erhält KEINEN Unternehmenssnapshot (eigener, request-scoped Kontext via ghasi-security.server).
+ * Die Rechts-/Gesetzeswerte gelten für alle nicht-Fahrer-Rollen.
+ */
+export function buildKnowledgeSnapshot(role: AppRole | null = "admin"): string {
+  // Fahrer bekommen hier bewusst keinen unternehmensweiten Kontext.
+  if (role === "fahrer") return "";
+
+  const opsView = role === "admin" || role === "disposition";
+  const finanzView = role === "admin" || role === "finanz";
+
   const fahrerFrei = INITIAL_FAHRER.filter((f) => f.status === "verfuegbar");
   const fahrerUnterwegs = INITIAL_FAHRER.filter((f) => f.status === "unterwegs");
   const fzgFrei = INITIAL_FAHRZEUGE.filter((v) => v.status === "frei");
@@ -190,66 +205,81 @@ export function buildKnowledgeSnapshot(): string {
 
   const lines: string[] = [];
   lines.push(`# Unternehmenswissen (Stand jetzt)`);
-  lines.push(
-    `Kennzahlen heute: Umsatz ${EUR(umsatzHeute)}, Gewinn ${EUR(gewinnHeute)}, ` +
-      `${fahrerFrei.length} freie Fahrer, ${fahrerUnterwegs.length} unterwegs, ` +
-      `${fzgFrei.length} freie Fahrzeuge, ${fzgUnterwegs.length} unterwegs.`,
-  );
 
-  lines.push(`\n## Fahrer (${INITIAL_FAHRER.length})`);
-  for (const f of INITIAL_FAHRER) {
+  if (opsView) {
     lines.push(
-      `- ${f.name} (${f.nummer}): ${f.status}, Bewertung ${f.bewertung}/5, Pünktlichkeit ${f.puenktlichkeit}%, ` +
-        `Überstunden ${f.ueberstunden}h, Fahrzeug ${f.fahrzeug ?? "—"}.`,
+      `Kennzahlen heute: Umsatz ${EUR(umsatzHeute)}, Gewinn ${EUR(gewinnHeute)}, ` +
+        `${fahrerFrei.length} freie Fahrer, ${fahrerUnterwegs.length} unterwegs, ` +
+        `${fzgFrei.length} freie Fahrzeuge, ${fzgUnterwegs.length} unterwegs.`,
     );
+  } else if (finanzView) {
+    lines.push(`Kennzahlen heute: Umsatz ${EUR(umsatzHeute)}, Gewinn ${EUR(gewinnHeute)}.`);
   }
 
-  lines.push(`\n## Fahrzeuge (${INITIAL_FAHRZEUGE.length})`);
-  for (const v of INITIAL_FAHRZEUGE) {
-    lines.push(
-      `- ${v.kennzeichen} ${v.marke} ${v.modell} (${v.typ}): ${v.status}, Tank ${v.tankstand}%, ` +
-        `nächste Wartung ${v.naechsteWartung}, TÜV ${v.tuevBis}, Versicherung bis ${v.versicherungBis}.`,
-    );
+  if (opsView) {
+    lines.push(`\n## Fahrer (${INITIAL_FAHRER.length})`);
+    for (const f of INITIAL_FAHRER) {
+      lines.push(
+        `- ${f.name} (${f.nummer}): ${f.status}, Bewertung ${f.bewertung}/5, Pünktlichkeit ${f.puenktlichkeit}%, ` +
+          `Überstunden ${f.ueberstunden}h, Fahrzeug ${f.fahrzeug ?? "—"}.`,
+      );
+    }
+
+    lines.push(`\n## Fahrzeuge (${INITIAL_FAHRZEUGE.length})`);
+    for (const v of INITIAL_FAHRZEUGE) {
+      lines.push(
+        `- ${v.kennzeichen} ${v.marke} ${v.modell} (${v.typ}): ${v.status}, Tank ${v.tankstand}%, ` +
+          `nächste Wartung ${v.naechsteWartung}, TÜV ${v.tuevBis}, Versicherung bis ${v.versicherungBis}.`,
+      );
+    }
+
+    lines.push(`\n## Aktuelle Aufträge (${INITIAL_AUFTRAEGE.length})`);
+    for (const a of INITIAL_AUFTRAEGE) {
+      lines.push(
+        `- ${a.nummer} ${a.patient}: ${a.transportart}, ${STATUS_META[a.status].label}, ` +
+          `${a.abholort} → ${a.zielort}, ${formatTermin(a.termin)}, Fahrer ${a.fahrer ?? "—"}. ` +
+          `Verordnung: ${VERORDNUNG_META[effektiveVerordnung(a)].label}, Mobilität: ${MOBILITAET_META[effektiveMobilitaet(a)].label}, ` +
+          `Begleitperson: ${a.begleitperson ? "Ja" : "Nein"}, passendes Fahrzeug: ${empfohlenerFahrzeugtyp(effektiveMobilitaet(a))}.`,
+      );
+    }
+    lines.push(`Offene/disponierte Aufträge: ${offene.length}.`);
+
+    lines.push(`\n## Patienten (${PATIENTEN.length})`);
+    for (const p of PATIENTEN)
+      lines.push(`- ${p.name}: ${p.mobilitaet}, ${p.kostentraeger}, ${p.hinweis}`);
   }
 
-  lines.push(`\n## Aktuelle Aufträge (${INITIAL_AUFTRAEGE.length})`);
-  for (const a of INITIAL_AUFTRAEGE) {
-    lines.push(
-      `- ${a.nummer} ${a.patient}: ${a.transportart}, ${STATUS_META[a.status].label}, ` +
-        `${a.abholort} → ${a.zielort}, ${formatTermin(a.termin)}, Fahrer ${a.fahrer ?? "—"}. ` +
-        `Verordnung: ${VERORDNUNG_META[effektiveVerordnung(a)].label}, Mobilität: ${MOBILITAET_META[effektiveMobilitaet(a)].label}, ` +
-        `Begleitperson: ${a.begleitperson ? "Ja" : "Nein"}, passendes Fahrzeug: ${empfohlenerFahrzeugtyp(effektiveMobilitaet(a))}.`,
-    );
+  if (opsView || finanzView) {
+    lines.push(`\n## Kunden & Kassen`);
+    for (const k of KUNDEN)
+      lines.push(`- ${k.name} (${k.typ}), offene Rechnungen: ${k.offeneRechnungen}`);
   }
-  lines.push(`Offene/disponierte Aufträge: ${offene.length}.`);
 
-  lines.push(`\n## Patienten (${PATIENTEN.length})`);
-  for (const p of PATIENTEN)
-    lines.push(`- ${p.name}: ${p.mobilitaet}, ${p.kostentraeger}, ${p.hinweis}`);
+  if (opsView) {
+    lines.push(`\n## Einrichtungen`);
+    lines.push(`Krankenhäuser: ${KRANKENHAEUSER.map((e) => e.name).join(", ")}`);
+    lines.push(`Dialysezentren: ${DIALYSEZENTREN.map((e) => e.name).join(", ")}`);
+    lines.push(`Pflegeheime: ${PFLEGEHEIME.map((e) => e.name).join(", ")}`);
+  }
 
-  lines.push(`\n## Kunden & Kassen`);
-  for (const k of KUNDEN)
-    lines.push(`- ${k.name} (${k.typ}), offene Rechnungen: ${k.offeneRechnungen}`);
+  if (finanzView) {
+    const fk = computeFinanzKpis();
+    lines.push(`\n## Finanzen (Monat)`);
+    lines.push(
+      `Umsatz ${EURf(fk.umsatzMonat)}, Ausgaben ${EURf(fk.ausgabenMonat)}, Gewinn ${EURf(fk.gewinnMonat)} (Marge ${fk.margeProzent} %). ` +
+        `Offene Posten ${EURf(fk.offenePosten)} (${fk.anzahlOffen}), überfällig ${EURf(fk.ueberfaelligeSumme)} (${fk.anzahlUeberfaellig}).`,
+    );
+    lines.push(
+      `Kostenstellen: Kraftstoff ${EURf(fk.kosten.kraftstoffkosten)}, Wartung ${EURf(fk.kosten.wartungskosten)}, ` +
+        `Fahrer ${EURf(fk.kosten.fahrerkosten)}, Leasing ${EURf(fk.kosten.leasingkosten)}, Fahrzeug ${EURf(fk.kosten.fahrzeugkosten)}.`,
+    );
+    lines.push(`Dokumente im Archiv: ${INITIAL_DOKUMENTE.length}.`);
+  }
 
-  lines.push(`\n## Einrichtungen`);
-  lines.push(`Krankenhäuser: ${KRANKENHAEUSER.map((e) => e.name).join(", ")}`);
-  lines.push(`Dialysezentren: ${DIALYSEZENTREN.map((e) => e.name).join(", ")}`);
-  lines.push(`Pflegeheime: ${PFLEGEHEIME.map((e) => e.name).join(", ")}`);
-
-  const fk = computeFinanzKpis();
-  lines.push(`\n## Finanzen (Monat)`);
-  lines.push(
-    `Umsatz ${EURf(fk.umsatzMonat)}, Ausgaben ${EURf(fk.ausgabenMonat)}, Gewinn ${EURf(fk.gewinnMonat)} (Marge ${fk.margeProzent} %). ` +
-      `Offene Posten ${EURf(fk.offenePosten)} (${fk.anzahlOffen}), überfällig ${EURf(fk.ueberfaelligeSumme)} (${fk.anzahlUeberfaellig}).`,
-  );
-  lines.push(
-    `Kostenstellen: Kraftstoff ${EURf(fk.kosten.kraftstoffkosten)}, Wartung ${EURf(fk.kosten.wartungskosten)}, ` +
-      `Fahrer ${EURf(fk.kosten.fahrerkosten)}, Leasing ${EURf(fk.kosten.leasingkosten)}, Fahrzeug ${EURf(fk.kosten.fahrzeugkosten)}.`,
-  );
-  lines.push(`Dokumente im Archiv: ${INITIAL_DOKUMENTE.length}.`);
-
-  // Live-GPS & Transport-Execution (Fahrzeugpositionen, Status, ETA, Alerts)
-  lines.push(`\n${buildGpsSnapshot()}`);
+  // Live-GPS nur für operative Rollen (nicht Finanzen).
+  if (opsView) {
+    lines.push(`\n${buildGpsSnapshot()}`);
+  }
 
   // Rechts- & Gesetzeswerte (Schiene A) – für ALLE Rollen; jeweils mit Stand.
   const pct = (n: number) => `${n.toString().replace(".", ",")} %`;

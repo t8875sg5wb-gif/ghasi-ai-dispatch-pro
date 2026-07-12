@@ -16,7 +16,20 @@ export interface ExecutiveAnalysis {
 
 export const generateExecutiveAnalysis = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async (): Promise<ExecutiveAnalysis> => {
+  .handler(async ({ context }): Promise<ExecutiveAnalysis> => {
+    // SICHERHEIT: Das Executive-Briefing bündelt operative UND Finanzdaten und
+    // ist daher ausschließlich Administratoren vorbehalten (Least Privilege).
+    const { resolveActor } = await import("@/lib/ghasi-security.server");
+    const { role } = await resolveActor(context.userId);
+    if (role !== "admin") {
+      return {
+        lageeinschaetzung: "",
+        chancen: [],
+        risiken: [],
+        naechsteSchritte: [],
+        fehler: "Dafür fehlt deiner Rolle die Berechtigung.",
+      };
+    }
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return {
@@ -59,7 +72,7 @@ Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
 
 ${buildCeoSnapshot()}
 
-${buildKnowledgeSnapshot()}`;
+${buildKnowledgeSnapshot("admin")}`;
 
     const toStrings = (v: unknown): string[] =>
       Array.isArray(v)
@@ -111,5 +124,4 @@ ${buildKnowledgeSnapshot()}`;
         fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { lageeinschaetzung: "", chancen: [], risiken: [], naechsteSchritte: [], fehler };
     }
-  },
-);
+  });

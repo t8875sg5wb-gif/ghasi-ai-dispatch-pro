@@ -673,45 +673,52 @@ export function buildBusinessTools(role: AppRole | null) {
   }
 
   // Smart Actions: NUR vorbereiten, niemals ausführen oder versenden.
+  // Fahrer (und rollenlose Konten) dürfen keine Unternehmensaktionen vorbereiten.
+  const darfAktionen = role === "admin" || role === "disposition" || role === "finanz";
   const finanzAktionen = role === "admin" || role === "finanz";
-  tools.aktion_vorbereiten = tool({
-    description:
-      "Bereitet eine Aktion als ENTWURF vor (Rechnung, E-Mail, SMS, WhatsApp, Fahrer-Zuweisung, Wartungserinnerung, Dokument, Routenoptimierung). Führt NICHTS aus und versendet NICHTS – der Entwurf muss vom Nutzer ausdrücklich bestätigt werden. Nutze dies, wenn der Nutzer um Vorbereitung/Entwurf bittet.",
-    inputSchema: z.object({
-      typ: z.enum([
-        "rechnung",
-        "email",
-        "sms",
-        "whatsapp",
-        "fahrer_zuweisung",
-        "wartungserinnerung",
-        "dokument",
-        "routenoptimierung",
-      ]),
-      titel: z.string().describe("Kurzer Titel des Entwurfs"),
-      empfaenger: z.string().optional().describe("Empfänger/Bezug, falls relevant"),
-      betreff: z.string().optional(),
-      inhalt: z.string().describe("Der vollständige Entwurfstext bzw. die vorgeschlagene Maßnahme"),
-    }),
-    execute: async ({ typ, titel, empfaenger, betreff, inhalt }) => {
-      if (typ === "rechnung" && !finanzAktionen) {
+  if (darfAktionen) {
+    tools.aktion_vorbereiten = tool({
+      description:
+        "Bereitet eine Aktion als ENTWURF vor (Rechnung, E-Mail, SMS, WhatsApp, Fahrer-Zuweisung, Wartungserinnerung, Dokument, Routenoptimierung). Führt NICHTS aus und versendet NICHTS – der Entwurf muss vom Nutzer ausdrücklich bestätigt werden. Nutze dies, wenn der Nutzer um Vorbereitung/Entwurf bittet.",
+      inputSchema: z.object({
+        typ: z.enum([
+          "rechnung",
+          "email",
+          "sms",
+          "whatsapp",
+          "fahrer_zuweisung",
+          "wartungserinnerung",
+          "dokument",
+          "routenoptimierung",
+        ]),
+        titel: z.string().describe("Kurzer Titel des Entwurfs"),
+        empfaenger: z.string().optional().describe("Empfänger/Bezug, falls relevant"),
+        betreff: z.string().optional(),
+        inhalt: z
+          .string()
+          .describe("Der vollständige Entwurfstext bzw. die vorgeschlagene Maßnahme"),
+      }),
+      execute: async ({ typ, titel, empfaenger, betreff, inhalt }) => {
+        if (typ === "rechnung" && !finanzAktionen) {
+          return { vorbereitet: false, fehler: "Dafür fehlt deiner Rolle die Berechtigung." };
+        }
+        // Fahrer-Zuweisungen sind operativ (Admin/Disposition).
+        if (typ === "fahrer_zuweisung" && !(role === "admin" || role === "disposition")) {
+          return { vorbereitet: false, fehler: "Dafür fehlt deiner Rolle die Berechtigung." };
+        }
         return {
-          vorbereitet: false,
-          fehler: "Keine Berechtigung für Finanzaktionen in dieser Rolle.",
+          vorbereitet: true,
+          typ,
+          titel,
+          empfaenger: empfaenger ?? null,
+          betreff: betreff ?? null,
+          inhalt,
+          hinweis:
+            "Dies ist ein Entwurf. Er wird nicht automatisch ausgeführt oder versendet – bitte ausdrücklich bestätigen.",
         };
-      }
-      return {
-        vorbereitet: true,
-        typ,
-        titel,
-        empfaenger: empfaenger ?? null,
-        betreff: betreff ?? null,
-        inhalt,
-        hinweis:
-          "Dies ist ein Entwurf. Er wird nicht automatisch ausgeführt oder versendet – bitte ausdrücklich bestätigen.",
-      };
-    },
-  });
+      },
+    });
+  }
 
   return tools;
 }
