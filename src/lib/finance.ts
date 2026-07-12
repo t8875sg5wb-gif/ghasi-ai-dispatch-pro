@@ -544,7 +544,10 @@ export interface FinanzKpis {
   kosten: Kostenaufstellung;
 }
 
-export function computeFinanzKpis(rechnungen: Rechnung[] = INITIAL_RECHNUNGEN): FinanzKpis {
+export function computeFinanzKpis(
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+  config: KostenConfig = {},
+): FinanzKpis {
   const aktiv = rechnungen.filter((r) => r.status !== "storniert");
 
   const offen = aktiv.filter(
@@ -562,7 +565,7 @@ export function computeFinanzKpis(rechnungen: Rechnung[] = INITIAL_RECHNUNGEN): 
   const bezahltSumme = bezahlt.reduce((s, r) => s + (r.bezahlterBetrag ?? r.betrag), 0);
   const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(r.betrag), 0);
 
-  const kosten = computeKostenaufstellung();
+  const kosten = computeKostenaufstellung(config);
   const umsatzMonat = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0);
   const gewinnMonat = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsgewinn, 0);
   const ausgabenMonat = kosten.gesamt;
