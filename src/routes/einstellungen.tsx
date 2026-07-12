@@ -304,6 +304,34 @@ function EinstellungenSeite() {
               </p>
             </Feld>
             <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+              <p className="mb-1 text-sm font-medium">Betriebskosten-Annahmen</p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Grundlage für Kraftstoff- und Kostenschätzungen in Buchhaltung, Dashboard und
+                Prognosen. Sobald echte Belege im Ausgaben-Modul vorliegen, werden diese bevorzugt.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Feld label="Angenommener Kraftstoffpreis (€/l)">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={company.dieselpreis}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("dieselpreis", Number(e.target.value) || 0)}
+                  />
+                </Feld>
+                <Feld label="Arbeitstage pro Monat (Ø)">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    value={company.arbeitstageMonat}
+                    disabled={!istAdmin}
+                    onChange={(e) => setC("arbeitstageMonat", Number(e.target.value) || 0)}
+                  />
+                </Feld>
+              </div>
+            </div>
+            <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 p-3">
               <p className="mb-3 text-sm font-medium">DATEV-Export (Steuerberater)</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Feld label="Berater-Nr.">
