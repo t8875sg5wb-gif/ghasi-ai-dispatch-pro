@@ -132,6 +132,8 @@ export const saveCompanySettings = createServerFn({ method: "POST" })
       datev_mandant_nr: data.datevMandantNr,
       datev_erloeskonto: data.datevErloeskonto,
       datev_gegenkonto: data.datevGegenkonto,
+      betriebskosten_dieselpreis: data.dieselpreis,
+      betriebskosten_arbeitstage: data.arbeitstageMonat,
     };
     const { data: saved, error } = await context.supabase
       .from("company_settings")
