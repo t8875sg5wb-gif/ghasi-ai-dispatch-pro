@@ -49,6 +49,8 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   datevMandantNr: "",
   datevErloeskonto: "8120",
   datevGegenkonto: "10000",
+  dieselpreis: 1.75,
+  arbeitstageMonat: 21,
 };
 
 interface CompanyRow {
