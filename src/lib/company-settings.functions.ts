@@ -69,6 +69,8 @@ interface CompanyRow {
   datev_mandant_nr?: string;
   datev_erloeskonto?: string;
   datev_gegenkonto?: string;
+  betriebskosten_dieselpreis?: number | string;
+  betriebskosten_arbeitstage?: number | string;
 }
 
 function rowToSettings(r: CompanyRow): CompanySettings {
