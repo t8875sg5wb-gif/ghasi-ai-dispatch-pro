@@ -83,11 +83,20 @@ export function PrognosenPage() {
         description="GHASI AI prognostiziert Umsatz, Auslastung, Personal-, Wartungs- und Kraftstoffbedarf sowie saisonale Nachfrage."
       />
 
+      <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-muted-foreground">
+        <SchaetzungBadge
+          label="Annahme"
+          hinweis="Alle Prognosewerte sind modellhafte Hochrechnungen aus aktuellen Betriebsdaten, Wochentags- und Saisonprofilen sowie – falls keine echten Werte vorliegen – hinterlegten Annahmen (z. B. Basisumsatz). Keine garantierten Ist-Zahlen."
+        />
+        <span>Prognosen sind Schätzungen auf Basis von Betriebsdaten und Annahmen – keine garantierten Ist-Werte.</span>
+      </div>
+
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <StatCard key={s.label} {...s} />
         ))}
       </section>
+
 
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard
