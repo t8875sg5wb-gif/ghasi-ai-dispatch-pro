@@ -2,6 +2,7 @@ import { TrendingUp, Gauge, Users, Wrench, Fuel, CalendarRange, LineChart } from
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { SchaetzungBadge } from "@/components/ui/schaetzung-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ForecastAreaChart,
