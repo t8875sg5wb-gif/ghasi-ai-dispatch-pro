@@ -26,6 +26,11 @@ export interface CompanySettings {
   datevErloeskonto: string;
   /** Debitoren-Sammelkonto / Gegenkonto (Standard 10000). */
   datevGegenkonto: string;
+  // --- Betriebskosten-Annahmen (für Kostenschätzungen) ---
+  /** Angenommener Kraftstoffpreis €/l für die Kraftstoffkosten-Schätzung. */
+  dieselpreis: number;
+  /** Durchschnittliche Arbeitstage pro Monat für Monats-Hochrechnungen. */
+  arbeitstageMonat: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
