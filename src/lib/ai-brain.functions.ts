@@ -72,7 +72,7 @@ Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
 
 ${buildCeoSnapshot()}
 
-${buildKnowledgeSnapshot()}`;
+${buildKnowledgeSnapshot("admin")}`;
 
     const toStrings = (v: unknown): string[] =>
       Array.isArray(v)
