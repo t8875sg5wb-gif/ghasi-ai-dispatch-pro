@@ -142,6 +142,38 @@ function BuchhaltungPage() {
     }),
   );
 
+  const dieselpreisText = (company?.dieselpreis ?? 1.75).toFixed(2).replace(".", ",");
+  const arbeitstageText = String(company?.arbeitstageMonat ?? 21);
+
+  function kostenMarker(key: keyof typeof KOSTEN_LABEL) {
+    if (key === "kraftstoffkosten") {
+      return kpis.kosten.kraftstoffQuelle === "echte-belege" ? (
+        <EchtBadge hinweis="Berechnet aus tatsächlichen Kraftstoff-Belegen des laufenden Monats (Ausgaben-Modul)." />
+      ) : (
+        <SchaetzungBadge
+          hinweis={`Annahme: ${dieselpreisText} €/l × Ø-Verbrauch × geschätzte Monatskilometer (${arbeitstageText} Arbeitstage). Sobald Kraftstoff-Belege im Ausgaben-Modul erfasst sind, wird der echte Wert verwendet. In den Einstellungen anpassbar.`}
+        />
+      );
+    }
+    if (key === "fahrzeugkosten") {
+      return (
+        <SchaetzungBadge
+          label="Annahme"
+          hinweis={`Hochrechnung aus Kosten/km × geschätzten Monatskilometern (${arbeitstageText} Arbeitstage). Kein echter Beleg.`}
+        />
+      );
+    }
+    if (key === "fahrerkosten") {
+      return (
+        <SchaetzungBadge
+          label="Annahme"
+          hinweis={`Hochrechnung aus Umsatz-Gewinn-Differenz × ${arbeitstageText} Arbeitstagen. Ersetzt keine echte Lohnbuchhaltung.`}
+        />
+      );
+    }
+    return null;
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       <PageHero
@@ -188,6 +220,7 @@ function BuchhaltungPage() {
                   <span className="flex items-center gap-2 text-muted-foreground">
                     <p.icon className="h-4 w-4" />
                     {p.label}
+                    {kostenMarker(p.key)}
                   </span>
                   <span className="font-semibold tabular-nums">
                     {EUR(p.wert)}{" "}
@@ -203,6 +236,7 @@ function BuchhaltungPage() {
             </div>
           </CardContent>
         </Card>
+
 
         {/* Cashflow / BWA Kurz */}
         <Card className="border-border/70 shadow-card">
