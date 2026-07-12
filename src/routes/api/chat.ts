@@ -8,13 +8,7 @@ import { generateHinweise } from "@/lib/ghasi-hinweise";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
 import { buildBusinessTools } from "@/lib/ghasi-tools";
 import { hydrateServerMirrors } from "@/lib/server-mirror.server";
-import {
-  type AppRole,
-  hoechsteRolle,
-  ROLE_LABELS,
-  ROLE_BESCHREIBUNG,
-  erlaubteBereiche,
-} from "@/lib/roles";
+import { ROLE_LABELS, ROLE_BESCHREIBUNG, erlaubteBereiche } from "@/lib/roles";
 
 const SYSTEM_PROMPT = `Du bist GHASI AI – der digitale Geschäftsführer und persönliche Executive-Assistent
 eines Krankentransportunternehmens. Du agierst wie ein erfahrener Operations Director, der jeden
