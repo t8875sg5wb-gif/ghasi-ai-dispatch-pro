@@ -138,22 +138,17 @@ function sammleVorbereiteteAktionen(parts: UIMessage["parts"] | undefined) {
   return aktionen;
 }
 
-/** Verifiziert das Bearer-Token und ermittelt die höchste Rolle des Nutzers. */
-async function authentifiziere(
+/** Verifiziert das Bearer-Token serverseitig und gibt die Nutzer-ID zurück. */
+async function verifiziereToken(
   request: Request,
   admin: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
-): Promise<{ userId: string | null; role: AppRole | null }> {
+): Promise<string | null> {
   const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
   const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
-  if (!token) return { userId: null, role: null };
+  if (!token) return null;
   const { data, error } = await admin.auth.getUser(token);
-  if (error || !data.user) return { userId: null, role: null };
-  const { data: rollen } = await admin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", data.user.id);
-  const role = hoechsteRolle((rollen ?? []).map((r) => r.role) as AppRole[]);
-  return { userId: data.user.id, role };
+  if (error || !data.user) return null;
+  return data.user.id;
 }
 
 export const Route = createFileRoute("/api/chat")({
