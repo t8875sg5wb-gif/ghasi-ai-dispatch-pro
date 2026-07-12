@@ -111,6 +111,7 @@ export function useUploadDocument() {
   const create = useServerFn(createDocument);
   return useMutation({
     mutationFn: async (input: UploadDocumentInput): Promise<DokumentRecord> => {
+      pruefeUpload(input.file);
       const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
       const path = `${crypto.randomUUID()}-${safeName}`;
       const { error: upErr } = await supabase.storage
