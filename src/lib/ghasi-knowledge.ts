@@ -44,6 +44,7 @@ import {
   NEUERUNGEN_2026,
   RECHTSGRUNDLAGEN_KI,
 } from "@/lib/gesetzeswerte";
+import { type AppRole } from "@/lib/roles";
 
 const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
