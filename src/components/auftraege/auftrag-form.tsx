@@ -89,6 +89,29 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
+  const { data: patienten = [] } = usePatients();
+  const { data: kassen = [] } = useInsurers();
+  const { data: contracts = [] } = useInsurerContracts();
+
+  // Erwarteter Preis aus einem genehmigten Kassenvertrag (nur Anzeige, kein
+  // erfundener Wert). Kostenträger wird bevorzugt über den Patienten aufgelöst.
+  const vertragspreis = useMemo(() => {
+    const normName = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const patient = values.patient
+      ? patienten.find((p) => normName(p.name) === normName(values.patient))
+      : undefined;
+    const insurerId =
+      patient?.kostentraegerId ?? findeInsurerId(kassen, values.kostentraeger);
+    if (!insurerId) return { info: null as ReturnType<typeof ermittleVertragspreis>, hatKasse: false };
+    const befreit = patient?.zuzahlungsbefreit ?? false;
+    return {
+      info: ermittleVertragspreis(contracts, insurerId, values.transportart, befreit),
+      hatKasse: true,
+    };
+  }, [values.patient, values.kostentraeger, values.transportart, patienten, kassen, contracts]);
+
+
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
