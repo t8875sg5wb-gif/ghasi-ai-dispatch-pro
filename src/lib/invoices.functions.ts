@@ -248,6 +248,28 @@ async function loadInvoices(supabase: SupabaseReadClient): Promise<Rechnung[]> {
   return (data ?? []).map((r: unknown) => rowToRechnung(r as InvoiceRow));
 }
 
+async function loadContracts(supabase: SupabaseReadClient) {
+  const { data, error } = await supabase.from("insurer_contracts").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: unknown) => rowToKassenvertrag(r as KassenvertragRow));
+}
+
+async function loadInsurers(supabase: SupabaseReadClient): Promise<InsurerLike[]> {
+  const { data, error } = await supabase.from("insurers").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => {
+    const row = r as { id: string; name: string; kuerzel?: string };
+    return { id: row.id, name: row.name ?? "", kuerzel: row.kuerzel ?? "" };
+  });
+}
+
+async function loadPatients(supabase: SupabaseReadClient) {
+  const { data, error } = await supabase.from("patients").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: unknown) => rowToPatient(r as PatientRow));
+}
+
+
 function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" | "Kunde" {
   const k = kostentraeger.toLowerCase();
   if (/kasse|aok|barmer|dak|tk|techniker|krankenkasse|kkh|ikk/.test(k)) {
