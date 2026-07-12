@@ -455,20 +455,43 @@ export interface Kostenaufstellung {
   fahrerkosten: number;
   leasingkosten: number;
   gesamt: number;
+  /** Woher der Kraftstoffwert stammt: echte Belege (Ausgaben) oder Schätzung. */
+  kraftstoffQuelle: "echte-belege" | "schaetzung";
 }
 
-const DIESELPREIS = 1.75; // €/l, deterministic assumption for fuel cost estimate
-const ARBEITSTAGE_MONAT = 21;
+/** Standard-Annahmen, falls keine Firmeneinstellungen vorliegen. */
+export const DEFAULT_DIESELPREIS = 1.75; // €/l
+export const DEFAULT_ARBEITSTAGE_MONAT = 21;
 
-export function computeKostenaufstellung(): Kostenaufstellung {
-  // Fuel: monthly distance estimate × consumption × price (non-electric only).
-  const kmMonat = INITIAL_FAHRER.reduce((s, f) => s + f.kmHeute, 0) * ARBEITSTAGE_MONAT;
+export interface KostenConfig {
+  /** Angenommener Kraftstoffpreis €/l (aus Firmeneinstellungen). */
+  dieselpreis?: number;
+  /** Durchschnittliche Arbeitstage pro Monat (aus Firmeneinstellungen). */
+  arbeitstageMonat?: number;
+  /**
+   * Tatsächliche Kraftstoffkosten des Monats aus echten Belegen (Ausgaben-Modul).
+   * Wenn > 0 gesetzt, wird dieser Wert der Schätzung vorgezogen.
+   */
+  echteKraftstoffkostenMonat?: number;
+}
+
+export function computeKostenaufstellung(config: KostenConfig = {}): Kostenaufstellung {
+  const dieselpreis = config.dieselpreis ?? DEFAULT_DIESELPREIS;
+  const arbeitstageMonat = config.arbeitstageMonat ?? DEFAULT_ARBEITSTAGE_MONAT;
+
+  // Fuel: prefer real receipts from the Ausgaben module; otherwise estimate.
+  const kmMonat = INITIAL_FAHRER.reduce((s, f) => s + f.kmHeute, 0) * arbeitstageMonat;
   const avgVerbrauch =
     INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").reduce(
       (s, v) => s + v.verbrauch,
       0,
     ) / Math.max(1, INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").length);
-  const kraftstoffkosten = round((kmMonat / 100) * avgVerbrauch * DIESELPREIS);
+  const geschaetzt = round((kmMonat / 100) * avgVerbrauch * dieselpreis);
+  const hatEchte = (config.echteKraftstoffkostenMonat ?? 0) > 0;
+  const kraftstoffkosten = hatEchte ? round(config.echteKraftstoffkostenMonat!) : geschaetzt;
+  const kraftstoffQuelle: Kostenaufstellung["kraftstoffQuelle"] = hatEchte
+    ? "echte-belege"
+    : "schaetzung";
 
   // Maintenance: accumulated repairs across the fleet.
   const wartungskosten = INITIAL_FAHRZEUGE.reduce((s, v) => s + reparaturkostenGesamt(v), 0);
@@ -486,12 +509,20 @@ export function computeKostenaufstellung(): Kostenaufstellung {
   // Driver cost: profit-vs-revenue gap as a proxy for personnel + overheads.
   const fahrerkosten = round(
     INITIAL_FAHRER.reduce((s, f) => s + (f.umsatzHeute - f.gewinnHeute), 0) *
-      ARBEITSTAGE_MONAT *
+      arbeitstageMonat *
       0.55,
   );
 
   const gesamt = fahrzeugkosten + kraftstoffkosten + wartungskosten + fahrerkosten + leasingkosten;
-  return { fahrzeugkosten, kraftstoffkosten, wartungskosten, fahrerkosten, leasingkosten, gesamt };
+  return {
+    fahrzeugkosten,
+    kraftstoffkosten,
+    wartungskosten,
+    fahrerkosten,
+    leasingkosten,
+    gesamt,
+    kraftstoffQuelle,
+  };
 }
 
 /* ------------------------------------------------------------------ *
