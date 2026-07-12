@@ -124,5 +124,4 @@ ${buildKnowledgeSnapshot("admin")}`;
         fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { lageeinschaetzung: "", chancen: [], risiken: [], naechsteSchritte: [], fehler };
     }
-  },
-);
+  });

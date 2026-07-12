@@ -68,9 +68,11 @@ export function istSensibel(text: string): boolean {
 }
 
 const EUR = (n: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
-    Number.isFinite(n) ? n : 0,
-  );
+  new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(n) ? n : 0);
 
 /**
  * Baut einen request-scoped Wissenssnapshot für die Rolle FAHRER.
@@ -79,7 +81,10 @@ const EUR = (n: number) =>
  * keine fremden Patienten, keine unternehmensweiten Kennzahlen.
  * Filtert Fahrten ausschließlich über orders.fahrer_user_id (keine Namensabgleiche).
  */
-export async function buildDriverSnapshot(userId: string, driverId: string | null): Promise<string> {
+export async function buildDriverSnapshot(
+  userId: string,
+  driverId: string | null,
+): Promise<string> {
   const heute = new Date().toISOString().slice(0, 10);
   const lines: string[] = [];
   lines.push(`# Dein Fahrer-Kontext (Stand jetzt)`);
@@ -103,7 +108,9 @@ export async function buildDriverSnapshot(userId: string, driverId: string | nul
   // Heutige, diesem Fahrer zugewiesene Aufträge – strikt über fahrer_user_id.
   const { data: fahrten } = await supabaseAdmin
     .from("orders")
-    .select("nummer, patient, transportart, status, abholort, zielort, termin, mobilitaet, begleitperson")
+    .select(
+      "nummer, patient, transportart, status, abholort, zielort, termin, mobilitaet, begleitperson",
+    )
     .eq("fahrer_user_id", userId)
     .gte("termin", `${heute}T00:00:00`)
     .lte("termin", `${heute}T23:59:59`)
@@ -112,7 +119,10 @@ export async function buildDriverSnapshot(userId: string, driverId: string | nul
   lines.push(`\n## Heutige zugewiesene Fahrten (${fahrten?.length ?? 0})`);
   if (fahrten && fahrten.length > 0) {
     for (const a of fahrten) {
-      const zeit = new Date(a.termin).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      const zeit = new Date(a.termin).toLocaleTimeString("de-DE", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       lines.push(
         `- ${zeit} ${a.nummer}: ${a.patient}, ${a.transportart}, ${a.abholort} → ${a.zielort}, ` +
           `Status ${a.status}, Mobilität ${a.mobilitaet ?? "—"}, Begleitperson ${a.begleitperson ? "Ja" : "Nein"}.`,

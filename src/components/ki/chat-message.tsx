@@ -401,7 +401,9 @@ const MEMORY_TYP_LABEL: Record<MemoryTyp, string> = {
 // Gedächtnis-Vorschlag: NICHTS wird automatisch gespeichert. Der Nutzer muss
 // ausdrücklich bestätigen; erst dann speichert die abgesicherte Server-Funktion.
 function GedaechtnisVorschlag({ vorschlag }: { vorschlag: GedaechtnisVorschlagOutput }) {
-  const [status, setStatus] = useState<"offen" | "speichert" | "gespeichert" | "verworfen">("offen");
+  const [status, setStatus] = useState<"offen" | "speichert" | "gespeichert" | "verworfen">(
+    "offen",
+  );
   const speichern = useServerFn(speichereGedaechtnis);
 
   if (!vorschlag.vorgeschlagen) {

@@ -167,9 +167,8 @@ export const Route = createFileRoute("/api/chat")({
 
         const startZeit = Date.now();
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { resolveActor, threadGehoert, buildDriverSnapshot, istSensibel } = await import(
-          "@/lib/ghasi-security.server"
-        );
+        const { resolveActor, threadGehoert, buildDriverSnapshot, istSensibel } =
+          await import("@/lib/ghasi-security.server");
 
         // SICHERHEIT: Token serverseitig verifizieren. Ohne gültige Session kein Zugriff.
         const userId = await verifiziereToken(request, supabaseAdmin);
@@ -331,7 +330,9 @@ ${snapshot}`;
                     "personal=persönliche Vorliebe, company_rule=Unternehmensregel (nur Admin), " +
                       "professional_correction=fachliche Korrektur, temporary=temporär, observation=Beobachtung",
                   ),
-                kategorie: z.string().describe("z.B. entscheidung, kunde, fahrer, ablauf, vorliebe"),
+                kategorie: z
+                  .string()
+                  .describe("z.B. entscheidung, kunde, fahrer, ablauf, vorliebe"),
                 inhalt: z.string().describe("Was genau gemerkt werden soll, in einem Satz."),
                 wichtigkeit: z.number().min(1).max(5).describe("1=gering, 5=sehr wichtig"),
                 bezug: z.string().optional().describe("optionaler Bezug"),
@@ -357,7 +358,8 @@ ${snapshot}`;
                   inhalt,
                   wichtigkeit: Math.min(5, Math.max(1, Math.round(wichtigkeit))),
                   bezug: bezug ?? null,
-                  hinweis: "Vorschlag – bitte ausdrücklich bestätigen, damit ich ihn dauerhaft speichere.",
+                  hinweis:
+                    "Vorschlag – bitte ausdrücklich bestätigen, damit ich ihn dauerhaft speichere.",
                 };
               },
             }),
