@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   type Auftrag,
@@ -15,6 +15,15 @@ import {
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
 import { useDriverOptions, useVehicleOptions } from "@/hooks/use-entity-options";
+import { usePatients } from "@/lib/patients-store";
+import { useInsurers } from "@/lib/insurers-store";
+import { useInsurerContracts } from "@/lib/insurer-contracts-store";
+import {
+  ermittleVertragspreis,
+  findeInsurerId,
+  KEIN_VERTRAG_HINWEIS,
+} from "@/lib/contract-pricing";
+import { EUR2 } from "@/lib/finance";
 import {
   type AdresseStruktur,
   parseAdresse,
@@ -79,6 +88,29 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
   const fahrzeugOpt = useVehicleOptions();
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
+
+  const { data: patienten = [] } = usePatients();
+  const { data: kassen = [] } = useInsurers();
+  const { data: contracts = [] } = useInsurerContracts();
+
+  // Erwarteter Preis aus einem genehmigten Kassenvertrag (nur Anzeige, kein
+  // erfundener Wert). Kostenträger wird bevorzugt über den Patienten aufgelöst.
+  const vertragspreis = useMemo(() => {
+    const normName = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const patient = values.patient
+      ? patienten.find((p) => normName(p.name) === normName(values.patient))
+      : undefined;
+    const insurerId =
+      patient?.kostentraegerId ?? findeInsurerId(kassen, values.kostentraeger);
+    if (!insurerId) return { info: null as ReturnType<typeof ermittleVertragspreis>, hatKasse: false };
+    const befreit = patient?.zuzahlungsbefreit ?? false;
+    return {
+      info: ermittleVertragspreis(contracts, insurerId, values.transportart, befreit),
+      hatKasse: true,
+    };
+  }, [values.patient, values.kostentraeger, values.transportart, patienten, kassen, contracts]);
+
 
   useEffect(() => {
     if (initial) {
@@ -223,6 +255,46 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
           />
         </div>
       </div>
+
+      {/* Erwarteter Preis aus Kassenvertrag (nur Anzeige, kein erfundener Wert). */}
+      {vertragspreis.hatKasse &&
+        (vertragspreis.info ? (
+          <div className="rounded-xl border border-success/30 bg-success/10 p-3 text-sm">
+            <p className="font-medium text-success">{vertragspreis.info.quelleLabel}</p>
+            <div className="mt-1.5 grid gap-1 text-xs text-muted-foreground sm:grid-cols-3">
+              <span>
+                Vertragspreis:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.preis)}
+                </span>
+                {vertragspreis.info.einheit ? ` · ${vertragspreis.info.einheit}` : ""}
+              </span>
+              <span>
+                Patientenanteil:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.patientenanteil)}
+                </span>
+                {vertragspreis.info.patientenanteil === 0 ? " (befreit)" : ""}
+              </span>
+              <span>
+                Kassenanteil:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.kassenanteil)}
+                </span>
+              </span>
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Zuzahlung nach § 61 SGB V (10 %, mind. 5 €, max. 10 €). Übernahme in den
+              Rechnungsentwurf bei der Abrechnung.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs text-muted-foreground">
+            {KEIN_VERTRAG_HINWEIS} – der Preis bleibt leer und wird bei der Abrechnung manuell
+            ergänzt.
+          </div>
+        ))}
+
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

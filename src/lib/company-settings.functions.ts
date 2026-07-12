@@ -26,6 +26,11 @@ export interface CompanySettings {
   datevErloeskonto: string;
   /** Debitoren-Sammelkonto / Gegenkonto (Standard 10000). */
   datevGegenkonto: string;
+  // --- Betriebskosten-Annahmen (für Kostenschätzungen) ---
+  /** Angenommener Kraftstoffpreis €/l für die Kraftstoffkosten-Schätzung. */
+  dieselpreis: number;
+  /** Durchschnittliche Arbeitstage pro Monat für Monats-Hochrechnungen. */
+  arbeitstageMonat: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -44,6 +49,8 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   datevMandantNr: "",
   datevErloeskonto: "8120",
   datevGegenkonto: "10000",
+  dieselpreis: 1.75,
+  arbeitstageMonat: 21,
 };
 
 interface CompanyRow {
@@ -62,6 +69,8 @@ interface CompanyRow {
   datev_mandant_nr?: string;
   datev_erloeskonto?: string;
   datev_gegenkonto?: string;
+  betriebskosten_dieselpreis?: number | string;
+  betriebskosten_arbeitstage?: number | string;
 }
 
 function rowToSettings(r: CompanyRow): CompanySettings {
@@ -81,6 +90,8 @@ function rowToSettings(r: CompanyRow): CompanySettings {
     datevMandantNr: r.datev_mandant_nr ?? "",
     datevErloeskonto: r.datev_erloeskonto ?? "8120",
     datevGegenkonto: r.datev_gegenkonto ?? "10000",
+    dieselpreis: Number(r.betriebskosten_dieselpreis ?? 1.75),
+    arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
   };
 }
 
@@ -121,6 +132,8 @@ export const saveCompanySettings = createServerFn({ method: "POST" })
       datev_mandant_nr: data.datevMandantNr,
       datev_erloeskonto: data.datevErloeskonto,
       datev_gegenkonto: data.datevGegenkonto,
+      betriebskosten_dieselpreis: data.dieselpreis,
+      betriebskosten_arbeitstage: data.arbeitstageMonat,
     };
     const { data: saved, error } = await context.supabase
       .from("company_settings")

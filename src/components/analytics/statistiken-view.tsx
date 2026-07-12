@@ -2,6 +2,7 @@ import { PieChart, TrendingUp, Activity, Truck, Users } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { SchaetzungBadge } from "@/components/ui/schaetzung-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ForecastAreaChart, ForecastBarChart } from "@/components/enterprise/forecast-charts";
 import { computePrognosen, computeKpis, type ForecastPoint } from "@/lib/ai-brain";
@@ -100,12 +101,18 @@ export function StatistikenPage() {
 
         <Card className="border-border/70 shadow-card">
           <CardHeader>
-            <CardTitle className="text-base">Kostenverteilung (Monat)</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              Kostenverteilung (Monat)
+              <SchaetzungBadge
+                hinweis="Kraftstoff-, Fahrzeug- und Fahrerkosten sind Hochrechnungen aus Annahmen (Kraftstoffpreis, Arbeitstage/Monat – in den Einstellungen anpassbar). Sobald echte Belege im Ausgaben-Modul vorliegen, wird der echte Kraftstoffwert verwendet."
+              />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ForecastBarChart data={kostenVerteilung} unit="€" color="var(--chart-5)" />
           </CardContent>
         </Card>
+
       </section>
     </div>
   );

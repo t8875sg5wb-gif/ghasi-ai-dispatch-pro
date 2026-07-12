@@ -274,6 +274,8 @@ export type Database = {
       company_settings: {
         Row: {
           adresse: string
+          betriebskosten_arbeitstage: number
+          betriebskosten_dieselpreis: number
           created_at: string
           datev_berater_nr: string
           datev_erloeskonto: string
@@ -295,6 +297,8 @@ export type Database = {
         }
         Insert: {
           adresse?: string
+          betriebskosten_arbeitstage?: number
+          betriebskosten_dieselpreis?: number
           created_at?: string
           datev_berater_nr?: string
           datev_erloeskonto?: string
@@ -316,6 +320,8 @@ export type Database = {
         }
         Update: {
           adresse?: string
+          betriebskosten_arbeitstage?: number
+          betriebskosten_dieselpreis?: number
           created_at?: string
           datev_berater_nr?: string
           datev_erloeskonto?: string

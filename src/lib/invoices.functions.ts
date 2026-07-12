@@ -15,6 +15,15 @@ import {
 } from "@/lib/invoices-shared";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 import { modusFuerTransportart, satzFuer, STEUER_HINWEIS } from "@/lib/steuer";
+import { rowToKassenvertrag, type KassenvertragRow } from "@/lib/insurer-contracts-shared";
+import { rowToPatient, type PatientRow } from "@/lib/patients-shared";
+import {
+  ermittleVertragspreis,
+  findeInsurerId,
+  KEIN_VERTRAG_HINWEIS,
+  type InsurerLike,
+} from "@/lib/contract-pricing";
+import { EUR2 } from "@/lib/finance";
 
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -239,6 +248,28 @@ async function loadInvoices(supabase: SupabaseReadClient): Promise<Rechnung[]> {
   return (data ?? []).map((r: unknown) => rowToRechnung(r as InvoiceRow));
 }
 
+async function loadContracts(supabase: SupabaseReadClient) {
+  const { data, error } = await supabase.from("insurer_contracts").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: unknown) => rowToKassenvertrag(r as KassenvertragRow));
+}
+
+async function loadInsurers(supabase: SupabaseReadClient): Promise<InsurerLike[]> {
+  const { data, error } = await supabase.from("insurers").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => {
+    const row = r as { id: string; name: string; kuerzel?: string };
+    return { id: row.id, name: row.name ?? "", kuerzel: row.kuerzel ?? "" };
+  });
+}
+
+async function loadPatients(supabase: SupabaseReadClient) {
+  const { data, error } = await supabase.from("patients").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: unknown) => rowToPatient(r as PatientRow));
+}
+
+
 function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" | "Kunde" {
   const k = kostentraeger.toLowerCase();
   if (/kasse|aok|barmer|dak|tk|techniker|krankenkasse|kkh|ikk/.test(k)) {
@@ -266,15 +297,26 @@ export const billingReadyOrders = createServerFn({ method: "GET" })
  * Generates draft invoices for every billing-ready completed transport that has
  * no invoice yet. Drafts wait for manual approval — nothing is ever sent.
  * Duplicate-safe: skips orders that already have a linked invoice.
+ *
+ * Preis: Wenn für den Kostenträger (Kasse) ein genehmigter Kassenvertrag zur
+ * Transportart hinterlegt ist, wird DIESER Preis verwendet und die Herkunft
+ * dokumentiert. Existiert kein Vertrag, bleibt der Betrag leer (0) mit
+ * neutralem Hinweis – es wird NIE ein Preis erfunden (Verfassung Art. 8).
  */
 export const generateBillingDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ created: number; nummern: string[] }> => {
-    const [orders, invoices] = await Promise.all([
+    const [orders, invoices, contracts, insurers, patients] = await Promise.all([
       loadOrders(context.supabase),
       loadInvoices(context.supabase),
+      loadContracts(context.supabase),
+      loadInsurers(context.supabase),
+      loadPatients(context.supabase),
     ]);
     const berechnet = new Set(invoices.map((r) => r.bezugAuftrag).filter(Boolean));
+
+    const normName = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
     const heute = new Date();
     const datum = heute.toISOString().slice(0, 10);
@@ -286,12 +328,25 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
     for (const a of orders) {
       if (!abrechnungsBereitschaft(a).bereit) continue;
       if (berechnet.has(a.nummer)) continue;
-      const betrag = preisFuer(a);
+
+      // Kostenträger → insurerId (bevorzugt über den verknüpften Patienten).
+      const patient = patients.find((p) => normName(p.name) === normName(a.patient));
+      const insurerId =
+        patient?.kostentraegerId ?? findeInsurerId(insurers, a.kostentraeger);
+      const befreit = patient?.zuzahlungsbefreit ?? false;
+      const preisInfo = ermittleVertragspreis(contracts, insurerId, a.transportart, befreit, datum);
+
+      const betrag = preisInfo ? preisInfo.preis : 0;
       const art = abrechnungsartFuer(a.kostentraeger);
       const modus = modusFuerTransportart(a.transportart);
       const mwst = satzFuer(modus);
       const nummer = `RE-2026-${String(40 + lfd++).padStart(4, "0")}`;
       nummern.push(nummer);
+
+      const preisHinweis = preisInfo
+        ? `${preisInfo.quelleLabel} (${EUR2(preisInfo.preis)}${preisInfo.einheit ? ` · ${preisInfo.einheit}` : ""}). Patientenanteil ${EUR2(preisInfo.patientenanteil)}${befreit ? " (zuzahlungsbefreit)" : ""}, Kassenanteil ${EUR2(preisInfo.kassenanteil)}.`
+        : `${KEIN_VERTRAG_HINWEIS} – Preis manuell ergänzen.`;
+
       writes.push(
         writeToInvoiceRow({
           nummer,
@@ -308,7 +363,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
           positionen: [
             { beschreibung: `${a.transportart} ${a.nummer}`, menge: 1, einzelpreis: betrag },
           ],
-          notiz: `Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe. ${STEUER_HINWEIS[modus]}`,
+          notiz: `Automatisch vorbereiteter Entwurf – Versand nur nach Freigabe. ${preisHinweis} ${STEUER_HINWEIS[modus]}`,
         }),
       );
       berechnet.add(a.nummer);
@@ -319,6 +374,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { created: writes.length, nummern };
   });
+
 
 /** Server-side duplicate detection: same customer + amount + ≤7 days apart. */
 export const detectInvoiceDuplicates = createServerFn({ method: "GET" })
