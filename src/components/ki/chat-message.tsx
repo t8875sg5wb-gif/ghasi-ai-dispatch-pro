@@ -23,9 +23,12 @@ import {
 import type { UIMessage } from "ai";
 import { toast } from "sonner";
 
+import { useServerFn } from "@tanstack/react-start";
+
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ki/markdown";
 import { Button } from "@/components/ui/button";
+import { speichereGedaechtnis, type MemoryTyp } from "@/lib/ghasi.functions";
 
 interface WebQuelle {
   titel: string;
