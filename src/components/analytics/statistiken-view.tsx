@@ -2,6 +2,7 @@ import { PieChart, TrendingUp, Activity, Truck, Users } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { SchaetzungBadge } from "@/components/ui/schaetzung-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ForecastAreaChart, ForecastBarChart } from "@/components/enterprise/forecast-charts";
 import { computePrognosen, computeKpis, type ForecastPoint } from "@/lib/ai-brain";
