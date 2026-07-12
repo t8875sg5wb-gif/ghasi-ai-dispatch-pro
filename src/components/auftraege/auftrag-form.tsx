@@ -256,6 +256,46 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
         </div>
       </div>
 
+      {/* Erwarteter Preis aus Kassenvertrag (nur Anzeige, kein erfundener Wert). */}
+      {vertragspreis.hatKasse &&
+        (vertragspreis.info ? (
+          <div className="rounded-xl border border-success/30 bg-success/10 p-3 text-sm">
+            <p className="font-medium text-success">{vertragspreis.info.quelleLabel}</p>
+            <div className="mt-1.5 grid gap-1 text-xs text-muted-foreground sm:grid-cols-3">
+              <span>
+                Vertragspreis:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.preis)}
+                </span>
+                {vertragspreis.info.einheit ? ` · ${vertragspreis.info.einheit}` : ""}
+              </span>
+              <span>
+                Patientenanteil:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.patientenanteil)}
+                </span>
+                {vertragspreis.info.patientenanteil === 0 ? " (befreit)" : ""}
+              </span>
+              <span>
+                Kassenanteil:{" "}
+                <span className="font-semibold text-foreground tabular-nums">
+                  {EUR2(vertragspreis.info.kassenanteil)}
+                </span>
+              </span>
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Zuzahlung nach § 61 SGB V (10 %, mind. 5 €, max. 10 €). Übernahme in den
+              Rechnungsentwurf bei der Abrechnung.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs text-muted-foreground">
+            {KEIN_VERTRAG_HINWEIS} – der Preis bleibt leer und wird bei der Abrechnung manuell
+            ergänzt.
+          </div>
+        ))}
+
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Fahrer</Label>
