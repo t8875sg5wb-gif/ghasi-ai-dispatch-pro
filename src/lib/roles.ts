@@ -40,17 +40,26 @@ const ALLE_BEREICHE: Bereich[] = [
   "suche",
 ];
 
-/** Welche Bereiche darf eine Rolle über die KI abfragen? */
+/**
+ * Welche Bereiche darf eine Rolle über die KI abfragen?
+ * Least-Privilege (Constitution Art. 15):
+ * - Die unternehmensweite Suche ("suche") bleibt Admin & Disposition vorbehalten,
+ *   da ihr Index alle Entitäten (Patienten, Fahrer, Aufträge …) umfasst.
+ * - Finanzen sehen keine operativen/medizinischen Daten, kein GPS, keine Fahrerbewertungen.
+ * - Fahrer erhalten KEINE unternehmensweiten Werkzeuge; ihr KI-Kontext wird
+ *   request-scoped und ausschließlich auf die eigenen Daten begrenzt aufgebaut
+ *   (siehe ghasi-security.server: buildDriverSnapshot + Fahrer-Werkzeuge in api/chat).
+ */
 export const ROLE_BEREICHE: Record<AppRole, Bereich[]> = {
   admin: ALLE_BEREICHE,
   disposition: ["transporte", "fahrer", "fahrzeuge", "patienten", "kunden", "kpis", "suche"],
-  finanz: ["finanzen", "kunden", "kpis", "suche"],
-  fahrer: ["transporte", "fahrer", "fahrzeuge", "patienten", "suche"],
+  finanz: ["finanzen", "kunden", "kpis"],
+  fahrer: [],
 };
 
 export function erlaubteBereiche(role: AppRole | null | undefined): Bereich[] {
-  if (!role) return ["suche"];
-  return ROLE_BEREICHE[role] ?? ["suche"];
+  if (!role) return [];
+  return ROLE_BEREICHE[role] ?? [];
 }
 
 export function darfBereich(role: AppRole | null | undefined, bereich: Bereich): boolean {
