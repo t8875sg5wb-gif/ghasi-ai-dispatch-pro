@@ -90,6 +90,8 @@ function rowToSettings(r: CompanyRow): CompanySettings {
     datevMandantNr: r.datev_mandant_nr ?? "",
     datevErloeskonto: r.datev_erloeskonto ?? "8120",
     datevGegenkonto: r.datev_gegenkonto ?? "10000",
+    dieselpreis: Number(r.betriebskosten_dieselpreis ?? 1.75),
+    arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
   };
 }
 
