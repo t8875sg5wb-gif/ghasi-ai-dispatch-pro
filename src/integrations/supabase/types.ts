@@ -50,7 +50,8 @@ export type Database = {
       ai_audit_log: {
         Row: {
           created_at: string
-          frage: string
+          dauer_ms: number | null
+          erfolg: boolean
           id: string
           modell: string | null
           quellen: Json | null
@@ -58,10 +59,12 @@ export type Database = {
           thread_id: string | null
           user_id: string | null
           vorbereitete_aktionen: Json | null
+          werkzeuge: string[] | null
         }
         Insert: {
           created_at?: string
-          frage: string
+          dauer_ms?: number | null
+          erfolg?: boolean
           id?: string
           modell?: string | null
           quellen?: Json | null
@@ -69,10 +72,12 @@ export type Database = {
           thread_id?: string | null
           user_id?: string | null
           vorbereitete_aktionen?: Json | null
+          werkzeuge?: string[] | null
         }
         Update: {
           created_at?: string
-          frage?: string
+          dauer_ms?: number | null
+          erfolg?: boolean
           id?: string
           modell?: string | null
           quellen?: Json | null
@@ -80,6 +85,7 @@ export type Database = {
           thread_id?: string | null
           user_id?: string | null
           vorbereitete_aktionen?: Json | null
+          werkzeuge?: string[] | null
         }
         Relationships: []
       }
@@ -782,31 +788,43 @@ export type Database = {
         Row: {
           bezug: string | null
           created_at: string
+          expires_at: string | null
+          genehmigt: boolean
           id: string
           inhalt: string
           kategorie: string
           quelle: string
+          typ: string
           updated_at: string
+          user_id: string | null
           wichtigkeit: number
         }
         Insert: {
           bezug?: string | null
           created_at?: string
+          expires_at?: string | null
+          genehmigt?: boolean
           id?: string
           inhalt: string
           kategorie?: string
           quelle?: string
+          typ?: string
           updated_at?: string
+          user_id?: string | null
           wichtigkeit?: number
         }
         Update: {
           bezug?: string | null
           created_at?: string
+          expires_at?: string | null
+          genehmigt?: boolean
           id?: string
           inhalt?: string
           kategorie?: string
           quelle?: string
+          typ?: string
           updated_at?: string
+          user_id?: string | null
           wichtigkeit?: number
         }
         Relationships: []
