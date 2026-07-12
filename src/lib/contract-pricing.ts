@@ -106,3 +106,34 @@ export function ermittleVertragspreis(
 
 /** Neutraler Hinweis, wenn kein Vertrag gefunden wurde. */
 export const KEIN_VERTRAG_HINWEIS = "Kein Kassenvertrag für diese Transportart hinterlegt";
+
+/** Minimaler Kassen-Datensatz zum Namens-Matching. */
+export interface InsurerLike {
+  id: string;
+  name: string;
+  kuerzel?: string;
+}
+
+/**
+ * Findet die insurerId zu einem freien Kostenträger-Namen (z. B. aus dem Auftrag).
+ * Vergleicht normalisiert gegen Name und Kürzel. Gibt `null` zurück, wenn keine
+ * eindeutige Übereinstimmung existiert.
+ */
+export function findeInsurerId(
+  insurers: InsurerLike[],
+  kostentraeger: string | null | undefined,
+): string | null {
+  if (!kostentraeger?.trim()) return null;
+  const k = normalize(kostentraeger.trim());
+  // 1) exakter Treffer auf Name/Kürzel
+  const exakt = insurers.find(
+    (i) => normalize(i.name) === k || (i.kuerzel && normalize(i.kuerzel) === k),
+  );
+  if (exakt) return exakt.id;
+  // 2) Teilstring-Treffer (z. B. "AOK Nordost Sammelrechnung" → "AOK Nordost")
+  const teil = insurers.find(
+    (i) => normalize(i.name) && (k.includes(normalize(i.name)) || normalize(i.name).includes(k)),
+  );
+  return teil?.id ?? null;
+}
+
