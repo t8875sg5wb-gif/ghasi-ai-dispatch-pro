@@ -325,18 +325,13 @@ export function ChatMessage({ message }: { message: UIMessage }) {
             if (p.type.startsWith("tool-web_seite_lesen")) {
               return <ToolHinweis key={i} icon={Globe} text="Liest eine Webseite …" />;
             }
-            if (p.type.startsWith("tool-gedaechtnis_speichern")) {
-              const ok =
-                "output" in p && (p.output as { gespeichert?: boolean } | undefined)?.gespeichert;
-              if (ok)
-                return (
-                  <ToolHinweis
-                    key={i}
-                    icon={BrainCircuit}
-                    text="Ins Langzeitgedächtnis übernommen"
-                  />
-                );
-              return null;
+            if (p.type.startsWith("tool-gedaechtnis_vorschlagen")) {
+              const out =
+                "output" in p && p.output && typeof p.output === "object"
+                  ? (p.output as GedaechtnisVorschlagOutput)
+                  : undefined;
+              if (!out) return null;
+              return <GedaechtnisVorschlag key={i} vorschlag={out} />;
             }
             if (p.type.startsWith("tool-aktion_vorbereiten")) {
               const out =
