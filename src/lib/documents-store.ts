@@ -16,6 +16,78 @@ import type { DokumentKategorie, DokumentBezug } from "@/lib/documents";
 export const DOCUMENTS_QUERY_KEY = ["documents"] as const;
 const BUCKET = "documents";
 
+// Upload-Härtung (Constitution Art. 15): erlaubte Dokument-/Bildformate,
+// keine ausführbaren Dateien, max. 10 MB. Wird zusätzlich clientseitig geprüft.
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const ERLAUBTE_ENDUNGEN = new Set([
+  "pdf",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "gif",
+  "heic",
+  "txt",
+  "csv",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+]);
+const ERLAUBTE_MIME = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "text/plain",
+  "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+const VERBOTENE_ENDUNGEN = new Set([
+  "exe",
+  "bat",
+  "cmd",
+  "com",
+  "sh",
+  "bash",
+  "js",
+  "mjs",
+  "jar",
+  "msi",
+  "app",
+  "scr",
+  "ps1",
+  "vbs",
+  "php",
+  "html",
+  "htm",
+  "svg",
+]);
+
+/** Validiert eine Datei vor dem Upload. Wirft bei unzulässigen Dateien. */
+function pruefeUpload(file: File): void {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("Datei ist zu groß (max. 10 MB).");
+  }
+  const endung = file.name.includes(".")
+    ? file.name.split(".").pop()!.toLowerCase()
+    : "";
+  if (VERBOTENE_ENDUNGEN.has(endung)) {
+    throw new Error("Dieser Dateityp ist aus Sicherheitsgründen nicht erlaubt.");
+  }
+  if (!ERLAUBTE_ENDUNGEN.has(endung)) {
+    throw new Error("Nur Dokumente und Bilder (PDF, Office, Bild, Text/CSV) sind erlaubt.");
+  }
+  if (file.type && !ERLAUBTE_MIME.has(file.type)) {
+    throw new Error("Der Dateityp (MIME) ist nicht erlaubt.");
+  }
+}
+
 export function useDocuments() {
   const fetchDocuments = useServerFn(listDocuments);
   return useQuery({
