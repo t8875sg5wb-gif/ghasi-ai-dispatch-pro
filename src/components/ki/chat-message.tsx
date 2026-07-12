@@ -378,3 +378,92 @@ export function ChatMessage({ message }: { message: UIMessage }) {
     </div>
   );
 }
+
+interface GedaechtnisVorschlagOutput {
+  vorgeschlagen: boolean;
+  grund?: string;
+  typ?: MemoryTyp;
+  kategorie?: string;
+  inhalt?: string;
+  wichtigkeit?: number;
+  bezug?: string | null;
+  hinweis?: string;
+}
+
+const MEMORY_TYP_LABEL: Record<MemoryTyp, string> = {
+  personal: "Persönlich",
+  company_rule: "Unternehmensregel",
+  professional_correction: "Fachliche Korrektur",
+  temporary: "Temporär",
+  observation: "Beobachtung",
+};
+
+// Gedächtnis-Vorschlag: NICHTS wird automatisch gespeichert. Der Nutzer muss
+// ausdrücklich bestätigen; erst dann speichert die abgesicherte Server-Funktion.
+function GedaechtnisVorschlag({ vorschlag }: { vorschlag: GedaechtnisVorschlagOutput }) {
+  const [status, setStatus] = useState<"offen" | "speichert" | "gespeichert" | "verworfen">("offen");
+  const speichern = useServerFn(speichereGedaechtnis);
+
+  if (!vorschlag.vorgeschlagen) {
+    return (
+      <ToolHinweis
+        icon={ShieldAlert}
+        text={vorschlag.grund ?? "Kann nicht ins Gedächtnis übernommen werden."}
+      />
+    );
+  }
+
+  if (status === "gespeichert") {
+    return <ToolHinweis icon={CheckCircle2} text="Ins Langzeitgedächtnis übernommen" />;
+  }
+  if (status === "verworfen") {
+    return <ToolHinweis icon={XCircle} text="Vorschlag verworfen – nichts gespeichert." />;
+  }
+
+  const bestaetigen = async () => {
+    if (!vorschlag.inhalt || !vorschlag.typ) return;
+    setStatus("speichert");
+    try {
+      await speichern({
+        data: {
+          typ: vorschlag.typ,
+          kategorie: vorschlag.kategorie,
+          inhalt: vorschlag.inhalt,
+          wichtigkeit: vorschlag.wichtigkeit,
+          bezug: vorschlag.bezug ?? undefined,
+        },
+      });
+      setStatus("gespeichert");
+      toast.success("Gespeichert.");
+    } catch (e) {
+      setStatus("offen");
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-sm">
+      <div className="mb-1 flex items-center gap-1.5 font-medium">
+        <BrainCircuit className="h-4 w-4 text-primary" />
+        Vorschlag fürs Gedächtnis
+        {vorschlag.typ && (
+          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+            {MEMORY_TYP_LABEL[vorschlag.typ]}
+          </span>
+        )}
+      </div>
+      <p className="text-foreground">{vorschlag.inhalt}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {vorschlag.hinweis ?? "Bitte ausdrücklich bestätigen, damit ich es dauerhaft speichere."}
+      </p>
+      <div className="mt-2 flex gap-2">
+        <Button size="sm" onClick={bestaetigen} disabled={status === "speichert"}>
+          {status === "speichert" ? "Speichert …" : "Bestätigen & speichern"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setStatus("verworfen")}>
+          Verwerfen
+        </Button>
+      </div>
+    </div>
+  );
+}
