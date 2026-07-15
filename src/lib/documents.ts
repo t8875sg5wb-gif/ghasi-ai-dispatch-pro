@@ -152,6 +152,32 @@ export const DOKUMENT_KATEGORIEN: DokumentKategorie[] = [
   "wartungsbeleg",
 ];
 
+/** Strikt zulässige Bezugstypen (Runtime-Konstante als einzige Quelle). */
+export const DOKUMENT_BEZUG_TYPEN = [
+  "patient",
+  "kunde",
+  "fahrer",
+  "fahrzeug",
+  "transport",
+  "rechnung",
+  "wartung",
+] as const;
+
+const BEZUG_ROUTE_MAP: Record<DokumentBezugTyp, string> = {
+  patient: "/patienten",
+  kunde: "/kunden",
+  fahrer: "/fahrer",
+  fahrzeug: "/fahrzeuge",
+  transport: "/auftraege",
+  rechnung: "/rechnungen",
+  wartung: "/wartung",
+};
+
+/** Erlaubte, feste In-App-Route für einen Bezugstyp (nie aus Client-Daten). */
+export function bezugRoute(typ: DokumentBezugTyp): string | null {
+  return BEZUG_ROUTE_MAP[typ] ?? null;
+}
+
 export const FORMAT_META: Record<DokumentFormat, { label: string; icon: LucideIcon }> = {
   pdf: { label: "PDF", icon: FileText },
   bild: { label: "Bild", icon: ImageIcon },

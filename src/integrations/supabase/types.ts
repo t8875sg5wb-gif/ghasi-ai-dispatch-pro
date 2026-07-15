@@ -455,6 +455,8 @@ export type Database = {
         Row: {
           bezug: Json | null
           created_at: string
+          delete_attempted_at: string | null
+          delete_error: string | null
           format: string
           groesse_kb: number
           hochgeladen_von: string
@@ -463,6 +465,7 @@ export type Database = {
           name: string
           ocr_text: string | null
           ordner: string
+          status: string
           storage_path: string
           tags: Json
           updated_at: string
@@ -471,6 +474,8 @@ export type Database = {
         Insert: {
           bezug?: Json | null
           created_at?: string
+          delete_attempted_at?: string | null
+          delete_error?: string | null
           format?: string
           groesse_kb?: number
           hochgeladen_von?: string
@@ -479,6 +484,7 @@ export type Database = {
           name?: string
           ocr_text?: string | null
           ordner?: string
+          status?: string
           storage_path: string
           tags?: Json
           updated_at?: string
@@ -487,6 +493,8 @@ export type Database = {
         Update: {
           bezug?: Json | null
           created_at?: string
+          delete_attempted_at?: string | null
+          delete_error?: string | null
           format?: string
           groesse_kb?: number
           hochgeladen_von?: string
@@ -495,6 +503,7 @@ export type Database = {
           name?: string
           ocr_text?: string | null
           ordner?: string
+          status?: string
           storage_path?: string
           tags?: Json
           updated_at?: string

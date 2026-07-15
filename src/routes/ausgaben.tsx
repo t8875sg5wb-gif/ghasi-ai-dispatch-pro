@@ -254,7 +254,7 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
           kategorie: "wartungsbeleg",
           ordner: "Belege",
           tags: ["Ausgabe", kategorie],
-          hochgeladenVon: name,
+          
         });
         belegDokumentId = doc.id;
       }

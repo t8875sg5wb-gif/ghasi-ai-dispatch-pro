@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { listDocuments, deleteDocument, getDocumentSignedUrl } from "@/lib/documents.functions";
 import type { DokumentRecord } from "@/lib/documents-shared";
-import type { DokumentKategorie, DokumentBezug } from "@/lib/documents";
+import type { DokumentKategorie, DokumentBezugTyp } from "@/lib/documents";
 
 export const DOCUMENTS_QUERY_KEY = ["documents"] as const;
 
@@ -45,9 +45,11 @@ export interface UploadDocumentInput {
   kategorie: DokumentKategorie;
   ordner: string;
   tags: string[];
-  bezug?: DokumentBezug | null;
-  /** Wird ignoriert – Identität wird serverseitig gesetzt. Nur aus Legacy-UI-Gründen erlaubt. */
-  hochgeladenVon?: string;
+  /**
+   * Nur `typ` und `label`. Die anzuzeigende Route wird serverseitig aus `typ`
+   * abgeleitet – der Client kann keinen Deep-Link speichern.
+   */
+  bezug?: { typ: DokumentBezugTyp; label: string } | null;
 }
 
 async function bearerToken(): Promise<string> {
