@@ -1,26 +1,37 @@
-// P0.1 STORAGE — Server route for authorized document upload.
+// P0.2 STORAGE — Server route for authorized document upload.
 //
 // Guarantees:
-// - Bearer token verified via supabaseAdmin.auth.getUser (no client identity).
-// - Role gated to admin | disposition | finanz.
+// - Bearer token verified via `supabaseAdmin.auth.getUser` (no client identity).
+// - Role gated via the SHARED `requireDocumentRole` helper (admin |
+//   disposition | finanz). No duplicate role list.
 // - File validation: size ≤ 10 MiB, extension/MIME/magic bytes must agree
 //   (PDF, JPEG, PNG, WebP only).
 // - Multipart metadata is validated with a STRICT Zod schema. Unknown keys
 //   and multiple values per key are rejected (400). No client-supplied
-//   values may control id, storage path, uploader, role or timestamps.
-// - Server-generated storage path: `<uuid>/<uuid>.<ext>` (never the original
-//   filename).
-// - Failure-safe: object removed if metadata insert fails.
+//   values may control id, storage path, uploader, role, status, or
+//   timestamps. The original filename is only used as sanitised display
+//   metadata — NEVER as part of the storage path.
+// - Server-generated storage path: `<uuid>/<uuid>.<ext>`.
+// - Uploader is recorded as a non-personal role bucket ("Administration" /
+//   "Disposition" / "Finanzen") in `hochgeladen_von`. The auth user id is
+//   stored in the server-only `uploaded_by` column and never shipped to
+//   the browser.
+// - Recovery-safe rollback: if metadata insert fails, the just-uploaded
+//   storage object is removed. If that remove itself fails, a persistent
+//   `document_cleanup_jobs` row is inserted BEFORE returning an error, so
+//   an orphaned storage object is retried later. The route NEVER returns
+//   success when a rollback failed.
 // - Response returns the CLIENT DTO — never `storage_path`, `uploaded_by`,
-//   or internal error text.
+//   `hochgeladen_von`, `status`, `delete_error`, or internal error text.
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import {
   formatVonDatei,
   documentRowToClientDto,
+  bereinigeDateiname,
   type DokumentRecord,
-  type DocumentRow,
+  type DocumentClientProjectionRow,
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
 
@@ -203,6 +214,8 @@ export const Route = createFileRoute("/api/documents/upload")({
     handlers: {
       POST: async ({ request }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { requireDocumentRole, rolleAlsBereich } =
+          await import("@/lib/documents-security.server");
 
         // 1. Bearer-Token verifizieren.
         const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
@@ -212,20 +225,15 @@ export const Route = createFileRoute("/api/documents/upload")({
         if (userErr || !userRes.user) return jsonErr(401, "Nicht angemeldet.");
         const userId = userRes.user.id;
 
-        // 2. Rollenprüfung.
-        const { data: roles, error: rolesErr } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId);
-        if (rolesErr) {
-          console.error("[documents.upload] role lookup failed", rolesErr.message);
+        // 2. Zentraler Role-Gate.
+        let role: Awaited<ReturnType<typeof requireDocumentRole>>;
+        try {
+          role = await requireDocumentRole(userId);
+        } catch (err) {
+          if (err instanceof Response) return err;
+          console.error("[documents.upload] role gate error");
           return jsonErr(500, "Rollenprüfung fehlgeschlagen.");
         }
-        const erlaubteRollen = new Set(["admin", "disposition", "finanz"]);
-        const hatRolle = (roles ?? []).some((r) =>
-          erlaubteRollen.has((r as { role: string }).role),
-        );
-        if (!hatRolle) return jsonErr(403, "Keine Berechtigung zum Hochladen von Dokumenten.");
 
         // 3. Multipart parsen.
         let form: FormData;
@@ -249,10 +257,8 @@ export const Route = createFileRoute("/api/documents/upload")({
         if (file.size > MAX_UPLOAD_BYTES) return jsonErr(413, "Datei ist zu groß (max. 10 MiB).");
 
         // 5. Endung.
-        const originalName = file.name || "dokument";
-        const extRaw = originalName.includes(".")
-          ? originalName.split(".").pop()!.toLowerCase()
-          : "";
+        const anzeigeName = bereinigeDateiname(file.name);
+        const extRaw = anzeigeName.includes(".") ? anzeigeName.split(".").pop()!.toLowerCase() : "";
         const erwarteterMimeFuerExt = ENDUNG_ZU_MIME[extRaw];
         if (!erwarteterMimeFuerExt) {
           return jsonErr(415, "Nur PDF, JPEG, PNG oder WebP erlaubt.");
@@ -288,19 +294,22 @@ export const Route = createFileRoute("/api/documents/upload")({
         const finalExt = MIME_ZU_ENDUNG[echterMime];
         const path = `${crypto.randomUUID()}/${crypto.randomUUID()}.${finalExt}`;
 
-        // 10. Upload via Admin (storage.objects hat keine Client-Policies).
+        // 10. Upload via Admin.
         const { error: upErr } = await supabaseAdmin.storage
           .from("documents")
           .upload(path, buf, { contentType: echterMime, upsert: false });
         if (upErr) {
-          console.error("[documents.upload] storage upload failed", upErr.message);
+          console.error("[documents.upload] storage upload failed");
           return jsonErr(500, "Upload fehlgeschlagen.");
         }
 
         // 11. Metadaten – Insert. server-owned Felder werden hier gesetzt.
+        // `hochgeladen_von` bekommt einen nicht personenbezogenen Bereichsnamen
+        // (Administration / Disposition / Finanzen); die tatsächliche User-ID
+        // bleibt server-only in `uploaded_by`.
         const format = formatVonDatei(file);
-        const row = {
-          name: originalName.slice(0, 200),
+        const insertRow = {
+          name: anzeigeName,
           kategorie: meta.kategorie,
           format,
           ordner: meta.ordner,
@@ -308,23 +317,43 @@ export const Route = createFileRoute("/api/documents/upload")({
           bezug: meta.bezug ?? null,
           storage_path: path,
           groesse_kb: Math.max(1, Math.round(file.size / 1024)),
-          hochgeladen_von: userRes.user.email ?? "",
+          hochgeladen_von: rolleAlsBereich(role),
           uploaded_by: userId,
           status: "active" as const,
         };
 
         const { data: created, error: insErr } = await supabaseAdmin
           .from("documents")
-          .insert(row as never)
-          .select()
+          .insert(insertRow)
+          .select("id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at")
           .single();
         if (insErr || !created) {
-          await supabaseAdmin.storage.from("documents").remove([path]);
-          console.error("[documents.upload] metadata insert failed", insErr?.message);
+          // Rollback: sofortiges Storage-Remove; bei erneutem Fehler MUSS ein
+          // persistenter Cleanup-Job entstehen, bevor eine Fehlerantwort geht.
+          const { error: remErr } = await supabaseAdmin.storage.from("documents").remove([path]);
+          if (remErr) {
+            const { error: jobErr } = await supabaseAdmin.from("document_cleanup_jobs").insert({
+              storage_path: path,
+              grund: "upload_metadata_rollback",
+              fehler_code: "storage_remove_failed",
+              versuche: 1,
+              letzter_versuch_am: new Date().toISOString(),
+            });
+            if (jobErr) {
+              // Selbst der Cleanup-Job konnte nicht persistiert werden.
+              // Kein Erfolg vortäuschen – pfadloser High-Severity-Log,
+              // generische Fehlermeldung an den Client.
+              console.error("[documents.upload] FATAL: rollback + cleanup persist failed");
+              return jsonErr(500, "Upload fehlgeschlagen.");
+            }
+            console.error("[documents.upload] rollback deferred to cleanup queue");
+          }
           return jsonErr(500, "Metadaten konnten nicht gespeichert werden.");
         }
 
-        const dokument: DokumentRecord = documentRowToClientDto(created as unknown as DocumentRow);
+        const dokument: DokumentRecord = documentRowToClientDto(
+          created as DocumentClientProjectionRow,
+        );
         return Response.json(dokument);
       },
     },

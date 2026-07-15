@@ -1,16 +1,20 @@
-// Client/server split for documents:
+// P0.2 – Client/server split for documents.
+//
 // - `DokumentRecord` is the CLIENT DTO. It intentionally omits every
-//   server-only field (storage_path, uploaded_by, status, delete_error, …).
-//   The browser NEVER receives the internal storage path.
-// - `DocumentRow` is the raw DB row shape used server-side only.
-// - `documentRowToClientDto` is the single mapper both server-fn readers and
-//   the upload route use to build the client DTO. It also re-derives the
-//   navigation route for a `bezug` from its type, so the persisted row does
-//   not have to carry (and cannot spoof) a client-side deep link.
+//   server-only or identifying field (`storage_path`, `uploaded_by`,
+//   `hochgeladen_von`, `status`, `delete_error`, `delete_attempted_at`).
+//   The browser NEVER receives an internal storage path OR the uploader
+//   identity.
+// - `DocumentClientProjectionRow` is the exact DB row shape produced by
+//   selecting `CLIENT_DOCUMENT_COLUMNS`. `documentRowToClientDto` uses
+//   ONLY these fields — the typed mapper cannot accidentally read
+//   `storage_path`, `hochgeladen_von`, `uploaded_by`, `status`, etc.
+// - Deep-link `bezug.to` is re-derived server-side from `bezug.typ`; the
+//   persisted row cannot spoof a client-side navigation target.
 import type { DokumentKategorie, DokumentFormat, DokumentBezugTyp } from "@/lib/documents";
 import { bezugRoute } from "@/lib/documents";
 
-/** Client-facing DTO. Contains ONLY fields the browser is allowed to see. */
+/** Client-facing DTO. ONLY fields the browser is allowed to see. */
 export interface DokumentRecord {
   id: string;
   name: string;
@@ -21,34 +25,29 @@ export interface DokumentRecord {
   bezug?: { typ: DokumentBezugTyp; label: string; to: string };
   groesseKb: number;
   ocrText?: string;
-  hochgeladenVon: string;
   hochgeladenAm: string; // ISO (created_at)
-  status: "active" | "pending_delete";
 }
 
-/** Server-only DB row shape. Never leave the server layer with this. */
-export interface DocumentRow {
+/** Whitelist of DB columns the browser may ever read. */
+export const CLIENT_DOCUMENT_COLUMNS =
+  "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at" as const;
+
+/** DB row shape produced by SELECTing exactly `CLIENT_DOCUMENT_COLUMNS`. */
+export interface DocumentClientProjectionRow {
   id: string;
-  name: string;
-  kategorie: string;
-  format: string;
-  ordner: string;
+  name: string | null;
+  kategorie: string | null;
+  format: string | null;
+  ordner: string | null;
   tags: unknown;
   bezug: unknown;
-  storage_path: string;
-  groesse_kb: number;
+  groesse_kb: number | null;
   ocr_text: string | null;
-  hochgeladen_von: string;
   created_at: string;
-  status?: string | null;
 }
 
-/** Explicit whitelist of columns the client may ever read. */
-export const CLIENT_DOCUMENT_COLUMNS =
-  "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,hochgeladen_von,created_at,status" as const;
-
-/** Server-only → client DTO. Strips `storage_path`, `uploaded_by`, errors, etc. */
-export function documentRowToClientDto(r: DocumentRow): DokumentRecord {
+/** Typed mapper – no `as unknown as` bypass. */
+export function documentRowToClientDto(r: DocumentClientProjectionRow): DokumentRecord {
   const bezugRaw = r.bezug as { typ?: unknown; label?: unknown } | null;
   let bezug: DokumentRecord["bezug"] | undefined;
   if (
@@ -59,15 +58,9 @@ export function documentRowToClientDto(r: DocumentRow): DokumentRecord {
   ) {
     const to = bezugRoute(bezugRaw.typ as DokumentBezugTyp);
     if (to) {
-      bezug = {
-        typ: bezugRaw.typ as DokumentBezugTyp,
-        label: bezugRaw.label,
-        to,
-      };
+      bezug = { typ: bezugRaw.typ as DokumentBezugTyp, label: bezugRaw.label, to };
     }
   }
-  const status =
-    r.status === "pending_delete" ? "pending_delete" : ("active" as DokumentRecord["status"]);
   return {
     id: r.id,
     name: r.name ?? "",
@@ -78,9 +71,7 @@ export function documentRowToClientDto(r: DocumentRow): DokumentRecord {
     bezug,
     groesseKb: r.groesse_kb ?? 0,
     ocrText: r.ocr_text ?? undefined,
-    hochgeladenVon: r.hochgeladen_von ?? "",
     hochgeladenAm: r.created_at,
-    status,
   };
 }
 
@@ -98,4 +89,17 @@ export function formatVonDatei(file: File): DokumentFormat {
   )
     return "tabelle";
   return "text";
+}
+
+/**
+ * Bereinigt einen vom Browser gelieferten Dateinamen: Basename ohne
+ * Pfad-Trenner, ohne Steuerzeichen, max. 200 Zeichen. Der Wert taucht
+ * niemals im Storage-Pfad auf; er ist reine Anzeige-Metadata.
+ */
+export function bereinigeDateiname(raw: string | undefined): string {
+  const s = (raw ?? "").split(/[\\/]/).pop() ?? "";
+  // eslint-disable-next-line no-control-regex
+  const ohneSteuerzeichen = s.replace(/[\x00-\x1F\x7F]/g, "");
+  const gekuerzt = ohneSteuerzeichen.trim().slice(0, 200);
+  return gekuerzt || "dokument";
 }

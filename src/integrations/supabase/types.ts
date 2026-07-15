@@ -451,6 +451,36 @@ export type Database = {
         }
         Relationships: []
       }
+      document_cleanup_jobs: {
+        Row: {
+          created_at: string
+          fehler_code: string | null
+          grund: string
+          id: string
+          letzter_versuch_am: string | null
+          storage_path: string
+          versuche: number
+        }
+        Insert: {
+          created_at?: string
+          fehler_code?: string | null
+          grund: string
+          id?: string
+          letzter_versuch_am?: string | null
+          storage_path: string
+          versuche?: number
+        }
+        Update: {
+          created_at?: string
+          fehler_code?: string | null
+          grund?: string
+          id?: string
+          letzter_versuch_am?: string | null
+          storage_path?: string
+          versuche?: number
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           bezug: Json | null
