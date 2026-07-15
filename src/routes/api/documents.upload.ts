@@ -215,6 +215,9 @@ export const Route = createFileRoute("/api/documents/upload")({
     handlers: {
       POST: async ({ request }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { requireDocumentRole, rolleAlsBereich } = await import(
+          "@/lib/documents-security.server"
+        );
 
         // 1. Bearer-Token verifizieren.
         const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
@@ -224,20 +227,15 @@ export const Route = createFileRoute("/api/documents/upload")({
         if (userErr || !userRes.user) return jsonErr(401, "Nicht angemeldet.");
         const userId = userRes.user.id;
 
-        // 2. Rollenprüfung.
-        const { data: roles, error: rolesErr } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId);
-        if (rolesErr) {
-          console.error("[documents.upload] role lookup failed", rolesErr.message);
+        // 2. Zentraler Role-Gate.
+        let role: Awaited<ReturnType<typeof requireDocumentRole>>;
+        try {
+          role = await requireDocumentRole(userId);
+        } catch (err) {
+          if (err instanceof Response) return err;
+          console.error("[documents.upload] role gate error");
           return jsonErr(500, "Rollenprüfung fehlgeschlagen.");
         }
-        const erlaubteRollen = new Set(["admin", "disposition", "finanz"]);
-        const hatRolle = (roles ?? []).some((r) =>
-          erlaubteRollen.has((r as { role: string }).role),
-        );
-        if (!hatRolle) return jsonErr(403, "Keine Berechtigung zum Hochladen von Dokumenten.");
 
         // 3. Multipart parsen.
         let form: FormData;
@@ -261,10 +259,8 @@ export const Route = createFileRoute("/api/documents/upload")({
         if (file.size > MAX_UPLOAD_BYTES) return jsonErr(413, "Datei ist zu groß (max. 10 MiB).");
 
         // 5. Endung.
-        const originalName = file.name || "dokument";
-        const extRaw = originalName.includes(".")
-          ? originalName.split(".").pop()!.toLowerCase()
-          : "";
+        const anzeigeName = bereinigeDateiname(file.name);
+        const extRaw = anzeigeName.includes(".") ? anzeigeName.split(".").pop()!.toLowerCase() : "";
         const erwarteterMimeFuerExt = ENDUNG_ZU_MIME[extRaw];
         if (!erwarteterMimeFuerExt) {
           return jsonErr(415, "Nur PDF, JPEG, PNG oder WebP erlaubt.");
@@ -300,19 +296,22 @@ export const Route = createFileRoute("/api/documents/upload")({
         const finalExt = MIME_ZU_ENDUNG[echterMime];
         const path = `${crypto.randomUUID()}/${crypto.randomUUID()}.${finalExt}`;
 
-        // 10. Upload via Admin (storage.objects hat keine Client-Policies).
+        // 10. Upload via Admin.
         const { error: upErr } = await supabaseAdmin.storage
           .from("documents")
           .upload(path, buf, { contentType: echterMime, upsert: false });
         if (upErr) {
-          console.error("[documents.upload] storage upload failed", upErr.message);
+          console.error("[documents.upload] storage upload failed");
           return jsonErr(500, "Upload fehlgeschlagen.");
         }
 
         // 11. Metadaten – Insert. server-owned Felder werden hier gesetzt.
+        // `hochgeladen_von` bekommt einen nicht personenbezogenen Bereichsnamen
+        // (Administration / Disposition / Finanzen); die tatsächliche User-ID
+        // bleibt server-only in `uploaded_by`.
         const format = formatVonDatei(file);
-        const row = {
-          name: originalName.slice(0, 200),
+        const insertRow = {
+          name: anzeigeName,
           kategorie: meta.kategorie,
           format,
           ordner: meta.ordner,
@@ -320,25 +319,54 @@ export const Route = createFileRoute("/api/documents/upload")({
           bezug: meta.bezug ?? null,
           storage_path: path,
           groesse_kb: Math.max(1, Math.round(file.size / 1024)),
-          hochgeladen_von: userRes.user.email ?? "",
+          hochgeladen_von: rolleAlsBereich(role),
           uploaded_by: userId,
           status: "active" as const,
         };
 
         const { data: created, error: insErr } = await supabaseAdmin
           .from("documents")
-          .insert(row as never)
-          .select()
+          .insert(insertRow)
+          .select(
+            "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at",
+          )
           .single();
         if (insErr || !created) {
-          await supabaseAdmin.storage.from("documents").remove([path]);
-          console.error("[documents.upload] metadata insert failed", insErr?.message);
+          // Rollback: sofortiges Storage-Remove; bei erneutem Fehler MUSS ein
+          // persistenter Cleanup-Job entstehen, bevor eine Fehlerantwort geht.
+          const { error: remErr } = await supabaseAdmin.storage
+            .from("documents")
+            .remove([path]);
+          if (remErr) {
+            const { error: jobErr } = await supabaseAdmin
+              .from("document_cleanup_jobs")
+              .insert({
+                storage_path: path,
+                grund: "upload_metadata_rollback",
+                fehler_code: "storage_remove_failed",
+                versuche: 1,
+                letzter_versuch_am: new Date().toISOString(),
+              });
+            if (jobErr) {
+              // Selbst der Cleanup-Job konnte nicht persistiert werden.
+              // Kein Erfolg vortäuschen – pfadloser High-Severity-Log,
+              // generische Fehlermeldung an den Client.
+              console.error(
+                "[documents.upload] FATAL: rollback + cleanup persist failed",
+              );
+              return jsonErr(500, "Upload fehlgeschlagen.");
+            }
+            console.error("[documents.upload] rollback deferred to cleanup queue");
+          }
           return jsonErr(500, "Metadaten konnten nicht gespeichert werden.");
         }
 
-        const dokument: DokumentRecord = documentRowToClientDto(created as unknown as DocumentRow);
+        const dokument: DokumentRecord = documentRowToClientDto(
+          created as DocumentClientProjectionRow,
+        );
         return Response.json(dokument);
       },
     },
   },
+
 });
