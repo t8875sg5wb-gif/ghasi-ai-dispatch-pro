@@ -82,8 +82,9 @@ export const listDocuments = createServerFn({ method: "GET" })
  * signierbar; unbekannte, fremde und pending IDs erhalten dieselbe Antwort.
  */
 export const getDocumentSignedUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
+  .inputValidator(parseIdInput)
+
   .handler(async ({ data, context }): Promise<{ url: string; expiresIn: number }> => {
     const { supabaseAdmin } = await serverGate(context.userId);
     const { data: row, error } = await supabaseAdmin
