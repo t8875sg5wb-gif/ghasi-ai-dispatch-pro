@@ -123,8 +123,9 @@ export const getDocumentSignedUrl = createServerFn({ method: "POST" })
  * Storage-Meldungen verlassen den Server nicht.
  */
 export const deleteDocument = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
+  .inputValidator(parseIdInput)
+
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await serverGate(context.userId);
 
