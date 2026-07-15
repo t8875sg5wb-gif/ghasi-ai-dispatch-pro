@@ -3,14 +3,9 @@
 import { useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { signedDocumentUrl } from "@/lib/documents-store";
+import { signedDocumentUrlById } from "@/lib/documents-store";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export function DocumentViewer({
@@ -35,8 +30,8 @@ export function DocumentViewer({
     }
     setLoading(true);
     setFehler(false);
-    signedDocumentUrl(dokument.storagePath)
-      .then((u) => {
+    signedDocumentUrlById(dokument.id)
+      .then((u: string | null) => {
         if (!aktiv) return;
         if (u) setUrl(u);
         else setFehler(true);
