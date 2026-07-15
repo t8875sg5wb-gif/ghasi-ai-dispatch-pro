@@ -198,7 +198,8 @@ export const deleteDocument = createServerFn({ method: "POST" })
  * zurück – keine Pfade, keine Fehlerdetails.
  */
 export const retryDocumentCleanup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
+
   .handler(async ({ context }): Promise<{ processed: number }> => {
     const { supabaseAdmin } = await serverGate(context.userId);
     const { data: jobs, error } = await supabaseAdmin
