@@ -352,10 +352,18 @@ export const Route = createFileRoute("/api/documents/upload")({
           return jsonErr(500, "Metadaten konnten nicht gespeichert werden.");
         }
 
-        const dokument: DokumentRecord = documentRowToClientDto(
-          created as DocumentClientProjectionRow,
-        );
+        // Antwort-Projektion durch dieselbe Runtime-Schema-Grenze validieren.
+        // Fehler hier bedeuten NICHT: erfolgreicher Insert rückgängig machen.
+        // Nur generische 500 + sicherer Log.
+        let dokument: DokumentRecord;
+        try {
+          dokument = parseDocumentClientRow(created);
+        } catch {
+          console.error("[documents.upload] response projection invalid");
+          return jsonErr(500, "Upload konnte nicht bestätigt werden.");
+        }
         return Response.json(dokument);
+
       },
     },
   },
