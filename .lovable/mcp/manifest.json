@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://kckzvkzxvuvpnweeshds.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "ghasi-ai-mcp",
+      "version": "0.1.0",
+      "title": "GHASI AI"
+    },
+    "tools": [
+      {
+        "name": "list_orders",
+        "title": "Aufträge auflisten",
+        "description": "Listet Krankentransport-Aufträge der eigenen Firma (RLS). Optional nach Status filtern und Anzahl begrenzen.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Statusfilter, z.B. 'neu', 'geplant', 'in_fahrt', 'abgeschlossen'.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max. Ergebnisse (Standard 25).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_order",
+        "title": "Auftrag abrufen",
+        "description": "Ruft einen einzelnen Auftrag per ID oder Auftragsnummer ab.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "UUID des Auftrags.",
+              "type": "string"
+            },
+            "nummer": {
+              "description": "Auftragsnummer, z.B. 'A-2026-0042'.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_drivers",
+        "title": "Fahrer auflisten",
+        "description": "Listet alle Fahrer der eigenen Firma. Optional nach Status filtern.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Statusfilter, z.B. 'aktiv', 'krank', 'urlaub'.",
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_vehicles",
+        "title": "Fahrzeuge auflisten",
+        "description": "Listet alle Fahrzeuge der Flotte. Optional nach Status filtern.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Statusfilter, z.B. 'verfuegbar', 'im_einsatz', 'wartung'.",
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_invoices",
+        "title": "Rechnungen auflisten",
+        "description": "Listet Rechnungen. Optional nach Status filtern (z.B. 'offen', 'bezahlt', 'ueberfaellig').",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

@@ -24,6 +24,7 @@ import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LohnRouteImport } from './routes/lohn'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
 import { Route as LeasingRouteImport } from './routes/leasing'
@@ -59,7 +60,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
 import { Route as KiAssistentThreadIdRouteImport } from './routes/ki-assistent.$threadId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiDocumentsUploadRouteImport } from './routes/api/documents.upload'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const WartungRoute = WartungRouteImport.update({
   id: '/wartung',
@@ -134,6 +139,11 @@ const PflegeheimeRoute = PflegeheimeRouteImport.update({
 const PatientenRoute = PatientenRouteImport.update({
   id: '/patienten',
   path: '/patienten',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LohnRoute = LohnRouteImport.update({
@@ -311,9 +321,32 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiDocumentsUploadRoute = ApiDocumentsUploadRouteImport.update({
   id: '/api/documents/upload',
   path: '/api/documents/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -350,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -365,9 +399,13 @@ export interface FileRoutesByFullPath {
   '/versicherungen': typeof VersicherungenRoute
   '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRoutesByTo {
@@ -402,6 +440,7 @@ export interface FileRoutesByTo {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -417,9 +456,13 @@ export interface FileRoutesByTo {
   '/versicherungen': typeof VersicherungenRoute
   '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent': typeof KiAssistentIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRoutesById {
@@ -456,6 +499,7 @@ export interface FileRoutesById {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
@@ -471,9 +515,13 @@ export interface FileRoutesById {
   '/versicherungen': typeof VersicherungenRoute
   '/warnungen': typeof WarnungenRoute
   '/wartung': typeof WartungRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRouteTypes {
@@ -511,6 +559,7 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/mcp'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -526,9 +575,13 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/warnungen'
     | '/wartung'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/documents/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -563,6 +616,7 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/mcp'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -578,9 +632,13 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/warnungen'
     | '/wartung'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/documents/upload'
   id:
     | '__root__'
@@ -616,6 +674,7 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/mcp'
     | '/patienten'
     | '/pflegeheime'
     | '/posteingang'
@@ -631,9 +690,13 @@ export interface FileRouteTypes {
     | '/versicherungen'
     | '/warnungen'
     | '/wartung'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/documents/upload'
   fileRoutesById: FileRoutesById
 }
@@ -670,6 +733,7 @@ export interface RootRouteChildren {
   LeasingRoute: typeof LeasingRoute
   LiveGpsRoute: typeof LiveGpsRoute
   LohnRoute: typeof LohnRoute
+  McpRoute: typeof McpRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
   PosteingangRoute: typeof PosteingangRoute
@@ -685,7 +749,11 @@ export interface RootRouteChildren {
   VersicherungenRoute: typeof VersicherungenRoute
   WarnungenRoute: typeof WarnungenRoute
   WartungRoute: typeof WartungRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiDocumentsUploadRoute: typeof ApiDocumentsUploadRoute
 }
 
@@ -794,6 +862,13 @@ declare module '@tanstack/react-router' {
       path: '/patienten'
       fullPath: '/patienten'
       preLoaderRoute: typeof PatientenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lohn': {
@@ -1041,11 +1116,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/documents/upload': {
       id: '/api/documents/upload'
       path: '/api/documents/upload'
       fullPath: '/api/documents/upload'
       preLoaderRoute: typeof ApiDocumentsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -1098,6 +1201,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeasingRoute: LeasingRoute,
   LiveGpsRoute: LiveGpsRoute,
   LohnRoute: LohnRoute,
+  McpRoute: McpRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
   PosteingangRoute: PosteingangRoute,
@@ -1113,9 +1217,24 @@ const rootRouteChildren: RootRouteChildren = {
   VersicherungenRoute: VersicherungenRoute,
   WarnungenRoute: WarnungenRoute,
   WartungRoute: WartungRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiDocumentsUploadRoute: ApiDocumentsUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
