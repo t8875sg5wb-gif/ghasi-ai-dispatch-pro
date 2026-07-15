@@ -1,28 +1,40 @@
-// P0.1 STORAGE — Server route for authorized document upload.
+// P0.2 STORAGE — Server route for authorized document upload.
 //
 // Guarantees:
-// - Bearer token verified via supabaseAdmin.auth.getUser (no client identity).
-// - Role gated to admin | disposition | finanz.
+// - Bearer token verified via `supabaseAdmin.auth.getUser` (no client identity).
+// - Role gated via the SHARED `requireDocumentRole` helper (admin |
+//   disposition | finanz). No duplicate role list.
 // - File validation: size ≤ 10 MiB, extension/MIME/magic bytes must agree
 //   (PDF, JPEG, PNG, WebP only).
 // - Multipart metadata is validated with a STRICT Zod schema. Unknown keys
 //   and multiple values per key are rejected (400). No client-supplied
-//   values may control id, storage path, uploader, role or timestamps.
-// - Server-generated storage path: `<uuid>/<uuid>.<ext>` (never the original
-//   filename).
-// - Failure-safe: object removed if metadata insert fails.
+//   values may control id, storage path, uploader, role, status, or
+//   timestamps. The original filename is only used as sanitised display
+//   metadata — NEVER as part of the storage path.
+// - Server-generated storage path: `<uuid>/<uuid>.<ext>`.
+// - Uploader is recorded as a non-personal role bucket ("Administration" /
+//   "Disposition" / "Finanzen") in `hochgeladen_von`. The auth user id is
+//   stored in the server-only `uploaded_by` column and never shipped to
+//   the browser.
+// - Recovery-safe rollback: if metadata insert fails, the just-uploaded
+//   storage object is removed. If that remove itself fails, a persistent
+//   `document_cleanup_jobs` row is inserted BEFORE returning an error, so
+//   an orphaned storage object is retried later. The route NEVER returns
+//   success when a rollback failed.
 // - Response returns the CLIENT DTO — never `storage_path`, `uploaded_by`,
-//   or internal error text.
+//   `hochgeladen_von`, `status`, `delete_error`, or internal error text.
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import {
   formatVonDatei,
   documentRowToClientDto,
+  bereinigeDateiname,
   type DokumentRecord,
-  type DocumentRow,
+  type DocumentClientProjectionRow,
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
+
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
