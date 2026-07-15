@@ -1,8 +1,16 @@
-// Client-safe mapping between the persisted `documents` table and the in-app
-// persisted document record type. Reuses the category/format metadata from
-// `@/lib/documents` so the UI stays consistent with the seed catalogue.
-import type { DokumentKategorie, DokumentFormat, DokumentBezug } from "@/lib/documents";
+// Client/server split for documents:
+// - `DokumentRecord` is the CLIENT DTO. It intentionally omits every
+//   server-only field (storage_path, uploaded_by, status, delete_error, …).
+//   The browser NEVER receives the internal storage path.
+// - `DocumentRow` is the raw DB row shape used server-side only.
+// - `documentRowToClientDto` is the single mapper both server-fn readers and
+//   the upload route use to build the client DTO. It also re-derives the
+//   navigation route for a `bezug` from its type, so the persisted row does
+//   not have to carry (and cannot spoof) a client-side deep link.
+import type { DokumentKategorie, DokumentFormat, DokumentBezugTyp } from "@/lib/documents";
+import { bezugRoute } from "@/lib/documents";
 
+/** Client-facing DTO. Contains ONLY fields the browser is allowed to see. */
 export interface DokumentRecord {
   id: string;
   name: string;
@@ -10,27 +18,15 @@ export interface DokumentRecord {
   format: DokumentFormat;
   ordner: string;
   tags: string[];
-  bezug?: DokumentBezug;
-  storagePath: string;
+  bezug?: { typ: DokumentBezugTyp; label: string; to: string };
   groesseKb: number;
   ocrText?: string;
   hochgeladenVon: string;
   hochgeladenAm: string; // ISO (created_at)
+  status: "active" | "pending_delete";
 }
 
-export interface DokumentWrite {
-  name: string;
-  kategorie: DokumentKategorie;
-  format: DokumentFormat;
-  ordner: string;
-  tags: string[];
-  bezug?: DokumentBezug | null;
-  storagePath: string;
-  groesseKb: number;
-  ocrText?: string | null;
-  hochgeladenVon: string;
-}
-
+/** Server-only DB row shape. Never leave the server layer with this. */
 export interface DocumentRow {
   id: string;
   name: string;
@@ -44,9 +40,34 @@ export interface DocumentRow {
   ocr_text: string | null;
   hochgeladen_von: string;
   created_at: string;
+  status?: string | null;
 }
 
-export function rowToDokument(r: DocumentRow): DokumentRecord {
+/** Explicit whitelist of columns the client may ever read. */
+export const CLIENT_DOCUMENT_COLUMNS =
+  "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,hochgeladen_von,created_at,status" as const;
+
+/** Server-only → client DTO. Strips `storage_path`, `uploaded_by`, errors, etc. */
+export function documentRowToClientDto(r: DocumentRow): DokumentRecord {
+  const bezugRaw = r.bezug as { typ?: unknown; label?: unknown } | null;
+  let bezug: DokumentRecord["bezug"] | undefined;
+  if (
+    bezugRaw &&
+    typeof bezugRaw === "object" &&
+    typeof bezugRaw.typ === "string" &&
+    typeof bezugRaw.label === "string"
+  ) {
+    const to = bezugRoute(bezugRaw.typ as DokumentBezugTyp);
+    if (to) {
+      bezug = {
+        typ: bezugRaw.typ as DokumentBezugTyp,
+        label: bezugRaw.label,
+        to,
+      };
+    }
+  }
+  const status =
+    r.status === "pending_delete" ? "pending_delete" : ("active" as DokumentRecord["status"]);
   return {
     id: r.id,
     name: r.name ?? "",
@@ -54,31 +75,13 @@ export function rowToDokument(r: DocumentRow): DokumentRecord {
     format: (r.format as DokumentFormat) ?? "pdf",
     ordner: r.ordner ?? "Allgemein",
     tags: Array.isArray(r.tags) ? (r.tags as string[]) : [],
-    bezug: (r.bezug as DokumentBezug | null) ?? undefined,
-    storagePath: r.storage_path,
+    bezug,
     groesseKb: r.groesse_kb ?? 0,
     ocrText: r.ocr_text ?? undefined,
     hochgeladenVon: r.hochgeladen_von ?? "",
     hochgeladenAm: r.created_at,
+    status,
   };
-}
-
-export function dokumentToRow(w: Partial<DokumentWrite>): Record<string, unknown> {
-  const row: Record<string, unknown> = {};
-  const set = (k: string, v: unknown) => {
-    if (v !== undefined) row[k] = v;
-  };
-  set("name", w.name);
-  set("kategorie", w.kategorie);
-  set("format", w.format);
-  set("ordner", w.ordner);
-  set("tags", w.tags);
-  set("bezug", w.bezug ?? null);
-  set("storage_path", w.storagePath);
-  set("groesse_kb", w.groesseKb);
-  set("ocr_text", w.ocrText ?? null);
-  set("hochgeladen_von", w.hochgeladenVon);
-  return row;
 }
 
 /** Derive a document format bucket from a MIME type / filename. */

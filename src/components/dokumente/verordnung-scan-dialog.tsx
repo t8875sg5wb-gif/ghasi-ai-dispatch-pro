@@ -198,8 +198,7 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
           kategorie: "rezept",
           ordner: `Patienten/${zielName}`,
           tags: ["verordnung", "muster4", ...(values.dauerfahrt ? ["dauerfahrt"] : [])],
-          bezug: { typ: "patient", label: zielName, to: "/patienten" },
-          hochgeladenVon: akteur,
+          bezug: { typ: "patient", label: zielName },
         });
         dokumentId = doc.id;
       }

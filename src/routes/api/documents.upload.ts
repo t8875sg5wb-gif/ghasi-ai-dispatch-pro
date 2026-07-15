@@ -1,20 +1,28 @@
-// P0_STORAGE — Server route for authorized document upload.
-// - Multipart form-data POST from the browser
-// - Bearer token verified via supabaseAdmin.auth.getUser (no client identity)
-// - Role gated to admin | disposition | finanz
-// - File validation: size ≤ 10 MiB, allowed final types (pdf/jpeg/png/webp),
-//   extension/MIME/signature (magic bytes) must all agree
-// - Server-generated storage path: `<uuid>/<uuid>.<ext>` (never original name)
-// - Failure-safe: object removed if metadata insert fails
+// P0.1 STORAGE — Server route for authorized document upload.
+//
+// Guarantees:
+// - Bearer token verified via supabaseAdmin.auth.getUser (no client identity).
+// - Role gated to admin | disposition | finanz.
+// - File validation: size ≤ 10 MiB, extension/MIME/magic bytes must agree
+//   (PDF, JPEG, PNG, WebP only).
+// - Multipart metadata is validated with a STRICT Zod schema. Unknown keys
+//   and multiple values per key are rejected (400). No client-supplied
+//   values may control id, storage path, uploader, role or timestamps.
+// - Server-generated storage path: `<uuid>/<uuid>.<ext>` (never the original
+//   filename).
+// - Failure-safe: object removed if metadata insert fails.
+// - Response returns the CLIENT DTO — never `storage_path`, `uploaded_by`,
+//   or internal error text.
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import {
   formatVonDatei,
+  documentRowToClientDto,
   type DokumentRecord,
   type DocumentRow,
-  rowToDokument,
 } from "@/lib/documents-shared";
-import type { DokumentKategorie, DokumentBezug } from "@/lib/documents";
+import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
@@ -85,13 +93,118 @@ function jsonErr(status: number, message: string) {
   });
 }
 
+// -----------------------------------------------------------------------------
+// Strikte Metadata-Validierung. Kein `as`-Cast als Ersatz.
+// Steuerzeichen (\x00-\x1F, \x7F) sind in Textfeldern verboten.
+// -----------------------------------------------------------------------------
+const KATEGORIE_ENUM = z.enum(DOKUMENT_KATEGORIEN as unknown as [string, ...string[]]);
+const BEZUG_TYP_ENUM = z.enum(DOKUMENT_BEZUG_TYPEN as unknown as [string, ...string[]]);
+// eslint-disable-next-line no-control-regex
+const OHNE_STEUERZEICHEN = /^[^\x00-\x1F\x7F]*$/;
+
+const ORDNER_SCHEMA = z
+  .string()
+  .trim()
+  .min(1, "Ordner erforderlich.")
+  .max(120)
+  .regex(OHNE_STEUERZEICHEN, "Ungültige Zeichen im Ordner.");
+
+const BEZUG_SCHEMA = z
+  .object({
+    typ: BEZUG_TYP_ENUM,
+    label: z
+      .string()
+      .trim()
+      .min(1)
+      .max(160)
+      .regex(OHNE_STEUERZEICHEN, "Ungültige Zeichen im Bezug."),
+    // to wird VOM SERVER verworfen und über bezug.typ neu abgeleitet.
+    to: z.string().optional(),
+  })
+  .strict()
+  .transform((b) => ({ typ: b.typ, label: b.label }));
+
+const TAG_SCHEMA = z
+  .string()
+  .trim()
+  .min(1)
+  .max(48)
+  .regex(OHNE_STEUERZEICHEN, "Ungültige Zeichen im Tag.");
+
+const TAGS_JSON_SCHEMA = z
+  .string()
+  .transform((s, ctx) => {
+    try {
+      return JSON.parse(s) as unknown;
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "tags: ungültiges JSON." });
+      return z.NEVER;
+    }
+  })
+  .pipe(z.array(TAG_SCHEMA).max(20))
+  .transform((tags) => Array.from(new Set(tags)));
+
+const BEZUG_JSON_SCHEMA = z
+  .string()
+  .transform((s, ctx) => {
+    try {
+      return JSON.parse(s) as unknown;
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "bezug: ungültiges JSON." });
+      return z.NEVER;
+    }
+  })
+  .pipe(BEZUG_SCHEMA);
+
+const METADATA_SCHEMA = z
+  .object({
+    kategorie: KATEGORIE_ENUM,
+    ordner: ORDNER_SCHEMA,
+    tags: TAGS_JSON_SCHEMA.optional(),
+    bezug: BEZUG_JSON_SCHEMA.optional(),
+  })
+  .strict();
+
+const ERLAUBTE_FORM_KEYS = new Set(["file", "kategorie", "ordner", "tags", "bezug"]);
+
+/**
+ * Extrahiert Metadaten aus FormData mit strengen Regeln:
+ * - kein Feld darf mehrfach vorkommen,
+ * - Textfelder müssen wirklich Strings sein,
+ * - unbekannte Felder werden abgelehnt.
+ */
+function extrahiereMetadataFelder(form: FormData): Record<string, string> | Response {
+  const felder: Record<string, string> = {};
+  const gesehen = new Map<string, number>();
+  for (const [key] of form.entries()) {
+    gesehen.set(key, (gesehen.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of gesehen.entries()) {
+    if (!ERLAUBTE_FORM_KEYS.has(key)) {
+      return jsonErr(400, `Unbekanntes Feld: ${key}.`);
+    }
+    if (count > 1) {
+      return jsonErr(400, `Feld ${key} darf nur einmal übergeben werden.`);
+    }
+  }
+  for (const key of ["kategorie", "ordner", "tags", "bezug"] as const) {
+    const val = form.get(key);
+    if (val == null) continue;
+    if (typeof val !== "string") {
+      return jsonErr(400, `Feld ${key} muss Text sein.`);
+    }
+    felder[key] = val;
+  }
+  return felder;
+}
+
 export const Route = createFileRoute("/api/documents/upload")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // 1. Bearer-Token verifizieren, Identität serverseitig ableiten.
+        // 1. Bearer-Token verifizieren.
         const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
         const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
         if (!token) return jsonErr(401, "Nicht angemeldet.");
@@ -99,12 +212,15 @@ export const Route = createFileRoute("/api/documents/upload")({
         if (userErr || !userRes.user) return jsonErr(401, "Nicht angemeldet.");
         const userId = userRes.user.id;
 
-        // 2. Rollenprüfung: nur admin/disposition/finanz dürfen hochladen.
+        // 2. Rollenprüfung.
         const { data: roles, error: rolesErr } = await supabaseAdmin
           .from("user_roles")
           .select("role")
           .eq("user_id", userId);
-        if (rolesErr) return jsonErr(500, "Rollenprüfung fehlgeschlagen.");
+        if (rolesErr) {
+          console.error("[documents.upload] role lookup failed", rolesErr.message);
+          return jsonErr(500, "Rollenprüfung fehlgeschlagen.");
+        }
         const erlaubteRollen = new Set(["admin", "disposition", "finanz"]);
         const hatRolle = (roles ?? []).some((r) =>
           erlaubteRollen.has((r as { role: string }).role),
@@ -120,6 +236,13 @@ export const Route = createFileRoute("/api/documents/upload")({
         }
         const file = form.get("file");
         if (!(file instanceof File)) return jsonErr(400, "Datei fehlt.");
+
+        // Weitere Datei-Einträge sind nicht erlaubt (z. B. tags als Datei).
+        for (const [k, v] of form.entries()) {
+          if (k !== "file" && v instanceof File) {
+            return jsonErr(400, `Feld ${k} darf keine Datei sein.`);
+          }
+        }
 
         // 4. Größe.
         if (file.size <= 0) return jsonErr(400, "Datei ist leer.");
@@ -151,52 +274,43 @@ export const Route = createFileRoute("/api/documents/upload")({
           return jsonErr(415, "Dateiinhalt passt nicht zum angegebenen Dateityp.");
         }
 
-        // 8. Serverseitiger Pfad – nur UUIDs, keine Original-Namen.
+        // 8. Metadata: Whitelist-Extraktion + strikte Zod-Validierung.
+        const felder = extrahiereMetadataFelder(form);
+        if (felder instanceof Response) return felder;
+        const parsed = METADATA_SCHEMA.safeParse(felder);
+        if (!parsed.success) {
+          const first = parsed.error.issues[0];
+          return jsonErr(400, first?.message ?? "Ungültige Angaben.");
+        }
+        const meta = parsed.data;
+
+        // 9. Serverseitiger Pfad – nur UUIDs, keine Original-Namen.
         const finalExt = MIME_ZU_ENDUNG[echterMime];
         const path = `${crypto.randomUUID()}/${crypto.randomUUID()}.${finalExt}`;
 
-        // 9. Upload via Admin (storage.objects hat keine Client-Policies mehr).
+        // 10. Upload via Admin (storage.objects hat keine Client-Policies).
         const { error: upErr } = await supabaseAdmin.storage
           .from("documents")
           .upload(path, buf, { contentType: echterMime, upsert: false });
-        if (upErr) return jsonErr(500, `Upload fehlgeschlagen: ${upErr.message}`);
-
-        // 10. Metadaten – Insert. Bei Fehler Objekt zurückrollen.
-        const kategorie = (form.get("kategorie") as string | null) ?? "patientendokument";
-        const ordner = (form.get("ordner") as string | null) ?? "Allgemein";
-        let tags: string[] = [];
-        const tagsRaw = form.get("tags");
-        if (typeof tagsRaw === "string" && tagsRaw.trim()) {
-          try {
-            const parsed = JSON.parse(tagsRaw);
-            if (Array.isArray(parsed)) tags = parsed.filter((t) => typeof t === "string");
-          } catch {
-            /* ignore */
-          }
-        }
-        let bezug: DokumentBezug | null = null;
-        const bezugRaw = form.get("bezug");
-        if (typeof bezugRaw === "string" && bezugRaw.trim()) {
-          try {
-            const parsed = JSON.parse(bezugRaw);
-            if (parsed && typeof parsed === "object") bezug = parsed as DokumentBezug;
-          } catch {
-            /* ignore */
-          }
+        if (upErr) {
+          console.error("[documents.upload] storage upload failed", upErr.message);
+          return jsonErr(500, "Upload fehlgeschlagen.");
         }
 
+        // 11. Metadaten – Insert. server-owned Felder werden hier gesetzt.
         const format = formatVonDatei(file);
         const row = {
           name: originalName.slice(0, 200),
-          kategorie: kategorie as DokumentKategorie,
+          kategorie: meta.kategorie,
           format,
-          ordner: ordner.slice(0, 120),
-          tags,
-          bezug,
+          ordner: meta.ordner,
+          tags: meta.tags ?? [],
+          bezug: meta.bezug ?? null,
           storage_path: path,
           groesse_kb: Math.max(1, Math.round(file.size / 1024)),
           hochgeladen_von: userRes.user.email ?? "",
           uploaded_by: userId,
+          status: "active" as const,
         };
 
         const { data: created, error: insErr } = await supabaseAdmin
@@ -206,13 +320,11 @@ export const Route = createFileRoute("/api/documents/upload")({
           .single();
         if (insErr || !created) {
           await supabaseAdmin.storage.from("documents").remove([path]);
-          return jsonErr(
-            500,
-            `Metadaten konnten nicht gespeichert werden: ${insErr?.message ?? ""}`,
-          );
+          console.error("[documents.upload] metadata insert failed", insErr?.message);
+          return jsonErr(500, "Metadaten konnten nicht gespeichert werden.");
         }
 
-        const dokument: DokumentRecord = rowToDokument(created as unknown as DocumentRow);
+        const dokument: DokumentRecord = documentRowToClientDto(created as unknown as DocumentRow);
         return Response.json(dokument);
       },
     },

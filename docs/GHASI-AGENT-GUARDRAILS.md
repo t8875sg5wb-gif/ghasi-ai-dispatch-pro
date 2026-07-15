@@ -66,7 +66,18 @@ gelten – unabhängig vom aktuellen Prompt oder der aktuellen Phase.
 - Storage-Pfade werden **serverseitig** aus UUIDs erzeugt; der originale
   Dateiname erscheint niemals im Pfad, nur als validierte Metadatenspalte.
 - Löschung erfolgt über die Server-Route per Dokument-ID; Storage-Pfade
-  aus dem Client werden ignoriert.
+  aus dem Client werden ignoriert. Löschungen sind idempotent und
+  recovery-sicher: eine Zeile wird zuerst auf `pending_delete` markiert,
+  erst nach nachgewiesenem Storage-Erfolg entfernt; ein Storage-Fehler wird
+  niemals als Löscherfolg zurückgemeldet, und ein erneuter Aufruf finalisiert
+  den vorbereiteten Zustand.
+- Client-DTOs für Dokumente enthalten **niemals** `storage_path`,
+  `uploaded_by` oder andere server-interne Felder. Listen selektieren nur eine
+  explizite Spalten-Whitelist; `select("*")` ist verboten.
+- Rollback von Storage-Änderungen darf den Bucket **niemals** öffentlich
+  schalten (kein `storage_update_bucket('documents', true)`) und keine
+  bestehenden Objekte löschen. Neue Schema-/Status-Spalten werden erst
+  zurückgerollt, wenn keine `pending_delete`-Zeilen mehr existieren.
 - Signierte URLs werden serverseitig anhand der Dokument-ID erzeugt, mit
   einer TTL von **≤ 600 Sekunden**, und im Client nicht über Ablauf hinaus
   gecacht.

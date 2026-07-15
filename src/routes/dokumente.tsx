@@ -397,9 +397,9 @@ function UploadDialog({
       toast.error("Bitte zuerst eine Datei auswählen");
       return;
     }
-    const bezug: DokumentBezug | null =
+    const bezug =
       bezugTyp !== "keine" && bezugLabel.trim()
-        ? { typ: bezugTyp, label: bezugLabel.trim(), to: BEZUG_ROUTE[bezugTyp] }
+        ? { typ: bezugTyp, label: bezugLabel.trim() }
         : null;
     uploadMut.mutate(
       {
@@ -411,7 +411,6 @@ function UploadDialog({
           .map((t) => t.trim())
           .filter(Boolean),
         bezug,
-        hochgeladenVon: akteur,
       },
       {
         onSuccess: (d) => {
