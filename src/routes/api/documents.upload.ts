@@ -35,7 +35,6 @@ import {
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
 
-
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
 type ErlaubterMime = "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
@@ -215,9 +214,8 @@ export const Route = createFileRoute("/api/documents/upload")({
     handlers: {
       POST: async ({ request }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { requireDocumentRole, rolleAlsBereich } = await import(
-          "@/lib/documents-security.server"
-        );
+        const { requireDocumentRole, rolleAlsBereich } =
+          await import("@/lib/documents-security.server");
 
         // 1. Bearer-Token verifizieren.
         const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
@@ -327,33 +325,25 @@ export const Route = createFileRoute("/api/documents/upload")({
         const { data: created, error: insErr } = await supabaseAdmin
           .from("documents")
           .insert(insertRow)
-          .select(
-            "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at",
-          )
+          .select("id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at")
           .single();
         if (insErr || !created) {
           // Rollback: sofortiges Storage-Remove; bei erneutem Fehler MUSS ein
           // persistenter Cleanup-Job entstehen, bevor eine Fehlerantwort geht.
-          const { error: remErr } = await supabaseAdmin.storage
-            .from("documents")
-            .remove([path]);
+          const { error: remErr } = await supabaseAdmin.storage.from("documents").remove([path]);
           if (remErr) {
-            const { error: jobErr } = await supabaseAdmin
-              .from("document_cleanup_jobs")
-              .insert({
-                storage_path: path,
-                grund: "upload_metadata_rollback",
-                fehler_code: "storage_remove_failed",
-                versuche: 1,
-                letzter_versuch_am: new Date().toISOString(),
-              });
+            const { error: jobErr } = await supabaseAdmin.from("document_cleanup_jobs").insert({
+              storage_path: path,
+              grund: "upload_metadata_rollback",
+              fehler_code: "storage_remove_failed",
+              versuche: 1,
+              letzter_versuch_am: new Date().toISOString(),
+            });
             if (jobErr) {
               // Selbst der Cleanup-Job konnte nicht persistiert werden.
               // Kein Erfolg vortäuschen – pfadloser High-Severity-Log,
               // generische Fehlermeldung an den Client.
-              console.error(
-                "[documents.upload] FATAL: rollback + cleanup persist failed",
-              );
+              console.error("[documents.upload] FATAL: rollback + cleanup persist failed");
               return jsonErr(500, "Upload fehlgeschlagen.");
             }
             console.error("[documents.upload] rollback deferred to cleanup queue");
@@ -368,5 +358,4 @@ export const Route = createFileRoute("/api/documents/upload")({
       },
     },
   },
-
 });
