@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { signedDocumentUrl } from "@/lib/documents-store";
+import { signedDocumentUrlById } from "@/lib/documents-store";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export function DocumentViewer({
