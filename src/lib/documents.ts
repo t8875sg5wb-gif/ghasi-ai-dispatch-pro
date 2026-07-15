@@ -139,7 +139,7 @@ export const KATEGORIE_META: Record<DokumentKategorie, KategorieMeta> = {
   },
 };
 
-export const DOKUMENT_KATEGORIEN: DokumentKategorie[] = [
+export const DOKUMENT_KATEGORIEN = [
   "rezept",
   "transportauftrag",
   "patientendokument",
@@ -150,7 +150,8 @@ export const DOKUMENT_KATEGORIEN: DokumentKategorie[] = [
   "fahrzeugdokument",
   "versicherung",
   "wartungsbeleg",
-];
+] as const satisfies readonly DokumentKategorie[];
+
 
 /** Strikt zulässige Bezugstypen (Runtime-Konstante als einzige Quelle). */
 export const DOKUMENT_BEZUG_TYPEN = [
