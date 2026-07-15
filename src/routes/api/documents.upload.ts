@@ -28,12 +28,12 @@ import { z } from "zod";
 
 import {
   formatVonDatei,
-  documentRowToClientDto,
+  parseDocumentClientRow,
   bereinigeDateiname,
   type DokumentRecord,
-  type DocumentClientProjectionRow,
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
+
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
@@ -108,8 +108,9 @@ function jsonErr(status: number, message: string) {
 // Strikte Metadata-Validierung. Kein `as`-Cast als Ersatz.
 // Steuerzeichen (\x00-\x1F, \x7F) sind in Textfeldern verboten.
 // -----------------------------------------------------------------------------
-const KATEGORIE_ENUM = z.enum(DOKUMENT_KATEGORIEN as unknown as [string, ...string[]]);
-const BEZUG_TYP_ENUM = z.enum(DOKUMENT_BEZUG_TYPEN as unknown as [string, ...string[]]);
+const KATEGORIE_ENUM = z.enum(DOKUMENT_KATEGORIEN);
+const BEZUG_TYP_ENUM = z.enum(DOKUMENT_BEZUG_TYPEN);
+
 // eslint-disable-next-line no-control-regex
 const OHNE_STEUERZEICHEN = /^[^\x00-\x1F\x7F]*$/;
 
@@ -351,10 +352,18 @@ export const Route = createFileRoute("/api/documents/upload")({
           return jsonErr(500, "Metadaten konnten nicht gespeichert werden.");
         }
 
-        const dokument: DokumentRecord = documentRowToClientDto(
-          created as DocumentClientProjectionRow,
-        );
+        // Antwort-Projektion durch dieselbe Runtime-Schema-Grenze validieren.
+        // Fehler hier bedeuten NICHT: erfolgreicher Insert rückgängig machen.
+        // Nur generische 500 + sicherer Log.
+        let dokument: DokumentRecord;
+        try {
+          dokument = parseDocumentClientRow(created);
+        } catch {
+          console.error("[documents.upload] response projection invalid");
+          return jsonErr(500, "Upload konnte nicht bestätigt werden.");
+        }
         return Response.json(dokument);
+
       },
     },
   },
