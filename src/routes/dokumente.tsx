@@ -291,8 +291,8 @@ function DokumentePage() {
                       </div>
                       <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {formatDatum(d.hochgeladenAm)} · {d.hochgeladenVon} ·{" "}
-                        {formatGroesse(d.groesseKb)}
+                        {formatDatum(d.hochgeladenAm)} · {formatGroesse(d.groesseKb)}
+
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
