@@ -21,10 +21,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { documentAuthStatusMiddleware } from "@/lib/documents-auth.middleware";
 import {
-  documentRowToClientDto,
+  parseDocumentClientRow,
   CLIENT_DOCUMENT_COLUMNS,
-  type DocumentClientProjectionRow,
   type DokumentRecord,
 } from "@/lib/documents-shared";
 
@@ -40,8 +40,21 @@ async function serverGate(userId: string) {
   return { supabaseAdmin, role };
 }
 
+/** Zod-freier ID-Validator: liefert bei ungültiger UUID kontrolliert 400. */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function parseIdInput(raw: unknown): { id: string } {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Response("Ungültige Anfrage.", { status: 400 });
+  }
+  const id = (raw as { id?: unknown }).id;
+  if (typeof id !== "string" || !UUID_REGEX.test(id)) {
+    throw new Response("Ungültige Dokument-ID.", { status: 400 });
+  }
+  return { id };
+}
+
 export const listDocuments = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
   .handler(async ({ context }): Promise<DokumentRecord[]> => {
     const { supabaseAdmin } = await serverGate(context.userId);
     const { data, error } = await supabaseAdmin
@@ -53,10 +66,14 @@ export const listDocuments = createServerFn({ method: "GET" })
       console.error("[documents] list failed");
       throw new Response("Serverstörung.", { status: 500 });
     }
-    return (data ?? []).map((r) =>
-      documentRowToClientDto(r as unknown as DocumentClientProjectionRow),
-    );
+    try {
+      return (data ?? []).map((r) => parseDocumentClientRow(r));
+    } catch {
+      console.error("[documents] list projection invalid");
+      throw new Response("Serverstörung.", { status: 500 });
+    }
   });
+
 
 /**
  * Kurzlebige (≤ 600 s) signierte URL für ein Dokument. Autorisierung über
