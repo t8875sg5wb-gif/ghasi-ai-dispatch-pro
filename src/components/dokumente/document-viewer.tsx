@@ -36,7 +36,7 @@ export function DocumentViewer({
     setLoading(true);
     setFehler(false);
     signedDocumentUrlById(dokument.id)
-      .then((u) => {
+      .then((u: string | null) => {
         if (!aktiv) return;
         if (u) setUrl(u);
         else setFehler(true);
