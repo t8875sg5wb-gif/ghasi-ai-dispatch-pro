@@ -108,8 +108,9 @@ function jsonErr(status: number, message: string) {
 // Strikte Metadata-Validierung. Kein `as`-Cast als Ersatz.
 // Steuerzeichen (\x00-\x1F, \x7F) sind in Textfeldern verboten.
 // -----------------------------------------------------------------------------
-const KATEGORIE_ENUM = z.enum(DOKUMENT_KATEGORIEN as unknown as [string, ...string[]]);
-const BEZUG_TYP_ENUM = z.enum(DOKUMENT_BEZUG_TYPEN as unknown as [string, ...string[]]);
+const KATEGORIE_ENUM = z.enum(DOKUMENT_KATEGORIEN);
+const BEZUG_TYP_ENUM = z.enum(DOKUMENT_BEZUG_TYPEN);
+
 // eslint-disable-next-line no-control-regex
 const OHNE_STEUERZEICHEN = /^[^\x00-\x1F\x7F]*$/;
 
