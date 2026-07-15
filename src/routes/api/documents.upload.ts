@@ -28,12 +28,12 @@ import { z } from "zod";
 
 import {
   formatVonDatei,
-  documentRowToClientDto,
+  parseDocumentClientRow,
   bereinigeDateiname,
   type DokumentRecord,
-  type DocumentClientProjectionRow,
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
+
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
