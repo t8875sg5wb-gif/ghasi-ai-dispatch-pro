@@ -1,16 +1,19 @@
-// Server functions for persisted documents metadata.
-// File bytes live in the private Supabase Storage bucket "documents"; these
-// functions only manage the metadata rows (RLS enforces staff access).
+// Server functions for persisted documents metadata + secure viewing/deletion.
+// File bytes live in the private Supabase Storage bucket "documents".
+// Uploads are handled by the /api/documents/upload server route.
+// All access here is authenticated; storage.objects has no client policies,
+// so signed URLs and deletions must go through this server layer.
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   rowToDokument,
-  dokumentToRow,
   type DocumentRow,
   type DokumentRecord,
-  type DokumentWrite,
 } from "@/lib/documents-shared";
+
+const SIGNED_URL_TTL_SECONDS = 600;
 
 export const listDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -23,39 +26,66 @@ export const listDocuments = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => rowToDokument(r as unknown as DocumentRow));
   });
 
-export const createDocument = createServerFn({ method: "POST" })
+/**
+ * Erzeugt eine kurzlebige (≤ 600 s) signierte URL für ein Dokument.
+ * Autorisierung erfolgt über die documents-Tabellen-RLS: ohne passende
+ * Rolle liefert `.select` keine Zeile und wir liefern 404. Der Storage-Pfad
+ * wird ausschließlich serverseitig aus der Dokumentzeile bezogen; ein
+ * client-übergebener Pfad wird niemals akzeptiert.
+ */
+export const getDocumentSignedUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: DokumentWrite) => {
-    if (!data || typeof data.name !== "string" || !data.name.trim()) {
-      throw new Error("name ist erforderlich");
-    }
-    if (!data.storagePath) throw new Error("storagePath ist erforderlich");
-    return data;
-  })
-  .handler(async ({ data, context }): Promise<DokumentRecord> => {
-    const { data: created, error } = await context.supabase
-      .from("documents")
-      .insert(dokumentToRow(data) as never)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return rowToDokument(created as unknown as DocumentRow);
-  });
-
-export const deleteDocument = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
-  })
-  .handler(async ({ data, context }): Promise<{ ok: true; storagePath: string | null }> => {
-    // Fetch the storage path so the caller can also delete the file object.
-    const { data: row } = await context.supabase
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }): Promise<{ url: string; expiresIn: number }> => {
+    const { data: row, error } = await context.supabase
       .from("documents")
       .select("storage_path")
       .eq("id", data.id)
-      .single();
-    const { error } = await context.supabase.from("documents").delete().eq("id", data.id);
+      .maybeSingle();
     if (error) throw new Error(error.message);
-    return { ok: true, storagePath: (row as { storage_path: string } | null)?.storage_path ?? null };
+    if (!row) throw new Error("Dokument nicht gefunden oder kein Zugriff.");
+    const storagePath = (row as { storage_path: string }).storage_path;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error: sErr } = await supabaseAdmin.storage
+      .from("documents")
+      .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
+    if (sErr || !signed?.signedUrl) {
+      throw new Error(sErr?.message ?? "Signierte URL konnte nicht erstellt werden.");
+    }
+    return { url: signed.signedUrl, expiresIn: SIGNED_URL_TTL_SECONDS };
+  });
+
+/**
+ * Löscht ein Dokument autorisiert per ID: RLS-geprüfte Zeilenlöschung
+ * plus serverseitige Entfernung des Storage-Objekts (Admin-Client, weil
+ * storage.objects keine Client-Policies mehr trägt). Der Client übergibt
+ * niemals einen Storage-Pfad.
+ */
+export const deleteDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { data: row, error: selErr } = await context.supabase
+      .from("documents")
+      .select("storage_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (selErr) throw new Error(selErr.message);
+    if (!row) throw new Error("Dokument nicht gefunden oder kein Zugriff.");
+    const storagePath = (row as { storage_path: string }).storage_path;
+
+    const { error: delErr } = await context.supabase
+      .from("documents")
+      .delete()
+      .eq("id", data.id);
+    if (delErr) throw new Error(delErr.message);
+
+    // Nach erfolgreicher Metadatenlöschung Storage-Objekt entfernen.
+    // Fehler hier hinterlässt höchstens eine Waise; die reguläre
+    // Orphan-Bereinigung (P0-Inventar) räumt diese auf.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.storage.from("documents").remove([storagePath]);
+
+    return { ok: true };
   });
