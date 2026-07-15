@@ -59,6 +59,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
 import { Route as KiAssistentThreadIdRouteImport } from './routes/ki-assistent.$threadId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiDocumentsUploadRouteImport } from './routes/api/documents.upload'
 
 const WartungRoute = WartungRouteImport.update({
   id: '/wartung',
@@ -310,6 +311,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDocumentsUploadRoute = ApiDocumentsUploadRouteImport.update({
+  id: '/api/documents/upload',
+  path: '/api/documents/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
+  '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -413,6 +420,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent': typeof KiAssistentIndexRoute
+  '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
+  '/api/documents/upload': typeof ApiDocumentsUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
+    | '/api/documents/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent'
+    | '/api/documents/upload'
   id:
     | '__root__'
     | '/'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
+    | '/api/documents/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -674,6 +686,7 @@ export interface RootRouteChildren {
   WarnungenRoute: typeof WarnungenRoute
   WartungRoute: typeof WartungRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiDocumentsUploadRoute: typeof ApiDocumentsUploadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1028,6 +1041,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/documents/upload': {
+      id: '/api/documents/upload'
+      path: '/api/documents/upload'
+      fullPath: '/api/documents/upload'
+      preLoaderRoute: typeof ApiDocumentsUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1094,6 +1114,7 @@ const rootRouteChildren: RootRouteChildren = {
   WarnungenRoute: WarnungenRoute,
   WartungRoute: WartungRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiDocumentsUploadRoute: ApiDocumentsUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
