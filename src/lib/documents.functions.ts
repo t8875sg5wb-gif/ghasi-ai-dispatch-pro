@@ -7,11 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  rowToDokument,
-  type DocumentRow,
-  type DokumentRecord,
-} from "@/lib/documents-shared";
+import { rowToDokument, type DocumentRow, type DokumentRecord } from "@/lib/documents-shared";
 
 const SIGNED_URL_TTL_SECONDS = 600;
 
@@ -75,10 +71,7 @@ export const deleteDocument = createServerFn({ method: "POST" })
     if (!row) throw new Error("Dokument nicht gefunden oder kein Zugriff.");
     const storagePath = (row as { storage_path: string }).storage_path;
 
-    const { error: delErr } = await context.supabase
-      .from("documents")
-      .delete()
-      .eq("id", data.id);
+    const { error: delErr } = await context.supabase.from("documents").delete().eq("id", data.id);
     if (delErr) throw new Error(delErr.message);
 
     // Nach erfolgreicher Metadatenlöschung Storage-Objekt entfernen.

@@ -14,10 +14,7 @@ import {
   type DocumentRow,
   rowToDokument,
 } from "@/lib/documents-shared";
-import type {
-  DokumentKategorie,
-  DokumentBezug,
-} from "@/lib/documents";
+import type { DokumentKategorie, DokumentBezug } from "@/lib/documents";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
@@ -40,7 +37,13 @@ const ENDUNG_ZU_MIME: Record<string, ErlaubterMime> = {
 
 /** Erkennt das echte Dateiformat anhand der Magic Bytes. */
 function pruefeMagicBytes(bytes: Uint8Array): ErlaubterMime | null {
-  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46
+  ) {
     return "application/pdf"; // "%PDF"
   }
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
@@ -61,8 +64,14 @@ function pruefeMagicBytes(bytes: Uint8Array): ErlaubterMime | null {
   }
   if (
     bytes.length >= 12 &&
-    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && // "RIFF"
-    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50 // "WEBP"
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 && // "RIFF"
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50 // "WEBP"
   ) {
     return "image/webp";
   }
@@ -97,7 +106,9 @@ export const Route = createFileRoute("/api/documents/upload")({
           .eq("user_id", userId);
         if (rolesErr) return jsonErr(500, "Rollenprüfung fehlgeschlagen.");
         const erlaubteRollen = new Set(["admin", "disposition", "finanz"]);
-        const hatRolle = (roles ?? []).some((r) => erlaubteRollen.has((r as { role: string }).role));
+        const hatRolle = (roles ?? []).some((r) =>
+          erlaubteRollen.has((r as { role: string }).role),
+        );
         if (!hatRolle) return jsonErr(403, "Keine Berechtigung zum Hochladen von Dokumenten.");
 
         // 3. Multipart parsen.
@@ -116,7 +127,9 @@ export const Route = createFileRoute("/api/documents/upload")({
 
         // 5. Endung.
         const originalName = file.name || "dokument";
-        const extRaw = originalName.includes(".") ? originalName.split(".").pop()!.toLowerCase() : "";
+        const extRaw = originalName.includes(".")
+          ? originalName.split(".").pop()!.toLowerCase()
+          : "";
         const erwarteterMimeFuerExt = ENDUNG_ZU_MIME[extRaw];
         if (!erwarteterMimeFuerExt) {
           return jsonErr(415, "Nur PDF, JPEG, PNG oder WebP erlaubt.");
@@ -193,7 +206,10 @@ export const Route = createFileRoute("/api/documents/upload")({
           .single();
         if (insErr || !created) {
           await supabaseAdmin.storage.from("documents").remove([path]);
-          return jsonErr(500, `Metadaten konnten nicht gespeichert werden: ${insErr?.message ?? ""}`);
+          return jsonErr(
+            500,
+            `Metadaten konnten nicht gespeichert werden: ${insErr?.message ?? ""}`,
+          );
         }
 
         const dokument: DokumentRecord = rowToDokument(created as unknown as DocumentRow);

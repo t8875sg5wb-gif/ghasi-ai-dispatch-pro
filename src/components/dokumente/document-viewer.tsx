@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { signedDocumentUrlById } from "@/lib/documents-store";
 import type { DokumentRecord } from "@/lib/documents-shared";

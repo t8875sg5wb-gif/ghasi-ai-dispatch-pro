@@ -8,11 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
-import {
-  listDocuments,
-  deleteDocument,
-  getDocumentSignedUrl,
-} from "@/lib/documents.functions";
+import { listDocuments, deleteDocument, getDocumentSignedUrl } from "@/lib/documents.functions";
 import type { DokumentRecord } from "@/lib/documents-shared";
 import type { DokumentKategorie, DokumentBezug } from "@/lib/documents";
 
