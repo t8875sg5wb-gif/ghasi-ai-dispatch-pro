@@ -138,7 +138,6 @@ function DokumentePage() {
     });
   };
 
-
   return (
     <div className="animate-fade-in space-y-6">
       <PageHero
@@ -240,8 +239,9 @@ function DokumentePage() {
                 </Button>
               </div>
             )}
-
+            {/* Bei Listenfehler niemals veraltete/gecachte Zeilen zeigen. */}
             {!isLoading &&
+              !isError &&
               ergebnisse.map((d) => {
                 const kat = KATEGORIE_META[d.kategorie];
                 const fmt = FORMAT_META[d.format];
@@ -432,11 +432,7 @@ function UploadDialog({
           reset();
           onOpenChange(false);
         },
-        onError: (e) =>
-          toast.error("Upload fehlgeschlagen", {
-            description: e instanceof Error ? e.message : "Upload fehlgeschlagen.",
-          }),
-
+        onError: (e) => toast.error("Upload fehlgeschlagen", { description: String(e) }),
       },
     );
   };

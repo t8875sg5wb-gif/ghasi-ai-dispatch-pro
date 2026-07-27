@@ -19,7 +19,6 @@ import {
 import type { DokumentRecord } from "@/lib/documents-shared";
 import type { DokumentKategorie, DokumentBezugTyp } from "@/lib/documents";
 
-
 export const DOCUMENTS_QUERY_KEY = ["documents"] as const;
 
 // Client-Vorprüfung (UX-Helfer, keine Autorisierung). Server erzwingt alles nochmal.
@@ -41,7 +40,7 @@ function pruefeUploadClient(file: File): void {
 
 export function useDocuments() {
   const fetchDocuments = useServerFn(listDocuments);
-  return useQuery({
+  return useQuery<DokumentRecord[], DocumentClientError>({
     queryKey: DOCUMENTS_QUERY_KEY,
     queryFn: async (): Promise<DokumentRecord[]> => {
       try {
@@ -55,7 +54,6 @@ export function useDocuments() {
     retry: false,
   });
 }
-
 
 export interface UploadDocumentInput {
   file: File;
@@ -131,18 +129,16 @@ export function useDeleteDocument() {
 /**
  * Kurzlebige signierte URL (≤ 600 s) für ein Dokument. Autorisierung
  * erfolgt anhand der Dokument-ID auf dem Server; ein Storage-Pfad wird
- * niemals aus dem Client übergeben. Nicht über die TTL hinaus cachen.
+ * niemals aus dem Client übergeben. Die TTL wird ausschließlich validiert
+ * und nicht nach außen gegeben. Nicht cachen, nicht persistieren.
  * Wirft bei jedem Fehlerfall einen typisierten `DocumentClientError`.
  */
-export async function signedDocumentUrlById(id: string): Promise<{
-  url: string;
-  expiresIn: number;
-}> {
+export async function signedDocumentUrlById(id: string): Promise<string> {
   try {
     const roh = await getDocumentSignedUrl({ data: { id } });
-    return parseSignedUrlResult(roh);
+    const { url } = parseSignedUrlResult(roh);
+    return url;
   } catch (e) {
     throw toDocumentClientError(e);
   }
 }
-

@@ -9,6 +9,17 @@ import { signedDocumentUrlById } from "@/lib/documents-store";
 import { documentErrorMessage } from "@/lib/document-client-error";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
+/**
+ * Der gesamte asynchrone Zustand ist an die Dokument-ID gebunden. Ein
+ * Zustand mit fremder ID ist niemals renderfähig – auch nicht im ersten
+ * Render nach einem Dokumentwechsel.
+ */
+type DocumentViewerState =
+  | { kind: "idle" }
+  | { kind: "loading"; documentId: string }
+  | { kind: "ready"; documentId: string; url: string }
+  | { kind: "error"; documentId: string; message: string };
+
 export function DocumentViewer({
   dokument,
   open,
@@ -18,40 +29,40 @@ export function DocumentViewer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [fehler, setFehler] = useState<string | null>(null);
+  const [state, setState] = useState<DocumentViewerState>({ kind: "idle" });
 
   const dokumentId = dokument?.id ?? null;
 
   useEffect(() => {
     let aktiv = true;
-    // Beim Wechsel/Schließen zuerst jeden alten Zustand verwerfen.
-    setUrl(null);
-    setFehler(null);
     if (!open || !dokumentId) {
-      setLoading(false);
+      setState({ kind: "idle" });
       return;
     }
-    setLoading(true);
+    setState({ kind: "loading", documentId: dokumentId });
     signedDocumentUrlById(dokumentId)
-      .then((res) => {
+      .then((url) => {
         if (!aktiv) return;
-        setUrl(res.url);
+        setState({ kind: "ready", documentId: dokumentId, url });
       })
       .catch((e: unknown) => {
         if (!aktiv) return;
-        setUrl(null);
-        setFehler(documentErrorMessage(e));
-      })
-      .finally(() => {
-        if (aktiv) setLoading(false);
+        setState({ kind: "error", documentId: dokumentId, message: documentErrorMessage(e) });
       });
     return () => {
       aktiv = false;
     };
   }, [open, dokumentId]);
 
+  // Render-Gate: jeder Zustand eines anderen (oder keines) Dokuments ist
+  // sofort — schon vor dem Effektlauf — nicht renderfähig.
+  const aktuell =
+    open && dokumentId !== null && state.kind !== "idle" && state.documentId === dokumentId
+      ? state
+      : null;
+  const loading = aktuell === null || aktuell.kind === "loading";
+  const fehler = aktuell?.kind === "error" ? aktuell.message : null;
+  const url = aktuell?.kind === "ready" ? aktuell.url : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
