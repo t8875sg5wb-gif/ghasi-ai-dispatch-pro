@@ -240,8 +240,9 @@ function DokumentePage() {
                 </Button>
               </div>
             )}
-
+            {/* Bei Listenfehler niemals veraltete/gecachte Zeilen zeigen. */}
             {!isLoading &&
+              !isError &&
               ergebnisse.map((d) => {
                 const kat = KATEGORIE_META[d.kategorie];
                 const fmt = FORMAT_META[d.format];
