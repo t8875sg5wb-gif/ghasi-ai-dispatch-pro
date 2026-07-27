@@ -58,7 +58,7 @@ assert.equal(res.bodyUsed, false);
 const rec = {
   id: "11111111-1111-1111-1111-111111111111",
   name: "a.pdf",
-  kategorie: "Rechnung",
+  kategorie: "rechnung",
   format: "pdf",
   ordner: "Allgemein",
   tags: [],
