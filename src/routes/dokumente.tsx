@@ -49,6 +49,8 @@ import {
   type DokumentBezug,
 } from "@/lib/documents";
 import { useDocuments, useUploadDocument, useDeleteDocument } from "@/lib/documents-store";
+import { documentErrorMessage } from "@/lib/document-client-error";
+
 import { DocumentViewer } from "@/components/dokumente/document-viewer";
 import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import type { DokumentRecord } from "@/lib/documents-shared";
