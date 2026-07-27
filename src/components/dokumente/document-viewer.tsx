@@ -6,6 +6,7 @@ import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { signedDocumentUrlById } from "@/lib/documents-store";
+import { documentErrorMessage } from "@/lib/document-client-error";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export function DocumentViewer({
@@ -19,28 +20,38 @@ export function DocumentViewer({
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [fehler, setFehler] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  const dokumentId = dokument?.id ?? null;
 
   useEffect(() => {
     let aktiv = true;
-    if (!open || !dokument) {
-      setUrl(null);
-      setFehler(false);
+    // Beim Wechsel/Schließen zuerst jeden alten Zustand verwerfen.
+    setUrl(null);
+    setFehler(null);
+    if (!open || !dokumentId) {
+      setLoading(false);
       return;
     }
     setLoading(true);
-    setFehler(false);
-    signedDocumentUrlById(dokument.id)
-      .then((u: string | null) => {
+    signedDocumentUrlById(dokumentId)
+      .then((res) => {
         if (!aktiv) return;
-        if (u) setUrl(u);
-        else setFehler(true);
+        setUrl(res.url);
       })
-      .finally(() => aktiv && setLoading(false));
+      .catch((e: unknown) => {
+        if (!aktiv) return;
+        setUrl(null);
+        setFehler(documentErrorMessage(e));
+      })
+      .finally(() => {
+        if (aktiv) setLoading(false);
+      });
     return () => {
       aktiv = false;
     };
-  }, [open, dokument]);
+  }, [open, dokumentId]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
