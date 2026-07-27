@@ -97,7 +97,7 @@ function DokumentePage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [viewer, setViewer] = useState<DokumentRecord | null>(null);
 
-  const { data: dokumente = [], isLoading, isError, refetch } = useDocuments();
+  const { data: dokumente = [], isLoading, isError, error, refetch } = useDocuments();
   const deleteMut = useDeleteDocument();
 
   const ergebnisse = useMemo(() => {
