@@ -9,6 +9,17 @@ import { signedDocumentUrlById } from "@/lib/documents-store";
 import { documentErrorMessage } from "@/lib/document-client-error";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
+/**
+ * Der gesamte asynchrone Zustand ist an die Dokument-ID gebunden. Ein
+ * Zustand mit fremder ID ist niemals renderfähig – auch nicht im ersten
+ * Render nach einem Dokumentwechsel.
+ */
+type DocumentViewerState =
+  | { kind: "idle" }
+  | { kind: "loading"; documentId: string }
+  | { kind: "ready"; documentId: string; url: string }
+  | { kind: "error"; documentId: string; message: string };
+
 export function DocumentViewer({
   dokument,
   open,
