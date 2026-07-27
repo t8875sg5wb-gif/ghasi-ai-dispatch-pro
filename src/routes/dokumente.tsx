@@ -432,7 +432,11 @@ function UploadDialog({
           reset();
           onOpenChange(false);
         },
-        onError: (e) => toast.error("Upload fehlgeschlagen", { description: String(e) }),
+        onError: (e) =>
+          toast.error("Upload fehlgeschlagen", {
+            description: e instanceof Error ? e.message : "Upload fehlgeschlagen.",
+          }),
+
       },
     );
   };
