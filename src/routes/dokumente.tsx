@@ -49,6 +49,8 @@ import {
   type DokumentBezug,
 } from "@/lib/documents";
 import { useDocuments, useUploadDocument, useDeleteDocument } from "@/lib/documents-store";
+import { documentErrorMessage } from "@/lib/document-client-error";
+
 import { DocumentViewer } from "@/components/dokumente/document-viewer";
 import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import type { DokumentRecord } from "@/lib/documents-shared";
@@ -95,7 +97,7 @@ function DokumentePage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [viewer, setViewer] = useState<DokumentRecord | null>(null);
 
-  const { data: dokumente = [], isLoading, isError, refetch } = useDocuments();
+  const { data: dokumente = [], isLoading, isError, error, refetch } = useDocuments();
   const deleteMut = useDeleteDocument();
 
   const ergebnisse = useMemo(() => {
@@ -131,9 +133,11 @@ function DokumentePage() {
           entitaet: d.name,
         });
       },
-      onError: (e) => toast.error("Löschen fehlgeschlagen", { description: String(e) }),
+      onError: (e) =>
+        toast.error("Löschen fehlgeschlagen", { description: documentErrorMessage(e) }),
     });
   };
+
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -230,12 +234,13 @@ function DokumentePage() {
             )}
             {isError && (
               <div className="flex flex-col items-center gap-2 py-8">
-                <p className="text-sm text-destructive">Dokumente konnten nicht geladen werden.</p>
+                <p className="text-sm text-destructive">{documentErrorMessage(error)}</p>
                 <Button size="sm" variant="outline" onClick={() => refetch()}>
                   Erneut versuchen
                 </Button>
               </div>
             )}
+
             {!isLoading &&
               ergebnisse.map((d) => {
                 const kat = KATEGORIE_META[d.kategorie];
@@ -427,7 +432,11 @@ function UploadDialog({
           reset();
           onOpenChange(false);
         },
-        onError: (e) => toast.error("Upload fehlgeschlagen", { description: String(e) }),
+        onError: (e) =>
+          toast.error("Upload fehlgeschlagen", {
+            description: e instanceof Error ? e.message : "Upload fehlgeschlagen.",
+          }),
+
       },
     );
   };
