@@ -41,7 +41,7 @@ function pruefeUploadClient(file: File): void {
 
 export function useDocuments() {
   const fetchDocuments = useServerFn(listDocuments);
-  return useQuery({
+  return useQuery<DokumentRecord[], DocumentClientError>({
     queryKey: DOCUMENTS_QUERY_KEY,
     queryFn: async (): Promise<DokumentRecord[]> => {
       try {
