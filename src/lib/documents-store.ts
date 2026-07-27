@@ -9,8 +9,16 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { listDocuments, deleteDocument, getDocumentSignedUrl } from "@/lib/documents.functions";
+import {
+  toDocumentClientError,
+  parseDocumentList,
+  parseDeleteResult,
+  parseSignedUrlResult,
+  type DocumentClientError,
+} from "@/lib/document-client-error";
 import type { DokumentRecord } from "@/lib/documents-shared";
 import type { DokumentKategorie, DokumentBezugTyp } from "@/lib/documents";
+
 
 export const DOCUMENTS_QUERY_KEY = ["documents"] as const;
 
