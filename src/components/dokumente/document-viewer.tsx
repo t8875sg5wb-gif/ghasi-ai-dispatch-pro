@@ -69,7 +69,7 @@ export function DocumentViewer({
           {!loading && fehler && (
             <div className="flex h-[50vh] flex-col items-center justify-center gap-2 text-muted-foreground">
               <FileText className="h-8 w-8" />
-              <p className="text-sm">Vorschau konnte nicht geladen werden.</p>
+              <p className="text-sm">{fehler}</p>
             </div>
           )}
           {!loading && url && dokument && (
