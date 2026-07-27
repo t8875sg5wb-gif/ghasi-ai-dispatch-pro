@@ -113,11 +113,17 @@ export function useUploadDocument() {
 export function useDeleteDocument() {
   const qc = useQueryClient();
   const del = useServerFn(deleteDocument);
-  return useMutation({
+  return useMutation<{ ok: true }, DocumentClientError, string>({
     mutationFn: async (id: string) => {
-      await del({ data: { id } });
-      return { ok: true as const };
+      try {
+        const roh = await del({ data: { id } });
+        // Erfolg nur bei bestätigtem `{ ok: true }` – niemals lokal erfunden.
+        return parseDeleteResult(roh);
+      } catch (e) {
+        throw toDocumentClientError(e);
+      }
     },
+    retry: false,
     onSuccess: () => qc.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY }),
   });
 }
@@ -126,12 +132,17 @@ export function useDeleteDocument() {
  * Kurzlebige signierte URL (≤ 600 s) für ein Dokument. Autorisierung
  * erfolgt anhand der Dokument-ID auf dem Server; ein Storage-Pfad wird
  * niemals aus dem Client übergeben. Nicht über die TTL hinaus cachen.
+ * Wirft bei jedem Fehlerfall einen typisierten `DocumentClientError`.
  */
-export async function signedDocumentUrlById(id: string): Promise<string | null> {
+export async function signedDocumentUrlById(id: string): Promise<{
+  url: string;
+  expiresIn: number;
+}> {
   try {
-    const res = await getDocumentSignedUrl({ data: { id } });
-    return res.url;
-  } catch {
-    return null;
+    const roh = await getDocumentSignedUrl({ data: { id } });
+    return parseSignedUrlResult(roh);
+  } catch (e) {
+    throw toDocumentClientError(e);
   }
 }
+
