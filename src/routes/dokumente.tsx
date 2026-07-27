@@ -234,12 +234,13 @@ function DokumentePage() {
             )}
             {isError && (
               <div className="flex flex-col items-center gap-2 py-8">
-                <p className="text-sm text-destructive">Dokumente konnten nicht geladen werden.</p>
+                <p className="text-sm text-destructive">{documentErrorMessage(error)}</p>
                 <Button size="sm" variant="outline" onClick={() => refetch()}>
                   Erneut versuchen
                 </Button>
               </div>
             )}
+
             {!isLoading &&
               ergebnisse.map((d) => {
                 const kat = KATEGORIE_META[d.kategorie];
