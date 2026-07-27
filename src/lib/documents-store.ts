@@ -35,10 +35,19 @@ export function useDocuments() {
   const fetchDocuments = useServerFn(listDocuments);
   return useQuery({
     queryKey: DOCUMENTS_QUERY_KEY,
-    queryFn: () => fetchDocuments(),
+    queryFn: async (): Promise<DokumentRecord[]> => {
+      try {
+        const roh = await fetchDocuments();
+        return parseDocumentList(roh);
+      } catch (e) {
+        throw toDocumentClientError(e);
+      }
+    },
     staleTime: 30_000,
+    retry: false,
   });
 }
+
 
 export interface UploadDocumentInput {
   file: File;
