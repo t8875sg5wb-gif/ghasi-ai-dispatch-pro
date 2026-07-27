@@ -433,7 +433,7 @@ function UploadDialog({
           onOpenChange(false);
         },
         onError: (e) => toast.error("Upload fehlgeschlagen", { description: String(e) }),
-
+      },
     );
   };
 
