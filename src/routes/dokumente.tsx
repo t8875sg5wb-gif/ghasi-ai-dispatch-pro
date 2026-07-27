@@ -138,7 +138,6 @@ function DokumentePage() {
     });
   };
 
-
   return (
     <div className="animate-fade-in space-y-6">
       <PageHero

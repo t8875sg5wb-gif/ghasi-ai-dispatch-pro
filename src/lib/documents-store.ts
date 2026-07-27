@@ -19,7 +19,6 @@ import {
 import type { DokumentRecord } from "@/lib/documents-shared";
 import type { DokumentKategorie, DokumentBezugTyp } from "@/lib/documents";
 
-
 export const DOCUMENTS_QUERY_KEY = ["documents"] as const;
 
 // Client-Vorprüfung (UX-Helfer, keine Autorisierung). Server erzwingt alles nochmal.
@@ -55,7 +54,6 @@ export function useDocuments() {
     retry: false,
   });
 }
-
 
 export interface UploadDocumentInput {
   file: File;
@@ -144,4 +142,3 @@ export async function signedDocumentUrlById(id: string): Promise<string> {
     throw toDocumentClientError(e);
   }
 }
-

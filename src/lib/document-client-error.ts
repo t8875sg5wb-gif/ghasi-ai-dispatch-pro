@@ -19,11 +19,7 @@
 //   untouched.
 import { z } from "zod";
 
-import {
-  DOKUMENT_KATEGORIEN,
-  DOKUMENT_BEZUG_TYPEN,
-  type DokumentFormat,
-} from "@/lib/documents";
+import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN, type DokumentFormat } from "@/lib/documents";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
 export type DocumentErrorStatus = 400 | 401 | 403 | 404 | 500;
@@ -97,7 +93,12 @@ function assertKeinResponse(value: unknown): void {
 // Strict runtime success validation
 // ---------------------------------------------------------------------------
 
-const DOKUMENT_FORMATE = ["pdf", "bild", "tabelle", "text"] as const satisfies readonly DokumentFormat[];
+const DOKUMENT_FORMATE = [
+  "pdf",
+  "bild",
+  "tabelle",
+  "text",
+] as const satisfies readonly DokumentFormat[];
 
 const bezugSchema = z
   .object({

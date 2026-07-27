@@ -64,7 +64,6 @@ export function DocumentViewer({
   const fehler = aktuell?.kind === "error" ? aktuell.message : null;
   const url = aktuell?.kind === "ready" ? aktuell.url : null;
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
