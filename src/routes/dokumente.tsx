@@ -131,9 +131,11 @@ function DokumentePage() {
           entitaet: d.name,
         });
       },
-      onError: (e) => toast.error("Löschen fehlgeschlagen", { description: String(e) }),
+      onError: (e) =>
+        toast.error("Löschen fehlgeschlagen", { description: documentErrorMessage(e) }),
     });
   };
+
 
   return (
     <div className="animate-fade-in space-y-6">
