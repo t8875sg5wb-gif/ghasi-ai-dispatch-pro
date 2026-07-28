@@ -72,6 +72,8 @@ export interface Fahrer {
   beschaeftigungsart?: Beschaeftigungsart;
   /** Vereinbartes Monatsbrutto in EUR. */
   monatsbrutto?: number;
+  /** Verknüpftes Auth-Benutzerkonto (Identitätskette für RLS). Nur Admin setzt dies. */
+  userId?: string | null;
 }
 
 export type Beschaeftigungsart = "minijob" | "midijob" | "svpflichtig";

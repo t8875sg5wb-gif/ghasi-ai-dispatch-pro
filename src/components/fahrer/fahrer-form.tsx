@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import {
   type Fahrer,
@@ -9,6 +11,9 @@ import {
   VERTRAGSARTEN,
 } from "@/lib/fahrer";
 import { useVehicleOptions } from "@/hooks/use-entity-options";
+import { useAuth } from "@/hooks/use-auth";
+import { useDrivers } from "@/lib/drivers-store";
+import { listeBenutzer } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,12 +70,26 @@ function emptyValues(): FahrerFormValues {
     fuehrungszeugnisDatum: null,
     svAusweisVorhanden: false,
     steuerId: "",
+    userId: null,
   };
 }
 
 export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerFormProps) {
   const [values, setValues] = useState<FahrerFormValues>(emptyValues);
   const fahrzeugOpt = useVehicleOptions();
+  const { role } = useAuth();
+  const istAdmin = role === "admin";
+  const fetchBenutzer = useServerFn(listeBenutzer);
+  const { data: benutzer = [] } = useQuery({
+    queryKey: ["admin", "benutzer", "fahrer-verknuepfung"],
+    queryFn: () => fetchBenutzer(),
+    enabled: istAdmin,
+    staleTime: 60_000,
+  });
+  const { data: alleFahrer = [] } = useDrivers();
+  const belegteKonten = new Set(
+    alleFahrer.filter((f) => f.id !== initial?.id && f.userId).map((f) => f.userId as string),
+  );
   const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(""));
 
   useEffect(() => {
@@ -241,6 +260,32 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
           />
         </div>
       </div>
+
+      {istAdmin ? (
+        <div className="space-y-1.5">
+          <Label>Benutzerkonto (Login des Fahrers)</Label>
+          <Select
+            value={values.userId ?? NONE}
+            onValueChange={(v) => set("userId", v === NONE ? null : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Kein Konto verknüpft" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>Kein Konto verknüpft</SelectItem>
+              {benutzer.map((b) => (
+                <SelectItem key={b.id} value={b.id} disabled={belegteKonten.has(b.id)}>
+                  {b.name} · {b.email}
+                  {belegteKonten.has(b.id) ? " (bereits verknüpft)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Die Verknüpfung bestimmt, welche Daten der Fahrer in der mobilen Ansicht sieht.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
