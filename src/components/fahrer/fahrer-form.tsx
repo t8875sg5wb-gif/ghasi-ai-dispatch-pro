@@ -95,7 +95,6 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, ...rest } = initial;
-      console.log("DBG initial", JSON.stringify({ id: initial.id, userId: initial.userId, keys: Object.keys(rest).includes("userId") }));
       setValues(rest);
       setAdr(parseAdresse(initial.adresse));
     } else {
@@ -104,7 +103,6 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
     }
   }, [initial]);
 
-  console.log("DBG render userId", values.userId, "benutzer", benutzer.length, "admin", istAdmin);
   function set<K extends keyof FahrerFormValues>(key: K, value: FahrerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
@@ -268,13 +266,22 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
           <Label>Benutzerkonto (Login des Fahrers)</Label>
           <Select
             value={values.userId ?? NONE}
-            onValueChange={(v) => set("userId", v === NONE ? null : v)}
+            onValueChange={(v) => {
+              // Radix emits "" when the controlled value has no matching item
+              // (happens while the user list is still loading) — ignore that so
+              // an existing link is never silently cleared.
+              if (v === "") return;
+              set("userId", v === NONE ? null : v);
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Kein Konto verknüpft" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Kein Konto verknüpft</SelectItem>
+              {values.userId && !benutzer.some((b) => b.id === values.userId) ? (
+                <SelectItem value={values.userId}>Verknüpftes Konto</SelectItem>
+              ) : null}
               {benutzer.map((b) => (
                 <SelectItem key={b.id} value={b.id} disabled={belegteKonten.has(b.id)}>
                   {b.name} · {b.email}
