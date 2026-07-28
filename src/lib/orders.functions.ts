@@ -1,6 +1,7 @@
 // Server functions for persisted transport orders (Aufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
