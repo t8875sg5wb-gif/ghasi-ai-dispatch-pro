@@ -394,6 +394,16 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
           </div>
         ))}
 
+      {/* Ärztliche Verordnung (Muster 4) inkl. informativer Deckungsprüfung. */}
+      <VerordnungAuswahl
+        patientId={values.patientId}
+        transportart={values.transportart}
+        termin={values.termin}
+        auftragId={initial?.id}
+        value={values.verordnungId}
+        onChange={(id) => set("verordnungId", id)}
+      />
+
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
