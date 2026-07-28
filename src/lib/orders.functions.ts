@@ -123,6 +123,19 @@ async function assertInsurerExists(
   if (!data) throw new Error("Unbekannter Kostenträger – Verknüpfung nicht möglich.");
 }
 
+async function assertVerordnungExists(
+  supabase: SupabaseClient<Database>,
+  verordnungId: string,
+): Promise<void> {
+  const { data } = await supabase
+    .from("verordnungen")
+    .select("id")
+    .eq("id", verordnungId)
+    .maybeSingle();
+  if (!data) throw new Error("Unbekannte Verordnung – Verknüpfung nicht möglich.");
+}
+
+
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Auftrag[]> => {
