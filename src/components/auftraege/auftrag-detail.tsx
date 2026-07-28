@@ -50,7 +50,7 @@ interface AuftragDetailProps {
   onStatusChange: (id: string, status: AuftragStatus) => void;
   onEdit: (auftrag: Auftrag) => void;
   /** Manuelle Zuweisung von Fahrer/Fahrzeug (nur nach Bestätigung). */
-  onAssign?: (id: string, fahrer: string, fahrzeug: string | null) => void;
+  onAssign?: (id: string, fahrerId: string, fahrer: string, fahrzeug: string | null) => void;
   /** Darf der aktuelle Nutzer Aufträge bearbeiten (admin/disposition)? */
   canManage?: boolean;
   /** Darf der aktuelle Nutzer den Status ändern (inkl. fahrer)? */
@@ -209,7 +209,7 @@ export function AuftragDetail({
           {canManage && unzugewiesen && onAssign && (
             <DriverSuggestion
               auftrag={auftrag}
-              onConfirm={(fahrer, fahrzeug) => onAssign(auftrag.id, fahrer, fahrzeug)}
+              onConfirm={(fahrerId, fahrer, fahrzeug) => onAssign(auftrag.id, fahrerId, fahrer, fahrzeug)}
             />
           )}
 
