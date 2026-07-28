@@ -147,13 +147,17 @@ function DispatchCenter() {
   );
 
   const zuweisen = useCallback(
-    (id: string, fahrerName: string) => {
+    // Identität über die stabile Fahrer-ID; der Name ist reine Anzeige.
+    (id: string, fahrerId: string) => {
       const t = transporte.find((x) => x.id === id);
       if (!t) return;
       const empf = empfehleDisposition(t, fahrer, fahrzeuge);
-      const f = fahrer.find((x) => x.name === fahrerName);
-      const fahrzeug = f?.fahrzeug ?? empf.fahrzeug?.kennzeichen ?? t.fahrzeug;
+      const f = fahrer.find((x) => x.id === fahrerId);
+      if (!f) return;
+      const fahrerName = f.name;
+      const fahrzeug = f.fahrzeug ?? empf.fahrzeug?.kennzeichen ?? t.fahrzeug;
       updateTransport(id, {
+        fahrerId,
         fahrer: fahrerName,
         fahrzeug,
         liveStatus: t.liveStatus === "geplant" ? "fahrzeug_zugewiesen" : t.liveStatus,
@@ -179,6 +183,7 @@ function DispatchCenter() {
         return;
       }
       updateTransport(t.id, {
+        fahrerId: empf.fahrer.id,
         fahrer: empf.fahrer.name,
         fahrzeug: empf.fahrzeug?.kennzeichen ?? t.fahrzeug,
         liveStatus: "fahrzeug_zugewiesen",
@@ -207,6 +212,7 @@ function DispatchCenter() {
         const empf = empfehleDisposition(t, fahrer, fahrzeuge);
         if (!empf.fahrer) return t;
         const patch: Partial<DispatchTransport> = {
+          fahrerId: empf.fahrer.id,
           fahrer: empf.fahrer.name,
           fahrzeug: empf.fahrzeug?.kennzeichen ?? t.fahrzeug,
           liveStatus: t.liveStatus === "geplant" ? "fahrzeug_zugewiesen" : t.liveStatus,
@@ -555,7 +561,7 @@ function DispatchCenter() {
                         if (meta.einsetzbar) e.preventDefault();
                       }}
                       onDrop={() => {
-                        if (dragId && meta.einsetzbar) zuweisen(dragId, f.name);
+                        if (dragId && meta.einsetzbar) zuweisen(dragId, f.id);
                         setDragId(null);
                       }}
                       className={cn(
@@ -796,7 +802,7 @@ function TransportDialog({
   onOpenChange: (o: boolean) => void;
   onKi: (t: DispatchTransport) => void;
   onStatus: (t: DispatchTransport) => void;
-  onAssign: (id: string, fahrer: string) => void;
+  onAssign: (id: string, fahrerId: string) => void;
 }) {
   const empf = useMemo(
     () => (t ? empfehleDisposition(t, fahrer, fahrzeuge) : null),
@@ -940,7 +946,7 @@ function TransportDialog({
                     size="sm"
                     variant="outline"
                     className="h-7 text-xs"
-                    onClick={() => onAssign(t.id, f.name)}
+                    onClick={() => onAssign(t.id, f.id)}
                   >
                     {f.name}
                   </Button>
