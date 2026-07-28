@@ -393,7 +393,7 @@ export function buildBusinessTools(role: AppRole | null) {
         if (error) throw new Error(error.message);
 
         const liste = (data ?? [])
-          .map((r) => rowToPatient(r as unknown as PatientRow))
+          .map((r) => rowToPatient(r as never))
           .filter((p) => !dialyse || /dialyse/i.test(p.hinweis));
         return {
           quelle: "Patienten",
