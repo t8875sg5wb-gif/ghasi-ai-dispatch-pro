@@ -8,7 +8,13 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
-import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
+import {
+  rowToAuftrag,
+  writeToRow,
+  type AuftragMitWarnungen,
+  type OrderRow,
+  type OrderWrite,
+} from "@/lib/orders-shared";
 
 /**
  * Strenge Laufzeitvalidierung für Auftragsmutationen.
@@ -168,7 +174,7 @@ export const createOrder = createServerFn({ method: "POST" })
     if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
     return parsed.data as OrderWrite;
   })
-  .handler(async ({ data, context }): Promise<Auftrag> => {
+  .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     let nummer = data.nummer;
     if (!nummer) {
       const { count } = await context.supabase
@@ -189,8 +195,18 @@ export const createOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return rowToAuftrag(created as unknown as OrderRow);
+    const auftrag: AuftragMitWarnungen = rowToAuftrag(created as unknown as OrderRow);
+
+    // Zuweisungskonflikte: warnen, nicht blockieren. Nur wenn tatsächlich
+    // ein Fahrer oder Fahrzeug zugewiesen wurde.
+    if (auftrag.fahrerId || auftrag.fahrzeug) {
+      const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
+      const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
+      if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
+    }
+    return auftrag;
   });
+
 
 export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -199,7 +215,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
     return parsed.data as { id: string; values: Partial<OrderWrite> };
   })
-  .handler(async ({ data, context }): Promise<Auftrag> => {
+  .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
@@ -229,7 +245,17 @@ export const updateOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    const auftrag = rowToAuftrag(updated as unknown as OrderRow);
+    const auftrag: AuftragMitWarnungen = rowToAuftrag(updated as unknown as OrderRow);
+
+    // Zuweisungskonflikte nur berechnen, wenn dieses Schreiben Fahrer oder
+    // Fahrzeug angefasst hat und am Ende auch eines von beiden gesetzt ist.
+    const aendertZuweisung = "fahrerId" in data.values || "fahrzeug" in data.values;
+    if (aendertZuweisung && (auftrag.fahrerId || auftrag.fahrzeug)) {
+      const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
+      const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
+      if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
+    }
+
 
     // Audit trail: persist every status / dispatch-assignment / driver change with
     // timestamp, status, driver, vehicle and GPS position (when available).
