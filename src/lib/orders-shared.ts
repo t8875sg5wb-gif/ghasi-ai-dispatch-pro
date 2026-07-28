@@ -161,6 +161,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     patient: r.patient ?? "Unbekannter Patient",
     patientId: r.patient_id ?? null,
     insurerId: r.insurer_id ?? null,
+    verordnungId: r.verordnung_id ?? null,
     telefon: r.telefon ?? "",
     transportart,
     prioritaet,
