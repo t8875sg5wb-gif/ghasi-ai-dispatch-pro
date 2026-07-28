@@ -11,6 +11,7 @@ import type {
   Zahlung,
 } from "@/lib/finance";
 import type { Auftrag } from "@/lib/auftraege";
+import { hatPatientenunterschrift } from "@/lib/auftraege";
 
 /** Shape the client sends when creating/updating an invoice. */
 export interface InvoiceWrite {
