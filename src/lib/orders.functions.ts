@@ -168,9 +168,10 @@ export const updateOrder = createServerFn({ method: "POST" })
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = z.object({ id: z.string().uuid() }).strict().safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftrags-ID.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("orders").delete().eq("id", data.id);
