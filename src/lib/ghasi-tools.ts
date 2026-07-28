@@ -327,8 +327,15 @@ export function buildBusinessTools(role: AppRole | null) {
         nurVerspaetet: z.boolean().optional().describe("nur verspätete Transporte"),
       }),
       execute: async ({ kennzeichen, nurAlerts, nurVerspaetet }) => {
+        // Live-Positionen ändern sich ständig: vor dem synchronen `buildFleet()`
+        // wird eine frische Hydration erzwungen, damit keine bis zu 5 Sekunden
+        // alten Mirror-Werte ausgeliefert werden. `buildFleet()` selbst bleibt
+        // synchron und client-safe (wird auch von der Karte im Browser genutzt).
+        const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
+        await hydrateServerMirrors(true);
         const { buildFleet, FLEET_FARBEN } = await import("@/lib/fleet-live");
         const { LIVE_STATUS_META } = await import("@/lib/dispatch");
+
         const fleet = buildFleet().filter(
           (v) =>
             enthaelt(`${v.kennzeichen} ${v.fahrer ?? ""} ${v.nummer}`, kennzeichen) &&
