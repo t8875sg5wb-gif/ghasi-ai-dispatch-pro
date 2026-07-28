@@ -24,6 +24,7 @@ export type Database = {
           entitaet: string | null
           id: string
           metadaten: Json | null
+          user_id: string | null
         }
         Insert: {
           akteur?: string
@@ -34,6 +35,7 @@ export type Database = {
           entitaet?: string | null
           id?: string
           metadaten?: Json | null
+          user_id?: string | null
         }
         Update: {
           akteur?: string
@@ -44,6 +46,7 @@ export type Database = {
           entitaet?: string | null
           id?: string
           metadaten?: Json | null
+          user_id?: string | null
         }
         Relationships: []
       }
