@@ -62,7 +62,11 @@ function FahrerPage() {
   const createMut = useCreateDriver();
   const updateMut = useUpdateDriver();
 
-  const [fahrer, setFahrer] = useState<Fahrer[]>(INITIAL_FAHRER);
+  // Single source of truth: the live query result. No local mirror of driver
+  // rows — a local copy could diverge from the server after a save and make the
+  // edit dialog show stale values.
+  const fahrer: Fahrer[] = dbFahrer ?? INITIAL_FAHRER;
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
 
@@ -70,14 +74,12 @@ function FahrerPage() {
   const [detailOpen, setDetailOpen] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Fahrer | null>(null);
-
-  // Keep the local list in sync with persisted drivers (live updates).
-  useEffect(() => {
-    if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
-  }, [dbFahrer]);
+  const [editId, setEditId] = useState<string | null>(null);
+  // Always resolve the edit target from the live list, never from a snapshot.
+  const editTarget = editId ? (fahrer.find((f) => f.id === editId) ?? null) : null;
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
+
 
   const stats = useMemo(() => {
     const verfuegbar = fahrer.filter((f) => f.status === "verfuegbar").length;
