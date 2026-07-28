@@ -165,6 +165,7 @@ export const createOrder = createServerFn({ method: "POST" })
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
+    if (data.verordnungId) await assertVerordnungExists(context.supabase, data.verordnungId);
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
     const { data: created, error } = await context.supabase
       .from("orders")
