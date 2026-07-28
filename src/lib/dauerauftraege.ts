@@ -432,7 +432,9 @@ export function transportWritesFuer(
       abholort: "",
       zielort: "",
       termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
-      fahrer: d.bevorzugterFahrer,
+      // Kein Namens-Matching: der bevorzugte Fahrer eines Dauerauftrags ist nur
+      // ein Anzeigewert. Generierte Aufträge starten unzugeordnet und werden
+      // bewusst über die Disposition (stabile Fahrer-ID) zugewiesen.
       fahrzeug: d.bevorzugtesFahrzeug,
       kostentraeger: d.kostentraeger,
       notiz: `${hin ? "Hinfahrt" : "Rückfahrt"} aus Dauerauftrag ${d.kennung}${

@@ -224,6 +224,8 @@ export interface DispatchTransport extends Auftrag {
   erloes: number;
   rollstuhl: boolean;
   liegend: boolean;
+  /** Stabile Fahrer-Zuordnung (drivers.id) — Identitätsquelle statt Name. */
+  fahrerId?: string | null;
   /** Fahrer hat den Auftrag bestätigt (Live-Board-Spalte „Fahrer akzeptiert"). */
   fahrerAkzeptiert?: boolean;
   /** Transport ist abgerechnet/abrechnungsbereit (Spalte „Abrechnung bereit"). */
@@ -341,7 +343,7 @@ const COARSE_STATUS: Record<LiveStatus, Auftrag["status"]> = {
  */
 export function dispatchPatchToWrite(patch: Partial<DispatchTransport>): Partial<OrderWrite> {
   const w: Partial<OrderWrite> = {};
-  if (patch.fahrer !== undefined) w.fahrer = patch.fahrer;
+  if (patch.fahrerId !== undefined) w.fahrerId = patch.fahrerId;
   if (patch.fahrzeug !== undefined) w.fahrzeug = patch.fahrzeug;
   if (patch.liveStatus !== undefined) {
     w.detailStatus = patch.liveStatus;

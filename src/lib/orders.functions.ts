@@ -1,31 +1,23 @@
 // Server functions for persisted transport orders (Aufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 
 /**
- * Löst den Anzeigenamen eines Fahrers in dessen Auth-Konto (drivers.user_id) auf.
- * Bewusst KEIN unscharfer Namensabgleich: exakter Treffer oder null.
+ * Identitätskette: Eine Fahrerzuordnung wird ausschließlich über die stabile
+ * `drivers.id` gesetzt. Es gibt bewusst KEINEN Namensabgleich mehr.
+ * Anzeigename und `fahrer_user_id` werden vom DB-Trigger
+ * `enforce_order_assignment` aus dem Fahrerdatensatz abgeleitet.
  */
-async function resolveFahrerUserId(
-  supabase: SupabaseClient<Database>,
-  fahrer: string | null | undefined,
-): Promise<string | null> {
-  if (!fahrer || !fahrer.trim()) return null;
-  const { data } = await supabase
-    .from("drivers")
-    .select("user_id")
-    .eq("name", fahrer.trim())
-    .limit(2);
-  const treffer = (data ?? []) as { user_id: string | null }[];
-  if (treffer.length !== 1) return null;
-  return treffer[0].user_id ?? null;
+async function assertDriverExists(
+  supabase: { from: (t: "drivers") => { select: (c: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown }> } } } },
+  fahrerId: string,
+): Promise<void> {
+  const { data } = await supabase.from("drivers").select("id").eq("id", fahrerId).maybeSingle();
+  if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
 }
 
 export const listOrders = createServerFn({ method: "GET" })
@@ -55,9 +47,8 @@ export const createOrder = createServerFn({ method: "POST" })
         .select("*", { count: "exact", head: true });
       nummer = `A-${2045 + (count ?? 0)}`;
     }
+    if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
-    // Identitätskette: Fahrerzuweisung zusätzlich als Auth-Konto persistieren.
-    row.fahrer_user_id = await resolveFahrerUserId(context.supabase, data.fahrer);
     const { data: created, error } = await context.supabase
       .from("orders")
       .insert(row as never)
@@ -74,10 +65,8 @@ export const updateOrder = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
+    if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     const row = writeToRow(data.values);
-    if ("fahrer" in (data.values as Record<string, unknown>)) {
-      row.fahrer_user_id = await resolveFahrerUserId(context.supabase, data.values.fahrer);
-    }
     const { data: updated, error } = await context.supabase
       .from("orders")
       .update(row as never)
@@ -90,7 +79,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     // Audit trail: persist every status / dispatch-assignment / driver change with
     // timestamp, status, driver, vehicle and GPS position (when available).
     const v = data.values as Record<string, unknown>;
-    const relevant = ["status", "detail_status", "fahrer", "fahrzeug", "lat", "lng"].some(
+    const relevant = ["status", "detail_status", "fahrerId", "fahrzeug", "lat", "lng"].some(
       (k) => k in v,
     );
     if (relevant) {
@@ -153,7 +142,6 @@ export const seedOrders = createServerFn({ method: "POST" })
         abholort: a.abholort,
         zielort: a.zielort,
         termin: a.termin,
-        fahrer: a.fahrer,
         fahrzeug: a.fahrzeug,
         kostentraeger: a.kostentraeger,
         notiz: a.notiz,
