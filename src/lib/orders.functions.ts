@@ -10,6 +10,62 @@ import type { Auftrag } from "@/lib/auftraege";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 
 /**
+ * Strenge Laufzeitvalidierung für Auftragsmutationen.
+ * `.strict()` weist unbekannte Felder aktiv ab — insbesondere `fahrer`
+ * (Anzeigename) und `fahrer_user_id`/`fahrerUserId`: Diese Werte werden
+ * ausschließlich serverseitig per DB-Trigger aus `fahrerId` abgeleitet und
+ * dürfen niemals vom Browser gesetzt werden.
+ */
+const adresseSchema = z
+  .object({
+    street: z.string().optional(),
+    houseNumber: z.string().optional(),
+    postalCode: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    additionalInfo: z.string().optional(),
+  })
+  .strict();
+
+const orderFieldsSchema = z
+  .object({
+    nummer: z.string().optional(),
+    patient: z.string().optional(),
+    telefon: z.string().optional(),
+    transportart: z.string().optional(),
+    prioritaet: z.string().optional(),
+    status: z.string().optional(),
+    abholort: z.string().optional(),
+    zielort: z.string().optional(),
+    pickup: adresseSchema.optional(),
+    destination: adresseSchema.optional(),
+    termin: z.string().optional(),
+    fahrerId: z.string().uuid().nullable().optional(),
+    fahrzeug: z.string().nullable().optional(),
+    kostentraeger: z.string().optional(),
+    notiz: z.string().optional(),
+    verordnung: z.string().optional(),
+    verordnungDokumentId: z.string().nullable().optional(),
+    mobilitaet: z.string().nullable().optional(),
+    begleitperson: z.boolean().optional(),
+    abholanforderung: z.string().optional(),
+    zielanforderung: z.string().optional(),
+    patientennotiz: z.string().optional(),
+    medizinischeNotiz: z.string().optional(),
+    detailStatus: z.string().nullable().optional(),
+    abrechnungStatus: z.string().optional(),
+    dauerauftragId: z.string().nullable().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
+  })
+  .strict();
+
+const createOrderSchema = orderFieldsSchema.extend({ patient: z.string().min(1) }).strict();
+const updateOrderSchema = z
+  .object({ id: z.string().uuid(), values: orderFieldsSchema })
+  .strict();
+
+/**
  * Identitätskette: Eine Fahrerzuordnung wird ausschließlich über die stabile
  * `drivers.id` gesetzt. Es gibt bewusst KEINEN Namensabgleich mehr.
  * Anzeigename und `fahrer_user_id` werden vom DB-Trigger
