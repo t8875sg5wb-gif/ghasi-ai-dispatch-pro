@@ -1192,6 +1192,7 @@ export type Database = {
           fahrer_user_id: string | null
           fahrzeug: string | null
           id: string
+          insurer_id: string | null
           kostentraeger: string
           lifecycle: Json
           medizinische_notiz: string
@@ -1199,6 +1200,7 @@ export type Database = {
           notiz: string
           nummer: string
           patient: string
+          patient_id: string | null
           patientennotiz: string
           pickup_additional_info: string
           pickup_city: string
@@ -1237,6 +1239,7 @@ export type Database = {
           fahrer_user_id?: string | null
           fahrzeug?: string | null
           id?: string
+          insurer_id?: string | null
           kostentraeger?: string
           lifecycle?: Json
           medizinische_notiz?: string
@@ -1244,6 +1247,7 @@ export type Database = {
           notiz?: string
           nummer: string
           patient?: string
+          patient_id?: string | null
           patientennotiz?: string
           pickup_additional_info?: string
           pickup_city?: string
@@ -1282,6 +1286,7 @@ export type Database = {
           fahrer_user_id?: string | null
           fahrzeug?: string | null
           id?: string
+          insurer_id?: string | null
           kostentraeger?: string
           lifecycle?: Json
           medizinische_notiz?: string
@@ -1289,6 +1294,7 @@ export type Database = {
           notiz?: string
           nummer?: string
           patient?: string
+          patient_id?: string | null
           patientennotiz?: string
           pickup_additional_info?: string
           pickup_city?: string
@@ -1314,6 +1320,20 @@ export type Database = {
             columns: ["fahrer_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_insurer_id_fkey"
+            columns: ["insurer_id"]
+            isOneToOne: false
+            referencedRelation: "insurers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
@@ -1437,6 +1457,7 @@ export type Database = {
           feiertage_ueberspringen: boolean
           generierte_termine: string[]
           id: string
+          insurer_id: string | null
           kategorie: string
           kennung: string
           kostentraeger: string
@@ -1445,6 +1466,7 @@ export type Database = {
           mobilitaet: string
           notiz: string
           patient: string
+          patient_id: string | null
           pause_bis: string | null
           pause_von: string | null
           pausiert: boolean
@@ -1481,6 +1503,7 @@ export type Database = {
           feiertage_ueberspringen?: boolean
           generierte_termine?: string[]
           id?: string
+          insurer_id?: string | null
           kategorie?: string
           kennung: string
           kostentraeger?: string
@@ -1489,6 +1512,7 @@ export type Database = {
           mobilitaet?: string
           notiz?: string
           patient?: string
+          patient_id?: string | null
           pause_bis?: string | null
           pause_von?: string | null
           pausiert?: boolean
@@ -1525,6 +1549,7 @@ export type Database = {
           feiertage_ueberspringen?: boolean
           generierte_termine?: string[]
           id?: string
+          insurer_id?: string | null
           kategorie?: string
           kennung?: string
           kostentraeger?: string
@@ -1533,6 +1558,7 @@ export type Database = {
           mobilitaet?: string
           notiz?: string
           patient?: string
+          patient_id?: string | null
           pause_bis?: string | null
           pause_von?: string | null
           pausiert?: boolean
@@ -1553,7 +1579,22 @@ export type Database = {
           wochentage?: number[]
           zielort?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "recurring_orders_insurer_id_fkey"
+            columns: ["insurer_id"]
+            isOneToOne: false
+            referencedRelation: "insurers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_orders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
