@@ -80,7 +80,7 @@ export function VerordnungAuswahl({
         id: auftragId ?? "\uffff", // Neuanlage zählt als letzte Fahrt des Tages
         termin: termin ? new Date(termin).toISOString() : new Date().toISOString(),
         transportart,
-        status: "offen",
+        status: "neu",
       },
       gewaehlt,
       auftraege.map((a) => ({
