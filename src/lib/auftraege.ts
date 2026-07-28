@@ -53,6 +53,8 @@ export interface Auftrag {
   patientId?: string | null;
   /** Stabile Kostenträger-Zuordnung (insurers.id); null = nicht verknüpft. */
   insurerId?: string | null;
+  /** Stabile Zuordnung zur ärztlichen Verordnung (verordnungen.id). */
+  verordnungId?: string | null;
   /** Kontakt-Telefonnummer für den Transport (Patient/Angehörige/Einrichtung). */
   telefon?: string;
   transportart: Transportart;
