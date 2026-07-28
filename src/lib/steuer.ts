@@ -127,22 +127,23 @@ export function computeEinkommensteuer(
 ): number {
   const x = Math.max(0, Math.floor(zvE));
   if (x <= grundfreibetrag) return 0;
-  // Tarifzonen (Konstanten angelehnt an den Tarif 2025).
-  const z2Start = 17_443;
-  const z3Start = 68_480;
+  // Tarifzonen: Tarif 2026 (§32a EStG, Steuerfortentwicklungsgesetz).
+  const z2Start = 17_799;
+  const z3Start = 69_878;
   const z4Start = 277_825;
   let est: number;
   if (x <= z2Start) {
     const y = (x - grundfreibetrag) / 10_000;
-    est = (932.3 * y + 1_400) * y;
+    est = (914.51 * y + 1_400) * y;
   } else if (x <= z3Start) {
     const zz = (x - z2Start) / 10_000;
-    est = (176.64 * zz + 2_397) * zz + 1_015.13;
+    est = (173.1 * zz + 2_397) * zz + 1_034.87;
   } else if (x <= z4Start) {
-    est = 0.42 * x - 10_911.92;
+    est = 0.42 * x - 11_135.63;
   } else {
-    est = 0.45 * x - 19_246.67;
+    est = 0.45 * x - 19_470.38;
   }
+
   return Math.max(0, Math.round(est));
 }
 
