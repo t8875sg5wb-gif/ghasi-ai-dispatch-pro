@@ -95,6 +95,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, ...rest } = initial;
+      console.log("DBG initial", JSON.stringify({ id: initial.id, userId: initial.userId }));
       setValues(rest);
       setAdr(parseAdresse(initial.adresse));
     } else {
