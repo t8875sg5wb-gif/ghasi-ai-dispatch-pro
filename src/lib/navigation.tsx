@@ -34,6 +34,7 @@ import {
   Handshake,
   Smartphone,
   Database,
+  Link2,
   Receipt,
   ScrollText,
   Wallet,
