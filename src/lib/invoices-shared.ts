@@ -196,10 +196,10 @@ export function abrechnungsBereitschaft(a: Auftrag): AbrechnungsBereitschaft {
   // Driver confirmation: an assigned driver on a completed transport.
   if (!a.fahrer) fehlend.push("Keine Fahrerbestätigung");
 
-  // Patient signature / completion confirmation (required for non-emergency).
+  // Patientenunterschrift: echter Leistungsnachweis. Eine verweigerte
+  // Unterschrift zählt ausdrücklich NICHT als Nachweis.
   if (verordnungErforderlich(a)) {
-    const signatur = a.detailStatus === "abgeschlossen" || (abgeschlossen && !!a.fahrer);
-    if (!signatur) fehlend.push("Patientenunterschrift fehlt");
+    if (!hatPatientenunterschrift(a)) fehlend.push("Patientenunterschrift fehlt");
   }
 
   // Billing customer must exist.

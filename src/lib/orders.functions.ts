@@ -28,6 +28,28 @@ const adresseSchema = z
   })
   .strict();
 
+/** Zeitstempel & Nachweis-Metadaten; bewusst eng begrenzt. */
+const lifecycleSchema = z
+  .object({
+    gestartetAm: z.string().max(40).optional(),
+    angekommenAm: z.string().max(40).optional(),
+    abgeschlossenAm: z.string().max(40).optional(),
+    unterschriftAm: z.string().max(40).optional(),
+    unterschriftVerweigert: z.boolean().optional(),
+    unterschriftVerweigertGrund: z.string().max(500).optional(),
+  })
+  .strict();
+
+/**
+ * Patientenunterschrift: PNG-Data-URL mit harter Längenbegrenzung (~150 KB),
+ * damit keine großen Bilder in der Auftragszeile landen.
+ */
+const unterschriftSchema = z
+  .string()
+  .max(200_000)
+  .regex(/^data:image\/png;base64,/, "Unterschrift muss eine PNG-Data-URL sein.")
+  .nullable();
+
 const orderFieldsSchema = z
   .object({
     nummer: z.string().optional(),
@@ -56,6 +78,8 @@ const orderFieldsSchema = z
     detailStatus: z.string().nullable().optional(),
     abrechnungStatus: z.string().optional(),
     dauerauftragId: z.string().nullable().optional(),
+    unterschrift: unterschriftSchema.optional(),
+    lifecycle: lifecycleSchema.optional(),
     lat: z.number().optional(),
     lng: z.number().optional(),
   })
