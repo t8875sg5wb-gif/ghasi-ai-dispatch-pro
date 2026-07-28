@@ -46,6 +46,8 @@ export const createInvoice = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
+    // Auch die manuelle Einzelrechnung legt reale USt-Beträge fest.
+    await requireBestaetigtenSteuerModus(context.supabase);
     const row = writeToInvoiceRow(data);
     const { data: created, error } = await context.supabase
       .from("invoices")
