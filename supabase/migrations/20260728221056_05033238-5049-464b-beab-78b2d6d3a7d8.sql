@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_order_verordnung_patient() FROM PUBLIC, anon, authenticated;
