@@ -13,6 +13,7 @@ import {
   updateDriver,
   deleteDriver,
   seedDrivers,
+  setDriverAccountLink,
 } from "@/lib/drivers.functions";
 import type { DriverWrite } from "@/lib/drivers-shared";
 
@@ -52,6 +53,20 @@ export function useUpdateDriver() {
   const fn = useServerFn(updateDriver);
   return useMutation({
     mutationFn: (input: { id: string; values: Partial<DriverWrite> }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: DRIVERS_QUERY_KEY }),
+  });
+}
+
+/**
+ * Admin-only: verknüpft einen Fahrer mit einem Auth-Konto oder löst die
+ * Verknüpfung. Getrennt von den normalen Stammdaten-Mutationen, weil
+ * `drivers.user_id` sicherheitsrelevant ist.
+ */
+export function useSetDriverAccountLink() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setDriverAccountLink);
+  return useMutation({
+    mutationFn: (input: { driverId: string; userId: string | null }) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: DRIVERS_QUERY_KEY }),
   });
 }

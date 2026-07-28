@@ -61,6 +61,7 @@ function FahrerPage() {
   const { data: dbFahrer } = useDrivers();
   const createMut = useCreateDriver();
   const updateMut = useUpdateDriver();
+  const linkMut = useSetDriverAccountLink();
 
   // Single source of truth: the live query result. No local mirror of driver
   // rows — a local copy could diverge from the server after a save and make the
@@ -155,6 +156,26 @@ function FahrerPage() {
     setFormOpen(true);
   }
 
+  // `userId` ist niemals Teil der normalen Stammdaten-Mutation — die
+  // Kontoverknüpfung läuft über die separate Admin-Serverfunktion.
+  function stammdaten(values: FahrerFormValues): Omit<FahrerFormValues, "userId"> {
+    const { userId: _userId, ...rest } = values;
+    return rest;
+  }
+
+  function verknuepfe(driverId: string, userId: string | null | undefined, vorher: string | null) {
+    const ziel = userId ?? null;
+    if (ziel === vorher) return;
+    linkMut.mutate(
+      { driverId, userId: ziel },
+      {
+        onSuccess: () =>
+          toast.success(ziel ? "Benutzerkonto verknüpft" : "Verknüpfung aufgehoben"),
+        onError: (e) => toast.error((e as Error).message || "Verknüpfung fehlgeschlagen"),
+      },
+    );
+  }
+
   function handleSubmit(values: FahrerFormValues) {
     if (editTarget) {
       if (!isPersisted(editTarget.id)) {
@@ -164,10 +185,11 @@ function FahrerPage() {
       // Close only after the server write AND the refetch have completed, so the
       // list/edit dialog can never be reopened on stale data.
       updateMut.mutate(
-        { id: editTarget.id, values },
+        { id: editTarget.id, values: stammdaten(values) },
         {
           onSuccess: () => {
             toast.success("Fahrer aktualisiert");
+            verknuepfe(editTarget.id, values.userId, editTarget.userId ?? null);
             setFormOpen(false);
             setEditId(null);
           },
@@ -178,9 +200,10 @@ function FahrerPage() {
     }
     // Wait for the real server response before showing the driver — no fake
     // client-side id/nummer (matches the vehicles create flow).
-    createMut.mutate(values, {
+    createMut.mutate(stammdaten(values), {
       onSuccess: (row) => {
         toast.success(`Fahrer ${row.nummer} angelegt`);
+        verknuepfe(row.id, values.userId, null);
         setFormOpen(false);
         setEditId(null);
       },
