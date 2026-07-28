@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
+import { assertInsurerExists, assertPatientExists } from "@/lib/identity-checks.server";
 import {
   rowToAuftrag,
   writeToRow,
