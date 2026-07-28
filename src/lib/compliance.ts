@@ -183,11 +183,15 @@ export function computeVollstaendigkeit(input: ComplianceInput): Vollstaendigkei
   }
 
   // Patienten mit Aufträgen
+  // Namensabgleich (Altbestand ohne Verknüpfung) UND stabile ID-Verknüpfung.
   const patientenMitAuftrag = new Set(
     input.auftraege.map((a) => a.patient).filter(Boolean),
   );
+  const patientenIdsMitAuftrag = new Set(
+    input.auftraege.map((a) => a.patientId).filter((x): x is string => Boolean(x)),
+  );
   for (const p of input.patienten) {
-    if (!patientenMitAuftrag.has(p.name)) continue;
+    if (!patientenMitAuftrag.has(p.name) && !patientenIdsMitAuftrag.has(p.id)) continue;
     const fehlend: string[] = [];
     if (!p.versichertennummer) fehlend.push("Versichertennummer");
     if (!p.verordnungVorhanden) fehlend.push("Verordnung");
