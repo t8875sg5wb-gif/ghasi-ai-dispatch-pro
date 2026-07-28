@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -62,7 +62,11 @@ function FahrerPage() {
   const createMut = useCreateDriver();
   const updateMut = useUpdateDriver();
 
-  const [fahrer, setFahrer] = useState<Fahrer[]>(INITIAL_FAHRER);
+  // Single source of truth: the live query result. No local mirror of driver
+  // rows — a local copy could diverge from the server after a save and make the
+  // edit dialog show stale values.
+  const fahrer: Fahrer[] = dbFahrer ?? INITIAL_FAHRER;
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
 
@@ -70,14 +74,12 @@ function FahrerPage() {
   const [detailOpen, setDetailOpen] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Fahrer | null>(null);
-
-  // Keep the local list in sync with persisted drivers (live updates).
-  useEffect(() => {
-    if (dbFahrer && dbFahrer.length > 0) setFahrer(dbFahrer);
-  }, [dbFahrer]);
+  const [editId, setEditId] = useState<string | null>(null);
+  // Always resolve the edit target from the live list, never from a snapshot.
+  const editTarget = editId ? (fahrer.find((f) => f.id === editId) ?? null) : null;
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
+
 
   const stats = useMemo(() => {
     const verfuegbar = fahrer.filter((f) => f.status === "verfuegbar").length;
@@ -129,46 +131,63 @@ function FahrerPage() {
   const isPersisted = (id: string) => !!dbFahrer?.some((f) => f.id === id);
 
   function handleStatusChange(id: string, status: FahrerStatus) {
-    setFahrer((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
-    if (isPersisted(id)) updateMut.mutate({ id, values: { status } });
-    toast.success(`Status geändert: ${FAHRER_STATUS_META[status].label}`);
+    if (isPersisted(id)) {
+      updateMut.mutate(
+        { id, values: { status } },
+        {
+          onSuccess: () => toast.success(`Status geändert: ${FAHRER_STATUS_META[status].label}`),
+          onError: () => toast.error("Status konnte nicht gespeichert werden"),
+        },
+      );
+    } else {
+      toast.error("Fahrer ist nicht gespeichert – Status kann nicht geändert werden");
+    }
   }
 
   function openCreate() {
-    setEditTarget(null);
+    setEditId(null);
     setFormOpen(true);
   }
 
   function openEdit(f: Fahrer) {
-    setEditTarget(f);
+    setEditId(f.id);
     setDetailOpen(false);
     setFormOpen(true);
   }
 
   function handleSubmit(values: FahrerFormValues) {
     if (editTarget) {
-      setFahrer((prev) => prev.map((f) => (f.id === editTarget.id ? { ...f, ...values } : f)));
-      if (isPersisted(editTarget.id)) {
-        updateMut.mutate({ id: editTarget.id, values });
+      if (!isPersisted(editTarget.id)) {
+        toast.error("Fahrer ist nicht gespeichert und kann nicht bearbeitet werden");
+        return;
       }
-      toast.success("Fahrer aktualisiert");
-    } else {
-      // Wait for the real server response before showing the driver — no fake
-      // client-side id/nummer (matches the vehicles create flow).
-      createMut.mutate(values, {
-        onSuccess: (row) => {
-          setFahrer((prev) => [row, ...prev.filter((f) => f.id !== row.id)]);
-          toast.success(`Fahrer ${row.nummer} angelegt`);
-          setFormOpen(false);
-          setEditTarget(null);
+      // Close only after the server write AND the refetch have completed, so the
+      // list/edit dialog can never be reopened on stale data.
+      updateMut.mutate(
+        { id: editTarget.id, values },
+        {
+          onSuccess: () => {
+            toast.success("Fahrer aktualisiert");
+            setFormOpen(false);
+            setEditId(null);
+          },
+          onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
         },
-        onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
-      });
+      );
       return;
     }
-    setFormOpen(false);
-    setEditTarget(null);
+    // Wait for the real server response before showing the driver — no fake
+    // client-side id/nummer (matches the vehicles create flow).
+    createMut.mutate(values, {
+      onSuccess: (row) => {
+        toast.success(`Fahrer ${row.nummer} angelegt`);
+        setFormOpen(false);
+        setEditId(null);
+      },
+      onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
+    });
   }
+
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
