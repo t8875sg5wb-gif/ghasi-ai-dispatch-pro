@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
+import { assertInsurerExists, assertPatientExists } from "@/lib/identity-checks.server";
 import {
   rowToAuftrag,
   writeToRow,
@@ -113,21 +114,8 @@ async function assertDriverExists(
   if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
 }
 
-async function assertPatientExists(
-  supabase: SupabaseClient<Database>,
-  patientId: string,
-): Promise<void> {
-  const { data } = await supabase.from("patients").select("id").eq("id", patientId).maybeSingle();
-  if (!data) throw new Error("Unbekannter Patient – Verknüpfung nicht möglich.");
-}
-
-async function assertInsurerExists(
-  supabase: SupabaseClient<Database>,
-  insurerId: string,
-): Promise<void> {
-  const { data } = await supabase.from("insurers").select("id").eq("id", insurerId).maybeSingle();
-  if (!data) throw new Error("Unbekannter Kostenträger – Verknüpfung nicht möglich.");
-}
+// Existenzprüfungen für Patient/Kostenträger liegen zentral in
+// `identity-checks.server.ts` (auch von Daueraufträgen genutzt).
 
 /**
  * Eine Verordnung darf nur an einen Auftrag desselben Patienten gehängt

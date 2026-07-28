@@ -19,6 +19,10 @@ import {
 export interface RecurringWrite {
   kennung?: string;
   patient?: string;
+  /** Stabile Verknüpfung zum Patientenstamm. */
+  patientId?: string | null;
+  /** Stabile Verknüpfung zur Krankenkasse (`insurers`). */
+  insurerId?: string | null;
   /** Legacy fallback; new writes should send `pickup`/`destination`. */
   abholort?: string;
   zielort?: string;
@@ -54,6 +58,8 @@ export interface RecurringRow {
   id: string;
   kennung: string;
   patient: string;
+  patient_id?: string | null;
+  insurer_id?: string | null;
   abholort: string;
   zielort: string;
   pickup_street?: string | null;
@@ -129,6 +135,8 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     id: r.id,
     kennung: r.kennung ?? "DA-—",
     patient: r.patient ?? "Unbekannter Patient",
+    patientId: r.patient_id ?? null,
+    insurerId: r.insurer_id ?? null,
     pickup,
     destination,
     abholort: formatAdresse(pickup) || (r.abholort ?? ""),
@@ -165,6 +173,8 @@ export function dauerauftragToWrite(d: Dauerauftrag): RecurringWrite {
   return {
     kennung: d.kennung,
     patient: d.patient,
+    patientId: d.patientId ?? null,
+    insurerId: d.insurerId ?? null,
     pickup: d.pickup,
     destination: d.destination,
     abholort: d.abholort,
@@ -203,6 +213,8 @@ export function writeToRecurringRow(w: Partial<RecurringWrite>): Record<string, 
   };
   set("kennung", w.kennung);
   set("patient", w.patient);
+  set("patient_id", w.patientId);
+  set("insurer_id", w.insurerId);
   const pickup = w.pickup
     ? normalisiereAdresse(w.pickup)
     : w.abholort !== undefined
