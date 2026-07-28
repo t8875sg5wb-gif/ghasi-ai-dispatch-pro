@@ -43,6 +43,8 @@ export interface DriverWrite {
   steuerId?: string;
   beschaeftigungsart?: Beschaeftigungsart;
   monatsbrutto?: number;
+  /** Verknüpftes Auth-Konto (nur Admin/Disposition setzen dies). */
+  userId?: string | null;
 }
 
 /** Minimal structural type of a row coming back from the `drivers` table. */
@@ -80,6 +82,7 @@ export interface DriverRow {
   steuer_id: string | null;
   beschaeftigungsart: string | null;
   monatsbrutto: number | string | null;
+  user_id?: string | null;
 }
 
 function asNachweis(value: unknown): Nachweis {
@@ -127,6 +130,7 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     steuerId: r.steuer_id ?? undefined,
     beschaeftigungsart: (r.beschaeftigungsart as Beschaeftigungsart) ?? "minijob",
     monatsbrutto: Number(r.monatsbrutto ?? 0),
+    userId: r.user_id ?? null,
   };
 }
 
@@ -168,5 +172,6 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("steuer_id", w.steuerId ?? null);
   set("beschaeftigungsart", w.beschaeftigungsart);
   set("monatsbrutto", w.monatsbrutto);
+  set("user_id", w.userId === undefined ? undefined : (w.userId || null));
   return row;
 }
