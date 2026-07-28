@@ -13,7 +13,24 @@
 /** Menschlich lesbarer Rechtsstand für Anzeige & KI-Zitate. */
 export const RECHTSSTAND = "Stand: Juli 2026";
 
-interface Wert<T> {
+/**
+ * Einordnung eines Wertes:
+ * - `gesetzlich`: durch Gesetz/Verordnung/amtliche Bekanntmachung festgelegt
+ * - `konfigurierbar`: betriebs-/kassenindividuell einstellbar
+ * - `schaetzung`: Näherung, kein amtlicher Wert
+ */
+export type Wertkategorie = "gesetzlich" | "konfigurierbar" | "schaetzung";
+
+/** Herkunfts-/Versionsangaben zu jedem Wert (Verfassung Art. 11). */
+interface WertMeta {
+  kategorie: Wertkategorie;
+  /** Quelle: Name + URL. "TODO" = in diesem Lauf nicht verifiziert. */
+  quelle: string;
+  /** Datum der letzten inhaltlichen Verifikation (ISO). */
+  verifiziertAm: string;
+}
+
+interface Wert<T> extends WertMeta {
   wert: T;
   /** gültig ab (ISO-Datum) */
   stand: string;
@@ -21,12 +38,17 @@ interface Wert<T> {
   hinweis?: string;
 }
 
+const TODO_QUELLE = "TODO: Quelle nicht in diesem Lauf verifiziert";
+
 /* ------------------------------------------------------------------ *
  * Mindestlohn
  * ------------------------------------------------------------------ */
 export const MINDESTLOHN: Wert<number> = {
   wert: 13.9,
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
   hinweis: "Ab 2027-01-01: 14,60 €/Stunde.",
 };
 
@@ -37,22 +59,34 @@ export const MINDESTLOHN: Wert<number> = {
 export const MINIJOB_GRENZE_MONAT: Wert<number> = {
   wert: 603,
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
   hinweis: "Ab 2027-01-01: 633 €/Monat. (2025 galt noch 556 €.)",
 };
 /** Minijob-Grenze pro Jahr. */
 export const MINIJOB_GRENZE_JAHR: Wert<number> = {
   wert: 7_236,
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
 };
 /** Untergrenze Übergangsbereich (Midijob). */
 export const MIDIJOB_UNTERGRENZE: Wert<number> = {
   wert: 603.01,
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
 };
 /** Obergrenze Übergangsbereich (Midijob). */
 export const MIDIJOB_OBERGRENZE: Wert<number> = {
   wert: 2_000,
   stand: "2023-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
 };
 
 /* ------------------------------------------------------------------ *
@@ -60,6 +94,9 @@ export const MIDIJOB_OBERGRENZE: Wert<number> = {
  * ------------------------------------------------------------------ */
 export const SV_SAETZE_2026 = {
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
   /** KV allgemeiner Beitragssatz */
   kvAllgemein: 14.6,
   /** durchschnittlicher kassenindividueller Zusatzbeitrag 2026 (pro Kasse konfigurierbar) */
@@ -81,6 +118,10 @@ export const SV_SAETZE_2026 = {
  * ------------------------------------------------------------------ */
 export const MINIJOB_PAUSCHALEN_2026 = {
   stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle:
+    "Minijob-Zentrale, Abgaben für gewerbliche Minijobs 2026 — https://www.minijob-zentrale.de/DE/die-minijobs/gewerblich/abgaben/abgaben_node.html",
+  verifiziertAm: "2026-07-28",
   /** pauschale Krankenversicherung */
   kv: 13.0,
   /** pauschale Rentenversicherung */
@@ -89,8 +130,8 @@ export const MINIJOB_PAUSCHALEN_2026 = {
   steuer: 2.0,
   /** Umlage U1 (Entgeltfortzahlung Krankheit) – zum 2026-01-01 gesenkt */
   u1: 0.8,
-  /** Umlage U2 (Mutterschaft) */
-  u2: 0.44,
+  /** Umlage U2 (Mutterschaft) – 2026: 0,22 % */
+  u2: 0.22,
   /** Insolvenzgeldumlage */
   insolvenzgeld: 0.15,
 } as const;
@@ -107,19 +148,40 @@ export const MINIJOB_PAUSCHAL_AG_PROZENT =
 /* ------------------------------------------------------------------ *
  * Beitragsbemessungsgrenzen & Bezugsgröße 2026 (Monat)
  * ------------------------------------------------------------------ */
-export const BBG_KV_PV_MONAT: Wert<number> = { wert: 5_812.5, stand: "2026-01-01" };
-export const BEZUGSGROESSE_MONAT: Wert<number> = { wert: 3_955, stand: "2026-01-01" };
+export const BBG_KV_PV_MONAT: Wert<number> = {
+  wert: 5_812.5,
+  stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
+};
+export const BEZUGSGROESSE_MONAT: Wert<number> = {
+  wert: 3_955,
+  stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
+};
 
 /* ------------------------------------------------------------------ *
  * Einkommensteuer
  * ------------------------------------------------------------------ */
-export const GRUNDFREIBETRAG: Wert<number> = { wert: 12_348, stand: "2026-01-01" };
+export const GRUNDFREIBETRAG: Wert<number> = {
+  wert: 12_348,
+  stand: "2026-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
+};
 
 /* ------------------------------------------------------------------ *
  * Zuzahlung Krankenfahrt (§ 61 SGB V)
  * ------------------------------------------------------------------ */
 export const ZUZAHLUNG_KRANKENFAHRT = {
   stand: "2004-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
   /** Anteil an den Fahrtkosten */
   prozent: 10,
   /** Mindestbetrag je Fahrt */
@@ -146,6 +208,9 @@ export function zuzahlungKrankenfahrt(fahrtkosten: number, befreit = false): num
  * ------------------------------------------------------------------ */
 export const AUFBEWAHRUNG_JAHRE = {
   stand: "2025-01-01",
+  kategorie: "gesetzlich",
+  quelle: TODO_QUELLE,
+  verifiziertAm: "TODO",
   /** Rechnungen/Belege (verkürzt durch BEG IV) */
   rechnungenBelege: 8,
   /** Bücher/Bilanzen */
