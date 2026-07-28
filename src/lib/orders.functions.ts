@@ -239,7 +239,17 @@ export const updateOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    const auftrag = rowToAuftrag(updated as unknown as OrderRow);
+    const auftrag: AuftragMitWarnungen = rowToAuftrag(updated as unknown as OrderRow);
+
+    // Zuweisungskonflikte nur berechnen, wenn dieses Schreiben Fahrer oder
+    // Fahrzeug angefasst hat und am Ende auch eines von beiden gesetzt ist.
+    const aendertZuweisung = "fahrerId" in data.values || "fahrzeug" in data.values;
+    if (aendertZuweisung && (auftrag.fahrerId || auftrag.fahrzeug)) {
+      const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
+      const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
+      if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
+    }
+
 
     // Audit trail: persist every status / dispatch-assignment / driver change with
     // timestamp, status, driver, vehicle and GPS position (when available).
