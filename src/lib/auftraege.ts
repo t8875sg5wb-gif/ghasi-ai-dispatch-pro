@@ -91,7 +91,38 @@ export interface Auftrag {
   abrechnungStatus?: string;
   /** Verknüpfter Dauerauftrag (Serie). */
   dauerauftragId?: string | null;
+  /**
+   * Patientenunterschrift als PNG-Data-URL (Leistungsnachweis für die
+   * Kassenabrechnung). Personenbezogenes Datum: niemals loggen, nicht in
+   * KI-Werkzeuge oder Exporte aufnehmen.
+   */
+  unterschrift?: string | null;
+  /** Zeitstempel des Auftragsablaufs (Start, Ankunft, Abschluss, Unterschrift). */
+  lifecycle?: AuftragLifecycle;
 }
+
+/** Zeitstempel & Nachweis-Metadaten zum Ablauf eines Auftrags. */
+export interface AuftragLifecycle {
+  /** Fahrt gestartet (ISO). */
+  gestartetAm?: string;
+  /** Ankunft bestätigt (ISO). */
+  angekommenAm?: string;
+  /** Tour abgeschlossen (ISO). */
+  abgeschlossenAm?: string;
+  /** Zeitpunkt der Patientenunterschrift (ISO). */
+  unterschriftAm?: string;
+  /** true = Patient konnte/wollte nicht unterschreiben. */
+  unterschriftVerweigert?: boolean;
+  /** Pflicht-Begründung, wenn die Unterschrift nicht möglich war. */
+  unterschriftVerweigertGrund?: string;
+}
+
+/** Echter Leistungsnachweis: eine tatsächlich erfasste, nicht verweigerte Unterschrift. */
+export function hatPatientenunterschrift(a: Auftrag): boolean {
+  if (a.lifecycle?.unterschriftVerweigert) return false;
+  return typeof a.unterschrift === "string" && a.unterschrift.startsWith("data:image/");
+}
+
 
 export interface StatusMeta {
   label: string;

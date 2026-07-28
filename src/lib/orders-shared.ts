@@ -3,6 +3,7 @@
 // module can be used from both server functions and the browser store.
 import type {
   Auftrag,
+  AuftragLifecycle,
   AuftragPrioritaet,
   AuftragStatus,
   Mobilitaet,
@@ -57,6 +58,10 @@ export interface OrderWrite {
   detailStatus?: string | null;
   abrechnungStatus?: string;
   dauerauftragId?: string | null;
+  /** Patientenunterschrift als PNG-Data-URL (personenbezogen – nie loggen). */
+  unterschrift?: string | null;
+  /** Zeitstempel des Auftragsablaufs. */
+  lifecycle?: AuftragLifecycle;
 }
 
 /** Minimal structural type of a row coming back from the `orders` table. */
@@ -99,6 +104,8 @@ export interface OrderRow {
   detail_status?: string | null;
   abrechnung_status?: string;
   dauerauftrag_id?: string | null;
+  unterschrift?: string | null;
+  lifecycle?: unknown;
 }
 
 export function rowToAuftrag(r: OrderRow): Auftrag {
@@ -166,6 +173,11 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     detailStatus: r.detail_status ?? null,
     abrechnungStatus: r.abrechnung_status ?? "offen",
     dauerauftragId: r.dauerauftrag_id ?? null,
+    unterschrift: r.unterschrift ?? null,
+    lifecycle:
+      r.lifecycle && typeof r.lifecycle === "object" && !Array.isArray(r.lifecycle)
+        ? (r.lifecycle as AuftragLifecycle)
+        : {},
   };
 }
 
@@ -227,5 +239,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   set("detail_status", w.detailStatus);
   set("abrechnung_status", w.abrechnungStatus);
   set("dauerauftrag_id", w.dauerauftragId);
+  set("unterschrift", w.unterschrift);
+  set("lifecycle", w.lifecycle);
   return row;
 }
