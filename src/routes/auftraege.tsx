@@ -214,10 +214,11 @@ function AuftraegePage() {
 
   const detailAuftrag = auftraege.find((a) => a.id === detailId) ?? null;
 
-  function handleAssign(id: string, fahrer: string, fahrzeug: string | null) {
+  // Zuweisung erfolgt über die stabile Fahrer-ID; der Name dient nur der Anzeige.
+  function handleAssign(id: string, fahrerId: string, fahrer: string, fahrzeug: string | null) {
     const ziel = auftraege.find((a) => a.id === id);
     updateMut.mutate(
-      { id, values: { fahrer, fahrzeug, status: "disponiert" } },
+      { id, values: { fahrerId, fahrzeug, status: "disponiert" } },
       {
         onSuccess: () => {
           toast.success(`Zugewiesen: ${fahrer}${fahrzeug ? ` · ${fahrzeug}` : ""}`);

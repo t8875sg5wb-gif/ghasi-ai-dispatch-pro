@@ -1185,6 +1185,7 @@ export type Database = {
           destination_street: string
           detail_status: string | null
           fahrer: string | null
+          fahrer_id: string | null
           fahrer_user_id: string | null
           fahrzeug: string | null
           id: string
@@ -1229,6 +1230,7 @@ export type Database = {
           destination_street?: string
           detail_status?: string | null
           fahrer?: string | null
+          fahrer_id?: string | null
           fahrer_user_id?: string | null
           fahrzeug?: string | null
           id?: string
@@ -1273,6 +1275,7 @@ export type Database = {
           destination_street?: string
           detail_status?: string | null
           fahrer?: string | null
+          fahrer_id?: string | null
           fahrer_user_id?: string | null
           fahrzeug?: string | null
           id?: string
@@ -1302,7 +1305,15 @@ export type Database = {
           zielanforderung?: string
           zielort?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_fahrer_id_fkey"
+            columns: ["fahrer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patients: {
         Row: {

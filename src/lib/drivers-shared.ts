@@ -43,9 +43,12 @@ export interface DriverWrite {
   steuerId?: string;
   beschaeftigungsart?: Beschaeftigungsart;
   monatsbrutto?: number;
-  /** Verknüpftes Auth-Konto (nur Admin/Disposition setzen dies). */
-  userId?: string | null;
 }
+
+// HINWEIS (Identitätskette): `userId` ist bewusst KEIN Bestandteil von
+// `DriverWrite`. Die Verknüpfung eines Fahrers mit einem Auth-Konto läuft
+// ausschließlich über die dedizierte Admin-Serverfunktion
+// `setDriverAccountLink` und ist zusätzlich per DB-Trigger geschützt.
 
 /** Minimal structural type of a row coming back from the `drivers` table. */
 export interface DriverRow {
@@ -172,6 +175,5 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("steuer_id", w.steuerId ?? null);
   set("beschaeftigungsart", w.beschaeftigungsart);
   set("monatsbrutto", w.monatsbrutto);
-  set("user_id", w.userId === undefined ? undefined : (w.userId || null));
   return row;
 }
