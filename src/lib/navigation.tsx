@@ -295,6 +295,12 @@ export const navGroups: NavGroup[] = [
         description: "Fahrer, Fahrzeuge, Kunden & Patienten per CSV/Excel importieren.",
       },
       {
+        label: "Datenabgleich",
+        to: "/datenabgleich",
+        icon: Link2,
+        description: "Aufträge ohne Patienten- oder Kostenträger-Verknüpfung zuordnen.",
+      },
+      {
         label: "Automatisierung",
         to: "/automatisierung",
         icon: Workflow,
