@@ -1,6 +1,7 @@
 // Server functions for persisted transport orders (Aufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
@@ -8,6 +9,62 @@ import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
+
+/**
+ * Strenge Laufzeitvalidierung für Auftragsmutationen.
+ * `.strict()` weist unbekannte Felder aktiv ab — insbesondere `fahrer`
+ * (Anzeigename) und `fahrer_user_id`/`fahrerUserId`: Diese Werte werden
+ * ausschließlich serverseitig per DB-Trigger aus `fahrerId` abgeleitet und
+ * dürfen niemals vom Browser gesetzt werden.
+ */
+const adresseSchema = z
+  .object({
+    street: z.string().optional(),
+    houseNumber: z.string().optional(),
+    postalCode: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    additionalInfo: z.string().optional(),
+  })
+  .strict();
+
+const orderFieldsSchema = z
+  .object({
+    nummer: z.string().optional(),
+    patient: z.string().optional(),
+    telefon: z.string().optional(),
+    transportart: z.string().optional(),
+    prioritaet: z.string().optional(),
+    status: z.string().optional(),
+    abholort: z.string().optional(),
+    zielort: z.string().optional(),
+    pickup: adresseSchema.optional(),
+    destination: adresseSchema.optional(),
+    termin: z.string().optional(),
+    fahrerId: z.string().uuid().nullable().optional(),
+    fahrzeug: z.string().nullable().optional(),
+    kostentraeger: z.string().optional(),
+    notiz: z.string().optional(),
+    verordnung: z.string().optional(),
+    verordnungDokumentId: z.string().nullable().optional(),
+    mobilitaet: z.string().nullable().optional(),
+    begleitperson: z.boolean().optional(),
+    abholanforderung: z.string().optional(),
+    zielanforderung: z.string().optional(),
+    patientennotiz: z.string().optional(),
+    medizinischeNotiz: z.string().optional(),
+    detailStatus: z.string().nullable().optional(),
+    abrechnungStatus: z.string().optional(),
+    dauerauftragId: z.string().nullable().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
+  })
+  .strict();
+
+const createOrderSchema = orderFieldsSchema.extend({ patient: z.string().min(1) }).strict();
+const updateOrderSchema = z
+  .object({ id: z.string().uuid(), values: orderFieldsSchema })
+  .strict();
 
 /**
  * Identitätskette: Eine Fahrerzuordnung wird ausschließlich über die stabile
@@ -36,11 +93,10 @@ export const listOrders = createServerFn({ method: "GET" })
 
 export const createOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: OrderWrite) => {
-    if (!data || typeof data.patient !== "string") {
-      throw new Error("patient ist erforderlich");
-    }
-    return data;
+  .validator((data: unknown): OrderWrite => {
+    const parsed = createOrderSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    return parsed.data as OrderWrite;
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     let nummer = data.nummer;
@@ -63,9 +119,10 @@ export const createOrder = createServerFn({ method: "POST" })
 
 export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<OrderWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<OrderWrite> } => {
+    const parsed = updateOrderSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    return parsed.data as { id: string; values: Partial<OrderWrite> };
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
@@ -111,9 +168,10 @@ export const updateOrder = createServerFn({ method: "POST" })
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = z.object({ id: z.string().uuid() }).strict().safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftrags-ID.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("orders").delete().eq("id", data.id);

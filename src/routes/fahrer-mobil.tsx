@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
 import { updateMyVehiclePosition } from "@/lib/fleet-tracking.functions";
 import { STATUS_META, type Auftrag } from "@/lib/auftraege";
 import { formatAdresse } from "@/lib/address";
@@ -64,20 +65,31 @@ function mapsUrl(address: string): string {
 }
 
 function FahrerMobilPage() {
-  const { name } = useAuth();
+  const { name, user } = useAuth();
   const { data: orders = [], isLoading } = useOrders();
+  const { data: drivers = [], isLoading: driversLoading } = useDrivers();
   const updateMut = useUpdateOrder();
 
+  // Identitätskette: die eigenen Touren werden ausschließlich über den
+  // verknüpften Fahrerdatensatz (drivers.user_id → drivers.id → orders.fahrer_id)
+  // bestimmt. Kein Namensabgleich — Namen sind nicht eindeutig und keine Identität.
+  const meinFahrer = useMemo(
+    () => (user ? (drivers.find((d) => d.userId === user.id) ?? null) : null),
+    [drivers, user],
+  );
+
   const meineTouren = useMemo(() => {
-    const me = name.trim().toLowerCase();
+    if (!meinFahrer) return [];
     return orders
-      .filter((o) => (o.fahrer ?? "").trim().toLowerCase() === me)
+      .filter((o) => o.fahrerId === meinFahrer.id)
       .filter((o) => istHeute(o.termin))
       .filter((o) => o.status !== "storniert")
       .sort((a, b) => new Date(a.termin).getTime() - new Date(b.termin).getTime());
-  }, [orders, name]);
+  }, [orders, meinFahrer]);
 
   const offen = meineTouren.filter((o) => o.status !== "abgeschlossen").length;
+  const ladend = isLoading || driversLoading;
+  const nichtVerknuepft = !driversLoading && !meinFahrer;
 
   // --- Opt-in real GPS sharing -----------------------------------------
   const pushPosition = useServerFn(updateMyVehiclePosition);
@@ -200,11 +212,24 @@ function FahrerMobilPage() {
         </CardContent>
       </Card>
 
-      {isLoading && (
+      {ladend && (
         <p className="py-8 text-center text-sm text-muted-foreground">Touren werden geladen …</p>
       )}
 
-      {!isLoading && meineTouren.length === 0 && (
+      {nichtVerknuepft && (
+        <Card className="border-dashed border-warning/50 bg-warning/5">
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+            <Smartphone className="h-8 w-8 text-warning" />
+            <p className="text-sm font-medium">Konto noch nicht mit einem Fahrer verknüpft</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Bitte lassen Sie Ihr Benutzerkonto von einem Administrator mit Ihrem
+              Fahrerdatensatz verknüpfen. Erst danach werden Ihre Touren hier angezeigt.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!ladend && !nichtVerknuepft && meineTouren.length === 0 && (
         <Card className="border-dashed border-border/70 bg-muted/30">
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
             <CheckCircle2 className="h-8 w-8 text-success" />
