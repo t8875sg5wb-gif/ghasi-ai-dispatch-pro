@@ -8,7 +8,13 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
-import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
+import {
+  rowToAuftrag,
+  writeToRow,
+  type AuftragMitWarnungen,
+  type OrderRow,
+  type OrderWrite,
+} from "@/lib/orders-shared";
 
 /**
  * Strenge Laufzeitvalidierung für Auftragsmutationen.
@@ -209,7 +215,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
     return parsed.data as { id: string; values: Partial<OrderWrite> };
   })
-  .handler(async ({ data, context }): Promise<Auftrag> => {
+  .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
