@@ -186,6 +186,8 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
               setValues((prev) => ({
                 ...prev,
                 patientId: v,
+                // Verordnungen sind patientengebunden – Zuordnung zurücksetzen.
+                verordnungId: prev.patientId === v ? prev.verordnungId : null,
                 patient: p?.name ?? prev.patient,
                 // Kostenträger des Patienten vorauswählen – bleibt übersteuerbar.
                 insurerId: p?.kostentraegerId ?? prev.insurerId ?? null,
