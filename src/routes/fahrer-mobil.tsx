@@ -212,11 +212,24 @@ function FahrerMobilPage() {
         </CardContent>
       </Card>
 
-      {isLoading && (
+      {ladend && (
         <p className="py-8 text-center text-sm text-muted-foreground">Touren werden geladen …</p>
       )}
 
-      {!isLoading && meineTouren.length === 0 && (
+      {nichtVerknuepft && (
+        <Card className="border-dashed border-warning/50 bg-warning/5">
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+            <Smartphone className="h-8 w-8 text-warning" />
+            <p className="text-sm font-medium">Konto noch nicht mit einem Fahrer verknüpft</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Bitte lassen Sie Ihr Benutzerkonto von einem Administrator mit Ihrem
+              Fahrerdatensatz verknüpfen. Erst danach werden Ihre Touren hier angezeigt.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!ladend && !nichtVerknuepft && meineTouren.length === 0 && (
         <Card className="border-dashed border-border/70 bg-muted/30">
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
             <CheckCircle2 className="h-8 w-8 text-success" />
