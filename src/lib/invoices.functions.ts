@@ -309,6 +309,8 @@ export const billingReadyOrders = createServerFn({ method: "GET" })
 export const generateBillingDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ created: number; nummern: string[] }> => {
+    // Sperre: ohne bestätigten USt-Modus keine Rechnungsentwürfe.
+    const company = await requireBestaetigtenSteuerModus(context.supabase);
     const [orders, invoices, contracts, insurers, patients] = await Promise.all([
       loadOrders(context.supabase),
       loadInvoices(context.supabase),
