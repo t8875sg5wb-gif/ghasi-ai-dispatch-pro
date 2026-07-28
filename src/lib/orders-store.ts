@@ -36,12 +36,23 @@ export function useOrders() {
   });
 }
 
+/** Zeigt nachträgliche Zuweisungswarnungen an (gespeichert ist bereits). */
+function zeigeZuweisungsWarnungen(res: { zuweisungsWarnungen?: string[] } | undefined) {
+  const warnungen = res?.zuweisungsWarnungen ?? [];
+  for (const text of warnungen) {
+    toast.error("Zuweisungskonflikt", { description: text, duration: 10_000 });
+  }
+}
+
 export function useCreateOrder() {
   const qc = useQueryClient();
   const fn = useServerFn(createOrder);
   return useMutation({
     mutationFn: (values: OrderWrite) => fn({ data: values }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+    onSuccess: (res) => {
+      zeigeZuweisungsWarnungen(res);
+      qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+    },
   });
 }
 
@@ -50,9 +61,13 @@ export function useUpdateOrder() {
   const fn = useServerFn(updateOrder);
   return useMutation({
     mutationFn: (input: { id: string; values: Partial<OrderWrite> }) => fn({ data: input }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+    onSuccess: (res) => {
+      zeigeZuweisungsWarnungen(res);
+      qc.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+    },
   });
 }
+
 
 export function useDeleteOrder() {
   const qc = useQueryClient();
