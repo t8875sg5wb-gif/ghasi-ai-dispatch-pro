@@ -1,6 +1,9 @@
 // Server functions for persisted transport orders (Aufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
@@ -13,7 +16,7 @@ import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/
  * `enforce_order_assignment` aus dem Fahrerdatensatz abgeleitet.
  */
 async function assertDriverExists(
-  supabase: { from: (t: "drivers") => { select: (c: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown }> } } } },
+  supabase: SupabaseClient<Database>,
   fahrerId: string,
 ): Promise<void> {
   const { data } = await supabase.from("drivers").select("id").eq("id", fahrerId).maybeSingle();

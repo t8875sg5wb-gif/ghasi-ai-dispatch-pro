@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 interface DriverSuggestionProps {
   auftrag: Auftrag;
   /** Manuelle Bestätigung der Zuweisung. */
-  onConfirm: (fahrer: string, fahrzeug: string | null) => void;
+  onConfirm: (fahrerId: string, fahrer: string, fahrzeug: string | null) => void;
   disabled?: boolean;
 }
 
@@ -28,7 +28,7 @@ function VorschlagZeile({
 }: {
   v: FahrerVorschlag;
   primary?: boolean;
-  onConfirm: (fahrer: string, fahrzeug: string | null) => void;
+  onConfirm: (fahrerId: string, fahrer: string, fahrzeug: string | null) => void;
   disabled?: boolean;
 }) {
   return (
@@ -72,7 +72,7 @@ function VorschlagZeile({
           variant={primary ? "default" : "outline"}
           className="shrink-0 gap-1.5"
           disabled={disabled}
-          onClick={() => onConfirm(v.fahrer.name, v.fahrzeugKennzeichen)}
+          onClick={() => onConfirm(v.fahrer.id, v.fahrer.name, v.fahrzeugKennzeichen)}
         >
           <Check className="h-3.5 w-3.5" />
           Zuweisen
