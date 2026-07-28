@@ -28,6 +28,12 @@ import {
 export interface OrderWrite {
   nummer?: string;
   patient?: string;
+  /**
+   * Stabile Patienten-/Kostenträger-Zuordnung. Die Anzeigetexte `patient`
+   * bzw. `kostentraeger` werden DB-seitig daraus abgeleitet, sobald gesetzt.
+   */
+  patientId?: string | null;
+  insurerId?: string | null;
   telefon?: string;
   transportart?: string;
   prioritaet?: string;
@@ -90,6 +96,8 @@ export interface OrderRow {
   termin: string;
   fahrer: string | null;
   fahrer_id?: string | null;
+  patient_id?: string | null;
+  insurer_id?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;
@@ -148,6 +156,8 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     id: r.id,
     nummer: r.nummer ?? "—",
     patient: r.patient ?? "Unbekannter Patient",
+    patientId: r.patient_id ?? null,
+    insurerId: r.insurer_id ?? null,
     telefon: r.telefon ?? "",
     transportart,
     prioritaet,
@@ -189,6 +199,10 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   };
   set("nummer", w.nummer);
   set("patient", w.patient);
+  // `patient`/`kostentraeger` werden vom DB-Trigger aus den IDs abgeleitet,
+  // sobald diese gesetzt sind — analog zu `fahrer_id` → `fahrer`.
+  set("patient_id", w.patientId);
+  set("insurer_id", w.insurerId);
   set("telefon", w.telefon);
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);

@@ -54,6 +54,8 @@ const orderFieldsSchema = z
   .object({
     nummer: z.string().optional(),
     patient: z.string().optional(),
+    patientId: z.string().uuid().nullable().optional(),
+    insurerId: z.string().uuid().nullable().optional(),
     telefon: z.string().optional(),
     transportart: z.string().optional(),
     prioritaet: z.string().optional(),
@@ -104,6 +106,22 @@ async function assertDriverExists(
   if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
 }
 
+async function assertPatientExists(
+  supabase: SupabaseClient<Database>,
+  patientId: string,
+): Promise<void> {
+  const { data } = await supabase.from("patients").select("id").eq("id", patientId).maybeSingle();
+  if (!data) throw new Error("Unbekannter Patient – Verknüpfung nicht möglich.");
+}
+
+async function assertInsurerExists(
+  supabase: SupabaseClient<Database>,
+  insurerId: string,
+): Promise<void> {
+  const { data } = await supabase.from("insurers").select("id").eq("id", insurerId).maybeSingle();
+  if (!data) throw new Error("Unbekannter Kostenträger – Verknüpfung nicht möglich.");
+}
+
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Auftrag[]> => {
@@ -131,6 +149,8 @@ export const createOrder = createServerFn({ method: "POST" })
       nummer = `A-${2045 + (count ?? 0)}`;
     }
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
+    if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
+    if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
     const { data: created, error } = await context.supabase
       .from("orders")
@@ -150,6 +170,8 @@ export const updateOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
+    if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
+    if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     const row = writeToRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("orders")
