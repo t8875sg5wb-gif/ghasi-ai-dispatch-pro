@@ -36,11 +36,10 @@ export const listOrders = createServerFn({ method: "GET" })
 
 export const createOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: OrderWrite) => {
-    if (!data || typeof data.patient !== "string") {
-      throw new Error("patient ist erforderlich");
-    }
-    return data;
+  .validator((data: unknown): OrderWrite => {
+    const parsed = createOrderSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    return parsed.data as OrderWrite;
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     let nummer = data.nummer;
