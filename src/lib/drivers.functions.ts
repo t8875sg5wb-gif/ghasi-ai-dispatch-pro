@@ -14,8 +14,8 @@ import { rowToFahrer, writeToRow, type DriverRow, type DriverWrite } from "@/lib
  * und ist zusätzlich per DB-Trigger auf Admins beschränkt.
  */
 const nachweisSchema = z
-  .object({ nummer: z.string(), gueltigBis: z.string(), klassen: z.array(z.string()).optional() })
-  .passthrough();
+  .object({ gueltigBis: z.string(), info: z.string().optional() })
+  .strict();
 
 const driverFieldsSchema = z
   .object({
