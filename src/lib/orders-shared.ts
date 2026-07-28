@@ -262,3 +262,10 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   set("lifecycle", w.lifecycle);
   return row;
 }
+
+/**
+ * Rückgabe von createOrder/updateOrder: der Auftrag plus optionale, rein
+ * informative Zuweisungswarnungen (Doppelbuchung, Verfügbarkeit, Eignung).
+ * Bestehende Aufrufer können das Feld ignorieren.
+ */
+export type AuftragMitWarnungen = Auftrag & { zuweisungsWarnungen?: string[] };
