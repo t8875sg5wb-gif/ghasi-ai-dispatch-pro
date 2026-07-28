@@ -15,6 +15,7 @@ import {
 } from "@/lib/invoices-shared";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 import { modusFuerTransportart, satzFuer, STEUER_HINWEIS } from "@/lib/steuer";
+import { requireBestaetigtenSteuerModus } from "@/lib/company-settings-shared";
 import { rowToKassenvertrag, type KassenvertragRow } from "@/lib/insurer-contracts-shared";
 import { rowToPatient, type PatientRow } from "@/lib/patients-shared";
 import {
@@ -45,6 +46,8 @@ export const createInvoice = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
+    // Auch die manuelle Einzelrechnung legt reale USt-Beträge fest.
+    await requireBestaetigtenSteuerModus(context.supabase);
     const row = writeToInvoiceRow(data);
     const { data: created, error } = await context.supabase
       .from("invoices")
@@ -306,6 +309,8 @@ export const billingReadyOrders = createServerFn({ method: "GET" })
 export const generateBillingDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ created: number; nummern: string[] }> => {
+    // Sperre: ohne bestätigten USt-Modus keine Rechnungsentwürfe.
+    const company = await requireBestaetigtenSteuerModus(context.supabase);
     const [orders, invoices, contracts, insurers, patients] = await Promise.all([
       loadOrders(context.supabase),
       loadInvoices(context.supabase),
@@ -341,7 +346,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
 
       const betrag = preisInfo ? preisInfo.preis : 0;
       const art = abrechnungsartFuer(a.kostentraeger);
-      const modus = modusFuerTransportart(a.transportart);
+      const modus = modusFuerTransportart(a.transportart, company.steuerModus);
       const mwst = satzFuer(modus);
       const nummer = `RE-2026-${String(40 + lfd++).padStart(4, "0")}`;
       nummern.push(nummer);

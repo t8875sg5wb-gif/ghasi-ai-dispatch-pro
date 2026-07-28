@@ -300,6 +300,7 @@ export type Database = {
           rechtsform: string
           singleton: number
           steuer_modus: string
+          steuer_modus_bestaetigt: boolean
           steuernummer: string
           telefon: string
           updated_at: string
@@ -324,6 +325,7 @@ export type Database = {
           rechtsform?: string
           singleton?: number
           steuer_modus?: string
+          steuer_modus_bestaetigt?: boolean
           steuernummer?: string
           telefon?: string
           updated_at?: string
@@ -348,6 +350,7 @@ export type Database = {
           rechtsform?: string
           singleton?: number
           steuer_modus?: string
+          steuer_modus_bestaetigt?: boolean
           steuernummer?: string
           telefon?: string
           updated_at?: string

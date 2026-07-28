@@ -301,6 +301,13 @@ function EinstellungenSeite() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!company.steuerModusBestaetigt && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
+                <span className="font-semibold">Noch nicht bestätigt</span> — ohne Bestätigung
+                können keine Rechnungen erzeugt werden. Bitte den passenden Modus wählen und
+                speichern. Diese Entscheidung sollte mit dem Steuerberater abgestimmt sein.
+              </div>
+            )}
             <Feld label="Umsatzsteuer-Modus">
               <Select
                 value={company.steuerModus}
