@@ -14,7 +14,7 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
-import { useDriverOptions, useVehicleOptions } from "@/hooks/use-entity-options";
+import { useDriverIdOptions, useVehicleOptions } from "@/hooks/use-entity-options";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
 import { useInsurerContracts } from "@/lib/insurer-contracts-store";
@@ -68,6 +68,7 @@ function emptyValues(): AuftragFormValues {
     zielort: "",
     termin: new Date().toISOString().slice(0, 16),
     fahrer: null,
+    fahrerId: null,
     fahrzeug: null,
     kostentraeger: "",
     notiz: "",
@@ -84,7 +85,7 @@ function emptyValues(): AuftragFormValues {
 
 export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
-  const fahrerOpt = useDriverOptions();
+  const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleOptions();
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
@@ -299,9 +300,15 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Fahrer</Label>
+          {values.fahrer && !values.fahrerId && (
+            <p className="text-xs text-amber-600 dark:text-amber-500">
+              Altbestand: „{values.fahrer}" ist nur als Name hinterlegt und keinem Fahrerdatensatz
+              zugeordnet. Bitte erneut auswählen.
+            </p>
+          )}
           <Select
-            value={values.fahrer ?? NONE}
-            onValueChange={(v) => set("fahrer", v === NONE ? null : v)}
+            value={values.fahrerId ?? NONE}
+            onValueChange={(v) => set("fahrerId", v === NONE ? null : v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Nicht zugewiesen" />

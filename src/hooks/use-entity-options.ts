@@ -32,6 +32,23 @@ export function useDriverOptions(): EntityOptions {
   }, [data]);
 }
 
+/**
+ * Fahrer-Auswahl mit STABILER ID als Wert (`drivers.id`).
+ * Für alle identitätsrelevanten Zuordnungen (z. B. Auftrag → Fahrer) zu
+ * verwenden — niemals Namen, da Namen nicht eindeutig und änderbar sind.
+ */
+export function useDriverIdOptions(): EntityOptions {
+  const { data } = useDrivers();
+  return useMemo(() => {
+    const list = data ?? [];
+    return {
+      options: list.map((f) => ({ value: f.id, label: `${f.name} · ${f.nummer}` })),
+      leer: list.length === 0,
+      hinweis: "Noch keine Fahrer angelegt – zuerst unter „Fahrer“ anlegen oder Beispieldaten laden.",
+    };
+  }, [data]);
+}
+
 export function useVehicleOptions(): EntityOptions {
   const { data } = useVehicles();
   return useMemo(() => {
