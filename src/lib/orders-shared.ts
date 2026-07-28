@@ -99,6 +99,7 @@ export interface OrderRow {
   fahrer: string | null;
   fahrer_id?: string | null;
   patient_id?: string | null;
+  insurer_id?: string | null;
   verordnung_id?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
