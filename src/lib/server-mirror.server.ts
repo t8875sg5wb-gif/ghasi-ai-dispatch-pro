@@ -34,17 +34,53 @@ function replace<T>(target: T[], next: T[]) {
 }
 
 /**
+ * Gültigkeitsdauer einer erfolgreichen Hydration. Innerhalb dieses Fensters
+ * kehren weitere Aufrufe sofort zurück, statt erneut neun Tabellen abzufragen.
+ */
+const MIRROR_TTL_MS = 5_000;
+
+/** Laufende Hydration – überlappende Aufrufe teilen sich dieselbe Promise. */
+let inFlight: Promise<void> | null = null;
+/** Zeitstempel der letzten erfolgreichen Hydration. */
+let letzteHydration = 0;
+
+/**
  * Loads all AI-visible entities from Supabase and mirrors them into the legacy
  * in-memory arrays: orders, drivers, invoices, recurring orders, patients,
  * vehicles, customers, insurers and facilities (split by type into hospitals,
  * dialysis centres and care homes).
+ *
+ * Nebenläufigkeit: Die modulweiten Mirror-Arrays sind globaler, mutabler
+ * Zustand. Ohne Koordination könnten sich zwei gleichzeitige Anfragen
+ * gegenseitig überschreiben (Node unterbricht an jedem `await`), sodass ein
+ * Mix aus zwei Ladezeitpunkten entsteht. Deshalb wird die laufende Promise
+ * selbst gecacht: überlappende Aufrufe warten auf dieselbe Hydration, und
+ * innerhalb von {@link MIRROR_TTL_MS} wird gar nicht erst neu geladen.
+ *
+ * @param force erzwingt eine frische Abfrage und ignoriert die Gültigkeitsdauer
+ *   (für Werkzeuge mit Echtzeitanspruch, z. B. Live-GPS). Läuft bereits eine
+ *   Hydration, wird auf diese gewartet und danach neu geladen.
  *
  * Mirrors are only replaced when the query succeeded — an empty but successful
  * result clears the demo seed data, while a failed query leaves the previous
  * mirror untouched. Failures are logged and swallowed so the chat handler still
  * responds instead of erroring out.
  */
-export async function hydrateServerMirrors(): Promise<void> {
+export async function hydrateServerMirrors(force = false): Promise<void> {
+  if (!force && Date.now() - letzteHydration < MIRROR_TTL_MS) return;
+  if (inFlight) {
+    await inFlight;
+    if (!force) return;
+  }
+  const lauf = ladeMirrors().finally(() => {
+    if (inFlight === lauf) inFlight = null;
+  });
+  inFlight = lauf;
+  await lauf;
+}
+
+async function ladeMirrors(): Promise<void> {
+
   try {
     const [orders, drivers, invoices, recurring, patients, vehicles, customers, insurers, facilities] =
       await Promise.all([
