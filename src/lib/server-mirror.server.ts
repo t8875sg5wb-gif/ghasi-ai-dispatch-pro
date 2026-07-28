@@ -150,8 +150,10 @@ async function ladeMirrors(): Promise<void> {
         alle.filter((e) => e.typ === "pflegeheim"),
       );
     }
+    letzteHydration = Date.now();
   } catch (error) {
     // Non-fatal: keep serving with already-mirrored data.
     console.error("[server-mirror] Hydration fehlgeschlagen:", error);
   }
+
 }
