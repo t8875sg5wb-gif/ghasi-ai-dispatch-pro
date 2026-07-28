@@ -41,6 +41,8 @@ import {
   type Mobilitaet,
 } from "@/lib/auftraege";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
+import { usePatients } from "@/lib/patients-store";
+import { useInsurers } from "@/lib/insurers-store";
 import {
   useDriverOptions,
   useVehicleOptions,
@@ -111,12 +113,17 @@ export const Route = createFileRoute("/dauerauftraege")({
   component: DauerauftraegePage,
 });
 
+/** Sentinel für "nicht verknüpft" in Selects (Radix erlaubt kein leeres Value). */
+const KEINE = "__keine__";
+
 type StatusFilter = DauerauftragStatus | "alle";
 
 const leereVorlage = (): Dauerauftrag => ({
   id: "",
   kennung: naechsteKennung(DAUERAUFTRAEGE),
   patient: "",
+  patientId: null,
+  insurerId: null,
   pickup: leereAdresse(),
   destination: leereAdresse(),
   abholort: "",
@@ -769,6 +776,9 @@ function DauerauftragForm({
   const fahrerOpt = useDriverOptions();
   const fahrzeugOpt = useVehicleOptions();
   const kundeOpt = useCustomerOptions();
+  const { data: patienten = [] } = usePatients();
+  const { data: kassen = [] } = useInsurers();
+  const kassenListe = kassen.length > 0 ? kassen : KRANKENKASSEN;
 
   useEffect(() => {
     setF(normalisiere(initial));
@@ -827,12 +837,51 @@ function DauerauftragForm({
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <Label>Patient</Label>
+            <Label>Patient (Stammdaten)</Label>
+            <Select
+              value={f.patientId ?? KEINE}
+              onValueChange={(v) => {
+                if (v === KEINE) {
+                  setF((prev) => ({ ...prev, patientId: null }));
+                  return;
+                }
+                const p = patienten.find((x) => x.id === v);
+                setF((prev) => ({
+                  ...prev,
+                  patientId: v,
+                  patient: p?.name ?? prev.patient,
+                }));
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Nicht verknüpft" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={KEINE}>Nicht verknüpft</SelectItem>
+                {patienten.length === 0 ? (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Noch keine Patienten angelegt.
+                  </div>
+                ) : (
+                  patienten.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            <Label className="pt-1 block">Patientenname</Label>
             <Input
               value={f.patient}
               onChange={(e) => set("patient", e.target.value)}
               placeholder="Name des Patienten"
             />
+            {!f.patientId && (
+              <p className="text-xs text-muted-foreground">
+                Ohne Verknüpfung wird nur der Freitext gespeichert.
+              </p>
+            )}
           </div>
           <div className="sm:col-span-2">
             <AddressFields
@@ -1001,18 +1050,39 @@ function DauerauftragForm({
           </div>
           <div>
             <Label>Krankenkasse</Label>
-            <Select value={f.krankenkasse} onValueChange={(v) => set("krankenkasse", v)}>
+            <Select
+              value={f.insurerId ?? KEINE}
+              onValueChange={(v) => {
+                if (v === KEINE) {
+                  setF((prev) => ({ ...prev, insurerId: null }));
+                  return;
+                }
+                const k = kassenListe.find((x) => x.id === v);
+                setF((prev) => ({
+                  ...prev,
+                  insurerId: v,
+                  krankenkasse: k?.name ?? prev.krankenkasse,
+                }));
+              }}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Nicht verknüpft" />
               </SelectTrigger>
               <SelectContent>
-                {KRANKENKASSEN.map((k) => (
-                  <SelectItem key={k.id} value={k.name}>
+                <SelectItem value={KEINE}>Nicht verknüpft</SelectItem>
+                {kassenListe.map((k) => (
+                  <SelectItem key={k.id} value={k.id}>
                     {k.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <Label className="pt-1 block">Krankenkasse (Text)</Label>
+            <Input
+              value={f.krankenkasse}
+              onChange={(e) => set("krankenkasse", e.target.value)}
+              placeholder="z. B. AOK Nordost"
+            />
           </div>
           <div>
             <Label>Bevorzugtes Fahrzeug</Label>
