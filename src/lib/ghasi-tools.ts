@@ -384,7 +384,7 @@ export function buildBusinessTools(role: AppRole | null) {
       // Bewusst KEINE medizinischen Freitextfelder im Ergebnis.
       execute: async ({ name, mobilitaet, dialyse }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { rowToPatient, type PatientRow } = await import("@/lib/patients-shared");
+        const { rowToPatient } = await import("@/lib/patients-shared");
 
         let query = supabaseAdmin.from("patients").select("*").limit(200);
         if (name) query = query.ilike("name", `%${name}%`);
