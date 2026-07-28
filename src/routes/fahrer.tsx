@@ -26,7 +26,12 @@ import {
 } from "@/lib/fahrer";
 import { FahrerForm, type FahrerFormValues } from "@/components/fahrer/fahrer-form";
 import { FahrerDetail } from "@/components/fahrer/fahrer-detail";
-import { useDrivers, useCreateDriver, useUpdateDriver } from "@/lib/drivers-store";
+import {
+  useDrivers,
+  useCreateDriver,
+  useUpdateDriver,
+  useSetDriverAccountLink,
+} from "@/lib/drivers-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -171,7 +176,7 @@ function FahrerPage() {
       {
         onSuccess: () =>
           toast.success(ziel ? "Benutzerkonto verknüpft" : "Verknüpfung aufgehoben"),
-        onError: (e) => toast.error((e as Error).message || "Verknüpfung fehlgeschlagen"),
+        onError: (e: unknown) => toast.error((e as Error).message || "Verknüpfung fehlgeschlagen"),
       },
     );
   }
