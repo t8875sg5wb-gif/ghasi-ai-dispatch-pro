@@ -56,6 +56,7 @@ const orderFieldsSchema = z
     patient: z.string().optional(),
     patientId: z.string().uuid().nullable().optional(),
     insurerId: z.string().uuid().nullable().optional(),
+    verordnungId: z.string().uuid().nullable().optional(),
     telefon: z.string().optional(),
     transportart: z.string().optional(),
     prioritaet: z.string().optional(),
