@@ -34,6 +34,8 @@ export interface OrderWrite {
    */
   patientId?: string | null;
   insurerId?: string | null;
+  /** Stabile Zuordnung zur ärztlichen Verordnung (verordnungen.id). */
+  verordnungId?: string | null;
   telefon?: string;
   transportart?: string;
   prioritaet?: string;
