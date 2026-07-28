@@ -454,6 +454,9 @@ export function transportWritesFuer(
       patientennotiz: "",
       medizinischeNotiz: d.medizinischeNotiz,
       dauerauftragId: d.id,
+      // Identitätskette: stabile Verknüpfungen der Serie auf die echte Fahrt.
+      patientId: d.patientId ?? null,
+      insurerId: d.insurerId ?? null,
     };
     writes.push(w);
   };
