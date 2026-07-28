@@ -164,3 +164,16 @@ export async function loadCompanySettings(client: unknown): Promise<CompanySetti
   if (!data) return DEFAULT_COMPANY_SETTINGS;
   return rowToSettings(data as CompanyRow);
 }
+
+export const STEUER_MODUS_UNBESTAETIGT_FEHLER =
+  "Bitte zuerst den Umsatzsteuer-Modus in den Einstellungen bestätigen (Speichern genügt).";
+
+/**
+ * Lädt die Firmeneinstellungen und stellt sicher, dass der USt-Modus bestätigt
+ * wurde. Wird vor jeder Erzeugung realer Rechnungen aufgerufen.
+ */
+export async function requireBestaetigtenSteuerModus(client: unknown): Promise<CompanySettings> {
+  const company = await loadCompanySettings(client);
+  if (!company.steuerModusBestaetigt) throw new Error(STEUER_MODUS_UNBESTAETIGT_FEHLER);
+  return company;
+}
