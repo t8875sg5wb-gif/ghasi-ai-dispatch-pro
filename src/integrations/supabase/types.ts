@@ -1223,6 +1223,7 @@ export type Database = {
           updated_at: string
           verordnung: string
           verordnung_dokument_id: string | null
+          verordnung_id: string | null
           zielanforderung: string
           zielort: string
         }
@@ -1270,6 +1271,7 @@ export type Database = {
           updated_at?: string
           verordnung?: string
           verordnung_dokument_id?: string | null
+          verordnung_id?: string | null
           zielanforderung?: string
           zielort?: string
         }
@@ -1317,6 +1319,7 @@ export type Database = {
           updated_at?: string
           verordnung?: string
           verordnung_dokument_id?: string | null
+          verordnung_id?: string | null
           zielanforderung?: string
           zielort?: string
         }
@@ -1340,6 +1343,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_verordnung_id_fkey"
+            columns: ["verordnung_id"]
+            isOneToOne: false
+            referencedRelation: "verordnungen"
             referencedColumns: ["id"]
           },
         ]
@@ -1810,6 +1820,84 @@ export type Database = {
           versicherung_bis?: string
         }
         Relationships: []
+      }
+      verordnungen: {
+        Row: {
+          anzahl_faelligkeiten: number | null
+          arzt_bsnr: string
+          arzt_lanr: string
+          arzt_name: string
+          ausstellungsdatum: string
+          created_at: string
+          dokument_id: string | null
+          genehmigt_von_kasse: boolean
+          genehmigungsnummer: string
+          hin_rueckfahrt: boolean
+          id: string
+          ist_serie: boolean
+          notiz: string
+          patient_id: string | null
+          seriengueltig_bis: string | null
+          seriengueltig_von: string | null
+          transportart: string
+          updated_at: string
+        }
+        Insert: {
+          anzahl_faelligkeiten?: number | null
+          arzt_bsnr?: string
+          arzt_lanr?: string
+          arzt_name?: string
+          ausstellungsdatum: string
+          created_at?: string
+          dokument_id?: string | null
+          genehmigt_von_kasse?: boolean
+          genehmigungsnummer?: string
+          hin_rueckfahrt?: boolean
+          id?: string
+          ist_serie?: boolean
+          notiz?: string
+          patient_id?: string | null
+          seriengueltig_bis?: string | null
+          seriengueltig_von?: string | null
+          transportart: string
+          updated_at?: string
+        }
+        Update: {
+          anzahl_faelligkeiten?: number | null
+          arzt_bsnr?: string
+          arzt_lanr?: string
+          arzt_name?: string
+          ausstellungsdatum?: string
+          created_at?: string
+          dokument_id?: string | null
+          genehmigt_von_kasse?: boolean
+          genehmigungsnummer?: string
+          hin_rueckfahrt?: boolean
+          id?: string
+          ist_serie?: boolean
+          notiz?: string
+          patient_id?: string | null
+          seriengueltig_bis?: string | null
+          seriengueltig_von?: string | null
+          transportart?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verordnungen_dokument_id_fkey"
+            columns: ["dokument_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verordnungen_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
