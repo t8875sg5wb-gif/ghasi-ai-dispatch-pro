@@ -1,5 +1,5 @@
 // Server functions for company-wide settings (Firmenstammdaten & Steuerprofil).
-// A single-row ("singleton") table. Reads: any authenticated user. Writes: admin.
+// A single-row ("singleton") table. Reads: Admin & Finanz. Writes: admin.
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
