@@ -6,6 +6,25 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 
+/**
+ * Löst den Anzeigenamen eines Fahrers in dessen Auth-Konto (drivers.user_id) auf.
+ * Bewusst KEIN unscharfer Namensabgleich: exakter Treffer oder null.
+ */
+async function resolveFahrerUserId(
+  supabase: { from: (t: string) => any },
+  fahrer: string | null | undefined,
+): Promise<string | null> {
+  if (!fahrer || !fahrer.trim()) return null;
+  const { data } = await supabase
+    .from("drivers")
+    .select("user_id")
+    .eq("name", fahrer.trim())
+    .limit(2);
+  const treffer = (data ?? []) as { user_id: string | null }[];
+  if (treffer.length !== 1) return null;
+  return treffer[0].user_id ?? null;
+}
+
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Auftrag[]> => {
@@ -34,6 +53,8 @@ export const createOrder = createServerFn({ method: "POST" })
       nummer = `A-${2045 + (count ?? 0)}`;
     }
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
+    // Identitätskette: Fahrerzuweisung zusätzlich als Auth-Konto persistieren.
+    row.fahrer_user_id = await resolveFahrerUserId(context.supabase, data.fahrer);
     const { data: created, error } = await context.supabase
       .from("orders")
       .insert(row as never)
@@ -51,6 +72,9 @@ export const updateOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     const row = writeToRow(data.values);
+    if ("fahrer" in (data.values as Record<string, unknown>)) {
+      row.fahrer_user_id = await resolveFahrerUserId(context.supabase, data.values.fahrer);
+    }
     const { data: updated, error } = await context.supabase
       .from("orders")
       .update(row as never)
