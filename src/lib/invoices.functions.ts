@@ -346,7 +346,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
 
       const betrag = preisInfo ? preisInfo.preis : 0;
       const art = abrechnungsartFuer(a.kostentraeger);
-      const modus = modusFuerTransportart(a.transportart);
+      const modus = modusFuerTransportart(a.transportart, company.steuerModus);
       const mwst = satzFuer(modus);
       const nummer = `RE-2026-${String(40 + lfd++).padStart(4, "0")}`;
       nummern.push(nummer);
