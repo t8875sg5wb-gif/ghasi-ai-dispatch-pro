@@ -95,7 +95,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, ...rest } = initial;
-      console.log("DBG initial", JSON.stringify({ id: initial.id, userId: initial.userId }));
+      console.log("DBG initial", JSON.stringify({ id: initial.id, userId: initial.userId, keys: Object.keys(rest).includes("userId") }));
       setValues(rest);
       setAdr(parseAdresse(initial.adresse));
     } else {
@@ -104,6 +104,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
     }
   }, [initial]);
 
+  console.log("DBG render userId", values.userId, "benutzer", benutzer.length, "admin", istAdmin);
   function set<K extends keyof FahrerFormValues>(key: K, value: FahrerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
