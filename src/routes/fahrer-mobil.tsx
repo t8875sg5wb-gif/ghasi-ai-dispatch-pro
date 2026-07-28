@@ -64,20 +64,31 @@ function mapsUrl(address: string): string {
 }
 
 function FahrerMobilPage() {
-  const { name } = useAuth();
+  const { name, user } = useAuth();
   const { data: orders = [], isLoading } = useOrders();
+  const { data: drivers = [], isLoading: driversLoading } = useDrivers();
   const updateMut = useUpdateOrder();
 
+  // Identitätskette: die eigenen Touren werden ausschließlich über den
+  // verknüpften Fahrerdatensatz (drivers.user_id → drivers.id → orders.fahrer_id)
+  // bestimmt. Kein Namensabgleich — Namen sind nicht eindeutig und keine Identität.
+  const meinFahrer = useMemo(
+    () => (user ? (drivers.find((d) => d.userId === user.id) ?? null) : null),
+    [drivers, user],
+  );
+
   const meineTouren = useMemo(() => {
-    const me = name.trim().toLowerCase();
+    if (!meinFahrer) return [];
     return orders
-      .filter((o) => (o.fahrer ?? "").trim().toLowerCase() === me)
+      .filter((o) => o.fahrerId === meinFahrer.id)
       .filter((o) => istHeute(o.termin))
       .filter((o) => o.status !== "storniert")
       .sort((a, b) => new Date(a.termin).getTime() - new Date(b.termin).getTime());
-  }, [orders, name]);
+  }, [orders, meinFahrer]);
 
   const offen = meineTouren.filter((o) => o.status !== "abgeschlossen").length;
+  const ladend = isLoading || driversLoading;
+  const nichtVerknuepft = !driversLoading && !meinFahrer;
 
   // --- Opt-in real GPS sharing -----------------------------------------
   const pushPosition = useServerFn(updateMyVehiclePosition);
