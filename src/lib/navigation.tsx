@@ -34,6 +34,7 @@ import {
   Handshake,
   Smartphone,
   Database,
+  Link2,
   Receipt,
   ScrollText,
   Wallet,
@@ -293,6 +294,12 @@ export const navGroups: NavGroup[] = [
         to: "/datenimport",
         icon: Database,
         description: "Fahrer, Fahrzeuge, Kunden & Patienten per CSV/Excel importieren.",
+      },
+      {
+        label: "Datenabgleich",
+        to: "/datenabgleich",
+        icon: Link2,
+        description: "Aufträge ohne Patienten- oder Kostenträger-Verknüpfung zuordnen.",
       },
       {
         label: "Automatisierung",

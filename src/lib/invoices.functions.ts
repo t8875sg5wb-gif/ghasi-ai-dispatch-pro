@@ -330,9 +330,12 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
       if (berechnet.has(a.nummer)) continue;
 
       // Kostenträger → insurerId (bevorzugt über den verknüpften Patienten).
-      const patient = patients.find((p) => normName(p.name) === normName(a.patient));
+      const patient = a.patientId
+        ? patients.find((p) => p.id === a.patientId)
+        : patients.find((p) => normName(p.name) === normName(a.patient));
+      // Genaueste Quelle zuerst: Auftrag → Patient → Texttreffer.
       const insurerId =
-        patient?.kostentraegerId ?? findeInsurerId(insurers, a.kostentraeger);
+        a.insurerId ?? patient?.kostentraegerId ?? findeInsurerId(insurers, a.kostentraeger);
       const befreit = patient?.zuzahlungsbefreit ?? false;
       const preisInfo = ermittleVertragspreis(contracts, insurerId, a.transportart, befreit, datum);
 

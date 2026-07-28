@@ -61,6 +61,8 @@ const NONE = "__none__";
 function emptyValues(): AuftragFormValues {
   return {
     patient: "",
+    patientId: null,
+    insurerId: null,
     telefon: "",
     transportart: "Sitzendtransport",
     prioritaet: "normal",
@@ -99,18 +101,30 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
   const vertragspreis = useMemo(() => {
     const normName = (s: string) =>
       s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-    const patient = values.patient
-      ? patienten.find((p) => normName(p.name) === normName(values.patient))
-      : undefined;
+    const patient = values.patientId
+      ? patienten.find((p) => p.id === values.patientId)
+      : values.patient
+        ? patienten.find((p) => normName(p.name) === normName(values.patient))
+        : undefined;
+    // Genaueste Quelle zuerst: Auftrag → Patient → Texttreffer.
     const insurerId =
-      patient?.kostentraegerId ?? findeInsurerId(kassen, values.kostentraeger);
+      values.insurerId ?? patient?.kostentraegerId ?? findeInsurerId(kassen, values.kostentraeger);
     if (!insurerId) return { info: null as ReturnType<typeof ermittleVertragspreis>, hatKasse: false };
     const befreit = patient?.zuzahlungsbefreit ?? false;
     return {
       info: ermittleVertragspreis(contracts, insurerId, values.transportart, befreit),
       hatKasse: true,
     };
-  }, [values.patient, values.kostentraeger, values.transportart, patienten, kassen, contracts]);
+  }, [
+    values.patient,
+    values.patientId,
+    values.insurerId,
+    values.kostentraeger,
+    values.transportart,
+    patienten,
+    kassen,
+    contracts,
+  ]);
 
 
   useEffect(() => {
@@ -158,7 +172,48 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="patient">Patient</Label>
+          <Label>Patient (Stammdaten)</Label>
+          <Select
+            value={values.patientId ?? NONE}
+            onValueChange={(v) => {
+              if (v === NONE) {
+                set("patientId", null);
+                return;
+              }
+              const p = patienten.find((x) => x.id === v);
+              setValues((prev) => ({
+                ...prev,
+                patientId: v,
+                patient: p?.name ?? prev.patient,
+                // Kostenträger des Patienten vorauswählen – bleibt übersteuerbar.
+                insurerId: p?.kostentraegerId ?? prev.insurerId ?? null,
+                kostentraeger: p?.kostentraegerId
+                  ? (kassen.find((k) => k.id === p.kostentraegerId)?.name ?? prev.kostentraeger)
+                  : prev.kostentraeger,
+              }));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Nicht verknüpft" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>Nicht verknüpft</SelectItem>
+              {patienten.length === 0 ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Noch keine Patienten angelegt.
+                </div>
+              ) : (
+                patienten.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <Label htmlFor="patient" className="pt-1 block">
+            Patientenname
+          </Label>
           <Input
             id="patient"
             value={values.patient}
@@ -166,6 +221,11 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
             placeholder="Name des Patienten"
             required
           />
+          {!values.patientId && (
+            <p className="text-xs text-muted-foreground">
+              Ohne Verknüpfung wird nur der Freitext gespeichert.
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="telefon">Telefonnummer</Label>
@@ -247,7 +307,43 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="kostentraeger">Kostenträger</Label>
+          <Label>Kostenträger (Stammdaten)</Label>
+          <Select
+            value={values.insurerId ?? NONE}
+            onValueChange={(v) => {
+              if (v === NONE) {
+                set("insurerId", null);
+                return;
+              }
+              const k = kassen.find((x) => x.id === v);
+              setValues((prev) => ({
+                ...prev,
+                insurerId: v,
+                kostentraeger: k?.name ?? prev.kostentraeger,
+              }));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Nicht verknüpft" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>Nicht verknüpft</SelectItem>
+              {kassen.length === 0 ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Noch keine Kostenträger angelegt.
+                </div>
+              ) : (
+                kassen.map((k) => (
+                  <SelectItem key={k.id} value={k.id}>
+                    {k.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <Label htmlFor="kostentraeger" className="pt-1 block">
+            Kostenträger-Text
+          </Label>
           <Input
             id="kostentraeger"
             value={values.kostentraeger}

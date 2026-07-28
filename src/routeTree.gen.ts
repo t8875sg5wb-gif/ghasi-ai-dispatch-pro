@@ -45,6 +45,7 @@ import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
 import { Route as DatenimportRouteImport } from './routes/datenimport'
+import { Route as DatenabgleichRouteImport } from './routes/datenabgleich'
 import { Route as ControlCenterRouteImport } from './routes/control-center'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CeoCockpitRouteImport } from './routes/ceo-cockpit'
@@ -246,6 +247,11 @@ const DatenimportRoute = DatenimportRouteImport.update({
   path: '/datenimport',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DatenabgleichRoute = DatenabgleichRouteImport.update({
+  id: '/datenabgleich',
+  path: '/datenabgleich',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ControlCenterRoute = ControlCenterRouteImport.update({
   id: '/control-center',
   path: '/control-center',
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByTo {
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -479,6 +487,7 @@ export interface FileRoutesById {
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
   '/control-center': typeof ControlCenterRoute
+  '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
   '/dialysezentren': typeof DialysezentrenRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/ceo-cockpit'
     | '/compliance'
     | '/control-center'
+    | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/ceo-cockpit'
     | '/compliance'
     | '/control-center'
+    | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -654,6 +665,7 @@ export interface FileRouteTypes {
     | '/ceo-cockpit'
     | '/compliance'
     | '/control-center'
+    | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
     | '/dialysezentren'
@@ -713,6 +725,7 @@ export interface RootRouteChildren {
   CeoCockpitRoute: typeof CeoCockpitRoute
   ComplianceRoute: typeof ComplianceRoute
   ControlCenterRoute: typeof ControlCenterRoute
+  DatenabgleichRoute: typeof DatenabgleichRoute
   DatenimportRoute: typeof DatenimportRoute
   DauerauftraegeRoute: typeof DauerauftraegeRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
@@ -1011,6 +1024,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DatenimportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/datenabgleich': {
+      id: '/datenabgleich'
+      path: '/datenabgleich'
+      fullPath: '/datenabgleich'
+      preLoaderRoute: typeof DatenabgleichRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/control-center': {
       id: '/control-center'
       path: '/control-center'
@@ -1181,6 +1201,7 @@ const rootRouteChildren: RootRouteChildren = {
   CeoCockpitRoute: CeoCockpitRoute,
   ComplianceRoute: ComplianceRoute,
   ControlCenterRoute: ControlCenterRoute,
+  DatenabgleichRoute: DatenabgleichRoute,
   DatenimportRoute: DatenimportRoute,
   DauerauftraegeRoute: DauerauftraegeRoute,
   DialysezentrenRoute: DialysezentrenRoute,
