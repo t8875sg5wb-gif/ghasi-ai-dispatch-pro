@@ -24,7 +24,7 @@ import {
   verordnungFehlt,
   empfohlenerFahrzeugtyp,
 } from "@/lib/auftraege";
-import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { KUNDEN } from "@/lib/stammdaten";
 import {
   DAUERAUFTRAEGE,
   WOCHENTAGE,
