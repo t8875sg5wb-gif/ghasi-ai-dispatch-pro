@@ -47,6 +47,11 @@ export interface Dauerauftrag {
   /** Sprechende Kennung der Serie, z. B. "DA-001". */
   kennung: string;
   patient: string;
+  /** Stabile Verknüpfung zum Patientenstamm (Identitätskette). */
+  patientId?: string | null;
+  /** Stabile Verknüpfung zur Krankenkasse (`insurers`) – aus `krankenkasse`. */
+  insurerId?: string | null;
+
   /** Strukturierte Abholadresse; legacy `abholort` bleibt als rückwärtskompatible Anzeige erhalten. */
   pickup?: AdresseStruktur;
   /** Strukturierte Zieladresse; legacy `zielort` bleibt als rückwärtskompatible Anzeige erhalten. */
