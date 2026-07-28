@@ -34,6 +34,8 @@ export interface OrderWrite {
    */
   patientId?: string | null;
   insurerId?: string | null;
+  /** Stabile Zuordnung zur ärztlichen Verordnung (verordnungen.id). */
+  verordnungId?: string | null;
   telefon?: string;
   transportart?: string;
   prioritaet?: string;
@@ -98,6 +100,7 @@ export interface OrderRow {
   fahrer_id?: string | null;
   patient_id?: string | null;
   insurer_id?: string | null;
+  verordnung_id?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;
@@ -158,6 +161,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     patient: r.patient ?? "Unbekannter Patient",
     patientId: r.patient_id ?? null,
     insurerId: r.insurer_id ?? null,
+    verordnungId: r.verordnung_id ?? null,
     telefon: r.telefon ?? "",
     transportart,
     prioritaet,
@@ -203,6 +207,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   // sobald diese gesetzt sind — analog zu `fahrer_id` → `fahrer`.
   set("patient_id", w.patientId);
   set("insurer_id", w.insurerId);
+  set("verordnung_id", w.verordnungId);
   set("telefon", w.telefon);
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);

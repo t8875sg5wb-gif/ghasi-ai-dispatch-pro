@@ -56,6 +56,7 @@ const orderFieldsSchema = z
     patient: z.string().optional(),
     patientId: z.string().uuid().nullable().optional(),
     insurerId: z.string().uuid().nullable().optional(),
+    verordnungId: z.string().uuid().nullable().optional(),
     telefon: z.string().optional(),
     transportart: z.string().optional(),
     prioritaet: z.string().optional(),
@@ -122,6 +123,19 @@ async function assertInsurerExists(
   if (!data) throw new Error("Unbekannter Kostenträger – Verknüpfung nicht möglich.");
 }
 
+async function assertVerordnungExists(
+  supabase: SupabaseClient<Database>,
+  verordnungId: string,
+): Promise<void> {
+  const { data } = await supabase
+    .from("verordnungen")
+    .select("id")
+    .eq("id", verordnungId)
+    .maybeSingle();
+  if (!data) throw new Error("Unbekannte Verordnung – Verknüpfung nicht möglich.");
+}
+
+
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Auftrag[]> => {
@@ -151,6 +165,7 @@ export const createOrder = createServerFn({ method: "POST" })
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
+    if (data.verordnungId) await assertVerordnungExists(context.supabase, data.verordnungId);
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
     const { data: created, error } = await context.supabase
       .from("orders")
@@ -172,6 +187,8 @@ export const updateOrder = createServerFn({ method: "POST" })
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
+    if (data.values.verordnungId)
+      await assertVerordnungExists(context.supabase, data.values.verordnungId);
     const row = writeToRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("orders")

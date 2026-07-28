@@ -32,6 +32,7 @@ import {
   adresseGefuellt,
 } from "@/lib/address";
 import { AddressFields } from "@/components/forms/address-fields";
+import { VerordnungAuswahl } from "@/components/auftraege/verordnung-auswahl";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ function emptyValues(): AuftragFormValues {
     patient: "",
     patientId: null,
     insurerId: null,
+    verordnungId: null,
     telefon: "",
     transportart: "Sitzendtransport",
     prioritaet: "normal",
@@ -184,6 +186,8 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
               setValues((prev) => ({
                 ...prev,
                 patientId: v,
+                // Verordnungen sind patientengebunden – Zuordnung zurücksetzen.
+                verordnungId: prev.patientId === v ? prev.verordnungId : null,
                 patient: p?.name ?? prev.patient,
                 // Kostenträger des Patienten vorauswählen – bleibt übersteuerbar.
                 insurerId: p?.kostentraegerId ?? prev.insurerId ?? null,
@@ -391,6 +395,16 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
             ergänzt.
           </div>
         ))}
+
+      {/* Ärztliche Verordnung (Muster 4) inkl. informativer Deckungsprüfung. */}
+      <VerordnungAuswahl
+        patientId={values.patientId}
+        transportart={values.transportart}
+        termin={values.termin}
+        auftragId={initial?.id}
+        value={values.verordnungId}
+        onChange={(id) => set("verordnungId", id)}
+      />
 
 
       <div className="grid gap-4 sm:grid-cols-2">
