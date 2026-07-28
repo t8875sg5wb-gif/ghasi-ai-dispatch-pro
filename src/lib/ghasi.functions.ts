@@ -124,18 +124,16 @@ export const protokolliere = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { resolveActor } = await import("@/lib/ghasi-security.server");
-
-    // Akteur wird serverseitig aus der Identität abgeleitet – Client-Werte werden ignoriert.
-    const actor = await resolveActor(context.userId);
-    const akteur = `${actor.name}${actor.role ? ` (${actor.role})` : ""}`.slice(0, 80);
-
-    const { data: row, error } = await supabaseAdmin
-      .from("activity_log")
-      .insert({ ...data, akteur })
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return row;
+    // Gemeinsamer, server-only Helfer (Service-Rolle + serverseitiger Akteur).
+    const { writeActivityLog } = await import("@/lib/activity-log.server");
+    return writeActivityLog(
+      {
+        bereich: data.bereich,
+        entitaet: data.entitaet,
+        aktion: data.aktion,
+        beschreibung: data.beschreibung,
+        metadaten: data.metadaten as Record<string, unknown> | null,
+      },
+      context.userId,
+    );
   });
