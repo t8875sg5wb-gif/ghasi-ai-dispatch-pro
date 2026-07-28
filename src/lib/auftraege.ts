@@ -60,7 +60,10 @@ export interface Auftrag {
   abholort: string;
   zielort: string;
   termin: string; // ISO datetime
+  /** Angezeigter Fahrername (abgeleitet, read-only aus Sicht des Clients). */
   fahrer: string | null;
+  /** Stabile Fahrer-Zuordnung (drivers.id); null = nicht sicher verknüpft. */
+  fahrerId?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;

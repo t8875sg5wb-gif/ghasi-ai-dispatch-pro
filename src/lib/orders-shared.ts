@@ -37,7 +37,12 @@ export interface OrderWrite {
   pickup?: AdresseStruktur;
   destination?: AdresseStruktur;
   termin?: string;
-  fahrer?: string | null;
+  /**
+   * Stabile Fahrer-Zuordnung über `drivers.id`. Der Anzeigename und
+   * `fahrer_user_id` werden serverseitig/DB-seitig daraus abgeleitet — der
+   * Browser liefert NIEMALS Namen oder Auth-IDs als Identität.
+   */
+  fahrerId?: string | null;
   fahrzeug?: string | null;
   kostentraeger?: string;
   notiz?: string;
@@ -79,6 +84,7 @@ export interface OrderRow {
   destination_additional_info?: string | null;
   termin: string;
   fahrer: string | null;
+  fahrer_id?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;
@@ -145,6 +151,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     zielort,
     termin: r.termin ?? new Date().toISOString(),
     fahrer: r.fahrer,
+    fahrerId: r.fahrer_id ?? null,
     fahrzeug: r.fahrzeug,
     kostentraeger: r.kostentraeger ?? "",
     notiz: r.notiz ?? "",
@@ -203,7 +210,9 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
     set("destination_additional_info", destination.additionalInfo);
   }
   set("termin", w.termin);
-  set("fahrer", w.fahrer);
+  // `fahrer` (Anzeigename) wird nie vom Client geschrieben — der DB-Trigger
+  // leitet ihn aus `fahrer_id` ab.
+  set("fahrer_id", w.fahrerId);
   set("fahrzeug", w.fahrzeug);
   set("kostentraeger", w.kostentraeger);
   set("notiz", w.notiz);
