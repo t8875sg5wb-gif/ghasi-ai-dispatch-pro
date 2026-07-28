@@ -1,8 +1,10 @@
 // Server functions for persisted recurring transport orders (Daueraufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertInsurerExists, assertPatientExists } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
 import {
   rowToDauerauftrag,
@@ -10,6 +12,18 @@ import {
   type RecurringRow,
   type RecurringWrite,
 } from "@/lib/recurring-shared";
+
+/**
+ * Identitätskette: `patientId`/`insurerId` sind stabile UUID-Verknüpfungen.
+ * `krankenkasse` bleibt Freitext-Anzeige, `kostentraeger` (Abrechnungskunde)
+ * ist bewusst ein anderes Konzept und hier nicht verknüpft.
+ */
+const identitaetSchema = z
+  .object({
+    patientId: z.string().uuid().nullable().optional(),
+    insurerId: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
 
 export const listRecurring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -28,9 +42,12 @@ export const createRecurring = createServerFn({ method: "POST" })
     if (!data || typeof data.patient !== "string") {
       throw new Error("patient ist erforderlich");
     }
+    identitaetSchema.parse(data);
     return data;
   })
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+    if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
+    if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     const row = writeToRecurringRow(data);
     const { data: created, error } = await context.supabase
       .from("recurring_orders")
@@ -45,9 +62,12 @@ export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: { id: string; values: Partial<RecurringWrite> }) => {
     if (!data?.id) throw new Error("id ist erforderlich");
+    identitaetSchema.parse(data.values ?? {});
     return data;
   })
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+    if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
+    if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     const row = writeToRecurringRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("recurring_orders")
