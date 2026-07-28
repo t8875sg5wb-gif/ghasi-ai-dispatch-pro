@@ -13,9 +13,24 @@ import {
   Moon,
   Save,
   Landmark,
+  Trash2,
 } from "lucide-react";
 
+import { useServerFn } from "@tanstack/react-start";
+
 import { useTheme } from "@/components/theme-provider";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { bereinigeAltenChatverlauf } from "@/lib/chat-retention.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { logActivity } from "@/lib/protokoll";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -107,6 +122,8 @@ function EinstellungenSeite() {
   const [company, setCompany] = useState<CompanySettings>(firma);
   const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(firma.adresse));
   const [pref, setPref] = useState<Praeferenzen>(STANDARD_PREF);
+  const bereinigen = useServerFn(bereinigeAltenChatverlauf);
+  const [bereinigtLaeuft, setBereinigtLaeuft] = useState(false);
 
   useEffect(() => {
     setCompany(firma);
@@ -120,6 +137,21 @@ function EinstellungenSeite() {
   }
   function setP<K extends keyof Praeferenzen>(key: K, value: Praeferenzen[K]) {
     setPref((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function chatverlaufBereinigen() {
+    setBereinigtLaeuft(true);
+    try {
+      const r = await bereinigen({ data: undefined });
+      toast.success(
+        `Bereinigt (älter als ${r.monate} Monate): ${r.geloeschteThreads} Unterhaltungen, ` +
+          `${r.geloeschteNachrichten} Nachrichten, ${r.geloeschteErinnerungen} Erinnerungen gelöscht.`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bereinigung fehlgeschlagen");
+    } finally {
+      setBereinigtLaeuft(false);
+    }
   }
 
   async function speichern() {
@@ -371,6 +403,67 @@ function EinstellungenSeite() {
             <p className="text-xs italic text-muted-foreground">{STEUER_DISCLAIMER}</p>
           </CardContent>
         </Card>
+
+        {/* Datenschutz & Aufbewahrung */}
+        {istAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-4 w-4" /> Datenschutz & Aufbewahrung
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Feld label="Aufbewahrungsdauer KI-Chatverlauf (Monate)">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={120}
+                  value={company.chatRetentionMonths}
+                  onChange={(e) => setC("chatRetentionMonths", Number(e.target.value) || 0)}
+                />
+                <p className="mt-2 rounded-lg border border-warning/30 bg-warning/10 p-2 text-xs text-foreground">
+                  Diese Frist ist eine betriebliche Einstellung, keine Rechtsberatung. Bitte mit
+                  einer Datenschutzbeauftragten oder rechtlicher Beratung abstimmen, bevor echte
+                  Patientendaten verarbeitet werden.
+                </p>
+              </Feld>
+
+              <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                <p className="mb-1 text-sm font-medium">Alten Chatverlauf jetzt löschen</p>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Löscht Unterhaltungen und Nachrichten, die älter als die eingestellte Frist sind,
+                  sowie abgelaufene bzw. überalterte KI-Erinnerungen. Der KI-Prüfpfad
+                  (Audit-Protokoll) bleibt bewusst unangetastet. Kein automatischer Lauf – nur
+                  manuell.
+                </p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={bereinigtLaeuft}>
+                      <Trash2 className="mr-1.5 h-4 w-4" /> Jetzt bereinigen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Chatverlauf endgültig löschen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Alle KI-Unterhaltungen, Nachrichten und Erinnerungen, die älter als{" "}
+                        {company.chatRetentionMonths} Monate sind, werden unwiderruflich gelöscht.
+                        Bitte zuvor die Frist speichern, falls Sie sie gerade geändert haben.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                      <AlertDialogAction onClick={chatverlaufBereinigen}>
+                        Endgültig löschen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

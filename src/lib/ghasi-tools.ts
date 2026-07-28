@@ -24,7 +24,7 @@ import {
   verordnungFehlt,
   empfohlenerFahrzeugtyp,
 } from "@/lib/auftraege";
-import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { KUNDEN } from "@/lib/stammdaten";
 import {
   DAUERAUFTRAEGE,
   WOCHENTAGE,
@@ -327,8 +327,15 @@ export function buildBusinessTools(role: AppRole | null) {
         nurVerspaetet: z.boolean().optional().describe("nur verspätete Transporte"),
       }),
       execute: async ({ kennzeichen, nurAlerts, nurVerspaetet }) => {
+        // Live-Positionen ändern sich ständig: vor dem synchronen `buildFleet()`
+        // wird eine frische Hydration erzwungen, damit keine bis zu 5 Sekunden
+        // alten Mirror-Werte ausgeliefert werden. `buildFleet()` selbst bleibt
+        // synchron und client-safe (wird auch von der Karte im Browser genutzt).
+        const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
+        await hydrateServerMirrors(true);
         const { buildFleet, FLEET_FARBEN } = await import("@/lib/fleet-live");
         const { LIVE_STATUS_META } = await import("@/lib/dispatch");
+
         const fleet = buildFleet().filter(
           (v) =>
             enthaelt(`${v.kennzeichen} ${v.fahrer ?? ""} ${v.nummer}`, kennzeichen) &&
@@ -378,13 +385,23 @@ export function buildBusinessTools(role: AppRole | null) {
         mobilitaet: z.enum(["Gehfähig", "Rollstuhl", "Liegend"]).optional(),
         dialyse: z.boolean().optional(),
       }),
+      // Request-scoped statt Mirror (Guardrails #3/#4): Patientendaten werden
+      // pro Anfrage direkt aus der Datenbank gelesen. Die Rollenprüfung ist
+      // über `erlaubt("patienten")` bereits erfolgt, daher Service-Role-Client.
+      // Bewusst KEINE medizinischen Freitextfelder im Ergebnis.
       execute: async ({ name, mobilitaet, dialyse }) => {
-        const liste = PATIENTEN.filter(
-          (p) =>
-            enthaelt(p.name, name) &&
-            (!mobilitaet || p.mobilitaet === mobilitaet) &&
-            (!dialyse || /dialyse/i.test(p.hinweis)),
-        );
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { rowToPatient } = await import("@/lib/patients-shared");
+
+        let query = supabaseAdmin.from("patients").select("*").limit(200);
+        if (name) query = query.ilike("name", `%${name}%`);
+        if (mobilitaet) query = query.eq("mobilitaet", mobilitaet);
+        const { data, error } = await query;
+        if (error) throw new Error(error.message);
+
+        const liste = (data ?? [])
+          .map((r) => rowToPatient(r as never))
+          .filter((p) => !dialyse || /dialyse/i.test(p.hinweis));
         return {
           quelle: "Patienten",
           anzahl: liste.length,
@@ -396,6 +413,7 @@ export function buildBusinessTools(role: AppRole | null) {
           })),
         };
       },
+
     });
   }
 

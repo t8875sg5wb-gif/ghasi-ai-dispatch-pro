@@ -285,6 +285,7 @@ export type Database = {
           adresse: string
           betriebskosten_arbeitstage: number
           betriebskosten_dieselpreis: number
+          chat_retention_months: number
           created_at: string
           datev_berater_nr: string
           datev_erloeskonto: string
@@ -308,6 +309,7 @@ export type Database = {
           adresse?: string
           betriebskosten_arbeitstage?: number
           betriebskosten_dieselpreis?: number
+          chat_retention_months?: number
           created_at?: string
           datev_berater_nr?: string
           datev_erloeskonto?: string
@@ -331,6 +333,7 @@ export type Database = {
           adresse?: string
           betriebskosten_arbeitstage?: number
           betriebskosten_dieselpreis?: number
+          chat_retention_months?: number
           created_at?: string
           datev_berater_nr?: string
           datev_erloeskonto?: string

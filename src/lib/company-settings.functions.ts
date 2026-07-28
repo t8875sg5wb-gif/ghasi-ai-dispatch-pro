@@ -31,6 +31,12 @@ export interface CompanySettings {
   dieselpreis: number;
   /** Durchschnittliche Arbeitstage pro Monat für Monats-Hochrechnungen. */
   arbeitstageMonat: number;
+  /**
+   * Betriebliche Aufbewahrungsdauer für KI-Chatverläufe in Monaten (1–120).
+   * Keine gesetzliche Frist und ausdrücklich NICHT von AUFBEWAHRUNG_JAHRE
+   * (GoBD/Belege) abgeleitet.
+   */
+  chatRetentionMonths: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -51,6 +57,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   datevGegenkonto: "10000",
   dieselpreis: 1.75,
   arbeitstageMonat: 21,
+  chatRetentionMonths: 12,
 };
 
 interface CompanyRow {
@@ -71,6 +78,7 @@ interface CompanyRow {
   datev_gegenkonto?: string;
   betriebskosten_dieselpreis?: number | string;
   betriebskosten_arbeitstage?: number | string;
+  chat_retention_months?: number | string;
 }
 
 function rowToSettings(r: CompanyRow): CompanySettings {
@@ -92,6 +100,7 @@ function rowToSettings(r: CompanyRow): CompanySettings {
     datevGegenkonto: r.datev_gegenkonto ?? "10000",
     dieselpreis: Number(r.betriebskosten_dieselpreis ?? 1.75),
     arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
+    chatRetentionMonths: Number(r.chat_retention_months ?? 12),
   };
 }
 
@@ -134,6 +143,10 @@ export const saveCompanySettings = createServerFn({ method: "POST" })
       datev_gegenkonto: data.datevGegenkonto,
       betriebskosten_dieselpreis: data.dieselpreis,
       betriebskosten_arbeitstage: data.arbeitstageMonat,
+      chat_retention_months: Math.min(
+        120,
+        Math.max(1, Math.round(Number(data.chatRetentionMonths) || 12)),
+      ),
     };
     const { data: saved, error } = await context.supabase
       .from("company_settings")
