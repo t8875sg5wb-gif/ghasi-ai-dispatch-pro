@@ -168,7 +168,7 @@ export const createOrder = createServerFn({ method: "POST" })
     if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
     return parsed.data as OrderWrite;
   })
-  .handler(async ({ data, context }): Promise<Auftrag> => {
+  .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     let nummer = data.nummer;
     if (!nummer) {
       const { count } = await context.supabase
@@ -189,8 +189,18 @@ export const createOrder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return rowToAuftrag(created as unknown as OrderRow);
+    const auftrag: AuftragMitWarnungen = rowToAuftrag(created as unknown as OrderRow);
+
+    // Zuweisungskonflikte: warnen, nicht blockieren. Nur wenn tatsächlich
+    // ein Fahrer oder Fahrzeug zugewiesen wurde.
+    if (auftrag.fahrerId || auftrag.fahrzeug) {
+      const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
+      const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
+      if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
+    }
+    return auftrag;
   });
+
 
 export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
