@@ -1,6 +1,9 @@
 // Server functions for persisted transport orders (Aufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
@@ -11,7 +14,7 @@ import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/
  * Bewusst KEIN unscharfer Namensabgleich: exakter Treffer oder null.
  */
 async function resolveFahrerUserId(
-  supabase: { from: (t: string) => any },
+  supabase: SupabaseClient<Database>,
   fahrer: string | null | undefined,
 ): Promise<string | null> {
   if (!fahrer || !fahrer.trim()) return null;
