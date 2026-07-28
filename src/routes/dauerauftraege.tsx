@@ -778,7 +778,6 @@ function DauerauftragForm({
   const kundeOpt = useCustomerOptions();
   const { data: patienten = [] } = usePatients();
   const { data: kassen = [] } = useInsurers();
-  const kassenListe = kassen.length > 0 ? kassen : KRANKENKASSEN;
 
   useEffect(() => {
     setF(normalisiere(initial));
@@ -1057,7 +1056,7 @@ function DauerauftragForm({
                   setF((prev) => ({ ...prev, insurerId: null }));
                   return;
                 }
-                const k = kassenListe.find((x) => x.id === v);
+                const k = kassen.find((x) => x.id === v);
                 setF((prev) => ({
                   ...prev,
                   insurerId: v,
@@ -1070,11 +1069,17 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={KEINE}>Nicht verknüpft</SelectItem>
-                {kassenListe.map((k) => (
-                  <SelectItem key={k.id} value={k.id}>
-                    {k.name}
-                  </SelectItem>
-                ))}
+                {kassen.length === 0 ? (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Noch keine Kostenträger angelegt.
+                  </div>
+                ) : (
+                  kassen.map((k) => (
+                    <SelectItem key={k.id} value={k.id}>
+                      {k.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <Label className="pt-1 block">Krankenkasse (Text)</Label>
