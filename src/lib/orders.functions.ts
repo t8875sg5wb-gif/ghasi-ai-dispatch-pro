@@ -123,17 +123,31 @@ async function assertInsurerExists(
   if (!data) throw new Error("Unbekannter Kostenträger – Verknüpfung nicht möglich.");
 }
 
-async function assertVerordnungExists(
+/**
+ * Eine Verordnung darf nur an einen Auftrag desselben Patienten gehängt
+ * werden. Ohne verknüpften Patienten gibt es keine belastbare Zuordnung –
+ * dann wird bewusst abgelehnt statt geraten.
+ */
+async function assertVerordnungPasstZuPatient(
   supabase: SupabaseClient<Database>,
   verordnungId: string,
+  patientId: string | null | undefined,
 ): Promise<void> {
   const { data } = await supabase
     .from("verordnungen")
-    .select("id")
+    .select("id, patient_id")
     .eq("id", verordnungId)
     .maybeSingle();
   if (!data) throw new Error("Unbekannte Verordnung – Verknüpfung nicht möglich.");
+  if (!patientId)
+    throw new Error(
+      "Verordnung kann nur mit einem aus den Stammdaten verknüpften Patienten gespeichert werden.",
+    );
+  if ((data as { patient_id: string | null }).patient_id !== patientId)
+    throw new Error("Die Verordnung gehört zu einem anderen Patienten.");
 }
+
+
 
 
 export const listOrders = createServerFn({ method: "GET" })
@@ -165,7 +179,9 @@ export const createOrder = createServerFn({ method: "POST" })
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
-    if (data.verordnungId) await assertVerordnungExists(context.supabase, data.verordnungId);
+    if (data.verordnungId)
+      await assertVerordnungPasstZuPatient(context.supabase, data.verordnungId, data.patientId);
+
     const row = writeToRow({ ...data, nummer, status: data.status ?? "neu" });
     const { data: created, error } = await context.supabase
       .from("orders")
@@ -187,8 +203,24 @@ export const updateOrder = createServerFn({ method: "POST" })
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
-    if (data.values.verordnungId)
-      await assertVerordnungExists(context.supabase, data.values.verordnungId);
+    // Verordnung/Patient müssen auch nach einem Teil-Update zueinander passen.
+    const aendertVerordnung = "verordnungId" in data.values;
+    const aendertPatient = "patientId" in data.values;
+    if (aendertVerordnung || aendertPatient) {
+      const { data: bestand } = await context.supabase
+        .from("orders")
+        .select("patient_id, verordnung_id")
+        .eq("id", data.id)
+        .maybeSingle();
+      const alt = (bestand ?? {}) as { patient_id?: string | null; verordnung_id?: string | null };
+      const patientId = aendertPatient ? data.values.patientId : (alt.patient_id ?? null);
+      const verordnungId = aendertVerordnung
+        ? data.values.verordnungId
+        : (alt.verordnung_id ?? null);
+      if (verordnungId)
+        await assertVerordnungPasstZuPatient(context.supabase, verordnungId, patientId);
+    }
+
     const row = writeToRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("orders")

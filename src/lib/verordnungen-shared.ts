@@ -60,7 +60,19 @@ export function istTransportart(v: string): v is Transportart {
   return (TRANSPORTARTEN as string[]).includes(v);
 }
 
+export class UngueltigeTransportartError extends Error {
+  constructor(id: string) {
+    super(`Verordnung ${id} hat eine unbekannte Transportart.`);
+    this.name = "UngueltigeTransportartError";
+  }
+}
+
+/**
+ * Mapper Zeile → Domänenobjekt. Bei einer unbekannten Transportart wird
+ * bewusst KEIN gültiger Wert erfunden, sondern kontrolliert abgebrochen.
+ */
 export function rowToVerordnung(r: VerordnungRow): Verordnung {
+  if (!istTransportart(r.transportart)) throw new UngueltigeTransportartError(r.id);
   return {
     id: r.id,
     patientId: r.patient_id ?? null,
@@ -68,7 +80,7 @@ export function rowToVerordnung(r: VerordnungRow): Verordnung {
     arztName: r.arzt_name ?? "",
     arztBsnr: r.arzt_bsnr ?? "",
     arztLanr: r.arzt_lanr ?? "",
-    transportart: istTransportart(r.transportart) ? r.transportart : "Sitzendtransport",
+    transportart: r.transportart,
     hinRueckfahrt: Boolean(r.hin_rueckfahrt),
     istSerie: Boolean(r.ist_serie),
     anzahlFaelligkeiten: r.anzahl_faelligkeiten ?? null,
@@ -102,6 +114,15 @@ export function verordnungToRow(w: Partial<VerordnungWrite>): Record<string, unk
   set("dokument_id", w.dokumentId);
   set("notiz", w.notiz);
   return row;
+}
+
+/** Wie `rowToVerordnung`, gibt bei ungültigen Zeilen jedoch `null` zurück. */
+export function safeRowToVerordnung(r: VerordnungRow): Verordnung | null {
+  try {
+    return rowToVerordnung(r);
+  } catch {
+    return null;
+  }
 }
 
 /** Kurzbeschriftung für Auswahllisten. */

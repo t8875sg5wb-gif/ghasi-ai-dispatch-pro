@@ -179,9 +179,11 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
             value={values.patientId ?? NONE}
             onValueChange={(v) => {
               if (v === NONE) {
-                set("patientId", null);
+                // Ohne Patient gibt es keine belastbare Verordnungszuordnung.
+                setValues((prev) => ({ ...prev, patientId: null, verordnungId: null }));
                 return;
               }
+
               const p = patienten.find((x) => x.id === v);
               setValues((prev) => ({
                 ...prev,
