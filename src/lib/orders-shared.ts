@@ -207,6 +207,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   // sobald diese gesetzt sind — analog zu `fahrer_id` → `fahrer`.
   set("patient_id", w.patientId);
   set("insurer_id", w.insurerId);
+  set("verordnung_id", w.verordnungId);
   set("telefon", w.telefon);
   set("transportart", w.transportart);
   set("prioritaet", w.prioritaet);
