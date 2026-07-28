@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
 import { updateMyVehiclePosition } from "@/lib/fleet-tracking.functions";
 import { STATUS_META, type Auftrag } from "@/lib/auftraege";
 import { formatAdresse } from "@/lib/address";
