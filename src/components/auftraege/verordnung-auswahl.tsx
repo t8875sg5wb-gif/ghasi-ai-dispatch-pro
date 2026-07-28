@@ -1,12 +1,19 @@
 // Auswahl einer ärztlichen Verordnung im Auftragsformular, inkl.
-// Deckungsprüfung (rein informativ) und Schnellanlage ohne Seitenwechsel.
-import { useMemo, useState } from "react";
+// Deckungsprüfung (rein informativ), Schnellanlage und Bearbeitung ohne
+// Seitenwechsel. Es wird nie geraten: fehlt der Patient oder ein gültiger
+// Termin, sagt die Komponente das ausdrücklich.
+import { useEffect, useMemo, useState } from "react";
 
 import type { Transportart } from "@/lib/auftraege";
 import { useOrders } from "@/lib/orders-store";
-import { useVerordnungen, useCreateVerordnung } from "@/lib/verordnungen-store";
-import { verordnungLabel, type VerordnungWrite } from "@/lib/verordnungen-shared";
-import { pruefeDeckung, KEINE_VERORDNUNG_HINWEIS } from "@/lib/verordnung-deckung";
+import { useVerordnungen, useCreateVerordnung, useUpdateVerordnung } from "@/lib/verordnungen-store";
+import { verordnungLabel, type Verordnung, type VerordnungWrite } from "@/lib/verordnungen-shared";
+import {
+  pruefeDeckung,
+  zeitstempel,
+  KEINE_VERORDNUNG_HINWEIS,
+  KEIN_TERMIN_HINWEIS,
+} from "@/lib/verordnung-deckung";
 import { TRANSPORTARTEN } from "@/lib/auftraege";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +53,9 @@ function heute(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Neuanlagen haben noch keine ID – ein stabiler Platzhalter genügt. */
+const NEUER_AUFTRAG_ID = "__neuer-auftrag__";
+
 export function VerordnungAuswahl({
   patientId,
   transportart,
@@ -57,8 +67,10 @@ export function VerordnungAuswahl({
   const { data: alleVerordnungen = [] } = useVerordnungen();
   const { data: auftraege = [] } = useOrders();
   const createVerordnung = useCreateVerordnung();
-  const [dialogOffen, setDialogOffen] = useState(false);
-  const [neu, setNeu] = useState<Partial<VerordnungWrite>>({
+  const updateVerordnung = useUpdateVerordnung();
+  const [dialogModus, setDialogModus] = useState<"neu" | "bearbeiten" | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const [entwurf, setEntwurf] = useState<Partial<VerordnungWrite>>({
     ausstellungsdatum: heute(),
     transportart,
     istSerie: false,
@@ -71,16 +83,32 @@ export function VerordnungAuswahl({
     [alleVerordnungen, patientId],
   );
 
-  const gewaehlt = value ? (alleVerordnungen.find((v) => v.id === value) ?? null) : null;
+  const gewaehlt: Verordnung | null = value
+    ? (alleVerordnungen.find((v) => v.id === value) ?? null)
+    : null;
+
+  // Verordnung gehört zu einem anderen Patienten oder ist nicht (mehr) lesbar.
+  const konflikt = Boolean(value) && (!gewaehlt || gewaehlt.patientId !== (patientId ?? null));
+
+  // Konflikte werden nicht stillschweigend repariert, aber auch nicht
+  // gespeichert: die Verknüpfung wird sichtbar entfernt.
+  useEffect(() => {
+    if (value && gewaehlt && patientId && gewaehlt.patientId !== patientId) {
+      onChange(null);
+    }
+  }, [value, gewaehlt, patientId, onChange]);
+
+  const terminMs = zeitstempel(termin);
 
   const deckung = useMemo(() => {
-    if (!gewaehlt) return null;
+    if (!gewaehlt || konflikt) return null;
     return pruefeDeckung(
       {
-        id: auftragId ?? "\uffff", // Neuanlage zählt als letzte Fahrt des Tages
-        termin: termin ? new Date(termin).toISOString() : new Date().toISOString(),
+        id: auftragId ?? NEUER_AUFTRAG_ID,
+        termin: termin,
         transportart,
         status: "neu",
+        verordnungId: gewaehlt.id,
       },
       gewaehlt,
       auftraege.map((a) => ({
@@ -91,35 +119,75 @@ export function VerordnungAuswahl({
         verordnungId: a.verordnungId ?? null,
       })),
     );
-  }, [gewaehlt, auftragId, termin, transportart, auftraege]);
+  }, [gewaehlt, konflikt, auftragId, termin, transportart, auftraege]);
 
-  async function anlegen() {
-    if (!patientId || !neu.ausstellungsdatum || !neu.transportart) return;
-    const erstellt = await createVerordnung.mutateAsync({ ...neu, patientId });
-    onChange(erstellt.id);
-    setDialogOffen(false);
+  function oeffneNeu() {
+    setFehler(null);
+    setEntwurf({ ausstellungsdatum: heute(), transportart, istSerie: false });
+    setDialogModus("neu");
   }
+
+  function oeffneBearbeiten() {
+    if (!gewaehlt) return;
+    setFehler(null);
+    const { id: _id, ...rest } = gewaehlt;
+    setEntwurf(rest);
+    setDialogModus("bearbeiten");
+  }
+
+  async function speichern() {
+    setFehler(null);
+    if (!patientId || !entwurf.ausstellungsdatum || !entwurf.transportart) return;
+    if (
+      entwurf.seriengueltigVon &&
+      entwurf.seriengueltigBis &&
+      entwurf.seriengueltigVon > entwurf.seriengueltigBis
+    ) {
+      setFehler("Serienzeitraum: „von“ darf nicht nach „bis“ liegen.");
+      return;
+    }
+    try {
+      if (dialogModus === "bearbeiten" && gewaehlt) {
+        await updateVerordnung.mutateAsync({
+          id: gewaehlt.id,
+          values: { ...entwurf, patientId },
+        });
+      } else {
+        const erstellt = await createVerordnung.mutateAsync({ ...entwurf, patientId });
+        onChange(erstellt.id);
+      }
+      setDialogModus(null);
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+    }
+  }
+
+  const speichertGerade = createVerordnung.isPending || updateVerordnung.isPending;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <Label>Ärztliche Verordnung</Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={!patientId}
-          onClick={() => {
-            setNeu({ ausstellungsdatum: heute(), transportart, istSerie: false });
-            setDialogOffen(true);
-          }}
-        >
-          Neu anlegen
-        </Button>
+        <div className="flex items-center gap-1">
+          {gewaehlt && !konflikt && (
+            <Button type="button" variant="ghost" size="sm" onClick={oeffneBearbeiten}>
+              Bearbeiten
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={!patientId}
+            onClick={oeffneNeu}
+          >
+            Neu anlegen
+          </Button>
+        </div>
       </div>
 
       <Select
-        value={value ?? NONE}
+        value={gewaehlt && !konflikt ? gewaehlt.id : NONE}
         onValueChange={(v) => onChange(v === NONE ? null : v)}
         disabled={!patientId}
       >
@@ -148,11 +216,22 @@ export function VerordnungAuswahl({
         </p>
       )}
 
-      {patientId && !gewaehlt && (
+      {konflikt && (
+        <p className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs">
+          Die bisher verknüpfte Verordnung gehört nicht zu diesem Patienten und wurde entfernt.
+          Bitte eine passende Verordnung auswählen.
+        </p>
+      )}
+
+      {patientId && !gewaehlt && !konflikt && (
         <p className="text-xs text-muted-foreground">{KEINE_VERORDNUNG_HINWEIS}</p>
       )}
 
-      {deckung && (
+      {gewaehlt && !konflikt && terminMs === null && (
+        <p className="text-xs text-muted-foreground">{KEIN_TERMIN_HINWEIS}</p>
+      )}
+
+      {deckung && terminMs !== null && (
         <div
           className={
             deckung.gedeckt
@@ -177,10 +256,12 @@ export function VerordnungAuswahl({
         </div>
       )}
 
-      <Dialog open={dialogOffen} onOpenChange={setDialogOffen}>
+      <Dialog open={dialogModus !== null} onOpenChange={(o) => !o && setDialogModus(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Verordnung anlegen</DialogTitle>
+            <DialogTitle>
+              {dialogModus === "bearbeiten" ? "Verordnung bearbeiten" : "Verordnung anlegen"}
+            </DialogTitle>
             <DialogDescription>
               Nur Abrechnungsdaten der Verordnung – keine medizinischen Angaben.
             </DialogDescription>
@@ -191,15 +272,19 @@ export function VerordnungAuswahl({
               <Input
                 id="v-datum"
                 type="date"
-                value={neu.ausstellungsdatum ?? ""}
-                onChange={(e) => setNeu((p) => ({ ...p, ausstellungsdatum: e.target.value }))}
+                value={entwurf.ausstellungsdatum ?? ""}
+                onChange={(e) =>
+                  setEntwurf((p) => ({ ...p, ausstellungsdatum: e.target.value }))
+                }
               />
             </div>
             <div className="space-y-1.5">
               <Label>Transportart</Label>
               <Select
-                value={neu.transportart ?? transportart}
-                onValueChange={(v) => setNeu((p) => ({ ...p, transportart: v as Transportart }))}
+                value={entwurf.transportart ?? transportart}
+                onValueChange={(v) =>
+                  setEntwurf((p) => ({ ...p, transportart: v as Transportart }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -217,8 +302,8 @@ export function VerordnungAuswahl({
               <Label htmlFor="v-arzt">Verordnender Arzt</Label>
               <Input
                 id="v-arzt"
-                value={neu.arztName ?? ""}
-                onChange={(e) => setNeu((p) => ({ ...p, arztName: e.target.value }))}
+                value={entwurf.arztName ?? ""}
+                onChange={(e) => setEntwurf((p) => ({ ...p, arztName: e.target.value }))}
                 placeholder="Name der Praxis / des Arztes"
               />
             </div>
@@ -227,16 +312,16 @@ export function VerordnungAuswahl({
                 <Label htmlFor="v-bsnr">BSNR</Label>
                 <Input
                   id="v-bsnr"
-                  value={neu.arztBsnr ?? ""}
-                  onChange={(e) => setNeu((p) => ({ ...p, arztBsnr: e.target.value }))}
+                  value={entwurf.arztBsnr ?? ""}
+                  onChange={(e) => setEntwurf((p) => ({ ...p, arztBsnr: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="v-lanr">LANR</Label>
                 <Input
                   id="v-lanr"
-                  value={neu.arztLanr ?? ""}
-                  onChange={(e) => setNeu((p) => ({ ...p, arztLanr: e.target.value }))}
+                  value={entwurf.arztLanr ?? ""}
+                  onChange={(e) => setEntwurf((p) => ({ ...p, arztLanr: e.target.value }))}
                 />
               </div>
             </div>
@@ -244,19 +329,19 @@ export function VerordnungAuswahl({
               <Label htmlFor="v-hin">Hin- und Rückfahrt</Label>
               <Switch
                 id="v-hin"
-                checked={neu.hinRueckfahrt ?? false}
-                onCheckedChange={(c) => setNeu((p) => ({ ...p, hinRueckfahrt: c }))}
+                checked={entwurf.hinRueckfahrt ?? false}
+                onCheckedChange={(c) => setEntwurf((p) => ({ ...p, hinRueckfahrt: c }))}
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
               <Label htmlFor="v-serie">Serienverordnung</Label>
               <Switch
                 id="v-serie"
-                checked={neu.istSerie ?? false}
-                onCheckedChange={(c) => setNeu((p) => ({ ...p, istSerie: c }))}
+                checked={entwurf.istSerie ?? false}
+                onCheckedChange={(c) => setEntwurf((p) => ({ ...p, istSerie: c }))}
               />
             </div>
-            {neu.istSerie && (
+            {entwurf.istSerie && (
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="v-anzahl">Genehmigte Fahrten</Label>
@@ -264,9 +349,9 @@ export function VerordnungAuswahl({
                     id="v-anzahl"
                     type="number"
                     min={1}
-                    value={neu.anzahlFaelligkeiten ?? ""}
+                    value={entwurf.anzahlFaelligkeiten ?? ""}
                     onChange={(e) =>
-                      setNeu((p) => ({
+                      setEntwurf((p) => ({
                         ...p,
                         anzahlFaelligkeiten: e.target.value ? Number(e.target.value) : null,
                       }))
@@ -279,9 +364,9 @@ export function VerordnungAuswahl({
                     <Input
                       id="v-von"
                       type="date"
-                      value={neu.seriengueltigVon ?? ""}
+                      value={entwurf.seriengueltigVon ?? ""}
                       onChange={(e) =>
-                        setNeu((p) => ({ ...p, seriengueltigVon: e.target.value || null }))
+                        setEntwurf((p) => ({ ...p, seriengueltigVon: e.target.value || null }))
                       }
                     />
                   </div>
@@ -290,9 +375,9 @@ export function VerordnungAuswahl({
                     <Input
                       id="v-bis"
                       type="date"
-                      value={neu.seriengueltigBis ?? ""}
+                      value={entwurf.seriengueltigBis ?? ""}
                       onChange={(e) =>
-                        setNeu((p) => ({ ...p, seriengueltigBis: e.target.value || null }))
+                        setEntwurf((p) => ({ ...p, seriengueltigBis: e.target.value || null }))
                       }
                     />
                   </div>
@@ -303,27 +388,32 @@ export function VerordnungAuswahl({
               <Label htmlFor="v-gen">Von der Kasse genehmigt</Label>
               <Switch
                 id="v-gen"
-                checked={neu.genehmigtVonKasse ?? false}
-                onCheckedChange={(c) => setNeu((p) => ({ ...p, genehmigtVonKasse: c }))}
+                checked={entwurf.genehmigtVonKasse ?? false}
+                onCheckedChange={(c) => setEntwurf((p) => ({ ...p, genehmigtVonKasse: c }))}
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="v-gnr">Genehmigungsnummer</Label>
               <Input
                 id="v-gnr"
-                value={neu.genehmigungsnummer ?? ""}
-                onChange={(e) => setNeu((p) => ({ ...p, genehmigungsnummer: e.target.value }))}
+                value={entwurf.genehmigungsnummer ?? ""}
+                onChange={(e) => setEntwurf((p) => ({ ...p, genehmigungsnummer: e.target.value }))}
               />
             </div>
+            {fehler && (
+              <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-xs sm:col-span-2">
+                {fehler}
+              </p>
+            )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDialogOffen(false)}>
+            <Button type="button" variant="outline" onClick={() => setDialogModus(null)}>
               Abbrechen
             </Button>
             <Button
               type="button"
-              onClick={anlegen}
-              disabled={createVerordnung.isPending || !neu.ausstellungsdatum}
+              onClick={speichern}
+              disabled={speichertGerade || !entwurf.ausstellungsdatum}
             >
               Verordnung speichern
             </Button>
