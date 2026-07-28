@@ -63,6 +63,7 @@ function emptyValues(): AuftragFormValues {
     patient: "",
     patientId: null,
     insurerId: null,
+    verordnungId: null,
     telefon: "",
     transportart: "Sitzendtransport",
     prioritaet: "normal",
