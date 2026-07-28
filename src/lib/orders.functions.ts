@@ -119,9 +119,10 @@ export const createOrder = createServerFn({ method: "POST" })
 
 export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<OrderWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<OrderWrite> } => {
+    const parsed = updateOrderSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    return parsed.data as { id: string; values: Partial<OrderWrite> };
   })
   .handler(async ({ data, context }): Promise<Auftrag> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
