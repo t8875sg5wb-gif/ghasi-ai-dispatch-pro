@@ -25,6 +25,10 @@ import { useOrders, useUpdateOrder } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { updateMyVehiclePosition } from "@/lib/fleet-tracking.functions";
 import { STATUS_META, type Auftrag } from "@/lib/auftraege";
+import {
+  UnterschriftDialog,
+  type UnterschriftErgebnis,
+} from "@/components/fahrer/unterschrift-dialog";
 import { formatAdresse } from "@/lib/address";
 import { cn } from "@/lib/utils";
 
@@ -151,6 +155,44 @@ function FahrerMobilPage() {
       }
     };
   }, [teilen, pushPosition]);
+
+  // --- Tourabschluss mit Leistungsnachweis -----------------------------
+  const [signOrder, setSignOrder] = useState<Auftrag | null>(null);
+
+  function abschliessen(ergebnis: UnterschriftErgebnis) {
+    const o = signOrder;
+    if (!o) return;
+    const jetzt = new Date().toISOString();
+    updateMut.mutate(
+      {
+        id: o.id,
+        values: {
+          status: "abgeschlossen",
+          detailStatus: "abgeschlossen",
+          unterschrift: ergebnis.unterschrift,
+          lifecycle: {
+            ...(o.lifecycle ?? {}),
+            abgeschlossenAm: jetzt,
+            ...(ergebnis.verweigert
+              ? { unterschriftVerweigert: true, unterschriftVerweigertGrund: ergebnis.grund }
+              : { unterschriftAm: jetzt, unterschriftVerweigert: false }),
+          },
+        },
+      },
+      {
+        onSuccess: () => {
+          setSignOrder(null);
+          toast.success(
+            ergebnis.verweigert
+              ? "Tour ohne Unterschrift abgeschlossen"
+              : "Tour abgeschlossen · Unterschrift erfasst",
+          );
+        },
+        onError: (e) =>
+          toast.error("Konnte nicht abgeschlossen werden", { description: String(e) }),
+      },
+    );
+  }
 
   function setStatus(o: Auftrag, values: Parameters<typeof updateMut.mutate>[0]["values"], msg: string) {
     updateMut.mutate(
@@ -300,7 +342,17 @@ function FahrerMobilPage() {
                 <Button
                   className="w-full rounded-xl"
                   disabled={pending}
-                  onClick={() => setStatus(o, { status: "unterwegs", detailStatus: "anfahrt" }, "Fahrt gestartet")}
+                  onClick={() =>
+                    setStatus(
+                      o,
+                      {
+                        status: "unterwegs",
+                        detailStatus: "anfahrt",
+                        lifecycle: { ...(o.lifecycle ?? {}), gestartetAm: new Date().toISOString() },
+                      },
+                      "Fahrt gestartet",
+                    )
+                  }
                 >
                   {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                   Fahrt starten
@@ -311,7 +363,19 @@ function FahrerMobilPage() {
                   variant="secondary"
                   className="w-full rounded-xl"
                   disabled={pending}
-                  onClick={() => setStatus(o, { detailStatus: "angekommen" }, "Ankunft bestätigt")}
+                  onClick={() =>
+                    setStatus(
+                      o,
+                      {
+                        detailStatus: "angekommen",
+                        lifecycle: {
+                          ...(o.lifecycle ?? {}),
+                          angekommenAm: new Date().toISOString(),
+                        },
+                      },
+                      "Ankunft bestätigt",
+                    )
+                  }
                 >
                   <Flag className="h-4 w-4" /> Angekommen
                 </Button>
@@ -320,9 +384,7 @@ function FahrerMobilPage() {
                 <Button
                   className="w-full rounded-xl"
                   disabled={pending}
-                  onClick={() =>
-                    setStatus(o, { status: "abgeschlossen", detailStatus: "abgeschlossen" }, "Tour abgeschlossen")
-                  }
+                  onClick={() => setSignOrder(o)}
                 >
                   <CheckCircle2 className="h-4 w-4" /> Tour abschließen
                 </Button>
@@ -336,6 +398,16 @@ function FahrerMobilPage() {
           </Card>
         );
       })}
+
+      <UnterschriftDialog
+        open={signOrder !== null}
+        onOpenChange={(o) => {
+          if (!o) setSignOrder(null);
+        }}
+        patient={signOrder?.patient ?? ""}
+        busy={updateMut.isPending}
+        onConfirm={abschliessen}
+      />
     </div>
   );
 }
