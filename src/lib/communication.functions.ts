@@ -165,9 +165,6 @@ export function toNewDraftRow(d: Record<string, unknown>): Record<string, unknow
     status: "offen",
   };
 }
-
-
-
 /* ------------------------------------------------------------------ *
  * Conversations
  * ------------------------------------------------------------------ */
