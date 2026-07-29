@@ -606,6 +606,12 @@ function DetailAnsicht({
   onEnd: () => void;
   onSkip: (iso: string) => void;
 }) {
+  const fahrerIdOpt = useDriverIdOptions();
+  const fahrzeugIdOpt = useVehicleIdOptions();
+  const fahrerLabel = (x: Dauerauftrag) =>
+    fahrerIdOpt.options.find((o) => o.value === x.bevorzugterFahrerId)?.label ?? null;
+  const fahrzeugLabel = (x: Dauerauftrag) =>
+    fahrzeugIdOpt.options.find((o) => o.value === x.bevorzugtesFahrzeugId)?.label ?? null;
   const st = abgeleiteterStatus(d);
   const StatusIcon = STATUS_META[st].icon;
   const termine = naechsteTermine(d, 8);
