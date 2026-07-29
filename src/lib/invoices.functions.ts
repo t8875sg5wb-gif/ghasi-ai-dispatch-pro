@@ -249,9 +249,10 @@ export interface InvoiceChangeEntry {
 /** Audit trail for a single invoice (newest first). */
 export const listInvoiceChanges = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { invoiceId: string }) => {
-    if (!data?.invoiceId) throw new Error("invoiceId ist erforderlich");
-    return data;
+  .validator((data: unknown): { invoiceId: string } => {
+    const parsed = listInvoiceChangesSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Rechnungsdaten.");
+    return parsed.data;
   })
   .handler(async ({ data, context }): Promise<InvoiceChangeEntry[]> => {
     const { data: rows, error } = await context.supabase
