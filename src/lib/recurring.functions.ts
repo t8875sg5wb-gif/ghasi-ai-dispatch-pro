@@ -31,7 +31,7 @@ const uhrzeit = z.string().regex(/^\d{2}:\d{2}$/, "Uhrzeit muss HH:mm sein.");
  * zusätzlich im Handler geprüft. `bevorzugterFahrer`/`bevorzugtesFahrzeug`
  * bleiben Legacy-Freitext (Altbestand) und werden nur noch durchgereicht.
  */
-const recurringFieldsSchema = z
+export const recurringFieldsSchema = z
   .object({
     kennung: z.string().trim().max(50).optional(),
     patient: z.string().trim().min(1).max(200),
