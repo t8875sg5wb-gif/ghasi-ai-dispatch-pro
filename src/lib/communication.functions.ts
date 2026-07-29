@@ -232,11 +232,7 @@ export const upsertDrafts = createServerFn({ method: "POST" })
   .validator((data: unknown) => parseOrThrow(upsertDraftsSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     if (data.drafts.length === 0) return { ok: true };
-    const rows = data.drafts.map((d) => ({
-      ...d,
-      betreff: d.betreff ?? null,
-      bezug: d.bezug ?? null,
-    }));
+    const rows = data.drafts.map((d) => toNewDraftRow(d));
     const { error } = await context.supabase
       .from("communication_drafts")
       .upsert(rows as never, { onConflict: "id", ignoreDuplicates: true });
