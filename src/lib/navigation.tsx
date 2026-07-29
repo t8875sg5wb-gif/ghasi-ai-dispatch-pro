@@ -152,7 +152,8 @@ export const navGroups: NavGroup[] = [
         label: "Schichtplan",
         to: "/schichtplan",
         icon: CalendarDays,
-        description: "Kalender für Fahrerdienste, Urlaub & Krankheit inkl. Doppelbelegungs-Prüfung.",
+        description:
+          "Kalender für Fahrerdienste, Urlaub & Krankheit inkl. Doppelbelegungs-Prüfung.",
       },
       {
         label: "Telefon",
@@ -384,4 +385,3 @@ export function navGroupsForRole(role: AppRole | null | undefined): NavGroup[] {
 export function navItemsForRole(role: AppRole | null | undefined): NavItem[] {
   return navGroupsForRole(role).flatMap((g) => g.items);
 }
-

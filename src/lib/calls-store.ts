@@ -4,13 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { INITIAL_ANRUFE, type Anruf } from "@/lib/telefon";
-import {
-  listCalls,
-  createCall,
-  updateCall,
-  deleteCall,
-  seedCalls,
-} from "@/lib/calls.functions";
+import { listCalls, createCall, updateCall, deleteCall, seedCalls } from "@/lib/calls.functions";
 import type { CallWrite } from "@/lib/calls-shared";
 
 export const CALLS_QUERY_KEY = ["calls"] as const;

@@ -90,7 +90,11 @@ export function BankImportDialog({ open, onOpenChange }: Props) {
     ];
     const neuerStatus = abgeleiteterStatus({ ...r, zahlungen: next });
     const summe = next.reduce((s, z) => s + z.betrag, 0);
-    const letzte = next.map((z) => z.datum).sort().at(-1) ?? null;
+    const letzte =
+      next
+        .map((z) => z.datum)
+        .sort()
+        .at(-1) ?? null;
     setBusyIdx(idx);
     try {
       await updateMut.mutateAsync({

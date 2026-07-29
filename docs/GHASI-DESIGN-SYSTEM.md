@@ -2,7 +2,7 @@
 
 ### Design System of GHASI AI — Version 1.1
 
-*Dieses Dokument definiert die visuelle Identität, die Benutzererfahrung, die Interaktionslogik und die Design-Qualitätsstandards von GHASI AI. Es ergänzt GHASI Constitution, Architecture, Domain Model und Roadmap. Später ergänzt es auch AI Blueprint und Implementation Guide. Bei Konflikten hat die Constitution Vorrang.*
+_Dieses Dokument definiert die visuelle Identität, die Benutzererfahrung, die Interaktionslogik und die Design-Qualitätsstandards von GHASI AI. Es ergänzt GHASI Constitution, Architecture, Domain Model und Roadmap. Später ergänzt es auch AI Blueprint und Implementation Guide. Bei Konflikten hat die Constitution Vorrang._
 
 Dieses Dokument ist ausdrücklich kein Sofort-Redesign-Auftrag.
 

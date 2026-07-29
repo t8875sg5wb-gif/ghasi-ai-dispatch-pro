@@ -63,7 +63,10 @@ export const Route = createFileRoute("/einstellungen")({
   head: () => ({
     meta: [
       { title: "Einstellungen – GHASI AI" },
-      { name: "description", content: "Unternehmensdaten, Steuern, Benachrichtigungen und Präferenzen." },
+      {
+        name: "description",
+        content: "Unternehmensdaten, Steuern, Benachrichtigungen und Präferenzen.",
+      },
     ],
   }),
   component: EinstellungenSeite,
@@ -102,14 +105,7 @@ function ladePraeferenzen(): Praeferenzen {
   }
 }
 
-const RECHTSFORMEN = [
-  "Einzelunternehmen",
-  "GbR",
-  "GmbH",
-  "UG (haftungsbeschränkt)",
-  "OHG",
-  "KG",
-];
+const RECHTSFORMEN = ["Einzelunternehmen", "GbR", "GmbH", "UG (haftungsbeschränkt)", "OHG", "KG"];
 
 function EinstellungenSeite() {
   const { theme, setTheme } = useTheme();

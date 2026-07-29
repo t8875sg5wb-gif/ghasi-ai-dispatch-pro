@@ -106,9 +106,12 @@ export const scanVerordnung = createServerFn({ method: "POST" })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[scanVerordnung] error:", message);
-      let fehler = "Die Verordnung konnte nicht automatisch erkannt werden – bitte manuell erfassen.";
-      if (/429|rate limit/i.test(message)) fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
-      else if (/402|credit/i.test(message)) fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
+      let fehler =
+        "Die Verordnung konnte nicht automatisch erkannt werden – bitte manuell erfassen.";
+      if (/429|rate limit/i.test(message))
+        fehler = "KI-Limit erreicht – bitte in Kürze erneut versuchen.";
+      else if (/402|credit/i.test(message))
+        fehler = "KI-Guthaben aufgebraucht – bitte Credits aufladen.";
       return { ok: false, data: emptyScan(), fehler };
     }
   });

@@ -263,9 +263,7 @@ function DatenimportPage() {
                   </Label>
                   <Select
                     value={mapping[f.key] ?? NONE}
-                    onValueChange={(v) =>
-                      setMapping((prev) => ({ ...prev, [f.key]: v }))
-                    }
+                    onValueChange={(v) => setMapping((prev) => ({ ...prev, [f.key]: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -311,7 +309,10 @@ function DatenimportPage() {
                 {validCount} gültig
               </Badge>
               {errorCount > 0 && (
-                <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive">
+                <Badge
+                  variant="outline"
+                  className="border-destructive/30 bg-destructive/10 text-destructive"
+                >
                   {errorCount} mit Fehler
                 </Badge>
               )}
@@ -334,7 +335,9 @@ function DatenimportPage() {
                     const row = rows[r.index];
                     return (
                       <TableRow key={r.index} className={cn(!r.record && "bg-destructive/5")}>
-                        <TableCell className="text-xs text-muted-foreground">{r.index + 1}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {r.index + 1}
+                        </TableCell>
                         <TableCell>
                           {r.record ? (
                             <CheckCircle2 className="h-4 w-4 text-success" />
@@ -427,7 +430,9 @@ function Stepper({ step }: { step: Step }) {
           >
             {i + 1}
           </span>
-          <span className={cn("text-sm", i === activeIdx ? "font-semibold" : "text-muted-foreground")}>
+          <span
+            className={cn("text-sm", i === activeIdx ? "font-semibold" : "text-muted-foreground")}
+          >
             {s.label}
           </span>
           {i < STEPS.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}

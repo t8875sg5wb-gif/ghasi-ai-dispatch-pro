@@ -89,7 +89,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "GHASI AI ist Ihr intelligenter digitaler Geschäftsführer für Krankentransportunternehmen – Aufträge, Flotte, Touren, Finanzen und KI-Assistent in einer App.",
       },
       { name: "author", content: "GHASI AI" },
-      { property: "og:title", content: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte" },
+      {
+        property: "og:title",
+        content: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte",
+      },
       {
         property: "og:description",
         content:
@@ -98,9 +101,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a5f0cea8-dd21-4cce-835d-41ede6a3b9af/id-preview-dce1686b--595826de-a801-4b8b-939c-7ef38977e662.lovable.app-1782840469375.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a5f0cea8-dd21-4cce-835d-41ede6a3b9af/id-preview-dce1686b--595826de-a801-4b8b-939c-7ef38977e662.lovable.app-1782840469375.png" },
+      {
+        name: "twitter:title",
+        content: "GHASI AI – Digitaler Geschäftsführer für Krankentransporte",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a5f0cea8-dd21-4cce-835d-41ede6a3b9af/id-preview-dce1686b--595826de-a801-4b8b-939c-7ef38977e662.lovable.app-1782840469375.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a5f0cea8-dd21-4cce-835d-41ede6a3b9af/id-preview-dce1686b--595826de-a801-4b8b-939c-7ef38977e662.lovable.app-1782840469375.png",
+      },
     ],
     links: [
       {

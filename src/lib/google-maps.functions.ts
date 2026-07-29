@@ -93,9 +93,7 @@ function haversine(a: GeoPunkt, b: GeoPunkt): number {
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const s =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
@@ -224,15 +222,14 @@ export const computeRoute = createServerFn({ method: "POST" })
 
 export const optimizeRoute = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (d: { origin: OrtEingabe; destination: OrtEingabe; stops: OrtEingabe[] }) =>
-      z
-        .object({
-          origin: ortSchema,
-          destination: ortSchema,
-          stops: z.array(ortSchema).min(1),
-        })
-        .parse(d),
+  .inputValidator((d: { origin: OrtEingabe; destination: OrtEingabe; stops: OrtEingabe[] }) =>
+    z
+      .object({
+        origin: ortSchema,
+        destination: ortSchema,
+        stops: z.array(ortSchema).min(1),
+      })
+      .parse(d),
   )
   .handler(async ({ data }): Promise<OptimierteRoute | null> => {
     const json = await computeRoutesRaw(
@@ -275,13 +272,7 @@ export const optimizeRoute = createServerFn({ method: "POST" })
 export const searchPlaces = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      kategorie?: PlaceKategorie;
-      text?: string;
-      lat: number;
-      lng: number;
-      radius?: number;
-    }) =>
+    (d: { kategorie?: PlaceKategorie; text?: string; lat: number; lng: number; radius?: number }) =>
       z
         .object({
           kategorie: z
@@ -317,7 +308,10 @@ export const searchPlaces = createServerFn({ method: "POST" })
           languageCode: "de",
           maxResultCount: 12,
           locationBias: {
-            circle: { center: { latitude: data.lat, longitude: data.lng }, radius: data.radius ?? 15000 },
+            circle: {
+              center: { latitude: data.lat, longitude: data.lng },
+              radius: data.radius ?? 15000,
+            },
           },
         }),
       });
@@ -333,7 +327,10 @@ export const searchPlaces = createServerFn({ method: "POST" })
           languageCode: "de",
           maxResultCount: 15,
           locationRestriction: {
-            circle: { center: { latitude: data.lat, longitude: data.lng }, radius: data.radius ?? 10000 },
+            circle: {
+              center: { latitude: data.lat, longitude: data.lng },
+              radius: data.radius ?? 10000,
+            },
           },
         }),
       });
@@ -376,15 +373,12 @@ export const rankByDistance = createServerFn({ method: "POST" })
     z.object({ ziel: ortSchema, quellen: z.array(punktSchema).min(1).max(25) }).parse(d),
   )
   .handler(
-    async ({
-      data,
-    }): Promise<{ index: number; distanzMeter: number; dauerSekunden: number }[]> => {
+    async ({ data }): Promise<{ index: number; distanzMeter: number; dauerSekunden: number }[]> => {
       const res = await fetch(`${GATEWAY_URL}/routes/distanceMatrix/v2:computeRouteMatrix`, {
         method: "POST",
         headers: gatewayHeaders({
           "Content-Type": "application/json",
-          "X-Goog-FieldMask":
-            "originIndex,destinationIndex,duration,distanceMeters,condition",
+          "X-Goog-FieldMask": "originIndex,destinationIndex,duration,distanceMeters,condition",
         }),
         body: JSON.stringify({
           origins: data.quellen.map((q) => ({ waypoint: toWaypoint(q) })),

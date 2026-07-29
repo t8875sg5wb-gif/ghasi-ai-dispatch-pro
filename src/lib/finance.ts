@@ -407,7 +407,11 @@ export function brutto(r: Rechnung): number {
 /** Sum of all recorded payments on an invoice. */
 export function summeZahlungen(r: Rechnung): number {
   const list = r.zahlungen ?? [];
-  if (list.length > 0) return round(list.reduce((s, z) => s + z.betrag, 0), 2);
+  if (list.length > 0)
+    return round(
+      list.reduce((s, z) => s + z.betrag, 0),
+      2,
+    );
   // fallback to the legacy single-payment fields
   if (typeof r.bezahlterBetrag === "number") return round(r.bezahlterBetrag, 2);
   return 0;
@@ -422,7 +426,12 @@ export function offenerBetrag(r: Rechnung): number {
 export function letzteZahlungDatum(r: Rechnung): string | null {
   const list = r.zahlungen ?? [];
   if (list.length > 0) {
-    return list.map((z) => z.datum).sort().at(-1) ?? null;
+    return (
+      list
+        .map((z) => z.datum)
+        .sort()
+        .at(-1) ?? null
+    );
   }
   return r.bezahltAm ?? null;
 }
@@ -441,8 +450,6 @@ export function abgeleiteterStatus(r: Rechnung): RechnungStatus {
   if (Math.abs(gezahlt) > eps) return "teilbezahlt";
   return istUeberfaellig(r) ? "ueberfaellig" : "offen";
 }
-
-
 
 /* ------------------------------------------------------------------ *
  * Cost breakdown (derived from the live fleet & driver data)

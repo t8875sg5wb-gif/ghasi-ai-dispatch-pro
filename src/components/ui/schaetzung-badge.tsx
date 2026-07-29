@@ -39,7 +39,11 @@ export function SchaetzungBadge({ hinweis, label = "Schätzung", className }: Sc
 /**
  * Gegenstück für Werte, die aus echten Belegen berechnet wurden.
  */
-export function EchtBadge({ hinweis, label = "aus echten Belegen", className }: SchaetzungBadgeProps) {
+export function EchtBadge({
+  hinweis,
+  label = "aus echten Belegen",
+  className,
+}: SchaetzungBadgeProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>

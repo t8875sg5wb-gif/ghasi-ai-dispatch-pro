@@ -152,7 +152,6 @@ export const DOKUMENT_KATEGORIEN = [
   "wartungsbeleg",
 ] as const satisfies readonly DokumentKategorie[];
 
-
 /** Strikt zulässige Bezugstypen (Runtime-Konstante als einzige Quelle). */
 export const DOKUMENT_BEZUG_TYPEN = [
   "patient",

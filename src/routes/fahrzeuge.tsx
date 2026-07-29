@@ -91,7 +91,6 @@ function FahrzeugePage() {
     }
   }, [deepLinkDone, deepKennzeichen, deepId, fahrzeuge]);
 
-
   const empfehlungen = useMemo(() => empfehleFahrzeug(fahrzeuge, undefined, 3), [fahrzeuge]);
 
   const stats = useMemo(() => {
@@ -140,8 +139,7 @@ function FahrzeugePage() {
     updateMut.mutate(
       { id, values: { status } },
       {
-        onSuccess: () =>
-          toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`),
+        onSuccess: () => toast.success(`Status geändert: ${FAHRZEUG_STATUS_META[status].label}`),
         onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
       },
     );
@@ -182,7 +180,6 @@ function FahrzeugePage() {
       });
     }
   }
-
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },
@@ -228,11 +225,7 @@ function FahrzeugePage() {
         </div>
         <div className="flex items-center gap-2">
           {fahrzeuge.length === 0 && (
-            <Button
-              variant="outline"
-              onClick={() => seedMut.mutate()}
-              disabled={seedMut.isPending}
-            >
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
               Beispieldaten laden
             </Button>
           )}

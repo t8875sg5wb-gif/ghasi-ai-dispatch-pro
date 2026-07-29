@@ -134,8 +134,18 @@ function JahresabschlussPage() {
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label={`Gewinn ${jahr}`} value={EUR2(gewinn)} icon={Calculator} tone="primary" />
-        <StatCard label="Einkommensteuer (Schätzung)" value={EUR2(est)} icon={FileText} tone="warning" />
-        <StatCard label="Gewerbesteuer (Schätzung)" value={EUR2(gewst)} icon={FileText} tone="info" />
+        <StatCard
+          label="Einkommensteuer (Schätzung)"
+          value={EUR2(est)}
+          icon={FileText}
+          tone="warning"
+        />
+        <StatCard
+          label="Gewerbesteuer (Schätzung)"
+          value={EUR2(gewst)}
+          icon={FileText}
+          tone="info"
+        />
         <StatCard label="Soli (Schätzung)" value={EUR2(soli)} icon={FileText} tone="accent" />
       </section>
 
@@ -194,10 +204,9 @@ function JahresabschlussPage() {
       </Card>
 
       <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
-        <span className="font-semibold">Hinweis:</span> Alle Steuerbeträge sind Schätzungen auf Basis
-        des EÜR-Gewinns (Grundtarif, ohne weitere Einkünfte, Sonderausgaben oder Vorsorgeaufwendungen).
-        {" "}
-        {STEUER_DISCLAIMER}
+        <span className="font-semibold">Hinweis:</span> Alle Steuerbeträge sind Schätzungen auf
+        Basis des EÜR-Gewinns (Grundtarif, ohne weitere Einkünfte, Sonderausgaben oder
+        Vorsorgeaufwendungen). {STEUER_DISCLAIMER}
       </div>
     </div>
   );

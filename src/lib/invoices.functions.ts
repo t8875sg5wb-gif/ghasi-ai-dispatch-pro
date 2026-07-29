@@ -84,8 +84,7 @@ export const updateInvoice = createServerFn({ method: "POST" })
     // Record every changed scalar field as an audit entry.
     if (before) {
       const akteur =
-        (typeof context.claims?.email === "string" ? context.claims.email : "") ||
-        context.userId;
+        (typeof context.claims?.email === "string" ? context.claims.email : "") || context.userId;
       const changes = diffInvoiceFields(
         before as Record<string, unknown>,
         updated as Record<string, unknown>,
@@ -192,7 +191,6 @@ export const listInvoiceChanges = createServerFn({ method: "GET" })
     });
   });
 
-
 export const deleteInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: { id: string }) => {
@@ -272,7 +270,6 @@ async function loadPatients(supabase: SupabaseReadClient) {
   return (data ?? []).map((r: unknown) => rowToPatient(r as PatientRow));
 }
 
-
 function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" | "Kunde" {
   const k = kostentraeger.toLowerCase();
   if (/kasse|aok|barmer|dak|tk|techniker|krankenkasse|kkh|ikk/.test(k)) {
@@ -321,7 +318,11 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
     const berechnet = new Set(invoices.map((r) => r.bezugAuftrag).filter(Boolean));
 
     const normName = (s: string) =>
-      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
 
     const heute = new Date();
     const datum = heute.toISOString().slice(0, 10);
@@ -382,7 +383,6 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { created: writes.length, nummern };
   });
-
 
 /** Server-side duplicate detection: same customer + amount + ≤7 days apart. */
 export const detectInvoiceDuplicates = createServerFn({ method: "GET" })

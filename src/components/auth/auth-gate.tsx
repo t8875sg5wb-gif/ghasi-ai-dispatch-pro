@@ -50,9 +50,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </div>
           <h1 className="text-xl font-bold tracking-tight">Warten auf Freigabe</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Hallo {name}, Ihr Konto wurde erstellt, ist aber noch keiner Rolle zugeordnet.
-            Ein Administrator muss Sie zunächst freischalten, bevor Sie Zugriff auf Daten
-            erhalten. Bitte wenden Sie sich an Ihre Administration.
+            Hallo {name}, Ihr Konto wurde erstellt, ist aber noch keiner Rolle zugeordnet. Ein
+            Administrator muss Sie zunächst freischalten, bevor Sie Zugriff auf Daten erhalten.
+            Bitte wenden Sie sich an Ihre Administration.
           </p>
           <Button variant="outline" className="mt-6 gap-2" onClick={() => void signOut()}>
             <LogOut className="h-4 w-4" />

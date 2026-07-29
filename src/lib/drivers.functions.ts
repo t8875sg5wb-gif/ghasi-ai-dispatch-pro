@@ -16,9 +16,7 @@ import { rowToFahrer, writeToRow, type DriverRow, type DriverWrite } from "@/lib
 /** ISO-Datum `YYYY-MM-DD` — identisches Muster wie in `verordnungen.functions.ts`. */
 const isoDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
 
-const nachweisSchema = z
-  .object({ gueltigBis: isoDatum, info: z.string().optional() })
-  .strict();
+const nachweisSchema = z.object({ gueltigBis: isoDatum, info: z.string().optional() }).strict();
 
 export const driverFieldsSchema = z
   .object({
@@ -249,7 +247,9 @@ export const setDriverAccountLink = createServerFn({ method: "POST" })
         .eq("role", "fahrer")
         .maybeSingle();
       if (!fahrerRolle) {
-        throw new Error("Das Konto besitzt nicht die Rolle „Fahrer“ und kann nicht verknüpft werden.");
+        throw new Error(
+          "Das Konto besitzt nicht die Rolle „Fahrer“ und kann nicht verknüpft werden.",
+        );
       }
 
       // 5) Ein Konto darf nur zu einem Fahrer gehören (zusätzlich DB-unique).

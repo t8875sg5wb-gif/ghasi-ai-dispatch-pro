@@ -6,13 +6,13 @@ The Constitution of GHASI AI – Version 1.0
 
 ### The Constitution of GHASI AI — Version 1.0
 
-*Gründungsdokument von GHASI AI Executive. Soll auch in fünf oder zehn Jahren noch gelten.
+\*Gründungsdokument von GHASI AI Executive. Soll auch in fünf oder zehn Jahren noch gelten.
 
 Grundlage für jede Entscheidung von Lovable, Claude Code und jedem zukünftigen Gespräch über
 
 dieses Projekt. Bei Widerspruch zwischen einer Einzelanweisung und dieser Verfassung: Rückfrage
 
-an den Unternehmer, nicht stillschweigend abweichen.*
+an den Unternehmer, nicht stillschweigend abweichen.\*
 
 ---
 
@@ -301,8 +301,8 @@ gibt, ohne ihnen die Entscheidungen abzunehmen.
 
 ---
 
-*Version 1.0 — Entwurf zur Freigabe durch den Unternehmer. Nach Freigabe wird dieses Dokument als
+\*Version 1.0 — Entwurf zur Freigabe durch den Unternehmer. Nach Freigabe wird dieses Dokument als
 
 `docs/GHASI-CONSTITUTION.md` im Repository abgelegt und ist ab dann die gemeinsame Grundlage für
 
-Lovable, Claude Code und jede zukünftige Weiterentwicklung von GHASI AI.*
+Lovable, Claude Code und jede zukünftige Weiterentwicklung von GHASI AI.\*

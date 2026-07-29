@@ -53,8 +53,6 @@ export function AddressFields({
         placeholder="Mit Google suchen – Adresse übernehmen …"
       />
 
-
-
       <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-street`}>Straße</Label>

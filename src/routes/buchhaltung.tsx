@@ -98,7 +98,6 @@ function BuchhaltungPage() {
   );
   const offen = useMemo(() => offenePostenJeKunde(alleRechnungen), [alleRechnungen]);
 
-
   const jahr = new Date().getFullYear();
   const [von, setVon] = useState(`${jahr}-01-01`);
   const [bis, setBis] = useState(toISODate(new Date()));
@@ -130,7 +129,6 @@ function BuchhaltungPage() {
       beschreibung: `DATEV-Buchungsstapel ${von}–${bis}: ${result.anzahl} Buchungen`,
     });
   }
-
 
   const kostenpositionen = (Object.keys(KOSTEN_LABEL) as (keyof typeof KOSTEN_LABEL)[]).map(
     (k) => ({
@@ -236,7 +234,6 @@ function BuchhaltungPage() {
             </div>
           </CardContent>
         </Card>
-
 
         {/* Cashflow / BWA Kurz */}
         <Card className="border-border/70 shadow-card">

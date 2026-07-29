@@ -20,11 +20,7 @@ export type AuftragStatus = "neu" | "disponiert" | "unterwegs" | "abgeschlossen"
 
 export type AuftragPrioritaet = "niedrig" | "normal" | "hoch" | "dringend";
 
-export type Transportart =
-  | "Liegendtransport"
-  | "Sitzendtransport"
-  | "Rollstuhl"
-  | "Dialysefahrt";
+export type Transportart = "Liegendtransport" | "Sitzendtransport" | "Rollstuhl" | "Dialysefahrt";
 
 /* ------------------------------------------------------------------ *
  * Medizinische Transportdetails (additiv)
@@ -131,7 +127,6 @@ export function hatPatientenunterschrift(a: Auftrag): boolean {
   if (a.lifecycle?.unterschriftVerweigert) return false;
   return typeof a.unterschrift === "string" && a.unterschrift.startsWith("data:image/");
 }
-
 
 export interface StatusMeta {
   label: string;
@@ -439,7 +434,8 @@ export const SEED_AUFTRAEGE: Auftrag[] = [
     abholanforderung: "Station 4B, Bett 2. Übergabe durch Pflege.",
     zielanforderung: "Patientenaufnahme, Trage bis ins Zimmer.",
     patientennotiz: "Ehefrau begleitet den Transport.",
-    medizinischeNotiz: "Patient nutzt eigenes tragbares O₂-Gerät – keine Begleitung/Überwachung nötig (Schiene A).",
+    medizinischeNotiz:
+      "Patient nutzt eigenes tragbares O₂-Gerät – keine Begleitung/Überwachung nötig (Schiene A).",
   },
   {
     id: "a-3",

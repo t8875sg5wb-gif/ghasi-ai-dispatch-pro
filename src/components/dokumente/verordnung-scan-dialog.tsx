@@ -6,7 +6,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ScanLine, Upload, Loader2, CheckCircle2, AlertTriangle, ArrowRight, UserPlus, UserCheck } from "lucide-react";
+import {
+  ScanLine,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  UserPlus,
+  UserCheck,
+} from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
@@ -96,7 +105,7 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
   const [gespeicherteMob, setGespeicherteMob] = useState<ScanTransportart | null>(null);
 
   const forcedPatient = useMemo(
-    () => (patientId ? patienten.find((p) => p.id === patientId) ?? null : null),
+    () => (patientId ? (patienten.find((p) => p.id === patientId) ?? null) : null),
     [patientId, patienten],
   );
 
@@ -140,7 +149,9 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
     setScanFehler(null);
     try {
       const base64 = await fileToBase64(datei);
-      const res = await scan({ data: { imageBase64: base64, mimeType: datei.type || "image/jpeg" } });
+      const res = await scan({
+        data: { imageBase64: base64, mimeType: datei.type || "image/jpeg" },
+      });
       setValues(res.data);
       if (!res.ok) setScanFehler(res.fehler ?? "Erkennung fehlgeschlagen.");
       // Decide default mode from a fuzzy match.
@@ -187,7 +198,7 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
       const matchedKasse = findeKasseMatch(values.krankenkasse, kassen);
       const zielName =
         modus === "match"
-          ? patienten.find((p) => p.id === zielPatientId)?.name ?? name ?? "Patient"
+          ? (patienten.find((p) => p.id === zielPatientId)?.name ?? name ?? "Patient")
           : name!;
 
       // 1) Upload the scan into the document archive, linked to the patient.
@@ -269,8 +280,8 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
             <ScanLine className="h-5 w-5 text-primary" /> Verordnung scannen (Muster 4)
           </DialogTitle>
           <DialogDescription>
-            Foto oder Scan hochladen – die KI liest die Felder aus. Nichts wird gespeichert, bevor Sie
-            alle Angaben geprüft und bestätigt haben.
+            Foto oder Scan hochladen – die KI liest die Felder aus. Nichts wird gespeichert, bevor
+            Sie alle Angaben geprüft und bestätigt haben.
           </DialogDescription>
         </DialogHeader>
 
@@ -306,7 +317,11 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
                 Ohne Scan manuell erfassen
               </Button>
               <Button onClick={runScan} disabled={!datei || scanning}>
-                {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
+                {scanning ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ScanLine className="h-4 w-4" />
+                )}
                 Mit KI auslesen
               </Button>
             </DialogFooter>
@@ -330,7 +345,8 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
               )}
               {scanFehler && (
                 <p className="flex items-center gap-1.5 text-xs text-warning">
-                  <AlertTriangle className="h-3.5 w-3.5" /> {scanFehler} Bitte Felder manuell ausfüllen.
+                  <AlertTriangle className="h-3.5 w-3.5" /> {scanFehler} Bitte Felder manuell
+                  ausfüllen.
                 </p>
               )}
             </div>
@@ -368,8 +384,8 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
                     </div>
                   ) : (
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <UserPlus className="h-3.5 w-3.5" /> Kein bestehender Patient erkannt – wird neu
-                      angelegt.
+                      <UserPlus className="h-3.5 w-3.5" /> Kein bestehender Patient erkannt – wird
+                      neu angelegt.
                     </p>
                   )}
                 </div>
@@ -465,7 +481,11 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
                 Zurück
               </Button>
               <Button onClick={confirmSave} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
                 Bestätigen & speichern
               </Button>
             </DialogFooter>
@@ -476,7 +496,9 @@ export function VerordnungScanDialog({ open, onOpenChange, patientId }: Props) {
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-2 rounded-xl bg-success/10 py-6 text-center">
               <CheckCircle2 className="h-8 w-8 text-success" />
-              <p className="text-sm font-medium">Verordnung für „{gespeicherterName}" gespeichert.</p>
+              <p className="text-sm font-medium">
+                Verordnung für „{gespeicherterName}" gespeichert.
+              </p>
               <p className="max-w-sm text-xs text-muted-foreground">
                 Optional: direkt eine Fahrt mit der erkannten Transportart vorbereiten.
               </p>
@@ -512,9 +534,7 @@ function Feld({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label className="text-xs">{label}</Label>
-        {!wert && (
-          <span className="text-[10px] text-warning">nicht erkannt</span>
-        )}
+        {!wert && <span className="text-[10px] text-warning">nicht erkannt</span>}
       </div>
       {children}
     </div>

@@ -209,7 +209,9 @@ export function AuftragDetail({
           {canManage && unzugewiesen && onAssign && (
             <DriverSuggestion
               auftrag={auftrag}
-              onConfirm={(fahrerId, fahrer, fahrzeug) => onAssign(auftrag.id, fahrerId, fahrer, fahrzeug)}
+              onConfirm={(fahrerId, fahrer, fahrzeug) =>
+                onAssign(auftrag.id, fahrerId, fahrer, fahrzeug)
+              }
             />
           )}
 

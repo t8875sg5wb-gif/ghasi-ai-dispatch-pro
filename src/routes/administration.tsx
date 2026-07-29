@@ -124,8 +124,8 @@ function Datensicherung() {
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Exportiert alle gespeicherten Daten (Aufträge, Kunden, Rechnungen u. v. m.) als
-          ZIP-Archiv mit einer CSV-Datei je Bereich.
+          Exportiert alle gespeicherten Daten (Aufträge, Kunden, Rechnungen u. v. m.) als ZIP-Archiv
+          mit einer CSV-Datei je Bereich.
         </p>
         <Button onClick={handleExport} disabled={busy} className="shrink-0">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -362,7 +362,6 @@ function SystemStatus() {
           ))}
         </CardContent>
       </Card>
-
 
       <Card>
         <CardHeader>

@@ -138,7 +138,6 @@ export function profitProAuftrag(
     .sort((a, b) => b.gewinn - a.gewinn);
 }
 
-
 export interface FahrerProfit {
   fahrer: Fahrer;
   umsatz: number;
@@ -187,7 +186,14 @@ export function profitProFahrzeug(fahrzeuge: Fahrzeug[] = INITIAL_FAHRZEUGE): Fa
       const reparaturkosten = reparaturkostenGesamt(v);
       // Uneconomic when repairs eat >25 % of monthly profit or margin is very thin.
       const wirtschaftlich = marge >= 10 && reparaturkosten < Math.max(600, v.monatsgewinn * 0.25);
-      return { fahrzeug: v, umsatz: v.monatsumsatz, gewinn: v.monatsgewinn, marge, reparaturkosten, wirtschaftlich };
+      return {
+        fahrzeug: v,
+        umsatz: v.monatsumsatz,
+        gewinn: v.monatsgewinn,
+        marge,
+        reparaturkosten,
+        wirtschaftlich,
+      };
     })
     .sort((a, b) => b.gewinn - a.gewinn);
 }
@@ -252,7 +258,9 @@ function ortKey(a: Auftrag): string {
   return ziel.toLowerCase().split(/[\s,]/)[0] ?? "";
 }
 
-export function suggestOrderCombinations(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): Kombivorschlag[] {
+export function suggestOrderCombinations(
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+): Kombivorschlag[] {
   const aktiv = auftraege.filter((a) => AKTIVE_STATUS.includes(a.status));
   const vorschlaege: Kombivorschlag[] = [];
   for (let i = 0; i < aktiv.length; i++) {
@@ -431,7 +439,7 @@ export function computeRiskAlerts(): RisikoAlert[] {
       id: "marge",
       titel: "Niedrige Gewinnmarge",
       detail: `Die Marge liegt bei ${fin.margeProzent} % – unter dem gesunden Zielwert von 15 %.`,
-      impact: `Ziel: +${EUR(round((fin.umsatzMonat * 0.03)))}/Monat`,
+      impact: `Ziel: +${EUR(round(fin.umsatzMonat * 0.03))}/Monat`,
       stufe: fin.margeProzent < 8 ? "kritisch" : "hoch",
       to: "/buchhaltung",
     });
@@ -556,7 +564,9 @@ export function buildCeoSnapshot(): string {
   lines.push("# Digital-CEO Intelligenz");
   lines.push(
     "Cashflow-Prognose: " +
-      cashflow.map((c) => `${c.label} Gewinn ${EUR(c.gewinn)} / Cashflow ${EUR(c.cashflow)}`).join(" · "),
+      cashflow
+        .map((c) => `${c.label} Gewinn ${EUR(c.gewinn)} / Cashflow ${EUR(c.cashflow)}`)
+        .join(" · "),
   );
   lines.push(
     `Freie Kapazität: ${cap.zusaetzlicheAuftraege} weitere Aufträge möglich (Potenzial ${EUR(cap.potenzialUmsatz)}). ` +
@@ -565,7 +575,8 @@ export function buildCeoSnapshot(): string {
   if (topFahrer.length) {
     lines.push(
       "Top-Fahrer (Effizienz): " +
-        topFahrer.map((f) => `${f.fahrer.name} ${f.effizienz}/100`).join(", ") + ".",
+        topFahrer.map((f) => `${f.fahrer.name} ${f.effizienz}/100`).join(", ") +
+        ".",
     );
   }
   if (recs.length) {
@@ -574,7 +585,8 @@ export function buildCeoSnapshot(): string {
   }
   if (risks.length) {
     lines.push("Geschäftsrisiken:");
-    for (const r of risks.slice(0, 4)) lines.push(`- [${r.stufe}] ${r.titel}: ${r.detail} (${r.impact})`);
+    for (const r of risks.slice(0, 4))
+      lines.push(`- [${r.stufe}] ${r.titel}: ${r.detail} (${r.impact})`);
   }
   return lines.join("\n");
 }

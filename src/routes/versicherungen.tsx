@@ -70,8 +70,6 @@ export const Route = createFileRoute("/versicherungen")({
   component: VersicherungenSeite,
 });
 
-
-
 type ArtFilter = VersicherungsArt | "alle";
 
 function VersicherungenSeite() {

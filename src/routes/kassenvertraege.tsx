@@ -286,7 +286,11 @@ function VertragDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Gültig bis</Label>
-              <Input type="date" value={gueltigBis} onChange={(e) => setGueltigBis(e.target.value)} />
+              <Input
+                type="date"
+                value={gueltigBis}
+                onChange={(e) => setGueltigBis(e.target.value)}
+              />
             </div>
           </div>
           <div className="space-y-1.5">

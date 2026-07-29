@@ -114,8 +114,18 @@ function FahrtenbuchPage() {
       />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        <StatCard label="Erfasste Fahrten" value={String(gefiltert.length)} icon={BookText} tone="info" />
-        <StatCard label="Gesamt-Kilometer" value={`${gesamtKm.toLocaleString("de-DE")} km`} icon={Gauge} tone="accent" />
+        <StatCard
+          label="Erfasste Fahrten"
+          value={String(gefiltert.length)}
+          icon={BookText}
+          tone="info"
+        />
+        <StatCard
+          label="Gesamt-Kilometer"
+          value={`${gesamtKm.toLocaleString("de-DE")} km`}
+          icon={Gauge}
+          tone="accent"
+        />
         <StatCard label="Fahrzeuge" value={String(fahrzeuge.length)} icon={Gauge} tone="primary" />
       </section>
 
@@ -136,14 +146,21 @@ function FahrtenbuchPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={exportCsv} disabled={gefiltert.length === 0}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              disabled={gefiltert.length === 0}
+            >
               <Download className="h-4 w-4" /> CSV
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading && (
-            <p className="py-8 text-center text-sm text-muted-foreground">Fahrten werden geladen …</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Fahrten werden geladen …
+            </p>
           )}
           {!isLoading && (
             <div className="overflow-x-auto">
@@ -191,7 +208,10 @@ function FahrtenbuchPage() {
                   ))}
                   {gefiltert.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                      <TableCell
+                        colSpan={8}
+                        className="py-8 text-center text-sm text-muted-foreground"
+                      >
                         Keine Fahrten erfasst.
                       </TableCell>
                     </TableRow>
@@ -208,7 +228,13 @@ function FahrtenbuchPage() {
   );
 }
 
-function FahrtDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+function FahrtDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
   const { data: fahrzeuge = [] } = useVehicles();
   const createMut = useCreateTrip();
 
@@ -271,7 +297,9 @@ function FahrtDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Fahrt erfassen</DialogTitle>
-          <DialogDescription>Kilometerstand und Zweck für den Nachweis eintragen.</DialogDescription>
+          <DialogDescription>
+            Kilometerstand und Zweck für den Nachweis eintragen.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -323,12 +351,20 @@ function FahrtDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
             </div>
             <div className="space-y-1.5">
               <Label>Zweck</Label>
-              <Input value={zweck} onChange={(e) => setZweck(e.target.value)} placeholder="z. B. Dialysefahrt" />
+              <Input
+                value={zweck}
+                onChange={(e) => setZweck(e.target.value)}
+                placeholder="z. B. Dialysefahrt"
+              />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Notiz</Label>
-            <Input value={notiz} onChange={(e) => setNotiz(e.target.value)} placeholder="Optional" />
+            <Input
+              value={notiz}
+              onChange={(e) => setNotiz(e.target.value)}
+              placeholder="Optional"
+            />
           </div>
         </div>
 

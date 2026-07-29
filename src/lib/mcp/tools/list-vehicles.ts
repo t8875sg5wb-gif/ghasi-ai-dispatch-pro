@@ -8,7 +8,10 @@ export default defineTool({
   title: "Fahrzeuge auflisten",
   description: "Listet alle Fahrzeuge der Flotte. Optional nach Status filtern.",
   inputSchema: {
-    status: z.string().optional().describe("Statusfilter, z.B. 'verfuegbar', 'im_einsatz', 'wartung'."),
+    status: z
+      .string()
+      .optional()
+      .describe("Statusfilter, z.B. 'verfuegbar', 'im_einsatz', 'wartung'."),
     limit: z.number().int().min(1).max(200).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },

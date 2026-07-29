@@ -815,9 +815,7 @@ function TransportDialog({
     <Dialog open={!!t} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {t.nummer}
-          </DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{t.nummer}</DialogTitle>
           <DialogDescription>
             {t.patient} · {t.transportart}
           </DialogDescription>

@@ -658,7 +658,6 @@ export function berechneKpis(
   const wartend = transporte.filter((t) => spalteVon(t) === "warten").length;
   const verspaetet = transporte.filter((t) => spalteVon(t) === "verspaetet").length;
 
-
   const umsatzHeute = transporte
     .filter((t) => t.liveStatus !== "storniert")
     .reduce((s, t) => s + t.erloes, 0);

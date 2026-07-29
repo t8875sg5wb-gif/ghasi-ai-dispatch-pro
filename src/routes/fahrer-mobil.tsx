@@ -36,7 +36,10 @@ export const Route = createFileRoute("/fahrer-mobil")({
   head: () => ({
     meta: [
       { title: "Meine Touren – GHASI AI" },
-      { name: "description", content: "Mobile Fahreransicht: heutige Touren, Status und Navigation." },
+      {
+        name: "description",
+        content: "Mobile Fahreransicht: heutige Touren, Status und Navigation.",
+      },
     ],
   }),
   component: FahrerMobilPage,
@@ -194,7 +197,11 @@ function FahrerMobilPage() {
     );
   }
 
-  function setStatus(o: Auftrag, values: Parameters<typeof updateMut.mutate>[0]["values"], msg: string) {
+  function setStatus(
+    o: Auftrag,
+    values: Parameters<typeof updateMut.mutate>[0]["values"],
+    msg: string,
+  ) {
     updateMut.mutate(
       { id: o.id, values },
       {
@@ -264,8 +271,8 @@ function FahrerMobilPage() {
             <Smartphone className="h-8 w-8 text-warning" />
             <p className="text-sm font-medium">Konto noch nicht mit einem Fahrer verknüpft</p>
             <p className="max-w-xs text-sm text-muted-foreground">
-              Bitte lassen Sie Ihr Benutzerkonto von einem Administrator mit Ihrem
-              Fahrerdatensatz verknüpfen. Erst danach werden Ihre Touren hier angezeigt.
+              Bitte lassen Sie Ihr Benutzerkonto von einem Administrator mit Ihrem Fahrerdatensatz
+              verknüpfen. Erst danach werden Ihre Touren hier angezeigt.
             </p>
           </CardContent>
         </Card>
@@ -326,7 +333,11 @@ function FahrerMobilPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <Button asChild variant="outline" className="rounded-xl" disabled={!ziel}>
-                  <a href={ziel ? mapsUrl(ziel) : undefined} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={ziel ? mapsUrl(ziel) : undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Navigation className="h-4 w-4" /> Navigation
                   </a>
                 </Button>
@@ -348,13 +359,20 @@ function FahrerMobilPage() {
                       {
                         status: "unterwegs",
                         detailStatus: "anfahrt",
-                        lifecycle: { ...(o.lifecycle ?? {}), gestartetAm: new Date().toISOString() },
+                        lifecycle: {
+                          ...(o.lifecycle ?? {}),
+                          gestartetAm: new Date().toISOString(),
+                        },
                       },
                       "Fahrt gestartet",
                     )
                   }
                 >
-                  {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  {pending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
                   Fahrt starten
                 </Button>
               )}

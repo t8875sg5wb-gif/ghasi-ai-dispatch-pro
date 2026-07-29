@@ -6,7 +6,9 @@ import { toCsv } from "@/lib/export-utils";
 import type { BackupData } from "@/lib/backup.functions";
 
 /** Build a ZIP of CSV files (one per table) and trigger a browser download. */
-export async function downloadBackupZip(data: BackupData): Promise<{ tables: number; rows: number }> {
+export async function downloadBackupZip(
+  data: BackupData,
+): Promise<{ tables: number; rows: number }> {
   const zip = new JSZip();
   let totalRows = 0;
   let tableCount = 0;

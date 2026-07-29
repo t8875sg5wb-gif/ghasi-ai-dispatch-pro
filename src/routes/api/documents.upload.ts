@@ -34,7 +34,6 @@ import {
 } from "@/lib/documents-shared";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN } from "@/lib/documents";
 
-
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MiB
 
 type ErlaubterMime = "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
@@ -363,7 +362,6 @@ export const Route = createFileRoute("/api/documents/upload")({
           return jsonErr(500, "Upload konnte nicht bestätigt werden.");
         }
         return Response.json(dokument);
-
       },
     },
   },

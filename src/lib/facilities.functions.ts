@@ -46,7 +46,10 @@ const updateFacilitySchema = z
 
 const deleteFacilitySchema = z.object({ id: z.string().uuid() }).strict();
 
-function parseOrThrow<T>(schema: { safeParse: (d: unknown) => { success: boolean; data?: T } }, data: unknown): T {
+function parseOrThrow<T>(
+  schema: { safeParse: (d: unknown) => { success: boolean; data?: T } },
+  data: unknown,
+): T {
   const parsed = schema.safeParse(data);
   if (!parsed.success) throw new Error("Ungültige Einrichtungsdaten.");
   return parsed.data as T;
@@ -79,7 +82,10 @@ export const createFacility = createServerFn({ method: "POST" })
 export const updateFacility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) =>
-    parseOrThrow<{ id: string; values: Partial<FacilityWrite> }>(updateFacilitySchema as never, data),
+    parseOrThrow<{ id: string; values: Partial<FacilityWrite> }>(
+      updateFacilitySchema as never,
+      data,
+    ),
   )
   .handler(async ({ data, context }): Promise<Einrichtung> => {
     const { data: updated, error } = await context.supabase
@@ -100,7 +106,6 @@ export const deleteFacility = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });
-
 
 export const seedFacilities = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -118,7 +118,12 @@ function AusgabenPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Ausgaben (brutto)" value={EUR(summe.brutto)} icon={Receipt} tone="primary" />
+        <StatCard
+          label="Ausgaben (brutto)"
+          value={EUR(summe.brutto)}
+          icon={Receipt}
+          tone="primary"
+        />
         <StatCard label="Netto" value={EUR(summe.netto)} icon={Receipt} tone="info" />
         <StatCard
           label={exempt ? "Nicht abziehbare Vorsteuer" : "Abziehbare Vorsteuer"}
@@ -143,12 +148,26 @@ function AusgabenPage() {
           <CardTitle className="text-base">Belege</CardTitle>
           <div className="flex gap-2">
             {expenses.length === 0 && (
-              <Button variant="outline" size="sm" disabled={seedMut.isPending} onClick={() => seedMut.mutate(undefined, { onSuccess: (r) => toast.success(`${r.seeded} Beispiele angelegt`) })}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={seedMut.isPending}
+                onClick={() =>
+                  seedMut.mutate(undefined, {
+                    onSuccess: (r) => toast.success(`${r.seeded} Beispiele angelegt`),
+                  })
+                }
+              >
                 {seedMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Beispiele laden
               </Button>
             )}
-            <Button variant="outline" size="sm" disabled={expenses.length === 0} onClick={exportCsv}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={expenses.length === 0}
+              onClick={exportCsv}
+            >
               CSV-Export
             </Button>
           </div>
@@ -185,7 +204,9 @@ function AusgabenPage() {
                         )}
                       </TableCell>
                       <TableCell className="max-w-[220px] truncate">{e.lieferant || "—"}</TableCell>
-                      <TableCell className="text-right tabular-nums">{EUR(e.betragBrutto)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {EUR(e.betragBrutto)}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
                         {e.ustSatz}%
                       </TableCell>
@@ -254,7 +275,6 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
           kategorie: "wartungsbeleg",
           ordner: "Belege",
           tags: ["Ausgabe", kategorie],
-          
         });
         belegDokumentId = doc.id;
       }
@@ -316,7 +336,12 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Bruttobetrag (EUR)</Label>
-              <Input inputMode="decimal" value={betrag} onChange={(e) => setBetrag(e.target.value)} placeholder="z. B. 118,40" />
+              <Input
+                inputMode="decimal"
+                value={betrag}
+                onChange={(e) => setBetrag(e.target.value)}
+                placeholder="z. B. 118,40"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>USt-Satz auf Beleg (%)</Label>
@@ -341,7 +366,10 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Fahrzeug (optional)</Label>
-              <Select value={fahrzeugId || "__none__"} onValueChange={(v) => setFahrzeugId(v === "__none__" ? "" : v)}>
+              <Select
+                value={fahrzeugId || "__none__"}
+                onValueChange={(v) => setFahrzeugId(v === "__none__" ? "" : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="—" />
                 </SelectTrigger>
@@ -357,7 +385,10 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
             </div>
             <div className="space-y-1.5">
               <Label>Fahrer (optional)</Label>
-              <Select value={fahrerId || "__none__"} onValueChange={(v) => setFahrerId(v === "__none__" ? "" : v)}>
+              <Select
+                value={fahrerId || "__none__"}
+                onValueChange={(v) => setFahrerId(v === "__none__" ? "" : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="—" />
                 </SelectTrigger>

@@ -8,12 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GoogleFleetMap } from "@/components/gps/google-fleet-map";
 import { GOOGLE_MAP_STILE, type GoogleMapStil } from "@/lib/google-maps";
-import {
-  type FleetVehicle,
-  type LatLng,
-  FLEET_FARBEN,
-  buildFleet,
-} from "@/lib/fleet-live";
+import { type FleetVehicle, type LatLng, FLEET_FARBEN, buildFleet } from "@/lib/fleet-live";
 
 function naechsterPunkt(v: FleetVehicle): LatLng | null {
   if (v.farbe !== "fahrt") return null;

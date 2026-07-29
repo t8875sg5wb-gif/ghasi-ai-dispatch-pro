@@ -2,7 +2,7 @@
 
 ### Development Roadmap of GHASI AI — Version 2.1
 
-*Dieses Dokument beschreibt die langfristige Entwicklungsstrategie von GHASI AI. Es ist keine einfache To-do-Liste und kein kurzfristiger Sprintplan. Die Roadmap definiert, in welcher Reihenfolge GHASI AI stabilisiert, vereinheitlicht, verknüpft, intelligent gemacht, automatisiert und langfristig skaliert wird. Bei Konflikten hat die Constitution Vorrang.*
+_Dieses Dokument beschreibt die langfristige Entwicklungsstrategie von GHASI AI. Es ist keine einfache To-do-Liste und kein kurzfristiger Sprintplan. Die Roadmap definiert, in welcher Reihenfolge GHASI AI stabilisiert, vereinheitlicht, verknüpft, intelligent gemacht, automatisiert und langfristig skaliert wird. Bei Konflikten hat die Constitution Vorrang._
 
 ---
 

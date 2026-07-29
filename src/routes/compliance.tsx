@@ -48,7 +48,10 @@ export const Route = createFileRoute("/compliance")({
 const STATUS_META: Record<PflichtStatus, { label: string; badge: string }> = {
   ok: { label: "OK", badge: "border-success/30 bg-success/10 text-success" },
   warnung: { label: "Bald fällig", badge: "border-warning/30 bg-warning/10 text-warning" },
-  kritisch: { label: "Kritisch", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+  kritisch: {
+    label: "Kritisch",
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+  },
   offen: { label: "Offen", badge: "border-info/30 bg-info/10 text-info" },
   info: { label: "Hinweis", badge: "border-border bg-muted text-muted-foreground" },
 };
@@ -78,7 +81,18 @@ function CompliancePage() {
       kassen: insurers ?? [],
       company,
     }),
-    [vehicles, drivers, insurance, leasing, patients, orders, invoices, contracts, insurers, company],
+    [
+      vehicles,
+      drivers,
+      insurance,
+      leasing,
+      patients,
+      orders,
+      invoices,
+      contracts,
+      insurers,
+      company,
+    ],
   );
 
   const pflichten = useMemo(() => computePflichten(input), [input]);
@@ -120,10 +134,25 @@ function CompliancePage() {
       />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Kritische Fristen" value={String(kritisch)} icon={AlertTriangle} tone={kritisch > 0 ? "warning" : "success"} />
+        <StatCard
+          label="Kritische Fristen"
+          value={String(kritisch)}
+          icon={AlertTriangle}
+          tone={kritisch > 0 ? "warning" : "success"}
+        />
         <StatCard label="Offene Punkte" value={String(offen)} icon={ListChecks} tone="info" />
-        <StatCard label="Ausgaben/Monat" value={EUR2(zahlungen.ausgehendSumme)} icon={TrendingDown} tone="warning" />
-        <StatCard label="Offene Forderungen" value={EUR2(zahlungen.eingehendSumme)} icon={TrendingUp} tone="primary" />
+        <StatCard
+          label="Ausgaben/Monat"
+          value={EUR2(zahlungen.ausgehendSumme)}
+          icon={TrendingDown}
+          tone="warning"
+        />
+        <StatCard
+          label="Offene Forderungen"
+          value={EUR2(zahlungen.eingehendSumme)}
+          icon={TrendingUp}
+          tone="primary"
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

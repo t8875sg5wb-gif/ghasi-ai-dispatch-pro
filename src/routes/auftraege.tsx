@@ -37,20 +37,13 @@ import {
   auftragProbleme,
   WARN_META,
 } from "@/lib/order-urgency";
-import {
-  useRecurring,
-} from "@/lib/recurring-store";
+import { useRecurring } from "@/lib/recurring-store";
 import { abgeleiteterStatus, RHYTHMUS_LABEL } from "@/lib/dauerauftraege";
 import { AuftragForm, type AuftragFormValues } from "@/components/auftraege/auftrag-form";
 import { AuftragDetail } from "@/components/auftraege/auftrag-detail";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Repeat, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
@@ -347,18 +340,11 @@ function AuftraegePage() {
       ["adresse_fehlt", "telefon_fehlt", "doppelt_eingeplant"].includes(p.typ),
     );
     return (
-      <TableRow
-        key={a.id}
-        className={cn("cursor-pointer", warn.row)}
-        onClick={() => openDetail(a)}
-      >
+      <TableRow key={a.id} className={cn("cursor-pointer", warn.row)} onClick={() => openDetail(a)}>
         <TableCell>
           <div className="flex items-center gap-3">
             <span
-              className={cn(
-                "h-2 w-2 shrink-0 rounded-full",
-                zeigtWarnung ? warn.dot : status.dot,
-              )}
+              className={cn("h-2 w-2 shrink-0 rounded-full", zeigtWarnung ? warn.dot : status.dot)}
             />
             <div className="min-w-0">
               <p className="font-medium leading-tight">{a.patient}</p>
@@ -376,10 +362,7 @@ function AuftraegePage() {
                     Nicht zugewiesen
                   </Badge>
                   {zeigtWarnung && (
-                    <Badge
-                      variant="outline"
-                      className={cn("h-5 px-1.5 text-[10px]", warn.badge)}
-                    >
+                    <Badge variant="outline" className={cn("h-5 px-1.5 text-[10px]", warn.badge)}>
                       {formatCountdown(m)}
                     </Badge>
                   )}
@@ -637,9 +620,7 @@ function AuftraegePage() {
                   {aktiveSerien.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
                       <Repeat className="h-6 w-6 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Keine aktiven Daueraufträge.
-                      </p>
+                      <p className="text-sm text-muted-foreground">Keine aktiven Daueraufträge.</p>
                       <Button asChild variant="outline" size="sm" className="mt-1 gap-1.5">
                         <Link to="/dauerauftraege">
                           Daueraufträge verwalten <ArrowRight className="h-3.5 w-3.5" />

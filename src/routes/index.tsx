@@ -195,7 +195,10 @@ function Dashboard() {
     (a) => (a.status === "neu" || a.status === "disponiert") && !a.fahrer,
   ).length;
   if (unbesetzt > 0)
-    aufgaben.push({ text: `${unbesetzt} Auftrag/Aufträge ohne Fahrer disponieren`, to: "/tourenplanung" });
+    aufgaben.push({
+      text: `${unbesetzt} Auftrag/Aufträge ohne Fahrer disponieren`,
+      to: "/tourenplanung",
+    });
   if (kpis.kritischeAlarme > 0)
     aufgaben.push({
       text: `${kpis.kritischeAlarme} Fahrzeug(e) mit ablaufender Frist (TÜV/Versicherung/Wartung)`,

@@ -2,13 +2,13 @@
 
 ### Technical Architecture of GHASI AI — Version 1.0
 
-*Technisches Grundlagendokument von GHASI AI. Ergänzt `docs/GHASI-CONSTITUTION.md`, ersetzt sie
+\*Technisches Grundlagendokument von GHASI AI. Ergänzt `docs/GHASI-CONSTITUTION.md`, ersetzt sie
 
 nicht. Bei Konflikten hat die Constitution Vorrang. Anders als die Constitution beschreibt dieses
 
 Dokument bewusst auch den **aktuellen, echten Stand** der Codebasis — nicht nur die Zielvision —
 
-damit Lovable und Claude Code konkret wissen, worauf sie aufbauen.*
+damit Lovable und Claude Code konkret wissen, worauf sie aufbauen.\*
 
 ---
 
@@ -384,9 +384,9 @@ Benchmarking, externe Partnerportale (DMRZ, QRAGO).
 
 ## 19. Entwicklungsreihenfolge
 
-1. Constitution *(fertig)*
+1. Constitution _(fertig)_
 
-2. Architecture *(dieses Dokument)*
+2. Architecture _(dieses Dokument)_
 
 3. Navigation vereinheitlichen (verbleibende Hauptbereiche nach dem Hub-Muster aus §6)
 

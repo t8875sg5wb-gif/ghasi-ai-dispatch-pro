@@ -27,7 +27,8 @@ export function useDriverOptions(): EntityOptions {
     return {
       options: list.map((f) => ({ value: f.name, label: `${f.name} · ${f.nummer}` })),
       leer: list.length === 0,
-      hinweis: "Noch keine Fahrer angelegt – zuerst unter „Fahrer“ anlegen oder Beispieldaten laden.",
+      hinweis:
+        "Noch keine Fahrer angelegt – zuerst unter „Fahrer“ anlegen oder Beispieldaten laden.",
     };
   }, [data]);
 }
@@ -44,7 +45,8 @@ export function useDriverIdOptions(): EntityOptions {
     return {
       options: list.map((f) => ({ value: f.id, label: `${f.name} · ${f.nummer}` })),
       leer: list.length === 0,
-      hinweis: "Noch keine Fahrer angelegt – zuerst unter „Fahrer“ anlegen oder Beispieldaten laden.",
+      hinweis:
+        "Noch keine Fahrer angelegt – zuerst unter „Fahrer“ anlegen oder Beispieldaten laden.",
     };
   }, [data]);
 }

@@ -6,7 +6,8 @@ import { rowToRechnung, type InvoiceRow } from "@/lib/invoices-shared";
 export default defineTool({
   name: "list_invoices",
   title: "Rechnungen auflisten",
-  description: "Listet Rechnungen. Optional nach Status filtern (z.B. 'offen', 'bezahlt', 'ueberfaellig').",
+  description:
+    "Listet Rechnungen. Optional nach Status filtern (z.B. 'offen', 'bezahlt', 'ueberfaellig').",
   inputSchema: {
     status: z.string().optional(),
     limit: z.number().int().min(1).max(100).optional(),

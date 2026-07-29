@@ -22,7 +22,6 @@ import {
   formatEUR,
   initials,
   laeuftAb,
-  
 } from "@/lib/fahrer";
 import { FahrerForm, type FahrerFormValues } from "@/components/fahrer/fahrer-form";
 import { FahrerDetail } from "@/components/fahrer/fahrer-detail";
@@ -85,7 +84,6 @@ function FahrerPage() {
   const editTarget = editId ? (fahrer.find((f) => f.id === editId) ?? null) : null;
 
   const empfehlungen = useMemo(() => empfehleFahrer(fahrer, 3), [fahrer]);
-
 
   const stats = useMemo(() => {
     const verfuegbar = fahrer.filter((f) => f.status === "verfuegbar").length;
@@ -174,8 +172,7 @@ function FahrerPage() {
     linkMut.mutate(
       { driverId, userId: ziel },
       {
-        onSuccess: () =>
-          toast.success(ziel ? "Benutzerkonto verknüpft" : "Verknüpfung aufgehoben"),
+        onSuccess: () => toast.success(ziel ? "Benutzerkonto verknüpft" : "Verknüpfung aufgehoben"),
         onError: (e: unknown) => toast.error((e as Error).message || "Verknüpfung fehlgeschlagen"),
       },
     );
@@ -215,7 +212,6 @@ function FahrerPage() {
       onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
     });
   }
-
 
   const filterChips: { value: StatusFilter; label: string }[] = [
     { value: "alle", label: "Alle" },

@@ -51,9 +51,9 @@ describe("linkSchema", () => {
   });
 
   test("lehnt unbekannten Schlüssel ab (.strict)", () => {
-    expect(
-      linkSchema.safeParse({ driverId: UUID_A, userId: UUID_B, role: "admin" }).success,
-    ).toBe(false);
+    expect(linkSchema.safeParse({ driverId: UUID_A, userId: UUID_B, role: "admin" }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -109,8 +109,8 @@ describe("updateDriverSchema", () => {
   });
 
   test("akzeptiert ein einzelnes gültiges Feld", () => {
-    expect(
-      updateDriverSchema.safeParse({ id: UUID_A, values: { status: "pause" } }).success,
-    ).toBe(true);
+    expect(updateDriverSchema.safeParse({ id: UUID_A, values: { status: "pause" } }).success).toBe(
+      true,
+    );
   });
 });

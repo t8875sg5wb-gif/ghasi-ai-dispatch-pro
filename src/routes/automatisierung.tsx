@@ -74,7 +74,6 @@ function AutomationPage() {
     );
   };
 
-
   const freigeben = (a: Automation) => {
     toast.success("Entwürfe freigegeben", { description: a.vorschlag });
     logActivity({

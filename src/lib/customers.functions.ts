@@ -5,7 +5,12 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Kunde } from "@/lib/stammdaten";
-import { rowToKunde, kundeToRow, type CustomerRow, type CustomerWrite } from "@/lib/customers-shared";
+import {
+  rowToKunde,
+  kundeToRow,
+  type CustomerRow,
+  type CustomerWrite,
+} from "@/lib/customers-shared";
 
 /**
  * Strenge Laufzeitvalidierung für Kunden-Mutationen (Muster CP12/CP19/CP22).
@@ -106,7 +111,6 @@ export const deleteCustomer = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });
-
 
 export const seedCustomers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

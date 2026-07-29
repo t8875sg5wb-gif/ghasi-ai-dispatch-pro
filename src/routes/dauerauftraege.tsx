@@ -35,11 +35,7 @@ import {
   naechsteTermine,
   offeneTermineImZeitraum,
 } from "@/lib/dauerauftraege";
-import {
-  MOBILITAET_META,
-  MOBILITAET_OPTIONEN,
-  type Mobilitaet,
-} from "@/lib/auftraege";
+import { MOBILITAET_META, MOBILITAET_OPTIONEN, type Mobilitaet } from "@/lib/auftraege";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
@@ -1047,7 +1043,9 @@ function DauerauftragForm({
               </SelectTrigger>
               <SelectContent>
                 {kundeOpt.leer ? (
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground">{kundeOpt.hinweis}</div>
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    {kundeOpt.hinweis}
+                  </div>
                 ) : (
                   kundeOpt.options.map((k) => (
                     <SelectItem key={k.value} value={k.value}>

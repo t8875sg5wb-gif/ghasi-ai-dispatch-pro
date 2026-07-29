@@ -2,7 +2,7 @@
 
 ### Fachliches Domain Model von GHASI AI — Version 1.0
 
-*Offizielles fachliches Grundlagendokument von GHASI AI Executive.*
+_Offizielles fachliches Grundlagendokument von GHASI AI Executive._
 
 Dieses Dokument ergänzt:
 

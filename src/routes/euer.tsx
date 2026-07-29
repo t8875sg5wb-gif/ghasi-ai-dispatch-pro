@@ -28,7 +28,10 @@ export const Route = createFileRoute("/euer")({
   head: () => ({
     meta: [
       { title: "EÜR – GHASI AI" },
-      { name: "description", content: "Einnahmen-Überschuss-Rechnung als Vorbereitung für ELSTER." },
+      {
+        name: "description",
+        content: "Einnahmen-Überschuss-Rechnung als Vorbereitung für ELSTER.",
+      },
     ],
   }),
   component: EuerPage,
@@ -45,10 +48,7 @@ function EuerPage() {
   const jahre = useMemo(() => verfuegbareJahre(rechnungen, ausgaben), [rechnungen, ausgaben]);
   const [jahr, setJahr] = useState(() => new Date().getFullYear());
 
-  const euer = useMemo(
-    () => computeEuer(jahr, rechnungen, ausgaben),
-    [jahr, rechnungen, ausgaben],
-  );
+  const euer = useMemo(() => computeEuer(jahr, rechnungen, ausgaben), [jahr, rechnungen, ausgaben]);
 
   function exportPdf() {
     downloadEuerPdf(euer, company);
@@ -142,7 +142,10 @@ function EuerPage() {
                 <tr key={z.key} className="border-b border-border/40">
                   <td className="px-2 py-1.5">{z.label}</td>
                   {z.monate.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">
+                    <td
+                      key={i}
+                      className="px-2 py-1.5 text-right tabular-nums text-muted-foreground"
+                    >
                       {v ? EUR2(v) : "—"}
                     </td>
                   ))}
@@ -160,7 +163,10 @@ function EuerPage() {
                 <tr key={z.key} className="border-b border-border/40">
                   <td className="px-2 py-1.5">{z.label}</td>
                   {z.monate.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">
+                    <td
+                      key={i}
+                      className="px-2 py-1.5 text-right tabular-nums text-muted-foreground"
+                    >
                       {v ? EUR2(v) : "—"}
                     </td>
                   ))}
@@ -187,7 +193,8 @@ function EuerPage() {
       <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
         <span className="font-semibold">Hinweis:</span> Im umsatzsteuerbefreiten Modus (§4 Nr.17b
         UStG) ist die Vorsteuer aus Ausgaben nicht abziehbar – Ausgaben werden brutto gebucht.
-        Enthaltene, nicht abziehbare Vorsteuer {jahr}: {EUR2(euer.hinweisVorsteuer)}. {STEUER_DISCLAIMER}
+        Enthaltene, nicht abziehbare Vorsteuer {jahr}: {EUR2(euer.hinweisVorsteuer)}.{" "}
+        {STEUER_DISCLAIMER}
       </div>
     </div>
   );

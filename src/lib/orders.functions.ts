@@ -120,7 +120,6 @@ export const updateOrderSchema = z
     path: ["values"],
   });
 
-
 // Existenzprüfungen für Fahrer/Fahrzeug/Patient/Kostenträger liegen zentral in
 // `identity-checks.server.ts` (auch von Daueraufträgen genutzt).
 
@@ -147,9 +146,6 @@ async function assertVerordnungPasstZuPatient(
   if ((data as { patient_id: string | null }).patient_id !== patientId)
     throw new Error("Die Verordnung gehört zu einem anderen Patienten.");
 }
-
-
-
 
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -203,7 +199,6 @@ export const createOrder = createServerFn({ method: "POST" })
     return auftrag;
   });
 
-
 export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown): { id: string; values: Partial<OrderWrite> } => {
@@ -213,8 +208,7 @@ export const updateOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
-    if (data.values.fahrzeugId)
-      await assertVehicleExists(context.supabase, data.values.fahrzeugId);
+    if (data.values.fahrzeugId) await assertVehicleExists(context.supabase, data.values.fahrzeugId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     // Verordnung/Patient müssen auch nach einem Teil-Update zueinander passen.
@@ -254,7 +248,6 @@ export const updateOrder = createServerFn({ method: "POST" })
       const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
       if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
     }
-
 
     // Audit trail: persist every status / dispatch-assignment / driver change with
     // timestamp, status, driver, vehicle and GPS position (when available).

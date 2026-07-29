@@ -13,11 +13,7 @@ import { GRUNDFREIBETRAG } from "@/lib/gesetzeswerte";
 
 export type SteuerModus = "befreit_4_17b" | "kleinunternehmer_19" | "regulaer_19";
 
-export const STEUER_MODI: SteuerModus[] = [
-  "befreit_4_17b",
-  "kleinunternehmer_19",
-  "regulaer_19",
-];
+export const STEUER_MODI: SteuerModus[] = ["befreit_4_17b", "kleinunternehmer_19", "regulaer_19"];
 
 export const STEUER_MODUS_LABEL: Record<SteuerModus, string> = {
   befreit_4_17b: "Umsatzsteuerbefreit (§ 4 Nr. 17b UStG)",

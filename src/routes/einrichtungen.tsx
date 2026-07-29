@@ -13,7 +13,7 @@ const einrichtungConfigs = {
     beschreibung: "Kliniken, Fachbereiche, Ansprechpartner und Transporte.",
     icon: Hospital,
     idPrefix: "kh",
-    
+
     kapazitaetLabel: "Betten",
   },
   dialysezentren: {
@@ -23,7 +23,7 @@ const einrichtungConfigs = {
     beschreibung: "Zentren, Schichtzeiten, Behandlungsplätze und Sammeltouren.",
     icon: Droplets,
     idPrefix: "dz",
-    
+
     kapazitaetLabel: "Behandlungsplätze",
   },
   pflegeheime: {
@@ -33,7 +33,7 @@ const einrichtungConfigs = {
     beschreibung: "Einrichtungen, Plätze, Ansprechpartner und Transporte.",
     icon: Home,
     idPrefix: "ph",
-    
+
     kapazitaetLabel: "Plätze",
   },
 };
@@ -43,8 +43,7 @@ type EinrichtungTab = keyof typeof einrichtungConfigs;
 export const Route = createFileRoute("/einrichtungen")({
   validateSearch: (search: Record<string, unknown>): { tab: EinrichtungTab } => {
     const tab = search.tab;
-    const gueltig =
-      tab === "krankenhaeuser" || tab === "dialysezentren" || tab === "pflegeheime";
+    const gueltig = tab === "krankenhaeuser" || tab === "dialysezentren" || tab === "pflegeheime";
     return { tab: gueltig ? (tab as EinrichtungTab) : "krankenhaeuser" };
   },
   head: () => ({
@@ -73,10 +72,7 @@ function EinrichtungenHub() {
         title="Einrichtungen"
         description="Krankenhäuser, Dialysezentren und Pflegeheime an einem Ort."
       />
-      <Tabs
-        value={tab}
-        onValueChange={(v) => navigate({ search: { tab: v as EinrichtungTab } })}
-      >
+      <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v as EinrichtungTab } })}>
         <TabsList>
           <TabsTrigger value="krankenhaeuser">
             <Hospital className="mr-1.5 h-4 w-4" /> Krankenhäuser

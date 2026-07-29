@@ -139,8 +139,6 @@ function KundenSeite() {
     }
   }
 
-
-
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -157,11 +155,7 @@ function KundenSeite() {
         </div>
         <div className="flex items-center gap-2">
           {kunden.length === 0 && (
-            <Button
-              variant="outline"
-              onClick={() => seedMut.mutate()}
-              disabled={seedMut.isPending}
-            >
+            <Button variant="outline" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
               Beispieldaten laden
             </Button>
           )}

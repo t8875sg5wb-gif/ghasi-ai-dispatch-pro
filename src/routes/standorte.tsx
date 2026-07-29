@@ -29,11 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { PoiMap, type PoiMarker } from "@/components/maps/poi-map";
 import { GOOGLE_MAP_STILE, type GoogleMapStil } from "@/lib/google-maps";
-import {
-  searchPlaces,
-  type PlaceErgebnis,
-  type PlaceKategorie,
-} from "@/lib/google-maps.functions";
+import { searchPlaces, type PlaceErgebnis, type PlaceKategorie } from "@/lib/google-maps.functions";
 
 export const Route = createFileRoute("/standorte")({
   head: () => ({
@@ -132,11 +128,8 @@ function StandorteSeite() {
   function speichereFav(p: PlaceErgebnis) {
     setFavoriten((prev) => {
       const exists = prev.some((f) => f.id === p.id);
-      const next = exists
-        ? prev.filter((f) => f.id !== p.id)
-        : [...prev, { ...p, kategorie }];
-      if (typeof window !== "undefined")
-        window.localStorage.setItem(FAV_KEY, JSON.stringify(next));
+      const next = exists ? prev.filter((f) => f.id !== p.id) : [...prev, { ...p, kategorie }];
+      if (typeof window !== "undefined") window.localStorage.setItem(FAV_KEY, JSON.stringify(next));
       return next;
     });
   }
@@ -331,10 +324,7 @@ function StandorteSeite() {
                             title={fav ? "Favorit entfernen" : "Als Favorit speichern"}
                           >
                             <Star
-                              className={cn(
-                                "size-4",
-                                fav && "fill-amber-400 text-amber-400",
-                              )}
+                              className={cn("size-4", fav && "fill-amber-400 text-amber-400")}
                             />
                           </Button>
                           <Button
