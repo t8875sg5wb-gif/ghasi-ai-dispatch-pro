@@ -150,7 +150,6 @@ function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
   return result.data;
 }
 
-
 /* ------------------------------------------------------------------ *
  * Conversations
  * ------------------------------------------------------------------ */
@@ -233,7 +232,11 @@ export const upsertDrafts = createServerFn({ method: "POST" })
   .validator((data: unknown) => parseOrThrow(upsertDraftsSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     if (data.drafts.length === 0) return { ok: true };
-    const rows = data.drafts.map((d) => ({ ...d, betreff: d.betreff ?? null, bezug: d.bezug ?? null }));
+    const rows = data.drafts.map((d) => ({
+      ...d,
+      betreff: d.betreff ?? null,
+      bezug: d.bezug ?? null,
+    }));
     const { error } = await context.supabase
       .from("communication_drafts")
       .upsert(rows as never, { onConflict: "id", ignoreDuplicates: true });
@@ -257,4 +260,3 @@ export const updateDraft = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return rowToEntwurf(updated as unknown as DraftRow);
   });
-
