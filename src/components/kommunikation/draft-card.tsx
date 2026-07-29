@@ -42,7 +42,7 @@ export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
   const genehmigen = () => {
     if (edit) bearbeiteEntwurf(entwurf.id, text);
     genehmigeEntwurf(entwurf.id);
-    toast.success("Freigegeben & gesendet", { description: entwurf.titel });
+    toast.success("Freigegeben", { description: entwurf.titel });
   };
 
   const verwerfen = () => {
