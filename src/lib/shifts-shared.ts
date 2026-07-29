@@ -82,9 +82,9 @@ export function shiftToRow(w: Partial<ShiftWrite>): Record<string, unknown> {
   set("driver_id", w.driverId);
   set("datum", w.datum);
   set("typ", w.typ);
-  set("von", w.von ?? "");
-  set("bis", w.bis ?? "");
-  set("notiz", w.notiz ?? "");
+  set("von", w.von);
+  set("bis", w.bis);
+  set("notiz", w.notiz);
   return row;
 }
 

@@ -53,9 +53,9 @@ export function fahrtToRow(w: Partial<FahrtWrite>): Record<string, unknown> {
   set("datum", w.datum);
   set("km_start", w.kmStart);
   set("km_ende", w.kmEnde);
-  set("fahrer", w.fahrer ?? "");
-  set("zweck", w.zweck ?? "");
-  set("notiz", w.notiz ?? "");
+  set("fahrer", w.fahrer);
+  set("zweck", w.zweck);
+  set("notiz", w.notiz);
   return row;
 }
 
