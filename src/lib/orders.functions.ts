@@ -29,7 +29,7 @@ import {
  * ausschließlich serverseitig per DB-Trigger aus `fahrerId` abgeleitet und
  * dürfen niemals vom Browser gesetzt werden.
  */
-const adresseSchema = z
+export const adresseSchema = z
   .object({
     street: z.string().optional(),
     houseNumber: z.string().optional(),
