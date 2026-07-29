@@ -1,6 +1,7 @@
 // Server functions for persisted invoices (Rechnungen) and server-side billing
 // logic. All run as the signed-in user (RLS enforces finance-role access).
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Rechnung } from "@/lib/finance";
