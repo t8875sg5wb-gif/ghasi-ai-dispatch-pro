@@ -160,7 +160,7 @@ export function genehmigeEntwurf(id: string) {
     bereich: "Kommunikation",
     entitaet: entwurf.titel,
     aktion: "entwurf_genehmigt",
-    beschreibung: `KI-Entwurf „${entwurf.titel}" freigegeben und an ${entwurf.empfaenger} über ${KANAL_META[entwurf.kanal].label} gesendet.`,
+    beschreibung: `KI-Entwurf „${entwurf.titel}" freigegeben.`,
     akteur: "Unternehmer",
     metadaten: {
       kanal: entwurf.kanal,
