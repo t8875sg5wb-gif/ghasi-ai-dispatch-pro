@@ -413,7 +413,6 @@ export function buildBusinessTools(role: AppRole | null) {
           })),
         };
       },
-
     });
   }
 

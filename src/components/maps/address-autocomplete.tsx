@@ -41,8 +41,7 @@ function mapComponents(
     if (t.includes("route")) adr.street = c.longText ?? adr.street;
     else if (t.includes("street_number")) adr.houseNumber = c.longText ?? adr.houseNumber;
     else if (t.includes("postal_code")) adr.postalCode = c.longText ?? adr.postalCode;
-    else if (t.includes("locality") || t.includes("postal_town"))
-      adr.city = c.longText ?? adr.city;
+    else if (t.includes("locality") || t.includes("postal_town")) adr.city = c.longText ?? adr.city;
     else if (!adr.city && t.includes("administrative_area_level_1"))
       adr.city = c.longText ?? adr.city;
     else if (t.includes("country")) adr.country = c.longText ?? adr.country;

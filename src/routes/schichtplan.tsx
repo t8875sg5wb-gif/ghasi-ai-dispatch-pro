@@ -34,11 +34,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useDrivers } from "@/lib/drivers-store";
-import {
-  useShifts,
-  useCreateShift,
-  useDeleteShift,
-} from "@/lib/shifts-store";
+import { useShifts, useCreateShift, useDeleteShift } from "@/lib/shifts-store";
 import {
   SHIFT_META,
   SHIFT_TYPEN,
@@ -153,7 +149,9 @@ function SchichtplanPage() {
             </div>
           )}
           {isLoading && (
-            <p className="py-8 text-center text-sm text-muted-foreground">Kalender wird geladen …</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Kalender wird geladen …
+            </p>
           )}
           {!isLoading && fahrer.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
@@ -364,7 +362,11 @@ function ZellenDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Notiz</Label>
-            <Input value={notiz} onChange={(e) => setNotiz(e.target.value)} placeholder="Optional" />
+            <Input
+              value={notiz}
+              onChange={(e) => setNotiz(e.target.value)}
+              placeholder="Optional"
+            />
           </div>
         </div>
 

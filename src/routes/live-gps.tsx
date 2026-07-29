@@ -80,7 +80,6 @@ function LiveGps() {
     return () => clearInterval(interval);
   }, []);
 
-
   const alerts = useMemo(() => computeFleetAlerts(fleet), [fleet]);
 
   const gefiltert = useMemo(() => {
@@ -138,7 +137,6 @@ function LiveGps() {
             </button>
           ))}
         </div>
-
       </div>
 
       {/* Status-Legende */}
@@ -169,7 +167,6 @@ function LiveGps() {
                 stil={stil}
                 onSelect={(id) => setSelected((cur) => (cur === id ? cur : id))}
               />
-
             </div>
           </CardContent>
         </Card>
@@ -308,7 +305,6 @@ function LiveGps() {
               </div>
               <p>Google Maps wird über den verbundenen Connector automatisch authentifiziert.</p>
             </CardContent>
-
           </Card>
         </div>
       </div>

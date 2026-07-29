@@ -5,7 +5,12 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Fahrzeug } from "@/lib/fahrzeuge";
-import { rowToFahrzeug, fahrzeugToRow, type VehicleRow, type VehicleWrite } from "@/lib/vehicles-shared";
+import {
+  rowToFahrzeug,
+  fahrzeugToRow,
+  type VehicleRow,
+  type VehicleWrite,
+} from "@/lib/vehicles-shared";
 
 /**
  * Strenge Laufzeitvalidierung für Fahrzeug-Mutationen (Muster wie CP12/CP13).
@@ -148,7 +153,6 @@ export const deleteVehicle = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });
-
 
 export const seedVehicles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -26,8 +26,7 @@ type OAuthNamespace = {
   approveAuthorization: (id: string) => Promise<OAuthResult>;
   denyAuthorization: (id: string) => Promise<OAuthResult>;
 };
-const oauth = (): OAuthNamespace =>
-  (supabase.auth as unknown as { oauth: OAuthNamespace }).oauth;
+const oauth = (): OAuthNamespace => (supabase.auth as unknown as { oauth: OAuthNamespace }).oauth;
 
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
@@ -53,7 +52,8 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   errorComponent: ({ error }) => (
     <div className="flex min-h-screen items-center justify-center p-6">
       <Card className="max-w-md p-6 text-sm text-muted-foreground">
-        Diese Autorisierungsanfrage konnte nicht geladen werden: {String((error as Error)?.message ?? error)}
+        Diese Autorisierungsanfrage konnte nicht geladen werden:{" "}
+        {String((error as Error)?.message ?? error)}
       </Card>
     </div>
   ),
@@ -108,8 +108,8 @@ function Consent() {
         </div>
         <p className="text-sm text-muted-foreground">
           {clientName} erhält die Möglichkeit, die aktivierten GHASI-AI-Tools in Ihrem Namen
-          aufzurufen – solange Sie angemeldet sind. Die App-Berechtigungen und
-          Backend-Richtlinien bleiben unverändert bestehen.
+          aufzurufen – solange Sie angemeldet sind. Die App-Berechtigungen und Backend-Richtlinien
+          bleiben unverändert bestehen.
         </p>
         {details?.scope ? (
           <p className="text-xs text-muted-foreground">

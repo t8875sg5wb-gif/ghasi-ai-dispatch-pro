@@ -2,10 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import {
-  listAutomationStates,
-  setAutomationState,
-} from "@/lib/automation-states.functions";
+import { listAutomationStates, setAutomationState } from "@/lib/automation-states.functions";
 import type { AutomationStatus } from "@/lib/automation";
 
 export const AUTOMATION_STATES_QUERY_KEY = ["automation_states"] as const;

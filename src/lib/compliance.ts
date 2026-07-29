@@ -155,7 +155,9 @@ export function computePflichten(input: ComplianceInput): CompliancePflicht[] {
       kategorie: "§133 SGB V",
       titel: `Rahmenvertrag – ${k.name}`,
       status: hat ? "ok" : "offen",
-      detail: hat ? "Genehmigte Preisvereinbarung vorhanden." : "Kein genehmigter Vertrag hinterlegt.",
+      detail: hat
+        ? "Genehmigte Preisvereinbarung vorhanden."
+        : "Kein genehmigter Vertrag hinterlegt.",
       schritte: hat ? undefined : "Preisvereinbarung nach §133 SGB V mit der Kasse abschließen.",
     });
   }
@@ -184,9 +186,7 @@ export function computeVollstaendigkeit(input: ComplianceInput): Vollstaendigkei
 
   // Patienten mit Aufträgen
   // Namensabgleich (Altbestand ohne Verknüpfung) UND stabile ID-Verknüpfung.
-  const patientenMitAuftrag = new Set(
-    input.auftraege.map((a) => a.patient).filter(Boolean),
-  );
+  const patientenMitAuftrag = new Set(input.auftraege.map((a) => a.patient).filter(Boolean));
   const patientenIdsMitAuftrag = new Set(
     input.auftraege.map((a) => a.patientId).filter((x): x is string => Boolean(x)),
   );
@@ -244,10 +244,7 @@ export function computeZahlungsUebersicht(
   );
   const offenSumme = offene.reduce((s, r) => s + (brutto(r) - summeZahlungen(r)), 0);
   const ueberfaellig = offene.filter((r) => tageUeberfaellig(r) > 0);
-  const ueberfaelligSumme = ueberfaellig.reduce(
-    (s, r) => s + (brutto(r) - summeZahlungen(r)),
-    0,
-  );
+  const ueberfaelligSumme = ueberfaellig.reduce((s, r) => s + (brutto(r) - summeZahlungen(r)), 0);
 
   const eingehend: ZahlungsPosten[] = [
     { titel: `Offene Forderungen (${offene.length})`, betrag: offenSumme },

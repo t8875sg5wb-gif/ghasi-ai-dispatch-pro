@@ -30,7 +30,6 @@ import {
  * Stile werden über GOOGLE_MAP_STILE in src/lib/google-maps.ts gesteuert.
  * ------------------------------------------------------------------ */
 
-
 /* ------------------------------------------------------------------ *
  * Farb-Status der Live-Marker
  * ------------------------------------------------------------------ */
@@ -100,7 +99,6 @@ export function geocode(adresse: string): LatLng {
     (((h >>> 10) % 1000) / 1000) * (MINDEN_BOUNDS.lngMax - MINDEN_BOUNDS.lngMin);
   return { lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) };
 }
-
 
 /** Erzeugt eine sanft gekrümmte Zwischenroute zwischen zwei Punkten. */
 function polyline(a: LatLng, b: LatLng, segmente = 6): LatLng[] {

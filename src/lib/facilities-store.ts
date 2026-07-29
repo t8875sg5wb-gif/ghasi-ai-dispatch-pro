@@ -4,12 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import {
-  KRANKENHAEUSER,
-  DIALYSEZENTREN,
-  PFLEGEHEIME,
-  type Einrichtung,
-} from "@/lib/stammdaten";
+import { KRANKENHAEUSER, DIALYSEZENTREN, PFLEGEHEIME, type Einrichtung } from "@/lib/stammdaten";
 import {
   listFacilities,
   createFacility,

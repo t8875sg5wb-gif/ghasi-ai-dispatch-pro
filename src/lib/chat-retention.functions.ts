@@ -44,7 +44,14 @@ export const bereinigeAltenChatverlauf = createServerFn({ method: "POST" })
 
     const monate = Math.min(
       120,
-      Math.max(1, Math.round(Number((settings as { chat_retention_months?: number } | null)?.chat_retention_months ?? 12))),
+      Math.max(
+        1,
+        Math.round(
+          Number(
+            (settings as { chat_retention_months?: number } | null)?.chat_retention_months ?? 12,
+          ),
+        ),
+      ),
     );
 
     const stichtagDate = new Date();

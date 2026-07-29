@@ -89,7 +89,10 @@ export function PrognosenPage() {
           label="Annahme"
           hinweis="Alle Prognosewerte sind modellhafte Hochrechnungen aus aktuellen Betriebsdaten, Wochentags- und Saisonprofilen sowie – falls keine echten Werte vorliegen – hinterlegten Annahmen (z. B. Basisumsatz). Keine garantierten Ist-Zahlen."
         />
-        <span>Prognosen sind Schätzungen auf Basis von Betriebsdaten und Annahmen – keine garantierten Ist-Werte.</span>
+        <span>
+          Prognosen sind Schätzungen auf Basis von Betriebsdaten und Annahmen – keine garantierten
+          Ist-Werte.
+        </span>
       </div>
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -97,7 +100,6 @@ export function PrognosenPage() {
           <StatCard key={s.label} {...s} />
         ))}
       </section>
-
 
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard

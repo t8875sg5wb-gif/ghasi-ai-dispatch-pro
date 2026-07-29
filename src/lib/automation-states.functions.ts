@@ -31,10 +31,9 @@ export const setAutomationState = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("automation_states")
-      .upsert(
-        { automation_id: data.automationId, status: data.status } as never,
-        { onConflict: "automation_id" },
-      );
+      .upsert({ automation_id: data.automationId, status: data.status } as never, {
+        onConflict: "automation_id",
+      });
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });

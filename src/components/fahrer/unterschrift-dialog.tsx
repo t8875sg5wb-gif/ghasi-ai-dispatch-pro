@@ -116,8 +116,7 @@ export function UnterschriftDialog({ open, onOpenChange, patient, busy, onConfir
     onConfirm({ unterschrift: c.toDataURL("image/png"), verweigert: false });
   }
 
-  const kannBestaetigen =
-    modus === "verweigert" ? grund.trim().length >= 3 : hatStriche;
+  const kannBestaetigen = modus === "verweigert" ? grund.trim().length >= 3 : hatStriche;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

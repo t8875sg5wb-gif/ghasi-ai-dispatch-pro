@@ -80,20 +80,28 @@ export async function hydrateServerMirrors(force = false): Promise<void> {
 }
 
 async function ladeMirrors(): Promise<void> {
-
   try {
-    const [orders, drivers, invoices, recurring, patients, vehicles, customers, insurers, facilities] =
-      await Promise.all([
-        supabaseAdmin.from("orders").select("*"),
-        supabaseAdmin.from("drivers").select("*"),
-        supabaseAdmin.from("invoices").select("*"),
-        supabaseAdmin.from("recurring_orders").select("*"),
-        supabaseAdmin.from("patients").select("*"),
-        supabaseAdmin.from("vehicles").select("*"),
-        supabaseAdmin.from("customers").select("*"),
-        supabaseAdmin.from("insurers").select("*"),
-        supabaseAdmin.from("facilities").select("*"),
-      ]);
+    const [
+      orders,
+      drivers,
+      invoices,
+      recurring,
+      patients,
+      vehicles,
+      customers,
+      insurers,
+      facilities,
+    ] = await Promise.all([
+      supabaseAdmin.from("orders").select("*"),
+      supabaseAdmin.from("drivers").select("*"),
+      supabaseAdmin.from("invoices").select("*"),
+      supabaseAdmin.from("recurring_orders").select("*"),
+      supabaseAdmin.from("patients").select("*"),
+      supabaseAdmin.from("vehicles").select("*"),
+      supabaseAdmin.from("customers").select("*"),
+      supabaseAdmin.from("insurers").select("*"),
+      supabaseAdmin.from("facilities").select("*"),
+    ]);
 
     if (!orders.error)
       replace(
@@ -136,7 +144,9 @@ async function ladeMirrors(): Promise<void> {
         (insurers.data ?? []).map((r) => rowToKrankenkasse(r as unknown as InsurerRow)),
       );
     if (!facilities.error) {
-      const alle = (facilities.data ?? []).map((r) => rowToEinrichtung(r as unknown as FacilityRow));
+      const alle = (facilities.data ?? []).map((r) =>
+        rowToEinrichtung(r as unknown as FacilityRow),
+      );
       replace(
         KRANKENHAEUSER,
         alle.filter((e) => e.typ === "krankenhaus"),
@@ -155,5 +165,4 @@ async function ladeMirrors(): Promise<void> {
     // Non-fatal: keep serving with already-mirrored data.
     console.error("[server-mirror] Hydration fehlgeschlagen:", error);
   }
-
 }

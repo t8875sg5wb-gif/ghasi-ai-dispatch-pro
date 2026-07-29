@@ -149,10 +149,7 @@ export function findePatientMatch(name: string | null, patients: Patient[]): Pat
 }
 
 /** Best matching insurer for a scanned Krankenkasse name, or null. */
-export function findeKasseMatch(
-  name: string | null,
-  kassen: Krankenkasse[],
-): Krankenkasse | null {
+export function findeKasseMatch(name: string | null, kassen: Krankenkasse[]): Krankenkasse | null {
   if (!name?.trim()) return null;
   let best: { kasse: Krankenkasse; score: number } | null = null;
   for (const k of kassen) {

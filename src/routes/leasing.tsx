@@ -71,8 +71,6 @@ export const Route = createFileRoute("/leasing")({
   component: LeasingSeite,
 });
 
-
-
 function LeasingSeite() {
   const { name: akteur } = useAuth();
   const { data: items = [] } = useLeasing();
@@ -488,7 +486,9 @@ function LeasingFelder({
             </SelectTrigger>
             <SelectContent>
               {fahrzeugOpt.leer ? (
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">{fahrzeugOpt.hinweis}</div>
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {fahrzeugOpt.hinweis}
+                </div>
               ) : (
                 fahrzeugOpt.options.map((f) => (
                   <SelectItem key={f.value} value={f.value}>

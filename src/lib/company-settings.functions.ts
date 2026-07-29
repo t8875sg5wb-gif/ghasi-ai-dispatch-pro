@@ -14,10 +14,7 @@ import {
   type CompanySettings,
 } from "@/lib/company-settings-shared";
 
-export {
-  DEFAULT_COMPANY_SETTINGS,
-  type CompanySettings,
-} from "@/lib/company-settings-shared";
+export { DEFAULT_COMPANY_SETTINGS, type CompanySettings } from "@/lib/company-settings-shared";
 
 export const getCompanySettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

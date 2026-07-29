@@ -44,10 +44,7 @@ export const deleteInsurerContract = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("insurer_contracts")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("insurer_contracts").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });

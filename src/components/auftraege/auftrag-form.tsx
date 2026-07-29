@@ -88,7 +88,13 @@ function emptyValues(): AuftragFormValues {
   };
 }
 
-export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
+export function AuftragForm({
+  initial,
+  prefill,
+  onSubmit,
+  onCancel,
+  submitLabel,
+}: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
   const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleIdOptions();
@@ -103,7 +109,11 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
   // erfundener Wert). Kostenträger wird bevorzugt über den Patienten aufgelöst.
   const vertragspreis = useMemo(() => {
     const normName = (s: string) =>
-      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
     const patient = values.patientId
       ? patienten.find((p) => p.id === values.patientId)
       : values.patient
@@ -112,7 +122,8 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
     // Genaueste Quelle zuerst: Auftrag → Patient → Texttreffer.
     const insurerId =
       values.insurerId ?? patient?.kostentraegerId ?? findeInsurerId(kassen, values.kostentraeger);
-    if (!insurerId) return { info: null as ReturnType<typeof ermittleVertragspreis>, hatKasse: false };
+    if (!insurerId)
+      return { info: null as ReturnType<typeof ermittleVertragspreis>, hatKasse: false };
     const befreit = patient?.zuzahlungsbefreit ?? false;
     return {
       info: ermittleVertragspreis(contracts, insurerId, values.transportart, befreit),
@@ -128,7 +139,6 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
     kassen,
     contracts,
   ]);
-
 
   useEffect(() => {
     if (initial) {
@@ -408,7 +418,6 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
         value={values.verordnungId}
         onChange={(id) => set("verordnungId", id)}
       />
-
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

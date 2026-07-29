@@ -19,9 +19,7 @@ import {
   type RecurringWrite,
 } from "@/lib/recurring-shared";
 
-const isoDatum = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
+const isoDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
 const uhrzeit = z.string().regex(/^\d{2}:\d{2}$/, "Uhrzeit muss HH:mm sein.");
 
 /**
@@ -105,7 +103,6 @@ export const createRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => parseOrThrow(createRecurringSchema, data) as RecurringWrite)
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
-
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     if (data.bevorzugterFahrerId)

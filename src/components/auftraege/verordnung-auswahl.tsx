@@ -6,7 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { Transportart } from "@/lib/auftraege";
 import { useOrders } from "@/lib/orders-store";
-import { useVerordnungen, useCreateVerordnung, useUpdateVerordnung } from "@/lib/verordnungen-store";
+import {
+  useVerordnungen,
+  useCreateVerordnung,
+  useUpdateVerordnung,
+} from "@/lib/verordnungen-store";
 import { verordnungLabel, type Verordnung, type VerordnungWrite } from "@/lib/verordnungen-shared";
 import {
   pruefeDeckung,
@@ -174,13 +178,7 @@ export function VerordnungAuswahl({
               Bearbeiten
             </Button>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={!patientId}
-            onClick={oeffneNeu}
-          >
+          <Button type="button" variant="ghost" size="sm" disabled={!patientId} onClick={oeffneNeu}>
             Neu anlegen
           </Button>
         </div>
@@ -273,9 +271,7 @@ export function VerordnungAuswahl({
                 id="v-datum"
                 type="date"
                 value={entwurf.ausstellungsdatum ?? ""}
-                onChange={(e) =>
-                  setEntwurf((p) => ({ ...p, ausstellungsdatum: e.target.value }))
-                }
+                onChange={(e) => setEntwurf((p) => ({ ...p, ausstellungsdatum: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">

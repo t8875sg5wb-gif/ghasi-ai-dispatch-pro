@@ -427,8 +427,6 @@ export function gruppiereNachTab(auftraege: Auftrag[], now = Date.now()): TabGru
   };
   return AUFTRAG_TABS.map((t) => ({
     ...t,
-    auftraege: auftraege
-      .filter((a) => auftragTab(a, now) === t.id)
-      .sort(byDringlichkeitDannTermin),
+    auftraege: auftraege.filter((a) => auftragTab(a, now) === t.id).sort(byDringlichkeitDannTermin),
   }));
 }

@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import {
   listOrders,
@@ -69,7 +68,6 @@ export function useUpdateOrder() {
     },
   });
 }
-
 
 export function useDeleteOrder() {
   const qc = useQueryClient();

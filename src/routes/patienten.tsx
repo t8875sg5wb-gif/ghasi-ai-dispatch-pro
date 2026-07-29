@@ -1,7 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { HeartPulse, Phone, Search, Shield, UserCheck, FileText, Plus, BadgeEuro, FileCheck2, CalendarCheck, AlertTriangle, ScanLine } from "lucide-react";
+import {
+  HeartPulse,
+  Phone,
+  Search,
+  Shield,
+  UserCheck,
+  FileText,
+  Plus,
+  BadgeEuro,
+  FileCheck2,
+  CalendarCheck,
+  AlertTriangle,
+  ScanLine,
+} from "lucide-react";
 
 import { type Patient } from "@/lib/stammdaten";
 import {
@@ -300,9 +313,18 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
               {patient.verordnungVorhanden ? "Verordnung liegt vor" : "Keine Verordnung"}
             </Badge>
             {patient.zuzahlungsbefreit && (
-              <Badge variant="outline" className={cn("gap-1", FRIST_BADGE[zuzahlung.status === "fehlt" ? "ok" : zuzahlung.status])}>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "gap-1",
+                  FRIST_BADGE[zuzahlung.status === "fehlt" ? "ok" : zuzahlung.status],
+                )}
+              >
                 <BadgeEuro className="h-3.5 w-3.5" />
-                Zuzahlungsbefreit{patient.zuzahlungsbefreitBis ? ` bis ${formatDatumDE(patient.zuzahlungsbefreitBis)}` : ""}
+                Zuzahlungsbefreit
+                {patient.zuzahlungsbefreitBis
+                  ? ` bis ${formatDatumDE(patient.zuzahlungsbefreitBis)}`
+                  : ""}
               </Badge>
             )}
             {patient.genehmigungBis && (
@@ -312,12 +334,13 @@ function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => vo
               </Badge>
             )}
           </div>
-          {(zuzahlung.status === "abgelaufen" || zuzahlung.status === "bald") && patient.zuzahlungsbefreit && (
-            <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              Zuzahlungsbefreiung {zuzahlung.label}.
-            </div>
-          )}
+          {(zuzahlung.status === "abgelaufen" || zuzahlung.status === "bald") &&
+            patient.zuzahlungsbefreit && (
+              <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                Zuzahlungsbefreiung {zuzahlung.label}.
+              </div>
+            )}
           {(genehmigung.status === "abgelaufen" || genehmigung.status === "bald") && (
             <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
               <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -475,7 +498,9 @@ function PatientFelder({
   const [zuzahlungsbefreitBis, setZuzahlungsbefreitBis] = useState(
     target?.zuzahlungsbefreitBis ?? "",
   );
-  const [verordnungVorhanden, setVerordnungVorhanden] = useState(target?.verordnungVorhanden ?? false);
+  const [verordnungVorhanden, setVerordnungVorhanden] = useState(
+    target?.verordnungVorhanden ?? false,
+  );
   const [verordnungDokumentId, setVerordnungDokumentId] = useState<string>(
     target?.verordnungDokumentId ?? "",
   );

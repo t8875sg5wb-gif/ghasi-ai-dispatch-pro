@@ -37,7 +37,10 @@ export interface EntityConfig {
 const trim = (v: string | undefined) => (v ?? "").trim();
 
 function toNumber(v: string | undefined, fallback = 0): number {
-  const s = trim(v).replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const s = trim(v)
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .replace(/[^\d.-]/g, "");
   if (!s) return fallback;
   const n = Number(s);
   return Number.isFinite(n) ? n : fallback;
@@ -79,7 +82,12 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
     label: "Fahrer",
     description: "Personal mit Kontaktdaten, Vertrag und Nachweisfristen.",
     fields: [
-      { key: "name", label: "Name", required: true, aliases: ["name", "fahrer", "vorname nachname"] },
+      {
+        key: "name",
+        label: "Name",
+        required: true,
+        aliases: ["name", "fahrer", "vorname nachname"],
+      },
       { key: "telefon", label: "Telefon", aliases: ["telefon", "tel", "handy", "mobil", "phone"] },
       { key: "email", label: "E-Mail", aliases: ["email", "e-mail", "mail"] },
       { key: "adresse", label: "Adresse", aliases: ["adresse", "anschrift", "address"] },
@@ -141,7 +149,10 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         umsatzHeute: 0,
         gewinnHeute: 0,
       };
-      return { record: errors.length ? null : (record as unknown as Record<string, unknown>), errors };
+      return {
+        record: errors.length ? null : (record as unknown as Record<string, unknown>),
+        errors,
+      };
     },
   },
 
@@ -149,16 +160,41 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
     label: "Fahrzeuge",
     description: "Flotte mit Kennzeichen, Typ, Ausstattung und Fristen.",
     fields: [
-      { key: "kennzeichen", label: "Kennzeichen", required: true, aliases: ["kennzeichen", "kfz", "plate"] },
+      {
+        key: "kennzeichen",
+        label: "Kennzeichen",
+        required: true,
+        aliases: ["kennzeichen", "kfz", "plate"],
+      },
       { key: "marke", label: "Marke", aliases: ["marke", "hersteller", "brand"] },
       { key: "modell", label: "Modell", aliases: ["modell", "model", "typbezeichnung"] },
       { key: "baujahr", label: "Baujahr", aliases: ["baujahr", "jahr", "year"], hint: "Zahl" },
-      { key: "typ", label: "Typ", aliases: ["typ", "fahrzeugtyp", "art"], hint: "z. B. PKW, Rollstuhlfahrzeug, LMW" },
-      { key: "sitzplaetze", label: "Sitzplätze", aliases: ["sitzplätze", "sitze", "plätze"], hint: "Zahl" },
+      {
+        key: "typ",
+        label: "Typ",
+        aliases: ["typ", "fahrzeugtyp", "art"],
+        hint: "z. B. PKW, Rollstuhlfahrzeug, LMW",
+      },
+      {
+        key: "sitzplaetze",
+        label: "Sitzplätze",
+        aliases: ["sitzplätze", "sitze", "plätze"],
+        hint: "Zahl",
+      },
       { key: "kraftstoff", label: "Kraftstoff", aliases: ["kraftstoff", "treibstoff", "fuel"] },
       { key: "standort", label: "Standort", aliases: ["standort", "ort", "location"] },
-      { key: "kilometerstand", label: "Kilometerstand", aliases: ["kilometerstand", "km", "laufleistung"], hint: "Zahl" },
-      { key: "tuevBis", label: "TÜV bis", aliases: ["tüv", "tuev", "hu", "hauptuntersuchung"], hint: "Datum" },
+      {
+        key: "kilometerstand",
+        label: "Kilometerstand",
+        aliases: ["kilometerstand", "km", "laufleistung"],
+        hint: "Zahl",
+      },
+      {
+        key: "tuevBis",
+        label: "TÜV bis",
+        aliases: ["tüv", "tuev", "hu", "hauptuntersuchung"],
+        hint: "Datum",
+      },
       { key: "versicherung", label: "Versicherung", aliases: ["versicherung", "insurance"] },
     ],
     build: (m) => {
@@ -201,7 +237,10 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         fotos: [],
         notizen: "",
       };
-      return { record: errors.length ? null : (record as unknown as Record<string, unknown>), errors };
+      return {
+        record: errors.length ? null : (record as unknown as Record<string, unknown>),
+        errors,
+      };
     },
   },
 
@@ -210,12 +249,26 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
     description: "Auftraggeber, Kassen und Vertragspartner.",
     fields: [
       { key: "name", label: "Name", required: true, aliases: ["name", "kunde", "firma"] },
-      { key: "typ", label: "Typ", aliases: ["typ", "art", "kategorie"], hint: "Krankenkasse, Klinik, Pflegeeinrichtung, Privat, Sonstige" },
-      { key: "ansprechpartner", label: "Ansprechpartner", aliases: ["ansprechpartner", "kontakt", "contact"] },
+      {
+        key: "typ",
+        label: "Typ",
+        aliases: ["typ", "art", "kategorie"],
+        hint: "Krankenkasse, Klinik, Pflegeeinrichtung, Privat, Sonstige",
+      },
+      {
+        key: "ansprechpartner",
+        label: "Ansprechpartner",
+        aliases: ["ansprechpartner", "kontakt", "contact"],
+      },
       { key: "telefon", label: "Telefon", aliases: ["telefon", "tel", "phone"] },
       { key: "email", label: "E-Mail", aliases: ["email", "e-mail", "mail"] },
       { key: "adresse", label: "Adresse", aliases: ["adresse", "anschrift", "address"] },
-      { key: "zahlungszielTage", label: "Zahlungsziel (Tage)", aliases: ["zahlungsziel", "zahlungsziel tage", "payment terms"], hint: "Zahl" },
+      {
+        key: "zahlungszielTage",
+        label: "Zahlungsziel (Tage)",
+        aliases: ["zahlungsziel", "zahlungsziel tage", "payment terms"],
+        hint: "Zahl",
+      },
       { key: "notiz", label: "Notiz", aliases: ["notiz", "bemerkung", "note"] },
     ],
     build: (m) => {
@@ -223,8 +276,13 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
       const name = trim(m.name);
       if (!name) errors.push("Name fehlt");
       const typ =
-        matchEnum(m.typ, ["Krankenkasse", "Klinik", "Pflegeeinrichtung", "Privat", "Sonstige"] as const) ??
-        "Sonstige";
+        matchEnum(m.typ, [
+          "Krankenkasse",
+          "Klinik",
+          "Pflegeeinrichtung",
+          "Privat",
+          "Sonstige",
+        ] as const) ?? "Sonstige";
       const record: CustomerWrite = {
         name,
         typ,
@@ -237,7 +295,10 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         notiz: trim(m.notiz) || undefined,
         aktiv: true,
       };
-      return { record: errors.length ? null : (record as unknown as Record<string, unknown>), errors };
+      return {
+        record: errors.length ? null : (record as unknown as Record<string, unknown>),
+        errors,
+      };
     },
   },
 
@@ -247,11 +308,29 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
     fields: [
       { key: "name", label: "Name", required: true, aliases: ["name", "patient"] },
       { key: "telefon", label: "Telefon", aliases: ["telefon", "tel", "phone"] },
-      { key: "mobilitaet", label: "Mobilität", aliases: ["mobilität", "mobilitaet", "mobility"], hint: "Gehfähig, Rollstuhl, Liegend" },
-      { key: "kostentraeger", label: "Kostenträger", aliases: ["kostenträger", "kostentraeger", "kasse", "versicherung"] },
+      {
+        key: "mobilitaet",
+        label: "Mobilität",
+        aliases: ["mobilität", "mobilitaet", "mobility"],
+        hint: "Gehfähig, Rollstuhl, Liegend",
+      },
+      {
+        key: "kostentraeger",
+        label: "Kostenträger",
+        aliases: ["kostenträger", "kostentraeger", "kasse", "versicherung"],
+      },
       { key: "hinweis", label: "Hinweis", aliases: ["hinweis", "bemerkung", "note"] },
-      { key: "begleitperson", label: "Begleitperson", aliases: ["begleitperson", "begleitung"], hint: "Ja/Nein" },
-      { key: "medizinischeNotiz", label: "Medizinische Notiz", aliases: ["medizinische notiz", "medizin", "diagnose"] },
+      {
+        key: "begleitperson",
+        label: "Begleitperson",
+        aliases: ["begleitperson", "begleitung"],
+        hint: "Ja/Nein",
+      },
+      {
+        key: "medizinischeNotiz",
+        label: "Medizinische Notiz",
+        aliases: ["medizinische notiz", "medizin", "diagnose"],
+      },
     ],
     build: (m) => {
       const errors: string[] = [];
@@ -260,13 +339,17 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
       const record: PatientWrite = {
         name,
         telefon: trim(m.telefon) || undefined,
-        mobilitaet: matchEnum(m.mobilitaet, ["Gehfähig", "Rollstuhl", "Liegend"] as const) ?? "Gehfähig",
+        mobilitaet:
+          matchEnum(m.mobilitaet, ["Gehfähig", "Rollstuhl", "Liegend"] as const) ?? "Gehfähig",
         kostentraeger: trim(m.kostentraeger),
         hinweis: trim(m.hinweis),
         begleitperson: toBool(m.begleitperson),
         medizinischeNotiz: trim(m.medizinischeNotiz) || undefined,
       };
-      return { record: errors.length ? null : (record as unknown as Record<string, unknown>), errors };
+      return {
+        record: errors.length ? null : (record as unknown as Record<string, unknown>),
+        errors,
+      };
     },
   },
 };

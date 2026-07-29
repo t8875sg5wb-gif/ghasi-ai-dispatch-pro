@@ -103,16 +103,13 @@ export function StatistikenPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               Kostenverteilung (Monat)
-              <SchaetzungBadge
-                hinweis="Kraftstoff-, Fahrzeug- und Fahrerkosten sind Hochrechnungen aus Annahmen (Kraftstoffpreis, Arbeitstage/Monat – in den Einstellungen anpassbar). Sobald echte Belege im Ausgaben-Modul vorliegen, wird der echte Kraftstoffwert verwendet."
-              />
+              <SchaetzungBadge hinweis="Kraftstoff-, Fahrzeug- und Fahrerkosten sind Hochrechnungen aus Annahmen (Kraftstoffpreis, Arbeitstage/Monat – in den Einstellungen anpassbar). Sobald echte Belege im Ausgaben-Modul vorliegen, wird der echte Kraftstoffwert verwendet." />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ForecastBarChart data={kostenVerteilung} unit="€" color="var(--chart-5)" />
           </CardContent>
         </Card>
-
       </section>
     </div>
   );

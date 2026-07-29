@@ -126,7 +126,8 @@
   --shadow-sm: 0 1px 2px oklch(0.4 0.05 258 / 0.06);
   --shadow-card: 0 6px 24px -8px oklch(0.4 0.08 258 / 0.18);
   --shadow-elevated: 0 18px 50px -12px oklch(0.4 0.1 258 / 0.28);
-  --shadow-glow: 0 0 0 1px oklch(0.62 0.14 240 / 0.18), 0 12px 30px -10px oklch(0.62 0.14 240 / 0.4);
+  --shadow-glow:
+    0 0 0 1px oklch(0.62 0.14 240 / 0.18), 0 12px 30px -10px oklch(0.62 0.14 240 / 0.4);
 }
 
 .dark {

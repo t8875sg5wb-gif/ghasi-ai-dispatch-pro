@@ -97,7 +97,6 @@ function istMahnbar(r: Rechnung, mounted: boolean): boolean {
   return tageUeberfaellig(r) > 0;
 }
 
-
 function RechnungenPage() {
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<RechnungStatus | "alle">("alle");
@@ -476,7 +475,6 @@ function RechnungenPage() {
         </CardContent>
       </Card>
 
-
       <Card className="border-border/70 shadow-sm">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
           <p className="text-sm text-muted-foreground">
@@ -499,14 +497,14 @@ function RechnungenPage() {
 
       <RechnungDetailDialog
         rechnung={
-          detailTarget ? (alleRechnungen.find((r) => r.id === detailTarget.id) ?? detailTarget) : null
+          detailTarget
+            ? (alleRechnungen.find((r) => r.id === detailTarget.id) ?? detailTarget)
+            : null
         }
         onClose={() => setDetailTarget(null)}
       />
 
       <BankImportDialog open={bankOpen} onOpenChange={setBankOpen} />
-
-
 
       {/* Mahnwesen-Dialog */}
       <Dialog open={!!mahnTarget} onOpenChange={(o) => !o && setMahnTarget(null)}>
@@ -541,8 +539,7 @@ function RechnungenPage() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  mahnTarget &&
-                  downloadText(`Mahnung_${mahnTarget.nummer}.txt`, mahnText)
+                  mahnTarget && downloadText(`Mahnung_${mahnTarget.nummer}.txt`, mahnText)
                 }
               >
                 <Download className="h-4 w-4" /> Download

@@ -51,7 +51,11 @@ export function RechnungDetailDialog({ rechnung, onClose }: Props) {
     if (!rechnung) return;
     const neuerStatus = abgeleiteterStatus({ ...rechnung, zahlungen: next });
     const summe = next.reduce((s, z) => s + z.betrag, 0);
-    const letzte = next.map((z) => z.datum).sort().at(-1) ?? null;
+    const letzte =
+      next
+        .map((z) => z.datum)
+        .sort()
+        .at(-1) ?? null;
     await updateMut.mutateAsync({
       id: rechnung.id,
       values: {
@@ -143,7 +147,9 @@ export function RechnungDetailDialog({ rechnung, onClose }: Props) {
                   <div className="min-w-0">
                     <span className="font-medium tabular-nums">{EUR2(z.betrag)}</span>
                     <span className="ml-2 text-muted-foreground">{formatDatum(z.datum)}</span>
-                    {z.notiz && <span className="ml-2 text-xs text-muted-foreground">· {z.notiz}</span>}
+                    {z.notiz && (
+                      <span className="ml-2 text-xs text-muted-foreground">· {z.notiz}</span>
+                    )}
                   </div>
                   <Button
                     size="icon"
@@ -193,10 +199,7 @@ export function RechnungDetailDialog({ rechnung, onClose }: Props) {
           ) : (
             <div className="space-y-1.5">
               {changes.map((c) => (
-                <div
-                  key={c.id}
-                  className="rounded-lg border border-border/50 px-3 py-2 text-xs"
-                >
+                <div key={c.id} className="rounded-lg border border-border/50 px-3 py-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.feld}</span>
                     <span className="text-muted-foreground">

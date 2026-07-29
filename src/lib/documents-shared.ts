@@ -39,7 +39,12 @@ export interface DokumentRecord {
 export const CLIENT_DOCUMENT_COLUMNS =
   "id,name,kategorie,format,ordner,tags,bezug,groesse_kb,ocr_text,created_at" as const;
 
-const DOKUMENT_FORMATE = ["pdf", "bild", "tabelle", "text"] as const satisfies readonly DokumentFormat[];
+const DOKUMENT_FORMATE = [
+  "pdf",
+  "bild",
+  "tabelle",
+  "text",
+] as const satisfies readonly DokumentFormat[];
 
 /**
  * Runtime Zod schema for a `bezug` value read from the database. Unknown

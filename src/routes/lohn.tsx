@@ -19,16 +19,9 @@ import {
 import { useDrivers, useUpdateDriver } from "@/lib/drivers-store";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { EUR2 } from "@/lib/finance";
-import {
-  computeLohn,
-  MINIJOB_GRENZE_2026,
-} from "@/lib/lohn";
+import { computeLohn, MINIJOB_GRENZE_2026 } from "@/lib/lohn";
 import { downloadLohnPdf, type LohnZeile } from "@/lib/lohn-pdf";
-import {
-  BESCHAEFTIGUNGSART_LABEL,
-  type Beschaeftigungsart,
-  type Fahrer,
-} from "@/lib/fahrer";
+import { BESCHAEFTIGUNGSART_LABEL, type Beschaeftigungsart, type Fahrer } from "@/lib/fahrer";
 import { STEUER_DISCLAIMER } from "@/lib/steuer";
 import { logActivity } from "@/lib/protokoll";
 
@@ -142,9 +135,24 @@ function LohnPage() {
       />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Auszahlung an Fahrer" value={EUR2(summe.netto)} icon={Users} tone="success" />
-        <StatCard label="An Krankenkasse/Minijob-Zentrale" value={EUR2(summe.sv)} icon={Building2} tone="warning" />
-        <StatCard label="An Finanzamt (Lohnsteuer)" value={EUR2(summe.steuer)} icon={Landmark} tone="info" />
+        <StatCard
+          label="Auszahlung an Fahrer"
+          value={EUR2(summe.netto)}
+          icon={Users}
+          tone="success"
+        />
+        <StatCard
+          label="An Krankenkasse/Minijob-Zentrale"
+          value={EUR2(summe.sv)}
+          icon={Building2}
+          tone="warning"
+        />
+        <StatCard
+          label="An Finanzamt (Lohnsteuer)"
+          value={EUR2(summe.steuer)}
+          icon={Landmark}
+          tone="info"
+        />
         <StatCard label="AG-Gesamtkosten" value={EUR2(summe.ag)} icon={Wallet} tone="primary" />
       </section>
 
@@ -227,10 +235,11 @@ function LohnPage() {
       </Card>
 
       <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
-        <span className="font-semibold">Wichtig:</span> Die offizielle Lohnabrechnung und die Meldungen
-        an Sozialversicherung/Finanzamt erfordern zertifizierte Software oder einen Lohnservice. Dieser
-        Rechner bereitet alle Werte für die Übergabe vor (Näherung, Stand Juli 2026, Minijob-Grenze{" "}
-        {MINIJOB_GRENZE_2026} €/Monat, Mindestlohn 13,90 €/h). {STEUER_DISCLAIMER}
+        <span className="font-semibold">Wichtig:</span> Die offizielle Lohnabrechnung und die
+        Meldungen an Sozialversicherung/Finanzamt erfordern zertifizierte Software oder einen
+        Lohnservice. Dieser Rechner bereitet alle Werte für die Übergabe vor (Näherung, Stand Juli
+        2026, Minijob-Grenze {MINIJOB_GRENZE_2026} €/Monat, Mindestlohn 13,90 €/h).{" "}
+        {STEUER_DISCLAIMER}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 ### AI Blueprint of GHASI AI — Version 1.1
 
-*Dieses Dokument definiert die künstliche Intelligenz von GHASI AI: Identität, KI-Persönlichkeit, Denkweise, Gedächtnis, Wissensbereiche, Entscheidungslogik, Kommunikation, Grenzen und langfristige Entwicklung. Es ergänzt Constitution, Architecture, Domain Model, Roadmap und Design System. Später ergänzt es auch den Implementation Guide. Bei Konflikten hat die Constitution Vorrang.*
+_Dieses Dokument definiert die künstliche Intelligenz von GHASI AI: Identität, KI-Persönlichkeit, Denkweise, Gedächtnis, Wissensbereiche, Entscheidungslogik, Kommunikation, Grenzen und langfristige Entwicklung. Es ergänzt Constitution, Architecture, Domain Model, Roadmap und Design System. Später ergänzt es auch den Implementation Guide. Bei Konflikten hat die Constitution Vorrang._
 
 Dieses Dokument ist ausdrücklich kein Sofort-Umsetzungsauftrag.
 

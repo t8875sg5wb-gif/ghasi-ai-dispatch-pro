@@ -4,7 +4,12 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Leasingvertrag } from "@/lib/leasing";
-import { rowToLeasing, leasingToRow, type LeasingRow, type LeasingWrite } from "@/lib/leasing-shared";
+import {
+  rowToLeasing,
+  leasingToRow,
+  type LeasingRow,
+  type LeasingWrite,
+} from "@/lib/leasing-shared";
 
 export const listLeasing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

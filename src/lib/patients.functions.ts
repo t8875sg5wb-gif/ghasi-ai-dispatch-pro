@@ -5,7 +5,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertInsurerExists } from "@/lib/identity-checks.server";
 import type { Patient } from "@/lib/stammdaten";
-import { rowToPatient, patientToRow, type PatientRow, type PatientWrite } from "@/lib/patients-shared";
+import {
+  rowToPatient,
+  patientToRow,
+  type PatientRow,
+  type PatientWrite,
+} from "@/lib/patients-shared";
 
 /** ISO-Datum `YYYY-MM-DD` (Muster wie CP19). */
 const isoDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
@@ -109,7 +114,6 @@ export const deletePatient = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true } as const;
   });
-
 
 export const seedPatients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

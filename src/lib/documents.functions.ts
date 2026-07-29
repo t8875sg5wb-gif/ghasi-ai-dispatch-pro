@@ -19,7 +19,6 @@
 //   logged with sanitised, path-less operation labels.
 import { createServerFn } from "@tanstack/react-start";
 
-
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { documentAuthStatusMiddleware } from "@/lib/documents-auth.middleware";
 import {
@@ -73,7 +72,6 @@ export const listDocuments = createServerFn({ method: "GET" })
       throw new Response("Serverstörung.", { status: 500 });
     }
   });
-
 
 /**
  * Kurzlebige (≤ 600 s) signierte URL für ein Dokument. Autorisierung über

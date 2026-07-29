@@ -1,13 +1,7 @@
 // Client-safe mapping between the persisted `drivers` table (snake_case) and the
 // in-app `Fahrer` domain type (camelCase). No server-only imports here so this
 // module can be used from both server functions and the browser store.
-import type {
-  Fahrer,
-  FahrerStatus,
-  Nachweis,
-  Vertragsart,
-  Beschaeftigungsart,
-} from "@/lib/fahrer";
+import type { Fahrer, FahrerStatus, Nachweis, Vertragsart, Beschaeftigungsart } from "@/lib/fahrer";
 
 /** Shape the client sends when creating/updating a driver. */
 export interface DriverWrite {

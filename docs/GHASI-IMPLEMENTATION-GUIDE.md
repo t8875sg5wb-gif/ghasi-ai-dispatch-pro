@@ -2,7 +2,7 @@
 
 ### Implementation Guide of GHASI AI — Version 1.0
 
-*Dieses Dokument beschreibt die verbindlichen Regeln für die Umsetzung von GHASI AI. Es verbindet Constitution, Architecture, Domain Model, Roadmap, Design System und AI Blueprint mit der praktischen Entwicklung. Bei Konflikten hat die Constitution Vorrang.*
+_Dieses Dokument beschreibt die verbindlichen Regeln für die Umsetzung von GHASI AI. Es verbindet Constitution, Architecture, Domain Model, Roadmap, Design System und AI Blueprint mit der praktischen Entwicklung. Bei Konflikten hat die Constitution Vorrang._
 
 ---
 

@@ -7,11 +7,7 @@ import { useEffect, useRef } from "react";
 import { type FleetVehicle, FLEET_FARBEN } from "@/lib/fleet-live";
 import { LIVE_STATUS_META } from "@/lib/dispatch";
 import { MOBILITAET_META } from "@/lib/auftraege";
-import {
-  type GoogleMapStil,
-  DARK_MAP_STYLES,
-  loadGoogleMaps,
-} from "@/lib/google-maps";
+import { type GoogleMapStil, DARK_MAP_STYLES, loadGoogleMaps } from "@/lib/google-maps";
 
 const MINDEN: google.maps.LatLngLiteral = { lat: 52.2887, lng: 8.9167 };
 

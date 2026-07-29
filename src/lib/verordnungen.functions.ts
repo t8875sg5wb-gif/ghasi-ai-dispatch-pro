@@ -27,12 +27,7 @@ const datum = z
 
 const text = (max: number) => z.string().trim().max(max);
 
-const TRANSPORTART = z.enum([
-  "Liegendtransport",
-  "Sitzendtransport",
-  "Rollstuhl",
-  "Dialysefahrt",
-]);
+const TRANSPORTART = z.enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt"]);
 
 const verordnungFieldsSchema = z
   .object({

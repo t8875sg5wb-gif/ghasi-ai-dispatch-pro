@@ -136,4 +136,3 @@ export function findeInsurerId(
   );
   return teil?.id ?? null;
 }
-
