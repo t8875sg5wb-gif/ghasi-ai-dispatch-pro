@@ -52,14 +52,14 @@ export function kundeToRow(w: Partial<CustomerWrite>): Record<string, unknown> {
   set("ansprechpartner", w.ansprechpartner);
   set("telefon", w.telefon);
   set("offene_rechnungen", w.offeneRechnungen);
-  set("email", w.email ?? null);
-  set("adresse", w.adresse ?? null);
-  set("vertragsstatus", w.vertragsstatus ?? null);
-  set("konditionen", w.konditionen ?? null);
-  set("zahlungsziel_tage", w.zahlungszielTage ?? null);
-  set("kreditlimit", w.kreditlimit ?? null);
-  set("umsatz_jahr", w.umsatzJahr ?? null);
-  set("notiz", w.notiz ?? null);
+  set("email", w.email);
+  set("adresse", w.adresse);
+  set("vertragsstatus", w.vertragsstatus);
+  set("konditionen", w.konditionen);
+  set("zahlungsziel_tage", w.zahlungszielTage);
+  set("kreditlimit", w.kreditlimit);
+  set("umsatz_jahr", w.umsatzJahr);
+  set("notiz", w.notiz);
   set("aktiv", w.aktiv);
   return row;
 }

@@ -44,12 +44,12 @@ export function anrufToRow(w: Partial<CallWrite>): Record<string, unknown> {
   };
   set("richtung", w.richtung);
   set("nummer", w.nummer);
-  set("name", w.name ?? null);
+  set("name", w.name);
   set("zeitpunkt", w.zeitpunkt);
   set("dauer_sek", w.dauerSek);
   set("kategorie", w.kategorie);
   set("status", w.status);
-  set("notiz", w.notiz ?? null);
-  set("auftrag_erstellt", w.auftragErstellt ?? false);
+  set("notiz", w.notiz);
+  set("auftrag_erstellt", w.auftragErstellt);
   return row;
 }

@@ -48,12 +48,12 @@ export function einrichtungToRow(w: Partial<FacilityWrite>): Record<string, unkn
   set("ansprechpartner", w.ansprechpartner);
   set("telefon", w.telefon);
   set("typ", w.typ);
-  set("email", w.email ?? null);
-  set("fachbereiche", w.fachbereiche ?? []);
-  set("kapazitaet", w.kapazitaet ?? null);
-  set("oeffnungszeiten", w.oeffnungszeiten ?? null);
-  set("kostentraeger", w.kostentraeger ?? null);
-  set("notiz", w.notiz ?? null);
+  set("email", w.email);
+  set("fachbereiche", w.fachbereiche);
+  set("kapazitaet", w.kapazitaet);
+  set("oeffnungszeiten", w.oeffnungszeiten);
+  set("kostentraeger", w.kostentraeger);
+  set("notiz", w.notiz);
   set("aktiv", w.aktiv);
   return row;
 }

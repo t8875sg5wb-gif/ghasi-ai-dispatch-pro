@@ -52,7 +52,7 @@ export function konversationToRow(k: Partial<Konversation>): Record<string, unkn
   set("kanal", k.kanal);
   set("prioritaet", k.prioritaet);
   set("gelesen", k.gelesen);
-  set("bezug", k.bezug ?? null);
+  set("bezug", k.bezug);
   set("nachrichten", k.nachrichten);
   return row;
 }
