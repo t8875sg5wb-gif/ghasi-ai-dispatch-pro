@@ -1,6 +1,7 @@
 // Server functions for persisted leasing contracts (Leasingverträge). RLS
 // enforces admin/disposition/finanz read, admin/finanz write.
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Leasingvertrag } from "@/lib/leasing";
@@ -10,6 +11,41 @@ import {
   type LeasingRow,
   type LeasingWrite,
 } from "@/lib/leasing-shared";
+
+/**
+ * Strenge Laufzeitvalidierung für Leasing-Mutationen (Muster CP19/CP22/CP23).
+ * `status` entspricht `LeasingStatus` (src/lib/leasing.ts).
+ * `fahrzeug` bleibt in diesem Checkpoint bewusst Freitext (Kennzeichen) –
+ * eine FK-Umstellung auf `vehicles.id` ist ein eigenes Thema.
+ */
+export const leasingFieldsSchema = z
+  .object({
+    leasinggeber: z.string().trim().min(1).max(200),
+    vertragsnummer: z.string().trim().min(1).max(100),
+    fahrzeug: z.string().trim().min(1).max(200),
+    rateMonat: z.number().min(0),
+    beginn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein."),
+    ende: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein."),
+    restwert: z.number().min(0),
+    laufzeitMonate: z.number().int().min(1),
+    kmInklusive: z.number().min(0),
+    kmAktuell: z.number().min(0),
+    status: z.enum(["aktiv", "endet_bald", "beendet"]),
+    notiz: z.string().max(2000).optional(),
+  })
+  .strict();
+
+const createLeasingSchema = leasingFieldsSchema;
+
+export const updateLeasingSchema = z
+  .object({ id: z.string().uuid(), values: leasingFieldsSchema.partial().strict() })
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
+
+const deleteLeasingSchema = z.object({ id: z.string().uuid() }).strict();
 
 export const listLeasing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -24,11 +60,10 @@ export const listLeasing = createServerFn({ method: "GET" })
 
 export const createLeasing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: LeasingWrite) => {
-    if (!data || typeof data.leasinggeber !== "string" || !data.leasinggeber.trim()) {
-      throw new Error("leasinggeber ist erforderlich");
-    }
-    return data;
+  .validator((data: unknown): LeasingWrite => {
+    const parsed = createLeasingSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Leasingdaten.");
+    return parsed.data as unknown as LeasingWrite;
   })
   .handler(async ({ data, context }): Promise<Leasingvertrag> => {
     const { data: created, error } = await context.supabase
@@ -42,9 +77,10 @@ export const createLeasing = createServerFn({ method: "POST" })
 
 export const updateLeasing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<LeasingWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<LeasingWrite> } => {
+    const parsed = updateLeasingSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Leasingdaten.");
+    return parsed.data as unknown as { id: string; values: Partial<LeasingWrite> };
   })
   .handler(async ({ data, context }): Promise<Leasingvertrag> => {
     const { data: updated, error } = await context.supabase
@@ -59,9 +95,10 @@ export const updateLeasing = createServerFn({ method: "POST" })
 
 export const deleteLeasing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = deleteLeasingSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Leasingdaten.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("leasing_contracts").delete().eq("id", data.id);

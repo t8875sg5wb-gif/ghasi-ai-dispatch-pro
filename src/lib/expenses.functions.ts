@@ -2,8 +2,10 @@
 // admin/finanz. Receipt photos live in the `documents` domain and are linked
 // via beleg_dokument_id.
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertDriverExists, assertVehicleExists } from "@/lib/identity-checks.server";
 import {
   rowToAusgabe,
   ausgabeToRow,
@@ -11,6 +13,46 @@ import {
   type ExpenseRow,
   type AusgabeWrite,
 } from "@/lib/expenses-shared";
+
+/**
+ * Strenge Laufzeitvalidierung für Ausgaben-Mutationen (Muster CP19/CP22/CP23).
+ * `kategorie` entspricht `AUSGABE_KATEGORIEN` (expenses-shared.ts).
+ * `belegDokumentId` bewusst ohne `.uuid()` – gleiche Konvention wie
+ * `verordnungDokumentId`.
+ */
+export const expenseFieldsSchema = z
+  .object({
+    datum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein."),
+    kategorie: z.enum([
+      "Kraftstoff",
+      "Reparatur",
+      "Leasing",
+      "Versicherung",
+      "Löhne",
+      "Büro",
+      "Sonstiges",
+    ]),
+    lieferant: z.string().trim().min(1).max(200),
+    betragBrutto: z.number().min(0),
+    ustSatz: z.number().min(0).max(100),
+    fahrzeugId: z.string().uuid().nullable().optional(),
+    fahrerId: z.string().uuid().nullable().optional(),
+    notiz: z.string().max(2000).nullable().optional(),
+    belegDokumentId: z.string().nullable().optional(),
+  })
+  .strict();
+
+const createExpenseSchema = expenseFieldsSchema;
+
+export const updateExpenseSchema = z
+  .object({ id: z.string().uuid(), values: expenseFieldsSchema.partial().strict() })
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
+
+const deleteExpenseSchema = z.object({ id: z.string().uuid() }).strict();
 
 export const listExpenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -25,11 +67,14 @@ export const listExpenses = createServerFn({ method: "GET" })
 
 export const createExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: AusgabeWrite) => {
-    if (!data?.datum) throw new Error("datum ist erforderlich");
-    return data;
+  .validator((data: unknown): AusgabeWrite => {
+    const parsed = createExpenseSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Ausgabendaten.");
+    return parsed.data as unknown as AusgabeWrite;
   })
   .handler(async ({ data, context }): Promise<Ausgabe> => {
+    if (data.fahrzeugId) await assertVehicleExists(context.supabase, data.fahrzeugId);
+    if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     const { data: created, error } = await context.supabase
       .from("expenses")
       .insert(ausgabeToRow(data) as never)
@@ -41,11 +86,14 @@ export const createExpense = createServerFn({ method: "POST" })
 
 export const updateExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<AusgabeWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<AusgabeWrite> } => {
+    const parsed = updateExpenseSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Ausgabendaten.");
+    return parsed.data as unknown as { id: string; values: Partial<AusgabeWrite> };
   })
   .handler(async ({ data, context }): Promise<Ausgabe> => {
+    if (data.values.fahrzeugId) await assertVehicleExists(context.supabase, data.values.fahrzeugId);
+    if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     const { data: updated, error } = await context.supabase
       .from("expenses")
       .update(ausgabeToRow(data.values) as never)
@@ -58,9 +106,10 @@ export const updateExpense = createServerFn({ method: "POST" })
 
 export const deleteExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = deleteExpenseSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Ausgabendaten.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("expenses").delete().eq("id", data.id);

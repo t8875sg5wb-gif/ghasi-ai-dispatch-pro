@@ -1,6 +1,7 @@
 // Server functions for persisted insurers (Krankenkassen). RLS enforces
 // admin/finanz access.
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Krankenkasse } from "@/lib/stammdaten";
@@ -10,6 +11,33 @@ import {
   type InsurerRow,
   type InsurerWrite,
 } from "@/lib/insurers-shared";
+
+/**
+ * Strenge Laufzeitvalidierung für Kostenträger-Mutationen (Muster CP19/CP22/CP23).
+ * ACHTUNG: `vertragsstatus` hat hier eine EIGENE Enum
+ * ("Rahmenvertrag" | "Einzelfall", vgl. `Krankenkasse` in stammdaten.ts) und ist
+ * NICHT identisch mit `Kunde.vertragsstatus` aus Checkpoint 23.
+ */
+export const insurerFieldsSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    kuerzel: z.string().trim().min(1).max(20),
+    vertragsstatus: z.enum(["Rahmenvertrag", "Einzelfall"]),
+  })
+  .strict();
+
+const createInsurerSchema = insurerFieldsSchema;
+
+export const updateInsurerSchema = z
+  .object({ id: z.string().uuid(), values: insurerFieldsSchema.partial().strict() })
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
+
+const deleteInsurerSchema = z.object({ id: z.string().uuid() }).strict();
+
 
 export const listInsurers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -24,11 +52,10 @@ export const listInsurers = createServerFn({ method: "GET" })
 
 export const createInsurer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: InsurerWrite) => {
-    if (!data || typeof data.name !== "string" || !data.name.trim()) {
-      throw new Error("name ist erforderlich");
-    }
-    return data;
+  .validator((data: unknown): InsurerWrite => {
+    const parsed = createInsurerSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Kostenträgerdaten.");
+    return parsed.data as unknown as InsurerWrite;
   })
   .handler(async ({ data, context }): Promise<Krankenkasse> => {
     const { data: created, error } = await context.supabase
@@ -42,9 +69,10 @@ export const createInsurer = createServerFn({ method: "POST" })
 
 export const updateInsurer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<InsurerWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<InsurerWrite> } => {
+    const parsed = updateInsurerSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Kostenträgerdaten.");
+    return parsed.data as unknown as { id: string; values: Partial<InsurerWrite> };
   })
   .handler(async ({ data, context }): Promise<Krankenkasse> => {
     const { data: updated, error } = await context.supabase
@@ -59,9 +87,10 @@ export const updateInsurer = createServerFn({ method: "POST" })
 
 export const deleteInsurer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = deleteInsurerSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Kostenträgerdaten.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("insurers").delete().eq("id", data.id);
