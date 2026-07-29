@@ -90,7 +90,22 @@ function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
   return parsed.data;
 }
 
+export const listRecurring = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<Dauerauftrag[]> => {
+    const { data, error } = await context.supabase
+      .from("recurring_orders")
+      .select("*")
+      .order("kennung", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => rowToDauerauftrag(r as unknown as RecurringRow));
+  });
+
+export const createRecurring = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => parseOrThrow(createRecurringSchema, data) as RecurringWrite)
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     if (data.bevorzugterFahrerId)
