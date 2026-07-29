@@ -9,6 +9,9 @@ import { anrufToRow } from "@/lib/calls-shared";
 import { ausgabeToRow } from "@/lib/expenses-shared";
 import { leasingToRow } from "@/lib/leasing-shared";
 import { konversationToRow } from "@/lib/communication-shared";
+import { writeToRow } from "@/lib/drivers-shared";
+import { versicherungToRow } from "@/lib/insurance-shared";
+import { kassenvertragToRow } from "@/lib/insurer-contracts-shared";
 
 test("patientToRow: partial update touches only the given field", () => {
   const row = patientToRow({ name: "Neu" });
@@ -126,4 +129,52 @@ test("konversationToRow: partial update touches only the given field", () => {
 test("konversationToRow: explicit null still clears", () => {
   const row = konversationToRow({ bezug: null as never });
   expect(row.bezug).toBe(null);
+});
+
+/* ------------------------------------------------------------------ *
+ * CP34: same patch-semantics fix for three more mappers
+ * ------------------------------------------------------------------ */
+
+test("writeToRow (drivers): partial update touches only the given field", () => {
+  const row = writeToRow({ name: "Fahrer" });
+  expect(Object.keys(row)).toEqual(["name"]);
+  for (const k of ["p_schein_gueltig_bis", "fuehrungszeugnis_datum", "steuer_id"]) {
+    expect(k in row).toBe(false);
+  }
+});
+
+test("writeToRow (drivers): explicit null still clears", () => {
+  const row = writeToRow({
+    pScheinGueltigBis: null as never,
+    fuehrungszeugnisDatum: null as never,
+    steuerId: null as never,
+  });
+  expect(row.p_schein_gueltig_bis).toBe(null);
+  expect(row.fuehrungszeugnis_datum).toBe(null);
+  expect(row.steuer_id).toBe(null);
+});
+
+test("versicherungToRow: partial update touches only the given field", () => {
+  const row = versicherungToRow({ status: "aktiv" });
+  expect(Object.keys(row)).toEqual(["status"]);
+  expect("notiz" in row).toBe(false);
+});
+
+test("versicherungToRow: explicit null still clears", () => {
+  const row = versicherungToRow({ notiz: null as never });
+  expect(row.notiz).toBe(null);
+});
+
+test("kassenvertragToRow: partial update touches only the given field", () => {
+  const row = kassenvertragToRow({ leistung: "Sitzendtransport" });
+  expect(Object.keys(row)).toEqual(["leistung"]);
+  for (const k of ["gueltig_ab", "gueltig_bis"]) {
+    expect(k in row).toBe(false);
+  }
+});
+
+test("kassenvertragToRow: explicit null still clears", () => {
+  const row = kassenvertragToRow({ gueltigAb: null as never, gueltigBis: null as never });
+  expect(row.gueltig_ab).toBe(null);
+  expect(row.gueltig_bis).toBe(null);
 });
