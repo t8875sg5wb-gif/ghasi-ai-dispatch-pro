@@ -87,7 +87,9 @@ test("GoBD-Audit-Felder werden akzeptiert", () => {
 
 test("Gutschrift-Beträge bleiben erlaubt, Unsinn wird abgelehnt", () => {
   expect(invoiceFieldsSchema.safeParse({ betrag: -180, bezahlterBetrag: -180 }).success).toBe(true);
-  expect(invoiceFieldsSchema.safeParse({ zahlungen: [{ datum: "2026-05-20", betrag: -180 }] }).success).toBe(true);
+  expect(
+    invoiceFieldsSchema.safeParse({ zahlungen: [{ datum: "2026-05-20", betrag: -180 }] }).success,
+  ).toBe(true);
   expect(invoiceFieldsSchema.safeParse({ datum: "20.05.2026" }).success).toBe(false);
   expect(invoiceFieldsSchema.safeParse({ status: "gesendet" }).success).toBe(false);
   expect(invoiceFieldsSchema.safeParse({ typ: "storno" }).success).toBe(false);

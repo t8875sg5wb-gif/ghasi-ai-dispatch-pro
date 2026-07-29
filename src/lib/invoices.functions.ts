@@ -113,8 +113,6 @@ const deleteInvoiceSchema = z.object({ id: z.string().uuid() }).strict();
 
 const listInvoiceChangesSchema = z.object({ invoiceId: z.string().uuid() }).strict();
 
-
-
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Rechnung[]> => {
