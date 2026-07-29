@@ -235,6 +235,8 @@ export const updateOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
+    if (data.values.fahrzeugId)
+      await assertVehicleExists(context.supabase, data.values.fahrzeugId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     // Verordnung/Patient müssen auch nach einem Teil-Update zueinander passen.

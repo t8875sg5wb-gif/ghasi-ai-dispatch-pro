@@ -14,7 +14,7 @@ import {
   VERORDNUNG_META,
   VERORDNUNG_OPTIONEN,
 } from "@/lib/auftraege";
-import { useDriverIdOptions, useVehicleOptions } from "@/hooks/use-entity-options";
+import { useDriverIdOptions, useVehicleIdOptions } from "@/hooks/use-entity-options";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
 import { useInsurerContracts } from "@/lib/insurer-contracts-store";
@@ -74,6 +74,7 @@ function emptyValues(): AuftragFormValues {
     fahrer: null,
     fahrerId: null,
     fahrzeug: null,
+    fahrzeugId: null,
     kostentraeger: "",
     notiz: "",
     verordnung: "nicht_erhalten",

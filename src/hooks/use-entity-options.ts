@@ -65,6 +65,27 @@ export function useVehicleOptions(): EntityOptions {
   }, [data]);
 }
 
+/**
+ * Fahrzeug-Auswahl mit STABILER ID als Wert (`vehicles.id`).
+ * Für alle identitätsrelevanten Zuordnungen (z. B. Auftrag → Fahrzeug) zu
+ * verwenden — niemals Kennzeichen, da Kennzeichen änderbar sind.
+ */
+export function useVehicleIdOptions(): EntityOptions {
+  const { data } = useVehicles();
+  return useMemo(() => {
+    const list = data ?? [];
+    return {
+      options: list.map((v) => ({
+        value: v.id,
+        label: `${v.kennzeichen} · ${v.marke} ${v.modell}`,
+      })),
+      leer: list.length === 0,
+      hinweis:
+        "Noch keine Fahrzeuge angelegt – zuerst unter „Fahrzeuge“ anlegen oder Beispieldaten laden.",
+    };
+  }, [data]);
+}
+
 export function useCustomerOptions(): EntityOptions {
   const { data } = useCustomers();
   return useMemo(() => {
