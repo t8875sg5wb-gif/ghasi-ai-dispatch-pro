@@ -66,7 +66,7 @@ export function kassenvertragToRow(w: Partial<KassenvertragWrite>): Record<strin
   set("genehmigt", w.genehmigt);
   set("gueltig_ab", w.gueltigAb);
   set("gueltig_bis", w.gueltigBis);
-  set("aktenzeichen", w.aktenzeichen ?? "");
-  set("notiz", w.notiz ?? "");
+  set("aktenzeichen", w.aktenzeichen);
+  set("notiz", w.notiz);
   return row;
 }
