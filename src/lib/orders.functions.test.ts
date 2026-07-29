@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 
 import { createOrderSchema, orderFieldsSchema, updateOrderSchema } from "@/lib/orders.functions";
 
-const UUID_A = "33333333-3333-3333-3333-333333333333";
+const UUID_A = "33333333-3333-4333-8333-333333333333";
 
 describe("orderFieldsSchema — Enums (CP13)", () => {
   test("akzeptiert gültigen status", () => {
