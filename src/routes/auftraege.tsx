@@ -274,7 +274,10 @@ function AuftraegePage() {
   }
 
   function handleSubmit(values: AuftragFormValues) {
-    const payload = values as unknown as OrderWrite;
+    // `fahrer` (Anzeigename) wird serverseitig aus `fahrerId` abgeleitet und
+    // vom strikten Schema abgelehnt – daher vor dem Senden entfernen.
+    const { fahrer: _fahrer, ...rest } = values;
+    const payload = rest as unknown as OrderWrite;
     if (editTarget) {
       updateMut.mutate(
         { id: editTarget.id, values: payload },
