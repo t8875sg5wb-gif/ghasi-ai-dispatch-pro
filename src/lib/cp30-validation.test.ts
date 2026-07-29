@@ -11,7 +11,7 @@ test("insurer", () => {
   expect(insurerFieldsSchema.safeParse({ name: "AOK", kuerzel: "AOK", vertragsstatus: "Einzelfall", x: 1 }).success).toBe(false);
 });
 test("contract", () => {
-  const ok = { insurerId: "11111111-1111-1111-1111-111111111111", leistung: "Liegend", preis: 80, einheit: "pro Fahrt", genehmigt: true, gueltigAb: "2026-01-01" };
+  const ok = { insurerId: "11111111-1111-4111-8111-111111111111", leistung: "Liegend", preis: 80, einheit: "pro Fahrt", genehmigt: true, gueltigAb: "2026-01-01" };
   expect(insurerContractFieldsSchema.safeParse(ok).success).toBe(true);
   expect(insurerContractFieldsSchema.safeParse({ ...ok, insurerId: "abc" }).success).toBe(false);
   expect(insurerContractFieldsSchema.safeParse({ ...ok, einheit: "pro Tag" }).success).toBe(false);
