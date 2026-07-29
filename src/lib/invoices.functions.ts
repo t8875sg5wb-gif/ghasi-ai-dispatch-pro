@@ -128,11 +128,10 @@ export const listInvoices = createServerFn({ method: "GET" })
 
 export const createInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: InvoiceWrite) => {
-    if (!data || typeof data.kunde !== "string") {
-      throw new Error("kunde ist erforderlich");
-    }
-    return data;
+  .validator((data: unknown): InvoiceWrite => {
+    const parsed = createInvoiceSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Rechnungsdaten.");
+    return parsed.data as unknown as InvoiceWrite;
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
     // Auch die manuelle Einzelrechnung legt reale USt-Beträge fest.
