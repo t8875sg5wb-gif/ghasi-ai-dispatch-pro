@@ -1197,6 +1197,7 @@ export type Database = {
           fahrer_id: string | null
           fahrer_user_id: string | null
           fahrzeug: string | null
+          fahrzeug_id: string | null
           id: string
           insurer_id: string | null
           kostentraeger: string
@@ -1245,6 +1246,7 @@ export type Database = {
           fahrer_id?: string | null
           fahrer_user_id?: string | null
           fahrzeug?: string | null
+          fahrzeug_id?: string | null
           id?: string
           insurer_id?: string | null
           kostentraeger?: string
@@ -1293,6 +1295,7 @@ export type Database = {
           fahrer_id?: string | null
           fahrer_user_id?: string | null
           fahrzeug?: string | null
+          fahrzeug_id?: string | null
           id?: string
           insurer_id?: string | null
           kostentraeger?: string
@@ -1329,6 +1332,13 @@ export type Database = {
             columns: ["fahrer_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_fahrzeug_id_fkey"
+            columns: ["fahrzeug_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
           {
