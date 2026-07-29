@@ -163,10 +163,10 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("km_heute", w.kmHeute);
   set("umsatz_heute", w.umsatzHeute);
   set("gewinn_heute", w.gewinnHeute);
-  set("p_schein_gueltig_bis", w.pScheinGueltigBis ?? null);
-  set("fuehrungszeugnis_datum", w.fuehrungszeugnisDatum ?? null);
+  set("p_schein_gueltig_bis", w.pScheinGueltigBis);
+  set("fuehrungszeugnis_datum", w.fuehrungszeugnisDatum);
   set("sv_ausweis_vorhanden", w.svAusweisVorhanden);
-  set("steuer_id", w.steuerId ?? null);
+  set("steuer_id", w.steuerId);
   set("beschaeftigungsart", w.beschaeftigungsart);
   set("monatsbrutto", w.monatsbrutto);
   return row;
