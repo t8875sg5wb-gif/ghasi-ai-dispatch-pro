@@ -20,7 +20,7 @@ const nachweisSchema = z
   .object({ gueltigBis: isoDatum, info: z.string().optional() })
   .strict();
 
-const driverFieldsSchema = z
+export const driverFieldsSchema = z
   .object({
     nummer: z.string().optional(),
     name: z.string().trim().min(1).max(200),
@@ -62,7 +62,7 @@ const driverFieldsSchema = z
   .strict();
 
 const createDriverSchema = driverFieldsSchema;
-const updateDriverSchema = z
+export const updateDriverSchema = z
   .object({ id: z.string().uuid(), values: driverFieldsSchema.partial().strict() })
   .strict()
   .refine((v) => Object.keys(v.values).length > 0, {
@@ -191,7 +191,7 @@ export const seedDrivers = createServerFn({ method: "POST" })
  * Admin-only: Fahrer ↔ Auth-Konto verknüpfen / trennen
  * ------------------------------------------------------------------ */
 
-const linkSchema = z
+export const linkSchema = z
   .object({ driverId: z.string().uuid(), userId: z.string().uuid().nullable() })
   .strict();
 

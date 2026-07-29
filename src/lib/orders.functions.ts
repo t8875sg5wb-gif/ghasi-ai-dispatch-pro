@@ -57,7 +57,7 @@ const unterschriftSchema = z
   .regex(/^data:image\/png;base64,/, "Unterschrift muss eine PNG-Data-URL sein.")
   .nullable();
 
-const orderFieldsSchema = z
+export const orderFieldsSchema = z
   .object({
     nummer: z.string().max(50).optional(),
     patient: z.string().trim().max(200).optional(),
@@ -103,10 +103,10 @@ const orderFieldsSchema = z
   })
   .strict();
 
-const createOrderSchema = orderFieldsSchema
+export const createOrderSchema = orderFieldsSchema
   .extend({ patient: z.string().trim().min(1).max(200) })
   .strict();
-const updateOrderSchema = z
+export const updateOrderSchema = z
   .object({ id: z.string().uuid(), values: orderFieldsSchema })
   .strict()
   .refine((v) => Object.keys(v.values).length > 0, {
