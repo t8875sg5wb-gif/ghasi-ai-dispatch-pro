@@ -169,11 +169,14 @@ export const listConversations = createServerFn({ method: "GET" })
 export const updateConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => parseOrThrow(updateConversationSchema, data))
-
   .handler(async ({ data, context }): Promise<Konversation> => {
+    // `bezug: null` (Bezug entfernen) auf das Domänformat abbilden; der Mapper
+    // schreibt `undefined` ohnehin als NULL in die Spalte.
+    const values: Partial<Konversation> = { ...data.values, bezug: data.values.bezug ?? undefined };
     const { data: updated, error } = await context.supabase
       .from("conversations")
-      .update(konversationToRow(data.values) as never)
+      .update(konversationToRow(values) as never)
+
       .eq("id", data.id)
       .select()
       .single();
