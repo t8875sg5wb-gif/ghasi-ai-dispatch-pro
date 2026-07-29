@@ -59,32 +59,40 @@ const unterschriftSchema = z
 
 const orderFieldsSchema = z
   .object({
-    nummer: z.string().optional(),
-    patient: z.string().optional(),
+    nummer: z.string().max(50).optional(),
+    patient: z.string().trim().max(200).optional(),
     patientId: z.string().uuid().nullable().optional(),
     insurerId: z.string().uuid().nullable().optional(),
     verordnungId: z.string().uuid().nullable().optional(),
-    telefon: z.string().optional(),
-    transportart: z.string().optional(),
-    prioritaet: z.string().optional(),
-    status: z.string().optional(),
-    abholort: z.string().optional(),
-    zielort: z.string().optional(),
+    telefon: z.string().trim().max(50).optional(),
+    transportart: z
+      .enum(["Liegendtransport", "Sitzendtransport", "Rollstuhl", "Dialysefahrt"])
+      .optional(),
+    prioritaet: z.enum(["niedrig", "normal", "hoch", "dringend"]).optional(),
+    status: z.enum(["neu", "disponiert", "unterwegs", "abgeschlossen", "storniert"]).optional(),
+    abholort: z.string().trim().max(300).optional(),
+    zielort: z.string().trim().max(300).optional(),
     pickup: adresseSchema.optional(),
     destination: adresseSchema.optional(),
-    termin: z.string().optional(),
+    termin: z
+      .string()
+      .regex(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/,
+        "Termin muss ISO-Datum/Zeit sein (YYYY-MM-DDTHH:mm).",
+      )
+      .optional(),
     fahrerId: z.string().uuid().nullable().optional(),
     fahrzeug: z.string().nullable().optional(),
-    kostentraeger: z.string().optional(),
-    notiz: z.string().optional(),
-    verordnung: z.string().optional(),
+    kostentraeger: z.string().trim().max(200).optional(),
+    notiz: z.string().max(2000).optional(),
+    verordnung: z.string().trim().max(200).optional(),
     verordnungDokumentId: z.string().nullable().optional(),
-    mobilitaet: z.string().nullable().optional(),
+    mobilitaet: z.string().trim().max(200).nullable().optional(),
     begleitperson: z.boolean().optional(),
-    abholanforderung: z.string().optional(),
-    zielanforderung: z.string().optional(),
-    patientennotiz: z.string().optional(),
-    medizinischeNotiz: z.string().optional(),
+    abholanforderung: z.string().max(500).optional(),
+    zielanforderung: z.string().max(500).optional(),
+    patientennotiz: z.string().max(2000).optional(),
+    medizinischeNotiz: z.string().max(2000).optional(),
     detailStatus: z.string().nullable().optional(),
     abrechnungStatus: z.string().optional(),
     dauerauftragId: z.string().nullable().optional(),
@@ -95,10 +103,17 @@ const orderFieldsSchema = z
   })
   .strict();
 
-const createOrderSchema = orderFieldsSchema.extend({ patient: z.string().min(1) }).strict();
+const createOrderSchema = orderFieldsSchema
+  .extend({ patient: z.string().trim().min(1).max(200) })
+  .strict();
 const updateOrderSchema = z
   .object({ id: z.string().uuid(), values: orderFieldsSchema })
-  .strict();
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
+
 
 /**
  * Identitätskette: Eine Fahrerzuordnung wird ausschließlich über die stabile
