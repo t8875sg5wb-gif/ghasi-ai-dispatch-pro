@@ -13,51 +13,62 @@ import { rowToFahrer, writeToRow, type DriverRow, type DriverWrite } from "@/lib
  * Die Kontoverknüpfung läuft ausschließlich über `setDriverAccountLink`
  * und ist zusätzlich per DB-Trigger auf Admins beschränkt.
  */
+/** ISO-Datum `YYYY-MM-DD` — identisches Muster wie in `verordnungen.functions.ts`. */
+const isoDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
+
 const nachweisSchema = z
-  .object({ gueltigBis: z.string(), info: z.string().optional() })
+  .object({ gueltigBis: isoDatum, info: z.string().optional() })
   .strict();
 
 const driverFieldsSchema = z
   .object({
     nummer: z.string().optional(),
-    name: z.string().min(1),
+    name: z.string().trim().min(1).max(200),
     foto: z.string().nullable(),
-    telefon: z.string(),
-    email: z.string(),
-    adresse: z.string(),
+    telefon: z.string().trim().min(1).max(200),
+    email: z.string().trim().min(1).max(200).email("Ungültige E-Mail-Adresse."),
+    adresse: z.string().trim().min(1).max(200),
     fuehrerschein: nachweisSchema,
     pSchein: nachweisSchema,
     ersteHilfe: nachweisSchema,
-    vertragsart: z.string(),
-    arbeitszeiten: z.string(),
-    urlaubstage: z.number(),
-    krankheitstage: z.number(),
-    status: z.string(),
-    standort: z.string(),
-    gps: z.object({ lat: z.number(), lng: z.number() }),
+    vertragsart: z.enum(["Vollzeit", "Teilzeit", "Minijob", "Aushilfe"]),
+    arbeitszeiten: z.string().trim().min(1).max(50),
+    urlaubstage: z.number().min(0),
+    krankheitstage: z.number().min(0),
+    status: z.enum(["verfuegbar", "unterwegs", "pause", "urlaub", "krank", "feierabend"]),
+    standort: z.string().trim().min(1).max(200),
+    gps: z.object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    }),
     fahrzeug: z.string().nullable(),
-    schicht: z.string(),
-    bewertung: z.number(),
-    puenktlichkeit: z.number(),
-    beschwerden: z.number(),
-    lob: z.number(),
-    ueberstunden: z.number(),
-    kmHeute: z.number(),
-    umsatzHeute: z.number(),
+    schicht: z.string().trim().min(1).max(50),
+    bewertung: z.number().min(0).max(5),
+    puenktlichkeit: z.number().min(0).max(100),
+    beschwerden: z.number().min(0),
+    lob: z.number().min(0),
+    ueberstunden: z.number().min(0),
+    kmHeute: z.number().min(0),
+    umsatzHeute: z.number().min(0),
+    // Bewusst ohne `.min(0)`: ein Tagesverlust ist betriebswirtschaftlich real.
     gewinnHeute: z.number(),
-    pScheinGueltigBis: z.string().nullable().optional(),
-    fuehrungszeugnisDatum: z.string().nullable().optional(),
+    pScheinGueltigBis: isoDatum.nullable().optional(),
+    fuehrungszeugnisDatum: isoDatum.nullable().optional(),
     svAusweisVorhanden: z.boolean().optional(),
-    steuerId: z.string().optional(),
-    beschaeftigungsart: z.string().optional(),
-    monatsbrutto: z.number().optional(),
+    steuerId: z.string().trim().max(50).optional(),
+    beschaeftigungsart: z.enum(["minijob", "midijob", "svpflichtig"]).optional(),
+    monatsbrutto: z.number().min(0).optional(),
   })
   .strict();
 
 const createDriverSchema = driverFieldsSchema;
 const updateDriverSchema = z
   .object({ id: z.string().uuid(), values: driverFieldsSchema.partial().strict() })
-  .strict();
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
 
 export const listDrivers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
