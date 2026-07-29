@@ -38,7 +38,6 @@ export const updateInsurerSchema = z
 
 const deleteInsurerSchema = z.object({ id: z.string().uuid() }).strict();
 
-
 export const listInsurers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Krankenkasse[]> => {
