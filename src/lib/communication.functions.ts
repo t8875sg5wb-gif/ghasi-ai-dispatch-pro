@@ -150,6 +150,24 @@ function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
   return result.data;
 }
 
+/**
+ * Zeile für einen NEU angelegten Entwurf. `upsertDrafts` legt ausschließlich
+ * neue Entwürfe an (`ignoreDuplicates: true`), deshalb wird der Status hier
+ * serverseitig auf "offen" erzwungen – ein vom Client mitgeschickter Status
+ * (z. B. "genehmigt") darf niemals durchschlagen. Statuswechsel bestehender
+ * Entwürfe laufen ausschließlich über `updateDraft`.
+ */
+export function toNewDraftRow(d: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...d,
+    betreff: (d.betreff as string | null | undefined) ?? null,
+    bezug: (d.bezug as unknown) ?? null,
+    status: "offen",
+  };
+}
+
+
+
 /* ------------------------------------------------------------------ *
  * Conversations
  * ------------------------------------------------------------------ */
