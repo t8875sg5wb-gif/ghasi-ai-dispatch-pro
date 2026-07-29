@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { adresseSchema } from "@/lib/orders.functions";
 import {
   assertDriverExists,
   assertInsurerExists,
@@ -18,38 +19,77 @@ import {
   type RecurringWrite,
 } from "@/lib/recurring-shared";
 
+const isoDatum = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
+const uhrzeit = z.string().regex(/^\d{2}:\d{2}$/, "Uhrzeit muss HH:mm sein.");
+
 /**
- * Identitätskette: `patientId`/`insurerId` sind stabile UUID-Verknüpfungen.
- * `krankenkasse` bleibt Freitext-Anzeige, `kostentraeger` (Abrechnungskunde)
- * ist bewusst ein anderes Konzept und hier nicht verknüpft.
+ * Strenge Laufzeitvalidierung für Dauerauftragsmutationen (`.strict()`).
+ * Identitätskette: `patientId`/`insurerId`/`bevorzugterFahrerId`/
+ * `bevorzugtesFahrzeugId` sind stabile UUID-Verknüpfungen; die Existenz wird
+ * zusätzlich im Handler geprüft. `bevorzugterFahrer`/`bevorzugtesFahrzeug`
+ * bleiben Legacy-Freitext (Altbestand) und werden nur noch durchgereicht.
  */
-const identitaetSchema = z
+const recurringFieldsSchema = z
   .object({
+    kennung: z.string().trim().max(50).optional(),
+    patient: z.string().trim().min(1).max(200),
     patientId: z.string().uuid().nullable().optional(),
     insurerId: z.string().uuid().nullable().optional(),
+    abholort: z.string().trim().max(300).optional(),
+    zielort: z.string().trim().max(300).optional(),
+    pickup: adresseSchema.optional(),
+    destination: adresseSchema.optional(),
+    terminzeit: uhrzeit,
+    rueckfahrt: z.boolean().optional(),
+    rueckfahrtzeit: uhrzeit.nullable().optional(),
+    mobilitaet: z.enum(["gehfaehig", "rollstuhl", "tragestuhl", "liegend"]).optional(),
+    begleitperson: z.boolean().optional(),
+    verordnungErforderlich: z.boolean().optional(),
+    kostentraeger: z.string().trim().max(200).optional(),
+    krankenkasse: z.string().trim().max(200).optional(),
+    bevorzugterFahrer: z.string().trim().max(200).nullable().optional(),
+    bevorzugtesFahrzeug: z.string().trim().max(200).nullable().optional(),
+    bevorzugterFahrerId: z.string().uuid().nullable().optional(),
+    bevorzugtesFahrzeugId: z.string().uuid().nullable().optional(),
+    notiz: z.string().max(2000).optional(),
+    medizinischeNotiz: z.string().max(2000).optional(),
+    kategorie: z.enum(["dialyse", "pflegeheim", "krankenhaus", "sonstige"]).optional(),
+    rhythmus: z.enum(["taeglich", "woechentlich"]).optional(),
+    wochentage: z.array(z.number().int().min(0).max(6)).optional(),
+    startDatum: isoDatum.optional(),
+    endDatum: isoDatum.nullable().optional(),
+    pauseVon: isoDatum.nullable().optional(),
+    pauseBis: isoDatum.nullable().optional(),
+    pausiert: z.boolean().optional(),
+    feiertageUeberspringen: z.boolean().optional(),
+    uebersprungeneTermine: z.array(z.string()).optional(),
+    generierteTermine: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
 
-export const listRecurring = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<Dauerauftrag[]> => {
-    const { data, error } = await context.supabase
-      .from("recurring_orders")
-      .select("*")
-      .order("kennung", { ascending: true });
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((r) => rowToDauerauftrag(r as unknown as RecurringRow));
+const createRecurringSchema = recurringFieldsSchema;
+
+const updateRecurringSchema = z
+  .object({
+    id: z.string().uuid(),
+    values: recurringFieldsSchema.partial().strict(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
   });
 
-export const createRecurring = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: RecurringWrite) => {
-    if (!data || typeof data.patient !== "string") {
-      throw new Error("patient ist erforderlich");
-    }
-    identitaetSchema.parse(data);
-    return data;
-  })
+const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
+
+function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) throw new Error("Ungültige Dauerauftragsdaten.");
+  return parsed.data;
+}
+
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
