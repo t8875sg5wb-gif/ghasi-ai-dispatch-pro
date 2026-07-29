@@ -74,10 +74,10 @@ export function ausgabeToRow(w: Partial<AusgabeWrite>): Record<string, unknown> 
   set("lieferant", w.lieferant);
   set("betrag_brutto", w.betragBrutto);
   set("ust_satz", w.ustSatz);
-  set("fahrzeug_id", w.fahrzeugId ?? null);
-  set("fahrer_id", w.fahrerId ?? null);
-  set("notiz", w.notiz ?? null);
-  set("beleg_dokument_id", w.belegDokumentId ?? null);
+  set("fahrzeug_id", w.fahrzeugId);
+  set("fahrer_id", w.fahrerId);
+  set("notiz", w.notiz);
+  set("beleg_dokument_id", w.belegDokumentId);
   return row;
 }
 
