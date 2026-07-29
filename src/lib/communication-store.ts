@@ -142,7 +142,11 @@ export function bearbeiteEntwurf(id: string, nachricht: string) {
   });
 }
 
-/** Approves a draft → marks it sent (manual confirmation) + audit log. */
+/**
+ * Genehmigt einen Entwurf und protokolliert die Freigabe. Es wird NICHTS
+ * versendet – im Projekt existiert kein Versandmechanismus (kein SMS-/E-Mail-/
+ * WhatsApp-Provider, kein Trigger). Die Freigabe ist rein dokumentarisch.
+ */
 export function genehmigeEntwurf(id: string) {
   const entwurf = (qcRef?.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY) ?? []).find(
     (e) => e.id === id,
