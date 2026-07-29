@@ -27,6 +27,94 @@ import {
 } from "@/lib/contract-pricing";
 import { EUR2 } from "@/lib/finance";
 
+/* ------------------------------------------------------------------ *
+ * Strenge Laufzeitvalidierung für Rechnungs-Mutationen (Muster CP30/CP31)
+ *
+ * Vorzeichen: `Rechnung.betrag`, `bezahlterBetrag` und `Zahlung.betrag` sind im
+ * Domäntyp ausdrücklich als "negative for credit notes" dokumentiert. Der
+ * Bestand bestätigt das (GU-2026-0007: betrag -180, bezahlter_betrag -180,
+ * positionen[0].einzelpreis -180). Deshalb KEIN `.min(0)` auf Beträgen –
+ * inklusive `positionen.einzelpreis`. Auch `positionen.menge` bleibt bewusst
+ * ohne Untergrenze: Gutschriften werden im Bestand über negative Einzelpreise
+ * abgebildet, eine Mengen-Negation ist fachlich gleichwertig und darf nicht
+ * nachträglich unspeicherbar werden.
+ * ------------------------------------------------------------------ */
+
+const isoDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum muss YYYY-MM-DD sein.");
+
+const positionSchema = z
+  .object({
+    beschreibung: z.string().trim().min(1).max(300),
+    menge: z.number(),
+    einzelpreis: z.number(),
+  })
+  .strict();
+
+const mahnEintragSchema = z
+  .object({
+    stufe: z.number().int().min(1).max(3),
+    datum: z.string().max(40),
+    tageUeberfaellig: z.number().int().min(0),
+  })
+  .strict();
+
+const zahlungSchema = z
+  .object({
+    datum: z.string().max(40),
+    betrag: z.number(),
+    notiz: z.string().max(500).optional(),
+  })
+  .strict();
+
+const invoiceFieldsSchema = z
+  .object({
+    nummer: z.string().trim().max(50).optional(),
+    typ: z.enum(["rechnung", "gutschrift"]).optional(),
+    kunde: z.string().trim().min(1).max(200).optional(),
+    // Bewusst ohne `.uuid()`: `generateBillingDrafts` setzt hier "" bzw. freie IDs.
+    kundeId: z.string().max(100).optional(),
+    abrechnungsart: z.enum(["Krankenkasse", "Patient", "Kunde"]).optional(),
+    betrag: z.number().optional(),
+    mwstSatz: z.number().min(0).max(100).optional(),
+    status: z
+      .enum(["entwurf", "offen", "bezahlt", "teilbezahlt", "ueberfaellig", "storniert"])
+      .optional(),
+    datum: isoDatum.optional(),
+    faelligkeit: isoDatum.optional(),
+    leistungsdatum: isoDatum.nullable().optional(),
+    bezahltAm: isoDatum.nullable().optional(),
+    bezahlterBetrag: z.number().nullable().optional(),
+    // Freitext-Auftragsnummer (z. B. "A-2052"), keine FK-Prüfung in CP32.
+    bezugAuftrag: z.string().trim().max(50).nullable().optional(),
+    positionen: z.array(positionSchema).max(100).optional(),
+    notiz: z.string().max(5000).nullable().optional(),
+    mahnstufe: z.number().int().min(0).max(3).optional(),
+    // ISO-Datetime: geschrieben aus `new Date().toISOString()`, gelesen aus
+    // der `timestamptz`-Spalte (mit Offset) und beim Speichern zurückgespielt.
+    letzteMahnung: z.string().datetime({ offset: true }).max(40).nullable().optional(),
+    mahnHistorie: z.array(mahnEintragSchema).max(20).optional(),
+    zahlungen: z.array(zahlungSchema).max(50).optional(),
+  })
+  .strict();
+
+const createInvoiceSchema = invoiceFieldsSchema
+  .extend({ kunde: z.string().trim().min(1).max(200) })
+  .strict();
+
+const updateInvoiceSchema = z
+  .object({ id: z.string().uuid(), values: invoiceFieldsSchema.partial().strict() })
+  .strict()
+  .refine((v) => Object.keys(v.values).length > 0, {
+    message: "Keine Änderungen übergeben.",
+    path: ["values"],
+  });
+
+const deleteInvoiceSchema = z.object({ id: z.string().uuid() }).strict();
+
+const listInvoiceChangesSchema = z.object({ invoiceId: z.string().uuid() }).strict();
+
+
+
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Rechnung[]> => {
