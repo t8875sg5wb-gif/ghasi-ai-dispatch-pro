@@ -59,6 +59,6 @@ export function leasingToRow(w: Partial<LeasingWrite>): Record<string, unknown> 
   set("km_inklusive", w.kmInklusive);
   set("km_aktuell", w.kmAktuell);
   set("status", w.status);
-  set("notiz", w.notiz ?? null);
+  set("notiz", w.notiz);
   return row;
 }

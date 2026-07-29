@@ -50,19 +50,19 @@ export function patientToRow(w: Partial<PatientWrite>): Record<string, unknown> 
     if (v !== undefined) row[k] = v;
   };
   set("name", w.name);
-  set("telefon", w.telefon ?? null);
+  set("telefon", w.telefon);
   set("mobilitaet", w.mobilitaet);
   set("kostentraeger", w.kostentraeger);
   set("hinweis", w.hinweis);
   set("begleitperson", w.begleitperson);
-  set("medizinische_notiz", w.medizinischeNotiz ?? null);
-  set("patientennotiz", w.patientennotiz ?? null);
-  set("kostentraeger_id", w.kostentraegerId ?? null);
-  set("versichertennummer", w.versichertennummer ?? null);
+  set("medizinische_notiz", w.medizinischeNotiz);
+  set("patientennotiz", w.patientennotiz);
+  set("kostentraeger_id", w.kostentraegerId);
+  set("versichertennummer", w.versichertennummer);
   set("zuzahlungsbefreit", w.zuzahlungsbefreit);
-  set("zuzahlungsbefreit_bis", w.zuzahlungsbefreitBis ?? null);
+  set("zuzahlungsbefreit_bis", w.zuzahlungsbefreitBis);
   set("verordnung_vorhanden", w.verordnungVorhanden);
-  set("verordnung_dokument_id", w.verordnungDokumentId ?? null);
-  set("genehmigung_bis", w.genehmigungBis ?? null);
+  set("verordnung_dokument_id", w.verordnungDokumentId);
+  set("genehmigung_bis", w.genehmigungBis);
   return row;
 }
