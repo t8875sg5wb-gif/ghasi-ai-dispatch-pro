@@ -283,9 +283,10 @@ export const listInvoiceChanges = createServerFn({ method: "GET" })
 
 export const deleteInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string } => {
+    const parsed = deleteInvoiceSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Rechnungsdaten.");
+    return parsed.data;
   })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("invoices").delete().eq("id", data.id);
