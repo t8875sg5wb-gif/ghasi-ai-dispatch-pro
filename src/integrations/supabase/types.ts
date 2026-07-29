@@ -1005,6 +1005,38 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_audit_snapshots: {
+        Row: {
+          changed_at: string
+          id: string
+          invoice_id: string
+          new_row: Json
+          old_row: Json
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          invoice_id: string
+          new_row: Json
+          old_row: Json
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          invoice_id?: string
+          new_row?: Json
+          old_row?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_audit_snapshots_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_changes: {
         Row: {
           akteur: string | null
