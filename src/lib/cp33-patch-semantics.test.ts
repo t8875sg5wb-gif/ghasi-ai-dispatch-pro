@@ -12,6 +12,8 @@ import { konversationToRow } from "@/lib/communication-shared";
 import { writeToRow } from "@/lib/drivers-shared";
 import { versicherungToRow } from "@/lib/insurance-shared";
 import { kassenvertragToRow } from "@/lib/insurer-contracts-shared";
+import { shiftToRow } from "@/lib/shifts-shared";
+import { fahrtToRow } from "@/lib/trips-shared";
 
 test("patientToRow: partial update touches only the given field", () => {
   const row = patientToRow({ name: "Neu" });
@@ -179,4 +181,52 @@ test("kassenvertragToRow: explicit null still clears", () => {
   const row = kassenvertragToRow({ gueltigAb: null as never, gueltigBis: null as never });
   expect(row.gueltig_ab).toBe(null);
   expect(row.gueltig_bis).toBe(null);
+});
+
+/* ------------------------------------------------------------------ *
+ * CP35: empty-string variant of the same patch-semantics bug
+ * ------------------------------------------------------------------ */
+
+test("kassenvertragToRow: omitted aktenzeichen/notiz produce no keys", () => {
+  const row = kassenvertragToRow({ leistung: "Sitzendtransport" });
+  expect(Object.keys(row)).toEqual(["leistung"]);
+  for (const k of ["aktenzeichen", "notiz"]) {
+    expect(k in row).toBe(false);
+  }
+});
+
+test("kassenvertragToRow: explicit empty string still written", () => {
+  const row = kassenvertragToRow({ aktenzeichen: "", notiz: "" });
+  expect(row.aktenzeichen).toBe("");
+  expect(row.notiz).toBe("");
+});
+
+test("shiftToRow: partial update touches only the given field", () => {
+  const row = shiftToRow({ typ: "frueh" as never });
+  expect(Object.keys(row)).toEqual(["typ"]);
+  for (const k of ["von", "bis", "notiz"]) {
+    expect(k in row).toBe(false);
+  }
+});
+
+test("shiftToRow: explicit empty string still written", () => {
+  const row = shiftToRow({ von: "", bis: "", notiz: "" });
+  expect(row.von).toBe("");
+  expect(row.bis).toBe("");
+  expect(row.notiz).toBe("");
+});
+
+test("fahrtToRow: partial update touches only the given field", () => {
+  const row = fahrtToRow({ datum: "2026-07-29" });
+  expect(Object.keys(row)).toEqual(["datum"]);
+  for (const k of ["fahrer", "zweck", "notiz"]) {
+    expect(k in row).toBe(false);
+  }
+});
+
+test("fahrtToRow: explicit empty string still written", () => {
+  const row = fahrtToRow({ fahrer: "", zweck: "", notiz: "" });
+  expect(row.fahrer).toBe("");
+  expect(row.zweck).toBe("");
+  expect(row.notiz).toBe("");
 });
