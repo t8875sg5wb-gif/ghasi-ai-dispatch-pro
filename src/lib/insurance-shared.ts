@@ -53,6 +53,6 @@ export function versicherungToRow(w: Partial<InsuranceWrite>): Record<string, un
   set("beginn", w.beginn);
   set("ablauf", w.ablauf);
   set("status", w.status);
-  set("notiz", w.notiz ?? null);
+  set("notiz", w.notiz);
   return row;
 }
