@@ -71,7 +71,7 @@ export function rowToFahrzeug(r: VehicleRow): Fahrzeug {
     marke: r.marke ?? "",
     modell: r.modell ?? "",
     baujahr: num(r.baujahr, 2020),
-    typ: (r.typ as Fahrzeugtyp) ?? "KTW",
+    typ: (r.typ as Fahrzeugtyp) ?? "PKW",
     rollstuhlGeeignet: Boolean(r.rollstuhl_geeignet),
     liegendGeeignet: Boolean(r.liegend_geeignet),
     sitzplaetze: num(r.sitzplaetze, 1),
