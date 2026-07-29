@@ -1,0 +1,2 @@
+DELETE FROM public.orders WHERE id = '9de7c21b-034a-48e9-9dc1-c26ed66c7aa3';
+UPDATE public.orders SET notiz = 'Hinfahrt aus Dauerauftrag DA-001 · Dialyse-Sammeltour Schicht 1' WHERE id = 'e63106e5-ee0b-4268-aac9-b4abffbf9b68';
