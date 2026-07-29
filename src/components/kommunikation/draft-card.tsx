@@ -42,7 +42,7 @@ export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
   const genehmigen = () => {
     if (edit) bearbeiteEntwurf(entwurf.id, text);
     genehmigeEntwurf(entwurf.id);
-    toast.success("Freigegeben & gesendet", { description: entwurf.titel });
+    toast.success("Freigegeben", { description: entwurf.titel });
   };
 
   const verwerfen = () => {
@@ -97,7 +97,7 @@ export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
               ) : (
                 <XCircle className="h-3 w-3" />
               )}
-              {entwurf.status === "genehmigt" ? "Gesendet" : "Verworfen"}
+              {entwurf.status === "genehmigt" ? "Freigegeben" : "Verworfen"}
             </Badge>
           )}
         </div>

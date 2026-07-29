@@ -150,6 +150,21 @@ function parseOrThrow<T>(schema: z.ZodType<T>, input: unknown): T {
   return result.data;
 }
 
+/**
+ * Zeile für einen NEU angelegten Entwurf. `upsertDrafts` legt ausschließlich
+ * neue Entwürfe an (`ignoreDuplicates: true`), deshalb wird der Status hier
+ * serverseitig auf "offen" erzwungen – ein vom Client mitgeschickter Status
+ * (z. B. "genehmigt") darf niemals durchschlagen. Statuswechsel bestehender
+ * Entwürfe laufen ausschließlich über `updateDraft`.
+ */
+export function toNewDraftRow(d: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...d,
+    betreff: (d.betreff as string | null | undefined) ?? null,
+    bezug: (d.bezug as unknown) ?? null,
+    status: "offen",
+  };
+}
 /* ------------------------------------------------------------------ *
  * Conversations
  * ------------------------------------------------------------------ */
@@ -232,11 +247,7 @@ export const upsertDrafts = createServerFn({ method: "POST" })
   .validator((data: unknown) => parseOrThrow(upsertDraftsSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     if (data.drafts.length === 0) return { ok: true };
-    const rows = data.drafts.map((d) => ({
-      ...d,
-      betreff: d.betreff ?? null,
-      bezug: d.bezug ?? null,
-    }));
+    const rows = data.drafts.map((d) => toNewDraftRow(d));
     const { error } = await context.supabase
       .from("communication_drafts")
       .upsert(rows as never, { onConflict: "id", ignoreDuplicates: true });

@@ -142,7 +142,11 @@ export function bearbeiteEntwurf(id: string, nachricht: string) {
   });
 }
 
-/** Approves a draft → marks it sent (manual confirmation) + audit log. */
+/**
+ * Genehmigt einen Entwurf und protokolliert die Freigabe. Es wird NICHTS
+ * versendet – im Projekt existiert kein Versandmechanismus (kein SMS-/E-Mail-/
+ * WhatsApp-Provider, kein Trigger). Die Freigabe ist rein dokumentarisch.
+ */
 export function genehmigeEntwurf(id: string) {
   const entwurf = (qcRef?.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY) ?? []).find(
     (e) => e.id === id,
@@ -156,7 +160,7 @@ export function genehmigeEntwurf(id: string) {
     bereich: "Kommunikation",
     entitaet: entwurf.titel,
     aktion: "entwurf_genehmigt",
-    beschreibung: `KI-Entwurf „${entwurf.titel}" freigegeben und an ${entwurf.empfaenger} über ${KANAL_META[entwurf.kanal].label} gesendet.`,
+    beschreibung: `KI-Entwurf „${entwurf.titel}" freigegeben.`,
     akteur: "Unternehmer",
     metadaten: {
       kanal: entwurf.kanal,
