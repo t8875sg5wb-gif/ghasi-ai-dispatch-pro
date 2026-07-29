@@ -91,7 +91,7 @@ function emptyValues(): AuftragFormValues {
 export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel }: AuftragFormProps) {
   const [values, setValues] = useState<AuftragFormValues>(emptyValues);
   const fahrerOpt = useDriverIdOptions();
-  const fahrzeugOpt = useVehicleOptions();
+  const fahrzeugOpt = useVehicleIdOptions();
   const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
   const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
 
@@ -442,9 +442,15 @@ export function AuftragForm({ initial, prefill, onSubmit, onCancel, submitLabel 
         </div>
         <div className="space-y-1.5">
           <Label>Fahrzeug</Label>
+          {values.fahrzeug && !values.fahrzeugId && (
+            <p className="text-xs text-amber-600 dark:text-amber-500">
+              Altbestand: „{values.fahrzeug}" ist nur als Kennzeichen hinterlegt und keinem
+              Fahrzeugdatensatz zugeordnet.
+            </p>
+          )}
           <Select
-            value={values.fahrzeug ?? NONE}
-            onValueChange={(v) => set("fahrzeug", v === NONE ? null : v)}
+            value={values.fahrzeugId ?? NONE}
+            onValueChange={(v) => set("fahrzeugId", v === NONE ? null : v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Nicht zugewiesen" />
