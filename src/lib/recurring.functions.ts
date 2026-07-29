@@ -124,11 +124,14 @@ export const createRecurring = createServerFn({ method: "POST" })
 
 export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<RecurringWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    identitaetSchema.parse(data.values ?? {});
-    return data;
-  })
+  .validator(
+    (data: unknown) =>
+      parseOrThrow(updateRecurringSchema, data) as {
+        id: string;
+        values: Partial<RecurringWrite>;
+      },
+  )
+
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
