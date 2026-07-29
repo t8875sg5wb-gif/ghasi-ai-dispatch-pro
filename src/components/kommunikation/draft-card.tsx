@@ -97,7 +97,7 @@ export function DraftCard({ entwurf }: { entwurf: KommEntwurf }) {
               ) : (
                 <XCircle className="h-3 w-3" />
               )}
-              {entwurf.status === "genehmigt" ? "Gesendet" : "Verworfen"}
+              {entwurf.status === "genehmigt" ? "Freigegeben" : "Verworfen"}
             </Badge>
           )}
         </div>
