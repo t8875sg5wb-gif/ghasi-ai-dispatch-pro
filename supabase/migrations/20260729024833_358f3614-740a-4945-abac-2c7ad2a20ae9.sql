@@ -1,0 +1,1 @@
+DELETE FROM public.patients WHERE name = 'CP22 Testpatient';
