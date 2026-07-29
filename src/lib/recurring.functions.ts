@@ -4,7 +4,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertInsurerExists, assertPatientExists } from "@/lib/identity-checks.server";
+import {
+  assertDriverExists,
+  assertInsurerExists,
+  assertPatientExists,
+  assertVehicleExists,
+} from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
 import {
   rowToDauerauftrag,
@@ -48,6 +53,10 @@ export const createRecurring = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
+    if (data.bevorzugterFahrerId)
+      await assertDriverExists(context.supabase, data.bevorzugterFahrerId);
+    if (data.bevorzugtesFahrzeugId)
+      await assertVehicleExists(context.supabase, data.bevorzugtesFahrzeugId);
     const row = writeToRecurringRow(data);
     const { data: created, error } = await context.supabase
       .from("recurring_orders")
@@ -68,6 +77,10 @@ export const updateRecurring = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
+    if (data.values.bevorzugterFahrerId)
+      await assertDriverExists(context.supabase, data.values.bevorzugterFahrerId);
+    if (data.values.bevorzugtesFahrzeugId)
+      await assertVehicleExists(context.supabase, data.values.bevorzugtesFahrzeugId);
     const row = writeToRecurringRow(data.values);
     const { data: updated, error } = await context.supabase
       .from("recurring_orders")

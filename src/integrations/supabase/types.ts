@@ -1471,7 +1471,9 @@ export type Database = {
           abholort: string
           begleitperson: boolean
           bevorzugter_fahrer: string | null
+          bevorzugter_fahrer_id: string | null
           bevorzugtes_fahrzeug: string | null
+          bevorzugtes_fahrzeug_id: string | null
           created_at: string
           destination_additional_info: string
           destination_city: string
@@ -1517,7 +1519,9 @@ export type Database = {
           abholort?: string
           begleitperson?: boolean
           bevorzugter_fahrer?: string | null
+          bevorzugter_fahrer_id?: string | null
           bevorzugtes_fahrzeug?: string | null
+          bevorzugtes_fahrzeug_id?: string | null
           created_at?: string
           destination_additional_info?: string
           destination_city?: string
@@ -1563,7 +1567,9 @@ export type Database = {
           abholort?: string
           begleitperson?: boolean
           bevorzugter_fahrer?: string | null
+          bevorzugter_fahrer_id?: string | null
           bevorzugtes_fahrzeug?: string | null
+          bevorzugtes_fahrzeug_id?: string | null
           created_at?: string
           destination_additional_info?: string
           destination_city?: string
@@ -1606,6 +1612,20 @@ export type Database = {
           zielort?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "recurring_orders_bevorzugter_fahrer_id_fkey"
+            columns: ["bevorzugter_fahrer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_orders_bevorzugtes_fahrzeug_id_fkey"
+            columns: ["bevorzugtes_fahrzeug_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recurring_orders_insurer_id_fkey"
             columns: ["insurer_id"]

@@ -74,6 +74,10 @@ export interface Dauerauftrag {
   krankenkasse: string;
   bevorzugtesFahrzeug: string | null;
   bevorzugterFahrer: string | null;
+  /** Stabile Verknüpfung zum Fahrerstamm (`drivers.id`) – Vorbelegung. */
+  bevorzugterFahrerId?: string | null;
+  /** Stabile Verknüpfung zum Fahrzeugstamm (`vehicles.id`) – Vorbelegung. */
+  bevorzugtesFahrzeugId?: string | null;
   notiz: string;
   medizinischeNotiz: string;
   kategorie: SerienKategorie;
@@ -437,10 +441,13 @@ export function transportWritesFuer(
       abholort: "",
       zielort: "",
       termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
-      // Kein Namens-Matching: der bevorzugte Fahrer eines Dauerauftrags ist nur
-      // ein Anzeigewert. Generierte Aufträge starten unzugeordnet und werden
-      // bewusst über die Disposition (stabile Fahrer-ID) zugewiesen.
-      fahrzeug: d.bevorzugtesFahrzeug,
+      // Fahrer: Kein Namens-Matching – der bevorzugte Fahrer eines Dauerauftrags
+      // ist nur ein Anzeigewert. Generierte Aufträge starten bewusst unzugeordnet
+      // und werden über die Disposition (stabile Fahrer-ID) zugewiesen.
+      // Fahrzeug: wird weiterhin vorbelegt, jetzt aber stabil über die
+      // Fahrzeug-ID statt über Kennzeichen-Freitext. Der DB-Trigger
+      // `enforce_order_assignment` leitet das Kennzeichen daraus ab.
+      fahrzeugId: d.bevorzugtesFahrzeugId ?? null,
       kostentraeger: d.kostentraeger,
       notiz: `${hin ? "Hinfahrt" : "Rückfahrt"} aus Dauerauftrag ${d.kennung}${
         d.notiz ? " · " + d.notiz : ""

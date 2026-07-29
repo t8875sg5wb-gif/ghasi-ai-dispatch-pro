@@ -8,7 +8,12 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
-import { assertInsurerExists, assertPatientExists } from "@/lib/identity-checks.server";
+import {
+  assertDriverExists,
+  assertInsurerExists,
+  assertPatientExists,
+  assertVehicleExists,
+} from "@/lib/identity-checks.server";
 import {
   rowToAuftrag,
   writeToRow,
@@ -116,34 +121,7 @@ export const updateOrderSchema = z
   });
 
 
-/**
- * Identitätskette: Eine Fahrerzuordnung wird ausschließlich über die stabile
- * `drivers.id` gesetzt. Es gibt bewusst KEINEN Namensabgleich mehr.
- * Anzeigename und `fahrer_user_id` werden vom DB-Trigger
- * `enforce_order_assignment` aus dem Fahrerdatensatz abgeleitet.
- */
-async function assertDriverExists(
-  supabase: SupabaseClient<Database>,
-  fahrerId: string,
-): Promise<void> {
-  const { data } = await supabase.from("drivers").select("id").eq("id", fahrerId).maybeSingle();
-  if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
-}
-
-/**
- * Identitätskette Fahrzeug: die Zuordnung läuft ausschließlich über die stabile
- * `vehicles.id`. Das Kennzeichen wird vom DB-Trigger `enforce_order_assignment`
- * daraus abgeleitet.
- */
-async function assertVehicleExists(
-  supabase: SupabaseClient<Database>,
-  fahrzeugId: string,
-): Promise<void> {
-  const { data } = await supabase.from("vehicles").select("id").eq("id", fahrzeugId).maybeSingle();
-  if (!data) throw new Error("Unbekanntes Fahrzeug – Zuordnung nicht möglich.");
-}
-
-// Existenzprüfungen für Patient/Kostenträger liegen zentral in
+// Existenzprüfungen für Fahrer/Fahrzeug/Patient/Kostenträger liegen zentral in
 // `identity-checks.server.ts` (auch von Daueraufträgen genutzt).
 
 /**

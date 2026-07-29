@@ -38,6 +38,10 @@ export interface RecurringWrite {
   krankenkasse?: string;
   bevorzugtesFahrzeug?: string | null;
   bevorzugterFahrer?: string | null;
+  /** Stabile Verknüpfung zum Fahrerstamm (`drivers.id`). */
+  bevorzugterFahrerId?: string | null;
+  /** Stabile Verknüpfung zum Fahrzeugstamm (`vehicles.id`). */
+  bevorzugtesFahrzeugId?: string | null;
   notiz?: string;
   medizinischeNotiz?: string;
   kategorie?: string;
@@ -84,6 +88,8 @@ export interface RecurringRow {
   krankenkasse: string;
   bevorzugtes_fahrzeug: string | null;
   bevorzugter_fahrer: string | null;
+  bevorzugter_fahrer_id?: string | null;
+  bevorzugtes_fahrzeug_id?: string | null;
   notiz: string;
   medizinische_notiz: string;
   kategorie: string;
@@ -151,6 +157,8 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     krankenkasse: r.krankenkasse ?? "",
     bevorzugtesFahrzeug: r.bevorzugtes_fahrzeug,
     bevorzugterFahrer: r.bevorzugter_fahrer,
+    bevorzugterFahrerId: r.bevorzugter_fahrer_id ?? null,
+    bevorzugtesFahrzeugId: r.bevorzugtes_fahrzeug_id ?? null,
     notiz: r.notiz ?? "",
     medizinischeNotiz: r.medizinische_notiz ?? "",
     kategorie,
@@ -189,6 +197,8 @@ export function dauerauftragToWrite(d: Dauerauftrag): RecurringWrite {
     krankenkasse: d.krankenkasse,
     bevorzugtesFahrzeug: d.bevorzugtesFahrzeug,
     bevorzugterFahrer: d.bevorzugterFahrer,
+    bevorzugterFahrerId: d.bevorzugterFahrerId ?? null,
+    bevorzugtesFahrzeugId: d.bevorzugtesFahrzeugId ?? null,
     notiz: d.notiz,
     medizinischeNotiz: d.medizinischeNotiz,
     kategorie: d.kategorie,
@@ -253,6 +263,8 @@ export function writeToRecurringRow(w: Partial<RecurringWrite>): Record<string, 
   set("krankenkasse", w.krankenkasse);
   set("bevorzugtes_fahrzeug", w.bevorzugtesFahrzeug);
   set("bevorzugter_fahrer", w.bevorzugterFahrer);
+  set("bevorzugter_fahrer_id", w.bevorzugterFahrerId);
+  set("bevorzugtes_fahrzeug_id", w.bevorzugtesFahrzeugId);
   set("notiz", w.notiz);
   set("medizinische_notiz", w.medizinischeNotiz);
   set("kategorie", w.kategorie);

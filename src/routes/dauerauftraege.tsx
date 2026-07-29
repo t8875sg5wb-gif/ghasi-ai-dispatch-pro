@@ -44,8 +44,8 @@ import { KRANKENKASSEN } from "@/lib/stammdaten";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
 import {
-  useDriverOptions,
-  useVehicleOptions,
+  useDriverIdOptions,
+  useVehicleIdOptions,
   useCustomerOptions,
 } from "@/hooks/use-entity-options";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,8 @@ const leereVorlage = (): Dauerauftrag => ({
   krankenkasse: KRANKENKASSEN[0]?.name ?? "",
   bevorzugtesFahrzeug: null,
   bevorzugterFahrer: null,
+  bevorzugterFahrerId: null,
+  bevorzugtesFahrzeugId: null,
   notiz: "",
   medizinischeNotiz: "",
   kategorie: "dialyse",
@@ -604,6 +606,12 @@ function DetailAnsicht({
   onEnd: () => void;
   onSkip: (iso: string) => void;
 }) {
+  const fahrerIdOpt = useDriverIdOptions();
+  const fahrzeugIdOpt = useVehicleIdOptions();
+  const fahrerLabel = (x: Dauerauftrag) =>
+    fahrerIdOpt.options.find((o) => o.value === x.bevorzugterFahrerId)?.label ?? null;
+  const fahrzeugLabel = (x: Dauerauftrag) =>
+    fahrzeugIdOpt.options.find((o) => o.value === x.bevorzugtesFahrzeugId)?.label ?? null;
   const st = abgeleiteterStatus(d);
   const StatusIcon = STATUS_META[st].icon;
   const termine = naechsteTermine(d, 8);
@@ -645,8 +653,11 @@ function DetailAnsicht({
           <Feld label="Feiertage überspringen" wert={d.feiertageUeberspringen ? "Ja" : "Nein"} />
           <Feld label="Abrechnungskunde" wert={d.kostentraeger} />
           <Feld label="Krankenkasse" wert={d.krankenkasse} />
-          <Feld label="Bevorzugtes Fahrzeug" wert={d.bevorzugtesFahrzeug ?? "—"} />
-          <Feld label="Bevorzugter Fahrer" wert={d.bevorzugterFahrer ?? "—"} />
+          <Feld
+            label="Bevorzugtes Fahrzeug"
+            wert={fahrzeugLabel(d) ?? d.bevorzugtesFahrzeug ?? "—"}
+          />
+          <Feld label="Bevorzugter Fahrer" wert={fahrerLabel(d) ?? d.bevorzugterFahrer ?? "—"} />
           {d.pauseVon && d.pauseBis && (
             <Feld
               label="Pausenzeitraum"
@@ -773,8 +784,8 @@ function DauerauftragForm({
     destination: d.destination ?? parseAdresse(d.zielort),
   });
   const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
-  const fahrerOpt = useDriverOptions();
-  const fahrzeugOpt = useVehicleOptions();
+  const fahrerOpt = useDriverIdOptions();
+  const fahrzeugOpt = useVehicleIdOptions();
   const kundeOpt = useCustomerOptions();
   const { data: patienten = [] } = usePatients();
   const { data: kassen = [] } = useInsurers();
@@ -1091,9 +1102,15 @@ function DauerauftragForm({
           </div>
           <div>
             <Label>Bevorzugtes Fahrzeug</Label>
+            {f.bevorzugtesFahrzeug && !f.bevorzugtesFahrzeugId && (
+              <p className="text-xs text-amber-600 dark:text-amber-500">
+                Altbestand: „{f.bevorzugtesFahrzeug}" ist nur als Kennzeichen hinterlegt und keinem
+                Fahrzeugdatensatz zugeordnet. Bitte erneut auswählen.
+              </p>
+            )}
             <Select
-              value={f.bevorzugtesFahrzeug ?? "none"}
-              onValueChange={(v) => set("bevorzugtesFahrzeug", v === "none" ? null : v)}
+              value={f.bevorzugtesFahrzeugId ?? "none"}
+              onValueChange={(v) => set("bevorzugtesFahrzeugId", v === "none" ? null : v)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -1110,9 +1127,15 @@ function DauerauftragForm({
           </div>
           <div>
             <Label>Bevorzugter Fahrer</Label>
+            {f.bevorzugterFahrer && !f.bevorzugterFahrerId && (
+              <p className="text-xs text-amber-600 dark:text-amber-500">
+                Altbestand: „{f.bevorzugterFahrer}" ist nur als Name hinterlegt und keinem
+                Fahrerdatensatz zugeordnet. Bitte erneut auswählen.
+              </p>
+            )}
             <Select
-              value={f.bevorzugterFahrer ?? "none"}
-              onValueChange={(v) => set("bevorzugterFahrer", v === "none" ? null : v)}
+              value={f.bevorzugterFahrerId ?? "none"}
+              onValueChange={(v) => set("bevorzugterFahrerId", v === "none" ? null : v)}
             >
               <SelectTrigger>
                 <SelectValue />
