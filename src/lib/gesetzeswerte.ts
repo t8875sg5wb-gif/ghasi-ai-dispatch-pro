@@ -38,6 +38,7 @@ interface Wert<T> extends WertMeta {
   hinweis?: string;
 }
 
+// Platzhalter für künftige, noch nicht verifizierte Werte.
 const TODO_QUELLE = "TODO: Quelle nicht in diesem Lauf verifiziert";
 
 /* ------------------------------------------------------------------ *
