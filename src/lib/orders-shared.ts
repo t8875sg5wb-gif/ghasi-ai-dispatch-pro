@@ -52,6 +52,11 @@ export interface OrderWrite {
    * Browser liefert NIEMALS Namen oder Auth-IDs als Identität.
    */
   fahrerId?: string | null;
+  /**
+   * Stabile Fahrzeug-Zuordnung über `vehicles.id`. Das Kennzeichen `fahrzeug`
+   * wird DB-seitig daraus abgeleitet.
+   */
+  fahrzeugId?: string | null;
   fahrzeug?: string | null;
   kostentraeger?: string;
   notiz?: string;
@@ -102,6 +107,7 @@ export interface OrderRow {
   insurer_id?: string | null;
   verordnung_id?: string | null;
   fahrzeug: string | null;
+  fahrzeug_id?: string | null;
   kostentraeger: string;
   notiz: string;
   verordnung: string;
@@ -174,6 +180,7 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     fahrer: r.fahrer,
     fahrerId: r.fahrer_id ?? null,
     fahrzeug: r.fahrzeug,
+    fahrzeugId: r.fahrzeug_id ?? null,
     kostentraeger: r.kostentraeger ?? "",
     notiz: r.notiz ?? "",
     verordnung,
@@ -245,6 +252,8 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   // leitet ihn aus `fahrer_id` ab.
   set("fahrer_id", w.fahrerId);
   set("fahrzeug", w.fahrzeug);
+  // Analog zu `fahrer_id` → `fahrer`: der Trigger leitet das Kennzeichen ab.
+  set("fahrzeug_id", w.fahrzeugId);
   set("kostentraeger", w.kostentraeger);
   set("notiz", w.notiz);
   set("verordnung", w.verordnung);
