@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.log_invoice_snapshot() FROM PUBLIC, anon, authenticated;
