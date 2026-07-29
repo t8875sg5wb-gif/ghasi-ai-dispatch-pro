@@ -82,6 +82,7 @@ export const orderFieldsSchema = z
       )
       .optional(),
     fahrerId: z.string().uuid().nullable().optional(),
+    fahrzeugId: z.string().uuid().nullable().optional(),
     fahrzeug: z.string().nullable().optional(),
     kostentraeger: z.string().trim().max(200).optional(),
     notiz: z.string().max(2000).optional(),
@@ -127,6 +128,19 @@ async function assertDriverExists(
 ): Promise<void> {
   const { data } = await supabase.from("drivers").select("id").eq("id", fahrerId).maybeSingle();
   if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
+}
+
+/**
+ * Identitätskette Fahrzeug: die Zuordnung läuft ausschließlich über die stabile
+ * `vehicles.id`. Das Kennzeichen wird vom DB-Trigger `enforce_order_assignment`
+ * daraus abgeleitet.
+ */
+async function assertVehicleExists(
+  supabase: SupabaseClient<Database>,
+  fahrzeugId: string,
+): Promise<void> {
+  const { data } = await supabase.from("vehicles").select("id").eq("id", fahrzeugId).maybeSingle();
+  if (!data) throw new Error("Unbekanntes Fahrzeug – Zuordnung nicht möglich.");
 }
 
 // Existenzprüfungen für Patient/Kostenträger liegen zentral in
