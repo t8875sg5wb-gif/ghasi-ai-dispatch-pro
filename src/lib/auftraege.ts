@@ -71,6 +71,8 @@ export interface Auftrag {
   fahrer: string | null;
   /** Stabile Fahrer-Zuordnung (drivers.id); null = nicht sicher verknüpft. */
   fahrerId?: string | null;
+  /** Stabile Fahrzeug-Zuordnung (`vehicles.id`); `fahrzeug` wird daraus abgeleitet. */
+  fahrzeugId?: string | null;
   fahrzeug: string | null;
   kostentraeger: string;
   notiz: string;

@@ -82,6 +82,7 @@ export const orderFieldsSchema = z
       )
       .optional(),
     fahrerId: z.string().uuid().nullable().optional(),
+    fahrzeugId: z.string().uuid().nullable().optional(),
     fahrzeug: z.string().nullable().optional(),
     kostentraeger: z.string().trim().max(200).optional(),
     notiz: z.string().max(2000).optional(),
@@ -127,6 +128,19 @@ async function assertDriverExists(
 ): Promise<void> {
   const { data } = await supabase.from("drivers").select("id").eq("id", fahrerId).maybeSingle();
   if (!data) throw new Error("Unbekannter Fahrer – Zuordnung nicht möglich.");
+}
+
+/**
+ * Identitätskette Fahrzeug: die Zuordnung läuft ausschließlich über die stabile
+ * `vehicles.id`. Das Kennzeichen wird vom DB-Trigger `enforce_order_assignment`
+ * daraus abgeleitet.
+ */
+async function assertVehicleExists(
+  supabase: SupabaseClient<Database>,
+  fahrzeugId: string,
+): Promise<void> {
+  const { data } = await supabase.from("vehicles").select("id").eq("id", fahrzeugId).maybeSingle();
+  if (!data) throw new Error("Unbekanntes Fahrzeug – Zuordnung nicht möglich.");
 }
 
 // Existenzprüfungen für Patient/Kostenträger liegen zentral in
@@ -186,6 +200,7 @@ export const createOrder = createServerFn({ method: "POST" })
       nummer = `A-${2045 + (count ?? 0)}`;
     }
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
+    if (data.fahrzeugId) await assertVehicleExists(context.supabase, data.fahrzeugId);
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     if (data.verordnungId)
@@ -202,7 +217,7 @@ export const createOrder = createServerFn({ method: "POST" })
 
     // Zuweisungskonflikte: warnen, nicht blockieren. Nur wenn tatsächlich
     // ein Fahrer oder Fahrzeug zugewiesen wurde.
-    if (auftrag.fahrerId || auftrag.fahrzeug) {
+    if (auftrag.fahrerId || auftrag.fahrzeugId || auftrag.fahrzeug) {
       const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
       const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
       if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
@@ -220,6 +235,8 @@ export const updateOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
+    if (data.values.fahrzeugId)
+      await assertVehicleExists(context.supabase, data.values.fahrzeugId);
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     // Verordnung/Patient müssen auch nach einem Teil-Update zueinander passen.
@@ -252,8 +269,9 @@ export const updateOrder = createServerFn({ method: "POST" })
 
     // Zuweisungskonflikte nur berechnen, wenn dieses Schreiben Fahrer oder
     // Fahrzeug angefasst hat und am Ende auch eines von beiden gesetzt ist.
-    const aendertZuweisung = "fahrerId" in data.values || "fahrzeug" in data.values;
-    if (aendertZuweisung && (auftrag.fahrerId || auftrag.fahrzeug)) {
+    const aendertZuweisung =
+      "fahrerId" in data.values || "fahrzeugId" in data.values || "fahrzeug" in data.values;
+    if (aendertZuweisung && (auftrag.fahrerId || auftrag.fahrzeugId || auftrag.fahrzeug)) {
       const { berechneZuweisungsWarnungen } = await import("@/lib/assignment-conflicts.server");
       const warnungen = await berechneZuweisungsWarnungen(context.supabase, auftrag.id);
       if (warnungen.length > 0) auftrag.zuweisungsWarnungen = warnungen;
@@ -263,9 +281,15 @@ export const updateOrder = createServerFn({ method: "POST" })
     // Audit trail: persist every status / dispatch-assignment / driver change with
     // timestamp, status, driver, vehicle and GPS position (when available).
     const v = data.values as Record<string, unknown>;
-    const relevant = ["status", "detail_status", "fahrerId", "fahrzeug", "lat", "lng"].some(
-      (k) => k in v,
-    );
+    const relevant = [
+      "status",
+      "detail_status",
+      "fahrerId",
+      "fahrzeugId",
+      "fahrzeug",
+      "lat",
+      "lng",
+    ].some((k) => k in v);
     if (relevant) {
       const gps =
         typeof v.lat === "number" && typeof v.lng === "number" ? { lat: v.lat, lng: v.lng } : null;
