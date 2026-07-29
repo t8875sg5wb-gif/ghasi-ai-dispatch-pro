@@ -66,7 +66,7 @@ const zahlungSchema = z
   })
   .strict();
 
-const invoiceFieldsSchema = z
+export const invoiceFieldsSchema = z
   .object({
     nummer: z.string().trim().max(50).optional(),
     typ: z.enum(["rechnung", "gutschrift"]).optional(),
