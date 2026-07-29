@@ -47,8 +47,9 @@ export const MINDESTLOHN: Wert<number> = {
   wert: 13.9,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Bundesministerium für Arbeit und Soziales, Pressemitteilung — https://www.bmas.de/DE/Service/Presse/Pressemitteilungen/2025/mindestlohn-steigt-zum-ersten-januar-2026.html",
+  verifiziertAm: "2026-07-29",
   hinweis: "Ab 2027-01-01: 14,60 €/Stunde.",
 };
 
@@ -60,8 +61,9 @@ export const MINIJOB_GRENZE_MONAT: Wert<number> = {
   wert: 603,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Minijob-Zentrale, Neue Verdienstgrenze 2026 — https://magazin.minijob-zentrale.de/neue-verdienstgrenze-2026/ (Formel: Mindestlohn × 130 ÷ 3)",
+  verifiziertAm: "2026-07-29",
   hinweis: "Ab 2027-01-01: 633 €/Monat. (2025 galt noch 556 €.)",
 };
 /** Minijob-Grenze pro Jahr. */
@@ -69,24 +71,27 @@ export const MINIJOB_GRENZE_JAHR: Wert<number> = {
   wert: 7_236,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Minijob-Zentrale, Neue Verdienstgrenze 2026 — https://magazin.minijob-zentrale.de/neue-verdienstgrenze-2026/ (Formel: Mindestlohn × 130 ÷ 3)",
+  verifiziertAm: "2026-07-29",
 };
 /** Untergrenze Übergangsbereich (Midijob). */
 export const MIDIJOB_UNTERGRENZE: Wert<number> = {
   wert: 603.01,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Deutsche Rentenversicherung, Meldung 23.02.2026 — https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2026/260223-minijob-midijob-verdienstgrenzen-steigen",
+  verifiziertAm: "2026-07-29",
 };
-/** Obergrenze Übergangsbereich (Midijob). */
+/** Obergrenze Übergangsbereich (Midijob) – seit 2023 unverändert. */
 export const MIDIJOB_OBERGRENZE: Wert<number> = {
   wert: 2_000,
   stand: "2023-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Deutsche Rentenversicherung, Meldung 23.02.2026 — https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2026/260223-minijob-midijob-verdienstgrenzen-steigen",
+  verifiziertAm: "2026-07-29",
 };
 
 /* ------------------------------------------------------------------ *
@@ -95,8 +100,9 @@ export const MIDIJOB_OBERGRENZE: Wert<number> = {
 export const SV_SAETZE_2026 = {
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Deutsche Rentenversicherung Knappschaft-Bahn-See, Sozialversicherungsrechengrößen 2026 — https://www.deutsche-rentenversicherung.de/KnappschaftBahnSee/DE/Aktuelles/Meldungen/2026/2026_01_02_Sozialversicherungsrechengroessen2026",
+  verifiziertAm: "2026-07-29",
   /** KV allgemeiner Beitragssatz */
   kvAllgemein: 14.6,
   /** durchschnittlicher kassenindividueller Zusatzbeitrag 2026 (pro Kasse konfigurierbar) */
@@ -105,8 +111,13 @@ export const SV_SAETZE_2026 = {
   pv: 3.6,
   /** PV-Zuschlag für Kinderlose (ab 23 J.) */
   pvKinderlosZuschlag: 0.6,
-  /** PV Arbeitgeberanteil */
-  pvArbeitgeber: 1.7,
+  /**
+   * PV Arbeitgeberanteil (bundesweit 1,8 %; 1,8 % AG + 1,8 % AN = 3,6 %).
+   * Sachsen-Sonderregelung (AG 1,3 %) ist hier bewusst NICHT abgebildet.
+   * Quelle: Die Techniker, Wie berechnen Arbeitgeber den Pflegebeitrag? —
+   * https://www.tk.de/firmenkunden/versicherung/beitraege-faq/pv-beitraege/wie-berechnen-arbeitgeber-den-pflegebeitrag-2148694
+   */
+  pvArbeitgeber: 1.8,
   /** Rentenversicherung */
   rv: 18.6,
   /** Arbeitslosenversicherung */
@@ -121,7 +132,7 @@ export const MINIJOB_PAUSCHALEN_2026 = {
   kategorie: "gesetzlich",
   quelle:
     "Minijob-Zentrale, Abgaben für gewerbliche Minijobs 2026 — https://www.minijob-zentrale.de/DE/die-minijobs/gewerblich/abgaben/abgaben_node.html",
-  verifiziertAm: "2026-07-28",
+  verifiziertAm: "2026-07-29",
   /** pauschale Krankenversicherung */
   kv: 13.0,
   /** pauschale Rentenversicherung */
@@ -152,15 +163,18 @@ export const BBG_KV_PV_MONAT: Wert<number> = {
   wert: 5_812.5,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Bundesregierung, Beitragsbemessungsgrenzen 2026 — https://www.bundesregierung.de/breg-de/aktuelles/beitragsgemessungsgrenzen-2386514",
+  verifiziertAm: "2026-07-29",
 };
+/** Bezugsgröße – seit 2025 bundeseinheitlich (keine Ost/West-Trennung mehr). */
 export const BEZUGSGROESSE_MONAT: Wert<number> = {
   wert: 3_955,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Sozialversicherungsrechengrößen-Verordnung 2026, § 1 — https://www.haufe.de/id/norm/sozialversicherungsrechengroessen-verordnung-2026-1-bezugsgroesse-in-der-sozialversicherung-HI17063750_p1.html",
+  verifiziertAm: "2026-07-29",
 };
 
 /* ------------------------------------------------------------------ *
@@ -170,8 +184,9 @@ export const GRUNDFREIBETRAG: Wert<number> = {
   wert: 12_348,
   stand: "2026-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "Bundesministerium der Finanzen, Monatsbericht Februar 2026 — https://www.bundesfinanzministerium.de/Monatsberichte/Ausgabe/2026/02/Inhalte/Kapitel-2-Analysen/2-5-wichtigste-steuerliche-aenderungen-2026.html",
+  verifiziertAm: "2026-07-29",
 };
 
 /* ------------------------------------------------------------------ *
@@ -180,8 +195,10 @@ export const GRUNDFREIBETRAG: Wert<number> = {
 export const ZUZAHLUNG_KRANKENFAHRT = {
   stand: "2004-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle: "§ 61 SGB V — https://www.gesetze-im-internet.de/sgb_5/__61.html",
+  verifiziertAm: "2026-07-29",
+  hinweis:
+    "Kabinettsbeschluss vom 29.04.2026 (GKV-Beitragssatzstabilisierungsgesetz, Stand heute: noch NICHT von Bundestag/Bundesrat verabschiedet) sieht ab 2027 eine Anhebung der Zuzahlungsgrenzen um 50% vor: mind. 7,50 €, max. 15 € (Prozentsatz unverändert bei 10%). Vor Umsetzung erneut prüfen, ob das Gesetz tatsächlich in Kraft getreten ist.",
   /** Anteil an den Fahrtkosten */
   prozent: 10,
   /** Mindestbetrag je Fahrt */
@@ -209,15 +226,16 @@ export function zuzahlungKrankenfahrt(fahrtkosten: number, befreit = false): num
 export const AUFBEWAHRUNG_JAHRE = {
   stand: "2025-01-01",
   kategorie: "gesetzlich",
-  quelle: TODO_QUELLE,
-  verifiziertAm: "TODO",
+  quelle:
+    "BEG IV (Bürokratieentlastungsgesetz IV, gilt seit 01.01.2025) für Rechnungen/Belege & Bücher; § 41 Abs. 1 Satz 9 EStG — https://www.gesetze-im-internet.de/estg/__41.html für Lohnkonten. Hinweis: arbeitszeitnachweise wurde in diesem Lauf nicht neu verifiziert.",
+  verifiziertAm: "2026-07-29",
   /** Rechnungen/Belege (verkürzt durch BEG IV) */
   rechnungenBelege: 8,
   /** Bücher/Bilanzen */
   buecher: 10,
-  /** Lohnkonten */
+  /** Lohnkonten – eigene, kürzere Frist (§ 41 Abs. 1 Satz 9 EStG), nicht mit den 8 Jahren für Buchungsbelege verwechseln. */
   lohnkonten: 6,
-  /** Arbeitszeitnachweise */
+  /** Arbeitszeitnachweise (in diesem Lauf nicht neu recherchiert) */
   arbeitszeitnachweise: 2,
 } as const;
 
