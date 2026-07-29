@@ -229,25 +229,20 @@ export const listDrafts = createServerFn({ method: "GET" })
 
 export const upsertDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { drafts: Record<string, unknown>[] }) => {
-    if (!data || !Array.isArray(data.drafts)) throw new Error("drafts ist erforderlich");
-    return data;
-  })
+  .validator((data: unknown) => parseOrThrow(upsertDraftsSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     if (data.drafts.length === 0) return { ok: true };
+    const rows = data.drafts.map((d) => ({ ...d, betreff: d.betreff ?? null, bezug: d.bezug ?? null }));
     const { error } = await context.supabase
       .from("communication_drafts")
-      .upsert(data.drafts as never, { onConflict: "id", ignoreDuplicates: true });
+      .upsert(rows as never, { onConflict: "id", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const updateDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: { nachricht?: string; status?: string } }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
-  })
+  .validator((data: unknown) => parseOrThrow(updateDraftSchema, data))
   .handler(async ({ data, context }): Promise<KommEntwurf> => {
     const values: Record<string, unknown> = {};
     if (data.values.nachricht !== undefined) values.nachricht = data.values.nachricht;
@@ -261,3 +256,4 @@ export const updateDraft = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return rowToEntwurf(updated as unknown as DraftRow);
   });
+
