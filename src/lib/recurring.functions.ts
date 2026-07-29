@@ -152,10 +152,8 @@ export const updateRecurring = createServerFn({ method: "POST" })
 
 export const deleteRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
-  })
+  .validator((data: unknown) => parseOrThrow(deleteRecurringSchema, data))
+
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("recurring_orders").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
