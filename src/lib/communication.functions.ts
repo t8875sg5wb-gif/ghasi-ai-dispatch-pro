@@ -168,10 +168,8 @@ export const listConversations = createServerFn({ method: "GET" })
 
 export const updateConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<Konversation> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
-  })
+  .validator((data: unknown) => parseOrThrow(updateConversationSchema, data))
+
   .handler(async ({ data, context }): Promise<Konversation> => {
     const { data: updated, error } = await context.supabase
       .from("conversations")
