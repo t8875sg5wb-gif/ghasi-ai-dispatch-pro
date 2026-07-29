@@ -148,9 +148,10 @@ export const createInvoice = createServerFn({ method: "POST" })
 
 export const updateInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; values: Partial<InvoiceWrite> }) => {
-    if (!data?.id) throw new Error("id ist erforderlich");
-    return data;
+  .validator((data: unknown): { id: string; values: Partial<InvoiceWrite> } => {
+    const parsed = updateInvoiceSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Rechnungsdaten.");
+    return parsed.data as unknown as { id: string; values: Partial<InvoiceWrite> };
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
     // Load the previous state first so we can log a GoBD-oriented audit trail.
