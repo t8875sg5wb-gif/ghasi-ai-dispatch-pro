@@ -70,7 +70,7 @@ const anhangSchema = z
     name: z.string().max(200),
     art: z.enum(["pdf", "bild", "dokument"]),
     // Teil des Domäntyps `KommAnhang` und im Bestand vorhanden.
-    groesse: z.string().max(50).optional(),
+    groesse: z.string().max(50),
   })
   .strict();
 
