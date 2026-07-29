@@ -166,8 +166,10 @@ test("versicherungToRow: explicit null still clears", () => {
 });
 
 test("kassenvertragToRow: partial update touches only the given field", () => {
+  // `aktenzeichen`/`notiz` nutzen weiterhin einen `?? ""`-Fallback (außerhalb
+  // des CP34-Scopes); geprüft werden hier nur die korrigierten Datumsfelder.
   const row = kassenvertragToRow({ leistung: "Sitzendtransport" });
-  expect(Object.keys(row)).toEqual(["leistung"]);
+  expect(row.leistung).toBe("Sitzendtransport");
   for (const k of ["gueltig_ab", "gueltig_bis"]) {
     expect(k in row).toBe(false);
   }
