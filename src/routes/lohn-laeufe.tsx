@@ -143,6 +143,30 @@ function LohnlaufSeitenInhalt() {
     }
   }
 
+  async function datevExportieren() {
+    const lauf = datevLauf;
+    if (!lauf) return;
+    if (!company) {
+      toast.error("Firmendaten werden noch geladen – bitte kurz warten.");
+      return;
+    }
+    try {
+      // Serverseitig: Rolle + Status "freigegeben" prüfen und Export protokollieren.
+      const geprueft = await datevMut.mutateAsync(lauf.id);
+      const res = buildDatevLohnexport(geprueft, {
+        beraterNr: company.datevBeraterNr,
+        mandantNr: company.datevMandantNr,
+        fahrerName: fahrerName.get(geprueft.fahrerId) ?? "Unbekannter Fahrer",
+      });
+      downloadCsv(res.dateiname, res.csv);
+      setDatevLauf(null);
+      toast.success("DATEV-Entwurf erstellt – Export wurde protokolliert.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export fehlgeschlagen.");
+    }
+  }
+
+
   async function anlegen() {
     try {
       await createMut.mutateAsync({ fahrerId, monat, notiz: notiz || undefined });
