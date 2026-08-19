@@ -398,3 +398,51 @@ export const rejectPayrollRun = createServerFn({ method: "POST" })
 
     return await ladeLauf(context.supabase, data.id);
   });
+
+/* ================================================================== *
+ * PDF-Export (reiner Lesevorgang)
+ * ================================================================== */
+
+/**
+ * Gibt einen freigegebenen Lohnlauf zum PDF-Export frei und protokolliert den
+ * Vorgang. Verändert KEINE Lohndaten.
+ *
+ * Serverseitig erzwungen:
+ * - nur Rollen admin/finanz,
+ * - nur Status "freigegeben" (alles andere ist fachlich nicht final).
+ *
+ * KEIN DATEV-Format, keine Auszahlung – bewusst späteren Schritten vorbehalten.
+ */
+export const exportPayrollRunPdf = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
+  .handler(async ({ data, context }): Promise<Lohnlauf> => {
+    await assertFinanzRolle(context.supabase, context.userId);
+
+    const lauf = await ladeLauf(context.supabase, data.id);
+    if (lauf.status !== "freigegeben") {
+      throw new Error(
+        "Nur freigegebene Lohnläufe können exportiert werden – dieser Lauf ist fachlich noch nicht final.",
+      );
+    }
+
+    const { logActivitySafe } = await import("@/lib/activity-log.server");
+    await logActivitySafe(
+      {
+        bereich: "Lohnläufe",
+        entitaet: lauf.id,
+        aktion: "exportiert",
+        beschreibung: `PDF-Export des freigegebenen Lohnlaufs ${lauf.periodeMonat.slice(0, 7)} (Version ${lauf.version}).`,
+        metadaten: {
+          periodeMonat: lauf.periodeMonat,
+          version: lauf.version,
+          format: "pdf",
+        },
+      },
+      context.userId,
+    );
+
+    return lauf;
+  });

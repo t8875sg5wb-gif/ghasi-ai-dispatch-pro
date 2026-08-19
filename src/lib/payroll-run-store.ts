@@ -7,6 +7,7 @@ import {
   calculatePayrollRun,
   createPayrollRun,
   deletePayrollRun,
+  exportPayrollRunPdf,
   listPayrollRunAudit,
   listPayrollRuns,
   rejectPayrollRun,
@@ -96,6 +97,16 @@ export function useRejectPayrollRun() {
   const invalidate = useInvalidateRuns();
   return useMutation({
     mutationFn: (args: { id: string; grund: string }) => fn({ data: args }),
+    onSuccess: invalidate,
+  });
+}
+
+/** Freigegebenen Lohnlauf für den PDF-Export laden (Rolle + Status serverseitig geprüft, protokolliert). */
+export function useExportPayrollRunPdf() {
+  const fn = useServerFn(exportPayrollRunPdf);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: invalidate,
   });
 }
