@@ -101,7 +101,12 @@ describe("XRechnung-Exportentwurf", () => {
 
   it("verweigert Export ohne IBAN und bei Entwürfen", () => {
     expect(() =>
-      generateXRechnung({ rechnung, verkaeufer: { ...verkaeufer, iban: "" }, kaeufer, steuerModus: "befreit_4_17b" }),
+      generateXRechnung({
+        rechnung,
+        verkaeufer: { ...verkaeufer, iban: "" },
+        kaeufer,
+        steuerModus: "befreit_4_17b",
+      }),
     ).toThrow(/IBAN/);
     expect(() =>
       generateXRechnung({
@@ -125,7 +130,9 @@ describe("XRechnung-Exportentwurf", () => {
       steuerModus: "regulaer_19",
     });
     expect(xml).toContain('<cbc:TaxAmount currencyID="EUR">19.00</cbc:TaxAmount>');
-    expect(xml).toContain('<cbc:TaxInclusiveAmount currencyID="EUR">119.00</cbc:TaxInclusiveAmount>');
+    expect(xml).toContain(
+      '<cbc:TaxInclusiveAmount currencyID="EUR">119.00</cbc:TaxInclusiveAmount>',
+    );
     expect(xml).toContain("Fahrt A &amp; B &lt;Sonderfall&gt;");
     expect(xml).not.toContain("TaxExemptionReason");
   });

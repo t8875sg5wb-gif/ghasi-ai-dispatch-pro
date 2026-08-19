@@ -216,10 +216,10 @@ export async function loadCompanySettings(client: unknown): Promise<CompanySetti
 export function firmenDatenXrechnungVollstaendig(data: CompanySettings): boolean {
   return Boolean(
     data.adresseStrasse?.trim() &&
-      data.adressePlz?.trim() &&
-      data.adresseOrt?.trim() &&
-      (data.adresseLand ?? "").trim() &&
-      data.iban?.trim(),
+    data.adressePlz?.trim() &&
+    data.adresseOrt?.trim() &&
+    (data.adresseLand ?? "").trim() &&
+    data.iban?.trim(),
   );
 }
 

@@ -292,8 +292,8 @@ function EinstellungenSeite() {
             </Feld>
             {!company.xrechnungDatenBestaetigt && (
               <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
-                <span className="font-semibold">XRechnung-Export gesperrt</span> — bitte Straße, PLZ,
-                Ort, Land und IBAN vollständig eintragen und speichern. Erst mit dieser
+                <span className="font-semibold">XRechnung-Export gesperrt</span> — bitte Straße,
+                PLZ, Ort, Land und IBAN vollständig eintragen und speichern. Erst mit dieser
                 Admin-Bestätigung ist der XRechnung-Exportentwurf möglich.
               </div>
             )}
