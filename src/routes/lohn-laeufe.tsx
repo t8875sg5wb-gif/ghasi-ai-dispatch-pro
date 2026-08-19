@@ -124,7 +124,6 @@ function LohnlaufSeitenInhalt() {
   const [ablehnGrund, setAblehnGrund] = useState("");
   const [datevLauf, setDatevLauf] = useState<Lohnlauf | null>(null);
 
-
   const fahrerName = useMemo(() => {
     const m = new Map<string, string>();
     for (const f of fahrer ?? []) m.set(f.id, f.name);
@@ -172,7 +171,6 @@ function LohnlaufSeitenInhalt() {
       toast.error(e instanceof Error ? e.message : "Export fehlgeschlagen.");
     }
   }
-
 
   async function anlegen() {
     try {
@@ -259,7 +257,6 @@ function LohnlaufSeitenInhalt() {
             DATEV-Lohn-<strong>Exportentwurf</strong> (CSV mit Platzhalter-Lohnarten) exportiert
             werden (jeder Export wird protokolliert). Eine Auszahlung/Banküberweisung ist bewusst
             nicht enthalten.
-
           </p>
         </CardContent>
       </Card>

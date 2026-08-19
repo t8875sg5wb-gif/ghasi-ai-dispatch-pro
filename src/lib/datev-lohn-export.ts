@@ -72,10 +72,7 @@ const SPALTEN = [
   "Quelle-Version",
 ];
 
-function postenZeile(
-  p: LohnlaufPosten,
-  base: (string | number)[],
-): string {
+function postenZeile(p: LohnlaufPosten, base: (string | number)[]): string {
   return [
     ...base,
     q("Posten"),
