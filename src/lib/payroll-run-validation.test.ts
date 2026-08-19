@@ -14,7 +14,7 @@ import {
   monatsZeitraum,
 } from "@/lib/payroll-run-shared";
 
-const FAHRER = "11111111-1111-1111-1111-111111111111";
+const FAHRER = "11111111-1111-4111-8111-111111111111";
 
 function emp(p: Partial<Beschaeftigungsverhaeltnis> = {}): Beschaeftigungsverhaeltnis {
   return {
@@ -258,7 +258,7 @@ describe("Vollständigkeitsregeln", () => {
     const r = berechneLohnlauf({
       monat: "2026-08",
       fahrerId: FAHRER,
-      beschaeftigungen: [emp({ fahrerId: "99999999-9999-9999-9999-999999999999" })],
+      beschaeftigungen: [emp({ fahrerId: "99999999-9999-4999-8999-999999999999" })],
       regeln: [],
       fakten: [],
     });
