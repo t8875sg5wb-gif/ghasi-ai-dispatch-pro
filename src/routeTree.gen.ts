@@ -26,6 +26,7 @@ import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LohnRegelwerkeRouteImport } from './routes/lohn-regelwerke'
+import { Route as LohnLaeufeRouteImport } from './routes/lohn-laeufe'
 import { Route as LohnFaktenRouteImport } from './routes/lohn-fakten'
 import { Route as LohnRouteImport } from './routes/lohn'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
@@ -153,6 +154,11 @@ const McpRoute = McpRouteImport.update({
 const LohnRegelwerkeRoute = LohnRegelwerkeRouteImport.update({
   id: '/lohn-regelwerke',
   path: '/lohn-regelwerke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LohnLaeufeRoute = LohnLaeufeRouteImport.update({
+  id: '/lohn-laeufe',
+  path: '/lohn-laeufe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LohnFaktenRoute = LohnFaktenRouteImport.update({
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
   '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-laeufe': typeof LohnLaeufeRoute
   '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
@@ -472,6 +479,7 @@ export interface FileRoutesByTo {
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
   '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-laeufe': typeof LohnLaeufeRoute
   '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
   '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-laeufe': typeof LohnLaeufeRoute
   '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/lohn'
     | '/lohn-fakten'
+    | '/lohn-laeufe'
     | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
@@ -660,6 +670,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/lohn'
     | '/lohn-fakten'
+    | '/lohn-laeufe'
     | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
@@ -722,6 +733,7 @@ export interface FileRouteTypes {
     | '/live-gps'
     | '/lohn'
     | '/lohn-fakten'
+    | '/lohn-laeufe'
     | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
@@ -785,6 +797,7 @@ export interface RootRouteChildren {
   LiveGpsRoute: typeof LiveGpsRoute
   LohnRoute: typeof LohnRoute
   LohnFaktenRoute: typeof LohnFaktenRoute
+  LohnLaeufeRoute: typeof LohnLaeufeRoute
   LohnRegelwerkeRoute: typeof LohnRegelwerkeRoute
   McpRoute: typeof McpRoute
   PatientenRoute: typeof PatientenRoute
@@ -929,6 +942,13 @@ declare module '@tanstack/react-router' {
       path: '/lohn-regelwerke'
       fullPath: '/lohn-regelwerke'
       preLoaderRoute: typeof LohnRegelwerkeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lohn-laeufe': {
+      id: '/lohn-laeufe'
+      path: '/lohn-laeufe'
+      fullPath: '/lohn-laeufe'
+      preLoaderRoute: typeof LohnLaeufeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lohn-fakten': {
@@ -1285,6 +1305,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveGpsRoute: LiveGpsRoute,
   LohnRoute: LohnRoute,
   LohnFaktenRoute: LohnFaktenRoute,
+  LohnLaeufeRoute: LohnLaeufeRoute,
   LohnRegelwerkeRoute: LohnRegelwerkeRoute,
   McpRoute: McpRoute,
   PatientenRoute: PatientenRoute,

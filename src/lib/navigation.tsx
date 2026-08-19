@@ -271,6 +271,13 @@ export const navGroups: NavGroup[] = [
         description:
           "Abzugs- und Arbeitgeberkostenregeln mit Pflicht-Quellenangabe – geprüft und versioniert.",
       },
+      {
+        label: "Lohnläufe",
+        to: "/lohn-laeufe",
+        icon: Calculator,
+        description:
+          "Lohnläufe je Fahrer und Kalendermonat anlegen und aus verifizierten Grundlagen berechnen.",
+      },
 
       {
         label: "Versicherungen",

@@ -137,6 +137,8 @@ export interface LohnRegel {
   prozentsatz: number | null;
   /** Nur gesetzt bei `berechnungsart === "festbetrag"`. */
   festbetrag: number | null;
+  /** Optional: Kennung eines verifizierten Lohn-Eingabefakts, den die Regel voraussetzt. */
+  benoetigterFakt: string | null;
   gueltigAb: string;
   gueltigBis: string | null;
   /** PFLICHT – z. B. Gesetzesparagraph oder offizielle Beitragssatz-Quelle. */
@@ -160,6 +162,7 @@ export interface LohnRegelWrite {
   berechnungsart: RegelBerechnungsart;
   prozentsatz?: number | null;
   festbetrag?: number | null;
+  benoetigterFakt?: string | null;
   gueltigAb: string;
   gueltigBis?: string | null;
   quelle: string;
@@ -175,6 +178,7 @@ export interface PayrollRuleRow {
   berechnungsart: string;
   prozentsatz: number | string | null;
   festbetrag: number | string | null;
+  benoetigter_fakt?: string | null;
   gueltig_ab: string;
   gueltig_bis: string | null;
   quelle: string;
@@ -204,6 +208,7 @@ export function rowToLohnRegel(r: PayrollRuleRow): LohnRegel {
     berechnungsart: r.berechnungsart === "festbetrag" ? "festbetrag" : "prozent",
     prozentsatz: num(r.prozentsatz),
     festbetrag: num(r.festbetrag),
+    benoetigterFakt: r.benoetigter_fakt ?? null,
     gueltigAb: r.gueltig_ab,
     gueltigBis: r.gueltig_bis ?? null,
     quelle: r.quelle,
@@ -230,6 +235,7 @@ export function lohnRegelToRow(w: Partial<LohnRegelWrite>): Record<string, unkno
   set("berechnungsart", w.berechnungsart);
   set("prozentsatz", w.prozentsatz);
   set("festbetrag", w.festbetrag);
+  set("benoetigter_fakt", w.benoetigterFakt);
   set("gueltig_ab", w.gueltigAb);
   set("gueltig_bis", w.gueltigBis);
   set("quelle", w.quelle);
@@ -393,6 +399,7 @@ export const regelFieldsSchema = z
     berechnungsart: z.enum(["prozent", "festbetrag"]),
     prozentsatz: z.number().positive().max(100).nullable().optional(),
     festbetrag: z.number().positive().max(1_000_000).nullable().optional(),
+    benoetigterFakt: schluessel.nullable().optional(),
     gueltigAb: isoDatum,
     gueltigBis: isoDatum.nullable().optional(),
     // Quellenangabe ist Pflicht: ohne Quelle darf keine Regel entstehen.
