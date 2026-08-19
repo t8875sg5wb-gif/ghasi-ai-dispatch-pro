@@ -446,3 +446,51 @@ export const exportPayrollRunPdf = createServerFn({ method: "POST" })
 
     return lauf;
   });
+
+/**
+ * Gibt einen freigegebenen Lohnlauf für den DATEV-Lohn-Exportentwurf frei und
+ * protokolliert den Vorgang. Verändert KEINE Lohndaten (reiner Lesevorgang).
+ *
+ * Serverseitig erzwungen:
+ * - nur Rollen admin/finanz,
+ * - nur Status "freigegeben".
+ *
+ * HINWEIS: Der erzeugte Export enthält Platzhalter-Lohnarten
+ * (`LOHNART_PRUEFEN`) und darf nicht ungeprüft in DATEV importiert werden.
+ * Keine Auszahlung/Banküberweisung.
+ */
+export const exportPayrollRunDatev = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
+  .handler(async ({ data, context }): Promise<Lohnlauf> => {
+    await assertFinanzRolle(context.supabase, context.userId);
+
+    const lauf = await ladeLauf(context.supabase, data.id);
+    if (lauf.status !== "freigegeben") {
+      throw new Error(
+        "Nur freigegebene Lohnläufe können exportiert werden – dieser Lauf ist fachlich noch nicht final.",
+      );
+    }
+
+    const { logActivitySafe } = await import("@/lib/activity-log.server");
+    await logActivitySafe(
+      {
+        bereich: "Lohnläufe",
+        entitaet: lauf.id,
+        aktion: "exportiert",
+        beschreibung: `DATEV-Lohn-Exportentwurf (Platzhalter-Lohnarten) des freigegebenen Lohnlaufs ${lauf.periodeMonat.slice(0, 7)} (Version ${lauf.version}).`,
+        metadaten: {
+          periodeMonat: lauf.periodeMonat,
+          version: lauf.version,
+          format: "datev-lohn-csv-entwurf",
+          lohnartPlatzhalter: "LOHNART_PRUEFEN",
+        },
+      },
+      context.userId,
+    );
+
+    return lauf;
+  });
+
