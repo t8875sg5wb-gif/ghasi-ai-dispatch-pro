@@ -37,9 +37,9 @@ describe("Lohn-Eingabefakten – Validierung", () => {
   });
 
   it("lehnt ungültige Fakten-Schlüssel ab", () => {
-    expect(createFaktSchema.safeParse({ ...faktBasis, faktSchluessel: "Steuer Klasse" }).success).toBe(
-      false,
-    );
+    expect(
+      createFaktSchema.safeParse({ ...faktBasis, faktSchluessel: "Steuer Klasse" }).success,
+    ).toBe(false);
   });
 
   it("lehnt leere Werte ab (nichts wird geraten)", () => {
@@ -47,9 +47,9 @@ describe("Lohn-Eingabefakten – Validierung", () => {
   });
 
   it("lehnt Enddatum vor Startdatum ab", () => {
-    expect(
-      createFaktSchema.safeParse({ ...faktBasis, gueltigBis: "2025-12-31" }).success,
-    ).toBe(false);
+    expect(createFaktSchema.safeParse({ ...faktBasis, gueltigBis: "2025-12-31" }).success).toBe(
+      false,
+    );
   });
 
   it("lehnt unbekannte Felder ab (.strict)", () => {
@@ -81,9 +81,7 @@ describe("Lohn-Regelwerke – Validierung", () => {
   });
 
   it("lehnt beide Werte gleichzeitig ab", () => {
-    expect(
-      createRegelSchema.safeParse({ ...regelBasis, festbetrag: 100 }).success,
-    ).toBe(false);
+    expect(createRegelSchema.safeParse({ ...regelBasis, festbetrag: 100 }).success).toBe(false);
   });
 
   it("lehnt fehlenden Wert ab (keine Vorbelegung)", () => {
@@ -124,14 +122,16 @@ describe("Lohn-Regelwerke – Validierung", () => {
 describe("Fehler-Mapping", () => {
   it("übersetzt Überschneidungen ohne SQL-Details", () => {
     expect(
-      mapPayrollDbError('conflicting key value violates exclusion constraint "payroll_rules_no_overlap_verified"'),
+      mapPayrollDbError(
+        'conflicting key value violates exclusion constraint "payroll_rules_no_overlap_verified"',
+      ),
     ).toContain("Kennung");
     expect(mapPayrollDbError("payroll_facts_no_overlap_verified")).toContain("Fakten-Schlüssel");
   });
 
   it("übersetzt Selbstverifizierung", () => {
-    expect(mapPayrollDbError("Eine Lohnregel muss von einer zweiten berechtigten Person …")).toContain(
-      "zweiten berechtigten Person",
-    );
+    expect(
+      mapPayrollDbError("Eine Lohnregel muss von einer zweiten berechtigten Person …"),
+    ).toContain("zweiten berechtigten Person");
   });
 });

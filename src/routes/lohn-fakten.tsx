@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, Info, Loader2, Pencil, Plus, ShieldAlert, Trash2, UserCog } from "lucide-react";
+import {
+  BadgeCheck,
+  Info,
+  Loader2,
+  Pencil,
+  Plus,
+  ShieldAlert,
+  Trash2,
+  UserCog,
+} from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

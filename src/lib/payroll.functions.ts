@@ -144,9 +144,7 @@ export const updatePayrollFact = createServerFn({ method: "POST" })
  */
 export const verifyPayrollFact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } =>
-    parseOrThrow<{ id: string }>(payrollIdSchema, data),
-  )
+  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(payrollIdSchema, data))
   .handler(async ({ data, context }): Promise<LohnFakt> => {
     await assertFinanzRolle(context.supabase, context.userId);
     const { data: updated, error } = await context.supabase
@@ -173,9 +171,7 @@ export const verifyPayrollFact = createServerFn({ method: "POST" })
 
 export const deletePayrollFact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } =>
-    parseOrThrow<{ id: string }>(payrollIdSchema, data),
-  )
+  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(payrollIdSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertFinanzRolle(context.supabase, context.userId);
     const { error } = await context.supabase.from("payroll_facts").delete().eq("id", data.id);
@@ -225,8 +221,8 @@ export const listPayrollRuleAudit = createServerFn({ method: "GET" })
 
 export const createPayrollRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): LohnRegelWrite =>
-    parseOrThrow<LohnRegelWrite>(createRegelSchema, data),
+  .validator(
+    (data: unknown): LohnRegelWrite => parseOrThrow<LohnRegelWrite>(createRegelSchema, data),
   )
   .handler(async ({ data, context }): Promise<LohnRegel> => {
     await assertFinanzRolle(context.supabase, context.userId);
@@ -285,9 +281,7 @@ export const updatePayrollRule = createServerFn({ method: "POST" })
 
 export const verifyPayrollRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } =>
-    parseOrThrow<{ id: string }>(payrollIdSchema, data),
-  )
+  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(payrollIdSchema, data))
   .handler(async ({ data, context }): Promise<LohnRegel> => {
     await assertFinanzRolle(context.supabase, context.userId);
     const { data: updated, error } = await context.supabase
@@ -314,9 +308,7 @@ export const verifyPayrollRule = createServerFn({ method: "POST" })
 
 export const deletePayrollRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } =>
-    parseOrThrow<{ id: string }>(payrollIdSchema, data),
-  )
+  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(payrollIdSchema, data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertFinanzRolle(context.supabase, context.userId);
     const { error } = await context.supabase.from("payroll_rules").delete().eq("id", data.id);

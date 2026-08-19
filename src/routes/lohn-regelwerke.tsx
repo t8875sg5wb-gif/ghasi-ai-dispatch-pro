@@ -239,10 +239,11 @@ function LohnRegelwerkePage() {
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
           Jede Regel braucht eine <strong>Quellenangabe</strong> und deren{" "}
-          <strong>Versionsangabe</strong> – ohne Quelle ist keine Anlage möglich. Neue Regeln starten
-          als <strong>Entwurf</strong> und müssen von einer zweiten berechtigten Person verifiziert
-          werden. Verifizierte Regeln derselben Kennung dürfen sich zeitlich nicht überschneiden. Es
-          findet hier bewusst keine Lohnberechnung und keine automatische Anwendung auf Fahrer statt.
+          <strong>Versionsangabe</strong> – ohne Quelle ist keine Anlage möglich. Neue Regeln
+          starten als <strong>Entwurf</strong> und müssen von einer zweiten berechtigten Person
+          verifiziert werden. Verifizierte Regeln derselben Kennung dürfen sich zeitlich nicht
+          überschneiden. Es findet hier bewusst keine Lohnberechnung und keine automatische
+          Anwendung auf Fahrer statt.
         </p>
       </div>
 

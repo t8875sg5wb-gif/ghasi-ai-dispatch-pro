@@ -272,8 +272,6 @@ export const navGroups: NavGroup[] = [
           "Abzugs- und Arbeitgeberkostenregeln mit Pflicht-Quellenangabe – geprüft und versioniert.",
       },
 
-
-
       {
         label: "Versicherungen",
         to: "/versicherungen",
