@@ -43,7 +43,8 @@ import {
   monatLabel,
   type Lohnlauf,
 } from "@/lib/payroll-run-shared";
-import { REGEL_KATEGORIE_LABEL, VERGUETUNGSART_LABEL_FALLBACK } from "@/lib/payroll-run-labels";
+import { REGEL_KATEGORIE_LABEL } from "@/lib/payroll-shared";
+import { VERGUETUNGSART_LABEL } from "@/lib/employment-shared";
 
 export const Route = createFileRoute("/lohn-laeufe")({
   component: LohnlaeufeSeite,
@@ -187,7 +188,7 @@ function LohnlaufSeitenInhalt() {
                     </Badge>
                     <span>Version {lauf.version}</span>
                     {lauf.verguetungsart && (
-                      <span>{VERGUETUNGSART_LABEL_FALLBACK[lauf.verguetungsart]}</span>
+                      <span>{VERGUETUNGSART_LABEL[lauf.verguetungsart]}</span>
                     )}
                     {lauf.berechnetAm && (
                       <span>
@@ -383,8 +384,8 @@ function Kennzahl({ label, wert }: { label: string; wert: number | null }) {
 }
 
 function LohnlaeufeSeite() {
-  const { hatRolle } = useAuth();
-  const berechtigt = hatRolle("admin") || hatRolle("finanz");
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
 
   if (!berechtigt) {
     return (
