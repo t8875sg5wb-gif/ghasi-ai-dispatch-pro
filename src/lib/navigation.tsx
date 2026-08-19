@@ -256,6 +256,22 @@ export const navGroups: NavGroup[] = [
         description:
           "Stundenlohn oder Monatsbrutto je Fahrer – geprüft im Vier-Augen-Prinzip, versioniert.",
       },
+      {
+        label: "Lohn-Eingabefakten",
+        to: "/lohn-fakten",
+        icon: UserCog,
+        description:
+          "Benannte Fakten je Fahrer (z. B. Steuerklasse, KV-Status) – geprüft im Vier-Augen-Prinzip, versioniert.",
+      },
+      {
+        label: "Lohn-Regelwerke",
+        to: "/lohn-regelwerke",
+        icon: BookText,
+        description:
+          "Abzugs- und Arbeitgeberkostenregeln mit Pflicht-Quellenangabe – geprüft und versioniert.",
+      },
+
+
 
       {
         label: "Versicherungen",
