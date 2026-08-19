@@ -86,6 +86,7 @@ interface FormState {
   gueltigBis: string;
   quelle: string;
   quelleVersion: string;
+  benoetigterFakt: string;
   notiz: string;
 }
 
@@ -99,6 +100,7 @@ const LEER: FormState = {
   gueltigBis: "",
   quelle: "",
   quelleVersion: "",
+  benoetigterFakt: "",
   notiz: "",
 };
 
@@ -165,6 +167,7 @@ function LohnRegelwerkePage() {
       gueltigBis: r.gueltigBis ?? "",
       quelle: r.quelle,
       quelleVersion: r.quelleVersion,
+      benoetigterFakt: r.benoetigterFakt ?? "",
       notiz: r.notiz,
     });
     setOffen(true);
@@ -198,6 +201,7 @@ function LohnRegelwerkePage() {
       gueltigBis: form.gueltigBis ? form.gueltigBis : null,
       quelle: form.quelle.trim(),
       quelleVersion: form.quelleVersion.trim(),
+      benoetigterFakt: form.benoetigterFakt.trim() ? form.benoetigterFakt.trim() : null,
       notiz: form.notiz,
     };
 
@@ -464,6 +468,19 @@ function LohnRegelwerkePage() {
                 value={form.wert}
                 onChange={(e) => setForm((f) => ({ ...f, wert: e.target.value }))}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Benötigter Lohn-Eingabefakt (optional)</Label>
+              <Input
+                placeholder="z. B. kv_status"
+                value={form.benoetigterFakt}
+                onChange={(e) => setForm((f) => ({ ...f, benoetigterFakt: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Wird gesetzt, greift die Regel im Lohnlauf nur, wenn dieser Fakt für den Zeitraum
+                verifiziert vorliegt – andernfalls gilt der Lohnlauf als unvollständig.
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
