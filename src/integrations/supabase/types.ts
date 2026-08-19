@@ -283,6 +283,11 @@ export type Database = {
       company_settings: {
         Row: {
           adresse: string
+          adresse_hausnummer: string
+          adresse_land: string
+          adresse_ort: string
+          adresse_plz: string
+          adresse_strasse: string
           betriebskosten_arbeitstage: number
           betriebskosten_dieselpreis: number
           chat_retention_months: number
@@ -294,6 +299,7 @@ export type Database = {
           email: string
           firma: string
           gewerbesteuer_hebesatz: number
+          iban: string
           id: string
           ik_nummer: string | null
           inhaber: string
@@ -305,9 +311,15 @@ export type Database = {
           telefon: string
           updated_at: string
           ust_id: string
+          xrechnung_daten_bestaetigt: boolean
         }
         Insert: {
           adresse?: string
+          adresse_hausnummer?: string
+          adresse_land?: string
+          adresse_ort?: string
+          adresse_plz?: string
+          adresse_strasse?: string
           betriebskosten_arbeitstage?: number
           betriebskosten_dieselpreis?: number
           chat_retention_months?: number
@@ -319,6 +331,7 @@ export type Database = {
           email?: string
           firma?: string
           gewerbesteuer_hebesatz?: number
+          iban?: string
           id?: string
           ik_nummer?: string | null
           inhaber?: string
@@ -330,9 +343,15 @@ export type Database = {
           telefon?: string
           updated_at?: string
           ust_id?: string
+          xrechnung_daten_bestaetigt?: boolean
         }
         Update: {
           adresse?: string
+          adresse_hausnummer?: string
+          adresse_land?: string
+          adresse_ort?: string
+          adresse_plz?: string
+          adresse_strasse?: string
           betriebskosten_arbeitstage?: number
           betriebskosten_dieselpreis?: number
           chat_retention_months?: number
@@ -344,6 +363,7 @@ export type Database = {
           email?: string
           firma?: string
           gewerbesteuer_hebesatz?: number
+          iban?: string
           id?: string
           ik_nummer?: string | null
           inhaber?: string
@@ -355,6 +375,7 @@ export type Database = {
           telefon?: string
           updated_at?: string
           ust_id?: string
+          xrechnung_daten_bestaetigt?: boolean
         }
         Relationships: []
       }
@@ -403,6 +424,11 @@ export type Database = {
       customers: {
         Row: {
           adresse: string | null
+          adresse_hausnummer: string
+          adresse_land: string
+          adresse_ort: string
+          adresse_plz: string
+          adresse_strasse: string
           aktiv: boolean
           ansprechpartner: string
           created_at: string
@@ -410,6 +436,7 @@ export type Database = {
           id: string
           konditionen: string | null
           kreditlimit: number | null
+          leitweg_id: string
           name: string
           notiz: string | null
           offene_rechnungen: number
@@ -422,6 +449,11 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          adresse_hausnummer?: string
+          adresse_land?: string
+          adresse_ort?: string
+          adresse_plz?: string
+          adresse_strasse?: string
           aktiv?: boolean
           ansprechpartner?: string
           created_at?: string
@@ -429,6 +461,7 @@ export type Database = {
           id?: string
           konditionen?: string | null
           kreditlimit?: number | null
+          leitweg_id?: string
           name: string
           notiz?: string | null
           offene_rechnungen?: number
@@ -441,6 +474,11 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          adresse_hausnummer?: string
+          adresse_land?: string
+          adresse_ort?: string
+          adresse_plz?: string
+          adresse_strasse?: string
           aktiv?: boolean
           ansprechpartner?: string
           created_at?: string
@@ -448,6 +486,7 @@ export type Database = {
           id?: string
           konditionen?: string | null
           kreditlimit?: number | null
+          leitweg_id?: string
           name?: string
           notiz?: string | null
           offene_rechnungen?: number
