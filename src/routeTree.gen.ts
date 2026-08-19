@@ -25,6 +25,8 @@ import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
 import { Route as PatientenRouteImport } from './routes/patienten'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LohnRegelwerkeRouteImport } from './routes/lohn-regelwerke'
+import { Route as LohnFaktenRouteImport } from './routes/lohn-fakten'
 import { Route as LohnRouteImport } from './routes/lohn'
 import { Route as LiveGpsRouteImport } from './routes/live-gps'
 import { Route as LeasingRouteImport } from './routes/leasing'
@@ -146,6 +148,16 @@ const PatientenRoute = PatientenRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LohnRegelwerkeRoute = LohnRegelwerkeRouteImport.update({
+  id: '/lohn-regelwerke',
+  path: '/lohn-regelwerke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LohnFaktenRoute = LohnFaktenRouteImport.update({
+  id: '/lohn-fakten',
+  path: '/lohn-fakten',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LohnRoute = LohnRouteImport.update({
@@ -398,6 +410,8 @@ export interface FileRoutesByFullPath {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
@@ -457,6 +471,8 @@ export interface FileRoutesByTo {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
@@ -518,6 +534,8 @@ export interface FileRoutesById {
   '/leasing': typeof LeasingRoute
   '/live-gps': typeof LiveGpsRoute
   '/lohn': typeof LohnRoute
+  '/lohn-fakten': typeof LohnFaktenRoute
+  '/lohn-regelwerke': typeof LohnRegelwerkeRoute
   '/mcp': typeof McpRoute
   '/patienten': typeof PatientenRoute
   '/pflegeheime': typeof PflegeheimeRoute
@@ -580,6 +598,8 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/lohn-fakten'
+    | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
     | '/pflegeheime'
@@ -639,6 +659,8 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/lohn-fakten'
+    | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
     | '/pflegeheime'
@@ -699,6 +721,8 @@ export interface FileRouteTypes {
     | '/leasing'
     | '/live-gps'
     | '/lohn'
+    | '/lohn-fakten'
+    | '/lohn-regelwerke'
     | '/mcp'
     | '/patienten'
     | '/pflegeheime'
@@ -760,6 +784,8 @@ export interface RootRouteChildren {
   LeasingRoute: typeof LeasingRoute
   LiveGpsRoute: typeof LiveGpsRoute
   LohnRoute: typeof LohnRoute
+  LohnFaktenRoute: typeof LohnFaktenRoute
+  LohnRegelwerkeRoute: typeof LohnRegelwerkeRoute
   McpRoute: typeof McpRoute
   PatientenRoute: typeof PatientenRoute
   PflegeheimeRoute: typeof PflegeheimeRoute
@@ -896,6 +922,20 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lohn-regelwerke': {
+      id: '/lohn-regelwerke'
+      path: '/lohn-regelwerke'
+      fullPath: '/lohn-regelwerke'
+      preLoaderRoute: typeof LohnRegelwerkeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lohn-fakten': {
+      id: '/lohn-fakten'
+      path: '/lohn-fakten'
+      fullPath: '/lohn-fakten'
+      preLoaderRoute: typeof LohnFaktenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lohn': {
@@ -1244,6 +1284,8 @@ const rootRouteChildren: RootRouteChildren = {
   LeasingRoute: LeasingRoute,
   LiveGpsRoute: LiveGpsRoute,
   LohnRoute: LohnRoute,
+  LohnFaktenRoute: LohnFaktenRoute,
+  LohnRegelwerkeRoute: LohnRegelwerkeRoute,
   McpRoute: McpRoute,
   PatientenRoute: PatientenRoute,
   PflegeheimeRoute: PflegeheimeRoute,
