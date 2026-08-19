@@ -17,7 +17,12 @@
 import { z } from "zod";
 
 import type { Beschaeftigungsverhaeltnis, Verguetungsart } from "@/lib/employment-shared";
-import type { LohnFakt, LohnRegel, RegelBerechnungsart, RegelKategorie } from "@/lib/payroll-shared";
+import type {
+  LohnFakt,
+  LohnRegel,
+  RegelBerechnungsart,
+  RegelKategorie,
+} from "@/lib/payroll-shared";
 
 export type LohnlaufStatus = "offen" | "berechnet" | "unvollstaendig";
 
@@ -295,7 +300,10 @@ export function berechneLohnlauf(args: {
   const fehlend: string[] = [];
 
   const verifizierteFakten = args.fakten.filter(
-    (f) => f.status === "verifiziert" && f.fahrerId === args.fahrerId && deckt(f.gueltigAb, f.gueltigBis, ab, bis),
+    (f) =>
+      f.status === "verifiziert" &&
+      f.fahrerId === args.fahrerId &&
+      deckt(f.gueltigAb, f.gueltigBis, ab, bis),
   );
 
   const beschaeftigung =

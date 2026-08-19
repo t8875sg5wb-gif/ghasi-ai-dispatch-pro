@@ -38,11 +38,7 @@ import {
   usePayrollRunAudit,
   usePayrollRuns,
 } from "@/lib/payroll-run-store";
-import {
-  LOHNLAUF_STATUS_LABEL,
-  monatLabel,
-  type Lohnlauf,
-} from "@/lib/payroll-run-shared";
+import { LOHNLAUF_STATUS_LABEL, monatLabel, type Lohnlauf } from "@/lib/payroll-run-shared";
 import { REGEL_KATEGORIE_LABEL } from "@/lib/payroll-shared";
 import { VERGUETUNGSART_LABEL } from "@/lib/employment-shared";
 
@@ -142,8 +138,8 @@ function LohnlaufSeitenInhalt() {
             Regelwerken und Lohn-Eingabefakten. Bei Stundenlohn ist die einzige zulässige
             Stundenquelle ein verifizierter Fakt <code>arbeitsstunden_JJJJ_MM</code>; der
             Schichtplan gilt als reine Planung. Fehlt eine Grundlage, wird der Lauf als
-            „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Freigabe,
-            Export und Auszahlung sind in diesem Schritt bewusst nicht enthalten.
+            „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Freigabe, Export
+            und Auszahlung sind in diesem Schritt bewusst nicht enthalten.
           </p>
         </CardContent>
       </Card>
@@ -191,9 +187,7 @@ function LohnlaufSeitenInhalt() {
                       <span>{VERGUETUNGSART_LABEL[lauf.verguetungsart]}</span>
                     )}
                     {lauf.berechnetAm && (
-                      <span>
-                        berechnet am {new Date(lauf.berechnetAm).toLocaleString("de-DE")}
-                      </span>
+                      <span>berechnet am {new Date(lauf.berechnetAm).toLocaleString("de-DE")}</span>
                     )}
                   </div>
                 </div>
@@ -398,7 +392,9 @@ function LohnlaeufeSeite() {
         <Card className="border-destructive/30">
           <CardContent className="flex gap-3 p-6 text-sm text-muted-foreground">
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-            <p>Kein Zugriff: Lohnläufe dürfen nur von Administration oder Finanzen genutzt werden.</p>
+            <p>
+              Kein Zugriff: Lohnläufe dürfen nur von Administration oder Finanzen genutzt werden.
+            </p>
           </CardContent>
         </Card>
       </div>

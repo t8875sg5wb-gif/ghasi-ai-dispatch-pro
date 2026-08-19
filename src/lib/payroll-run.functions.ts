@@ -53,10 +53,7 @@ function parseOrThrow<T>(
   return parsed.data as T;
 }
 
-async function ladeLauf(
-  supabase: SupabaseClient<Database>,
-  id: string,
-): Promise<Lohnlauf> {
+async function ladeLauf(supabase: SupabaseClient<Database>, id: string): Promise<Lohnlauf> {
   const { data: run, error } = await supabase
     .from("payroll_runs")
     .select("*")
@@ -69,7 +66,10 @@ async function ladeLauf(
     .eq("run_id", id)
     .order("kategorie", { ascending: true });
   if (e2) throw new Error(mapLohnlaufDbError(e2.message));
-  return rowToLohnlauf(run as unknown as PayrollRunRow, (items ?? []) as unknown as PayrollRunItemRow[]);
+  return rowToLohnlauf(
+    run as unknown as PayrollRunRow,
+    (items ?? []) as unknown as PayrollRunItemRow[],
+  );
 }
 
 export const listPayrollRuns = createServerFn({ method: "GET" })
@@ -83,9 +83,7 @@ export const listPayrollRuns = createServerFn({ method: "GET" })
       .order("periode_monat", { ascending: false });
     if (error) throw new Error(mapLohnlaufDbError(error.message));
 
-    const { data: items, error: e2 } = await context.supabase
-      .from("payroll_run_items")
-      .select("*");
+    const { data: items, error: e2 } = await context.supabase.from("payroll_run_items").select("*");
     if (e2) throw new Error(mapLohnlaufDbError(e2.message));
 
     const nachLauf = new Map<string, PayrollRunItemRow[]>();
@@ -116,8 +114,8 @@ export const listPayrollRunAudit = createServerFn({ method: "GET" })
 /** Legt einen leeren Lohnlauf an (Status "offen", keine Ergebnisse). */
 export const createPayrollRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): LohnlaufWrite =>
-    parseOrThrow<LohnlaufWrite>(createLohnlaufSchema, data),
+  .validator(
+    (data: unknown): LohnlaufWrite => parseOrThrow<LohnlaufWrite>(createLohnlaufSchema, data),
   )
   .handler(async ({ data, context }): Promise<Lohnlauf> => {
     await assertFinanzRolle(context.supabase, context.userId);
@@ -157,7 +155,9 @@ export const createPayrollRun = createServerFn({ method: "POST" })
  */
 export const calculatePayrollRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(lohnlaufIdSchema, data))
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
   .handler(async ({ data, context }): Promise<Lohnlauf> => {
     await assertFinanzRolle(context.supabase, context.userId);
 
@@ -171,20 +171,23 @@ export const calculatePayrollRun = createServerFn({ method: "POST" })
     const monat = run.periode_monat.slice(0, 7);
 
     // Grundlagen: ausschließlich verifizierte Datensätze.
-    const [{ data: empRows, error: e1 }, { data: ruleRows, error: e2 }, { data: factRows, error: e3 }] =
-      await Promise.all([
-        context.supabase
-          .from("employment_relationships")
-          .select("*")
-          .eq("driver_id", run.driver_id)
-          .eq("status", "verifiziert"),
-        context.supabase.from("payroll_rules").select("*").eq("status", "verifiziert"),
-        context.supabase
-          .from("payroll_facts")
-          .select("*")
-          .eq("driver_id", run.driver_id)
-          .eq("status", "verifiziert"),
-      ]);
+    const [
+      { data: empRows, error: e1 },
+      { data: ruleRows, error: e2 },
+      { data: factRows, error: e3 },
+    ] = await Promise.all([
+      context.supabase
+        .from("employment_relationships")
+        .select("*")
+        .eq("driver_id", run.driver_id)
+        .eq("status", "verifiziert"),
+      context.supabase.from("payroll_rules").select("*").eq("status", "verifiziert"),
+      context.supabase
+        .from("payroll_facts")
+        .select("*")
+        .eq("driver_id", run.driver_id)
+        .eq("status", "verifiziert"),
+    ]);
     const fehler = e1 ?? e2 ?? e3;
     if (fehler) throw new Error(mapLohnlaufDbError(fehler.message));
 
@@ -261,7 +264,9 @@ export const calculatePayrollRun = createServerFn({ method: "POST" })
 
 export const deletePayrollRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown): { id: string } => parseOrThrow<{ id: string }>(lohnlaufIdSchema, data))
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertFinanzRolle(context.supabase, context.userId);
     const { error } = await context.supabase.from("payroll_runs").delete().eq("id", data.id);

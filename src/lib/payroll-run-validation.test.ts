@@ -97,9 +97,15 @@ describe("Zeitraum-Helfer", () => {
 
 describe("Validierung", () => {
   it("akzeptiert nur YYYY-MM", () => {
-    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-08" }).success).toBe(true);
-    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-8" }).success).toBe(false);
-    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-13" }).success).toBe(false);
+    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-08" }).success).toBe(
+      true,
+    );
+    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-8" }).success).toBe(
+      false,
+    );
+    expect(createLohnlaufSchema.safeParse({ fahrerId: FAHRER, monat: "2026-13" }).success).toBe(
+      false,
+    );
   });
 
   it("lehnt unbekannte Felder ab (strict)", () => {
@@ -268,9 +274,11 @@ describe("Vollständigkeitsregeln", () => {
 
 describe("Fehler-Mapping", () => {
   it("übersetzt Doppelanlage und Zugriffsfehler", () => {
-    expect(mapLohnlaufDbError('duplicate key value violates "payroll_runs_unique_periode"')).toContain(
-      "bereits ein Lohnlauf",
+    expect(
+      mapLohnlaufDbError('duplicate key value violates "payroll_runs_unique_periode"'),
+    ).toContain("bereits ein Lohnlauf");
+    expect(mapLohnlaufDbError("new row violates row-level security policy")).toContain(
+      "Kein Zugriff",
     );
-    expect(mapLohnlaufDbError("new row violates row-level security policy")).toContain("Kein Zugriff");
   });
 });
