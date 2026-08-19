@@ -498,7 +498,19 @@ function KundeFelder({
   const [ansprechpartner, setAnsprechpartner] = useState(target?.ansprechpartner ?? "");
   const [telefon, setTelefon] = useState(target?.telefon ?? "");
   const [email, setEmail] = useState(target?.email ?? "");
-  const [adr, setAdr] = useState<AdresseStruktur>(() => parseAdresse(target?.adresse ?? ""));
+  const [adr, setAdr] = useState<AdresseStruktur>(() =>
+    target?.adresseStrasse || target?.adressePlz || target?.adresseOrt
+      ? {
+          street: target.adresseStrasse ?? "",
+          houseNumber: target.adresseHausnummer ?? "",
+          postalCode: target.adressePlz ?? "",
+          city: target.adresseOrt ?? "",
+          country: target.adresseLand || "DE",
+          additionalInfo: "",
+        }
+      : parseAdresse(target?.adresse ?? ""),
+  );
+  const [leitwegId, setLeitwegId] = useState(target?.leitwegId ?? "");
   const [vertragsstatus, setVertragsstatus] = useState<NonNullable<Kunde["vertragsstatus"]>>(
     target?.vertragsstatus ?? "Rahmenvertrag",
   );
@@ -536,6 +548,13 @@ function KundeFelder({
       umsatzJahr: umsatzJahr.trim() ? Number(umsatzJahr) : undefined,
       notiz: notiz.trim() || undefined,
       aktiv,
+      // Strukturierte Adresse: Pflicht für den XRechnung-Export (EN 16931).
+      adresseStrasse: adr.street.trim() || undefined,
+      adresseHausnummer: adr.houseNumber.trim() || undefined,
+      adressePlz: adr.postalCode.trim() || undefined,
+      adresseOrt: adr.city.trim() || undefined,
+      adresseLand: (adr.country || "DE").trim().length === 2 ? adr.country.toUpperCase() : "DE",
+      leitwegId: leitwegId.trim() || undefined,
     });
   }
 
@@ -587,6 +606,15 @@ function KundeFelder({
         </Feld>
         <div className="sm:col-span-2">
           <AddressFields idPrefix="kunde-adresse" label="Adresse" value={adr} onChange={setAdr} />
+        </div>
+        <div className="sm:col-span-2">
+          <Feld label="Leitweg-ID (nur bei öffentlich-rechtlichen Kostenträgern)">
+            <Input
+              value={leitwegId}
+              onChange={(e) => setLeitwegId(e.target.value)}
+              placeholder="z. B. 04011000-1234512345-06"
+            />
+          </Feld>
         </div>
 
         <Feld label="Zahlungsziel (Tage)">

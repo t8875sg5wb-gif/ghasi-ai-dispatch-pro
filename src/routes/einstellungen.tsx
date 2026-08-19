@@ -105,6 +105,32 @@ function ladePraeferenzen(): Praeferenzen {
   }
 }
 
+/** ISO-3166-1-Alpha-2 aus dem Klartext-Land ableiten (Standard DE). */
+function landCode(land: string): string {
+  const l = (land || "").trim().toLowerCase();
+  if (!l) return "DE";
+  if (l.length === 2) return l.toUpperCase();
+  if (l.startsWith("deutsch") || l === "germany") return "DE";
+  if (l.startsWith("öster") || l.startsWith("oester") || l === "austria") return "AT";
+  if (l.startsWith("schweiz") || l === "switzerland") return "CH";
+  return "DE";
+}
+
+/** Strukturierte Firmenadresse bevorzugen, sonst Freitext zerlegen. */
+function firmaAdresse(firma: CompanySettings): AdresseStruktur {
+  if (firma.adresseStrasse || firma.adressePlz || firma.adresseOrt) {
+    return {
+      street: firma.adresseStrasse,
+      houseNumber: firma.adresseHausnummer,
+      postalCode: firma.adressePlz,
+      city: firma.adresseOrt,
+      country: firma.adresseLand || "DE",
+      additionalInfo: "",
+    };
+  }
+  return parseAdresse(firma.adresse);
+}
+
 const RECHTSFORMEN = ["Einzelunternehmen", "GbR", "GmbH", "UG (haftungsbeschränkt)", "OHG", "KG"];
 
 function EinstellungenSeite() {
@@ -116,14 +142,14 @@ function EinstellungenSeite() {
   const saveFirma = useSaveCompanySettings();
 
   const [company, setCompany] = useState<CompanySettings>(firma);
-  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => parseAdresse(firma.adresse));
+  const [firmaAdr, setFirmaAdr] = useState<AdresseStruktur>(() => firmaAdresse(firma));
   const [pref, setPref] = useState<Praeferenzen>(STANDARD_PREF);
   const bereinigen = useServerFn(bereinigeAltenChatverlauf);
   const [bereinigtLaeuft, setBereinigtLaeuft] = useState(false);
 
   useEffect(() => {
     setCompany(firma);
-    setFirmaAdr(parseAdresse(firma.adresse));
+    setFirmaAdr(firmaAdresse(firma));
   }, [firma]);
 
   useEffect(() => setPref(ladePraeferenzen()), []);
@@ -242,9 +268,35 @@ function EinstellungenSeite() {
               value={firmaAdr}
               onChange={(next) => {
                 setFirmaAdr(next);
-                setC("adresse", formatAdresse(next));
+                // Freitext bleibt für PDF/Anzeige erhalten, zusätzlich werden die
+                // strukturierten Felder gepflegt (Pflicht für XRechnung/EN 16931).
+                setCompany((prev) => ({
+                  ...prev,
+                  adresse: formatAdresse(next),
+                  adresseStrasse: next.street,
+                  adresseHausnummer: next.houseNumber,
+                  adressePlz: next.postalCode,
+                  adresseOrt: next.city,
+                  adresseLand: landCode(next.country),
+                }));
               }}
             />
+
+            <Feld label="IBAN (Zahlungsangabe auf Rechnungen / XRechnung)">
+              <Input
+                value={company.iban}
+                disabled={!istAdmin}
+                onChange={(e) => setC("iban", e.target.value)}
+                placeholder="DE00 0000 0000 0000 0000 00"
+              />
+            </Feld>
+            {!company.xrechnungDatenBestaetigt && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
+                <span className="font-semibold">XRechnung-Export gesperrt</span> — bitte Straße,
+                PLZ, Ort, Land und IBAN vollständig eintragen und speichern. Erst mit dieser
+                Admin-Bestätigung ist der XRechnung-Exportentwurf möglich.
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Feld label="Telefon">

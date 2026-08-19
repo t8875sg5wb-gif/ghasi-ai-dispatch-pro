@@ -19,6 +19,7 @@ import { modusFuerTransportart, satzFuer, STEUER_HINWEIS } from "@/lib/steuer";
 import { requireBestaetigtenSteuerModus } from "@/lib/company-settings-shared";
 import { rowToKassenvertrag, type KassenvertragRow } from "@/lib/insurer-contracts-shared";
 import { rowToPatient, type PatientRow } from "@/lib/patients-shared";
+import { rowToKunde, type CustomerRow } from "@/lib/customers-shared";
 import {
   ermittleVertragspreis,
   findeInsurerId,
@@ -506,3 +507,133 @@ export const detectMissingInvoices = createServerFn({ method: "GET" })
       .filter((a) => a.status === "abgeschlossen" && !berechnet.has(a.nummer))
       .map((a) => ({ nummer: a.nummer, patient: a.patient }));
   });
+
+/* ------------------------------------------------------------------ *
+ * XRechnung-Exportentwurf (EN 16931 / UBL) für EINE gestellte Rechnung
+ *
+ * PFLICHT-HINWEIS: Dieser Export ist NICHT gegen den offiziellen
+ * XRechnung-Validator (KoSIT) geprüft. Vor jeglicher echten Nutzung —
+ * insbesondere Versand an Behörden oder Kostenträger — muss die Datei mit
+ * dem offiziellen Validator geprüft werden.
+ *
+ * Serverseitig erzwungen:
+ * - nur Rollen admin/finanz,
+ * - nur Rechnungen mit Status ungleich "entwurf"/"storniert",
+ * - nur nach Admin-Bestätigung der Firmendaten (Adresse + IBAN),
+ * - nur bei vollständiger strukturierter Kundenadresse (keine Schätzung).
+ *
+ * Reiner Lesevorgang, wird protokolliert. KEIN Versand an PEPPOL/ZRE.
+ * ------------------------------------------------------------------ */
+const xrechnungExportSchema = z.object({ id: z.string().uuid() }).strict();
+
+export const exportInvoiceXRechnung = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown): { id: string } => {
+    const parsed = xrechnungExportSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Ungültige Exportanfrage.");
+    return parsed.data;
+  })
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ xml: string; dateiname: string; leitwegFehlt: boolean; warnung: string }> => {
+      const { assertFinanzRolle } = await import("@/lib/employment-security.server");
+      await assertFinanzRolle(context.supabase, context.userId);
+
+      const {
+        generateXRechnung,
+        istExportierbar,
+        XRECHNUNG_FIRMA_UNBESTAETIGT,
+        XRECHNUNG_KUNDENADRESSE_FEHLT,
+        XRECHNUNG_WARNUNG,
+      } = await import("@/lib/xrechnung");
+      const { loadCompanySettings } = await import("@/lib/company-settings-shared");
+
+      const { data: row, error } = await context.supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!row) throw new Error("Rechnung nicht gefunden.");
+      const rechnung = rowToRechnung(row as unknown as InvoiceRow);
+
+      if (!istExportierbar(rechnung.status)) {
+        throw new Error(
+          "Nur ausgestellte Rechnungen können exportiert werden – Entwürfe und Storni nicht.",
+        );
+      }
+
+      const company = await loadCompanySettings(context.supabase);
+      if (!company.xrechnungDatenBestaetigt) throw new Error(XRECHNUNG_FIRMA_UNBESTAETIGT);
+
+      // Kunde auflösen: bevorzugt über die UUID-Referenz, sonst über den Namen
+      // (Altbestand mit freien Kunden-IDs). Keine geratene Adresse.
+      const istUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        rechnung.kundeId ?? "",
+      );
+      const query = context.supabase.from("customers").select("*").limit(1);
+      const { data: kundeRow } = istUuid
+        ? await query.eq("id", rechnung.kundeId).maybeSingle()
+        : await query.eq("name", rechnung.kunde).maybeSingle();
+      if (!kundeRow) {
+        throw new Error(
+          `${XRECHNUNG_KUNDENADRESSE_FEHLT}: Zu „${rechnung.kunde}“ ist kein Kundenstammsatz mit strukturierter Adresse hinterlegt.`,
+        );
+      }
+      const kunde = rowToKunde(kundeRow as unknown as CustomerRow);
+
+      const ergebnis = generateXRechnung({
+        rechnung,
+        steuerModus: company.steuerModus,
+        verkaeufer: {
+          name: company.firma,
+          adresse: {
+            strasse: company.adresseStrasse,
+            hausnummer: company.adresseHausnummer,
+            plz: company.adressePlz,
+            ort: company.adresseOrt,
+            land: company.adresseLand || "DE",
+          },
+          email: company.email,
+          telefon: company.telefon,
+          steuernummer: company.steuernummer,
+          ustId: company.ustId,
+          iban: company.iban,
+        },
+        kaeufer: {
+          name: kunde.name,
+          adresse: {
+            strasse: kunde.adresseStrasse ?? "",
+            hausnummer: kunde.adresseHausnummer ?? "",
+            plz: kunde.adressePlz ?? "",
+            ort: kunde.adresseOrt ?? "",
+            land: kunde.adresseLand || "DE",
+          },
+          email: kunde.email,
+          leitwegId: kunde.leitwegId,
+        },
+      });
+
+      const { logActivitySafe } = await import("@/lib/activity-log.server");
+      await logActivitySafe(
+        {
+          bereich: "Rechnungen",
+          entitaet: rechnung.id,
+          aktion: "exportiert",
+          beschreibung: `XRechnung-Exportentwurf (EN 16931/UBL, nicht KoSIT-validiert) für Rechnung ${rechnung.nummer}.`,
+          metadaten: {
+            nummer: rechnung.nummer,
+            kunde: rechnung.kunde,
+            format: "xrechnung-ubl-entwurf",
+            leitwegIdVorhanden: !ergebnis.leitwegFehlt,
+            kositValidiert: false,
+          },
+        },
+        context.userId,
+      );
+
+      return { ...ergebnis, warnung: XRECHNUNG_WARNUNG };
+    },
+  );

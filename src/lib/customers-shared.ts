@@ -20,6 +20,12 @@ export interface CustomerRow {
   umsatz_jahr: number | null;
   notiz: string | null;
   aktiv: boolean;
+  adresse_strasse?: string | null;
+  adresse_hausnummer?: string | null;
+  adresse_plz?: string | null;
+  adresse_ort?: string | null;
+  adresse_land?: string | null;
+  leitweg_id?: string | null;
 }
 
 export function rowToKunde(r: CustomerRow): Kunde {
@@ -39,6 +45,12 @@ export function rowToKunde(r: CustomerRow): Kunde {
     umsatzJahr: r.umsatz_jahr ?? undefined,
     notiz: r.notiz ?? undefined,
     aktiv: r.aktiv ?? true,
+    adresseStrasse: r.adresse_strasse ?? undefined,
+    adresseHausnummer: r.adresse_hausnummer ?? undefined,
+    adressePlz: r.adresse_plz ?? undefined,
+    adresseOrt: r.adresse_ort ?? undefined,
+    adresseLand: r.adresse_land ?? undefined,
+    leitwegId: r.leitweg_id ?? undefined,
   };
 }
 
@@ -61,5 +73,11 @@ export function kundeToRow(w: Partial<CustomerWrite>): Record<string, unknown> {
   set("umsatz_jahr", w.umsatzJahr);
   set("notiz", w.notiz);
   set("aktiv", w.aktiv);
+  set("adresse_strasse", w.adresseStrasse);
+  set("adresse_hausnummer", w.adresseHausnummer);
+  set("adresse_plz", w.adressePlz);
+  set("adresse_ort", w.adresseOrt);
+  set("adresse_land", w.adresseLand);
+  set("leitweg_id", w.leitwegId);
   return row;
 }
