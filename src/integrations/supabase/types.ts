@@ -1572,6 +1572,206 @@ export type Database = {
           },
         ]
       }
+      payroll_fact_audit_log: {
+        Row: {
+          akteur_user_id: string | null
+          aktion: string
+          created_at: string
+          driver_id: string | null
+          fact_id: string
+          fakt_schluessel: string | null
+          id: string
+          new_row: Json | null
+          old_row: Json | null
+          version: number | null
+        }
+        Insert: {
+          akteur_user_id?: string | null
+          aktion: string
+          created_at?: string
+          driver_id?: string | null
+          fact_id: string
+          fakt_schluessel?: string | null
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          version?: number | null
+        }
+        Update: {
+          akteur_user_id?: string | null
+          aktion?: string
+          created_at?: string
+          driver_id?: string | null
+          fact_id?: string
+          fakt_schluessel?: string | null
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          version?: number | null
+        }
+        Relationships: []
+      }
+      payroll_facts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          driver_id: string
+          fakt_schluessel: string
+          gueltig_ab: string
+          gueltig_bis: string | null
+          id: string
+          notiz: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+          wert: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          driver_id: string
+          fakt_schluessel: string
+          gueltig_ab: string
+          gueltig_bis?: string | null
+          id?: string
+          notiz?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+          wert: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string
+          fakt_schluessel?: string
+          gueltig_ab?: string
+          gueltig_bis?: string | null
+          id?: string
+          notiz?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+          wert?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_facts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_rule_audit_log: {
+        Row: {
+          akteur_user_id: string | null
+          aktion: string
+          created_at: string
+          id: string
+          kennung: string | null
+          new_row: Json | null
+          old_row: Json | null
+          rule_id: string
+          version: number | null
+        }
+        Insert: {
+          akteur_user_id?: string | null
+          aktion: string
+          created_at?: string
+          id?: string
+          kennung?: string | null
+          new_row?: Json | null
+          old_row?: Json | null
+          rule_id: string
+          version?: number | null
+        }
+        Update: {
+          akteur_user_id?: string | null
+          aktion?: string
+          created_at?: string
+          id?: string
+          kennung?: string | null
+          new_row?: Json | null
+          old_row?: Json | null
+          rule_id?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
+      payroll_rules: {
+        Row: {
+          berechnungsart: string
+          bezeichnung: string
+          created_at: string
+          created_by: string | null
+          festbetrag: number | null
+          gueltig_ab: string
+          gueltig_bis: string | null
+          id: string
+          kategorie: string
+          kennung: string
+          notiz: string
+          prozentsatz: number | null
+          quelle: string
+          quelle_version: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+        }
+        Insert: {
+          berechnungsart: string
+          bezeichnung: string
+          created_at?: string
+          created_by?: string | null
+          festbetrag?: number | null
+          gueltig_ab: string
+          gueltig_bis?: string | null
+          id?: string
+          kategorie: string
+          kennung: string
+          notiz?: string
+          prozentsatz?: number | null
+          quelle: string
+          quelle_version: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Update: {
+          berechnungsart?: string
+          bezeichnung?: string
+          created_at?: string
+          created_by?: string | null
+          festbetrag?: number | null
+          gueltig_ab?: string
+          gueltig_bis?: string | null
+          id?: string
+          kategorie?: string
+          kennung?: string
+          notiz?: string
+          prozentsatz?: number | null
+          quelle?: string
+          quelle_version?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
