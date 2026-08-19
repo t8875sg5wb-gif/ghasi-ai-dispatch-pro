@@ -1708,6 +1708,7 @@ export type Database = {
       }
       payroll_rules: {
         Row: {
+          benoetigter_fakt: string | null
           berechnungsart: string
           bezeichnung: string
           created_at: string
@@ -1729,6 +1730,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          benoetigter_fakt?: string | null
           berechnungsart: string
           bezeichnung: string
           created_at?: string
@@ -1750,6 +1752,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          benoetigter_fakt?: string | null
           berechnungsart?: string
           bezeichnung?: string
           created_at?: string
@@ -1771,6 +1774,195 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      payroll_run_audit_log: {
+        Row: {
+          akteur_user_id: string | null
+          aktion: string
+          created_at: string
+          driver_id: string | null
+          id: string
+          new_row: Json | null
+          old_row: Json | null
+          periode_monat: string | null
+          run_id: string
+          version: number | null
+        }
+        Insert: {
+          akteur_user_id?: string | null
+          aktion: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          periode_monat?: string | null
+          run_id: string
+          version?: number | null
+        }
+        Update: {
+          akteur_user_id?: string | null
+          aktion?: string
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          periode_monat?: string | null
+          run_id?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
+      payroll_run_items: {
+        Row: {
+          basisbetrag: number
+          berechnungsart: string
+          betrag: number
+          created_at: string
+          festbetrag: number | null
+          id: string
+          kategorie: string
+          prozentsatz: number | null
+          quelle: string
+          quelle_version: string
+          regel_bezeichnung: string
+          regel_kennung: string
+          rule_id: string | null
+          run_id: string
+        }
+        Insert: {
+          basisbetrag: number
+          berechnungsart: string
+          betrag: number
+          created_at?: string
+          festbetrag?: number | null
+          id?: string
+          kategorie: string
+          prozentsatz?: number | null
+          quelle?: string
+          quelle_version?: string
+          regel_bezeichnung: string
+          regel_kennung: string
+          rule_id?: string | null
+          run_id: string
+        }
+        Update: {
+          basisbetrag?: number
+          berechnungsart?: string
+          betrag?: number
+          created_at?: string
+          festbetrag?: number | null
+          id?: string
+          kategorie?: string
+          prozentsatz?: number | null
+          quelle?: string
+          quelle_version?: string
+          regel_bezeichnung?: string
+          regel_kennung?: string
+          rule_id?: string | null
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_items_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          berechnet_am: string | null
+          berechnet_von: string | null
+          brutto: number | null
+          created_at: string
+          created_by: string | null
+          driver_id: string
+          employment_id: string | null
+          fehlende_punkte: Json
+          id: string
+          netto: number | null
+          notiz: string
+          periode_monat: string
+          status: string
+          stunden: number | null
+          stundenlohn: number | null
+          summe_abzuege: number | null
+          summe_arbeitgeberkosten: number | null
+          updated_at: string
+          verguetungsart: string | null
+          version: number
+        }
+        Insert: {
+          berechnet_am?: string | null
+          berechnet_von?: string | null
+          brutto?: number | null
+          created_at?: string
+          created_by?: string | null
+          driver_id: string
+          employment_id?: string | null
+          fehlende_punkte?: Json
+          id?: string
+          netto?: number | null
+          notiz?: string
+          periode_monat: string
+          status?: string
+          stunden?: number | null
+          stundenlohn?: number | null
+          summe_abzuege?: number | null
+          summe_arbeitgeberkosten?: number | null
+          updated_at?: string
+          verguetungsart?: string | null
+          version?: number
+        }
+        Update: {
+          berechnet_am?: string | null
+          berechnet_von?: string | null
+          brutto?: number | null
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string
+          employment_id?: string | null
+          fehlende_punkte?: Json
+          id?: string
+          netto?: number | null
+          notiz?: string
+          periode_monat?: string
+          status?: string
+          stunden?: number | null
+          stundenlohn?: number | null
+          summe_abzuege?: number | null
+          summe_arbeitgeberkosten?: number | null
+          updated_at?: string
+          verguetungsart?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_runs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_employment_id_fkey"
+            columns: ["employment_id"]
+            isOneToOne: false
+            referencedRelation: "employment_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
