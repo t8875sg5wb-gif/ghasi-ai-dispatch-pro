@@ -110,3 +110,18 @@ export function useExportPayrollRunPdf() {
     onSuccess: invalidate,
   });
 }
+
+/**
+ * Freigegebenen Lohnlauf für den DATEV-Lohn-Exportentwurf laden
+ * (Rolle + Status serverseitig geprüft, protokolliert). Enthält
+ * Platzhalter-Lohnarten – nicht ungeprüft in DATEV importieren.
+ */
+export function useExportPayrollRunDatev() {
+  const fn = useServerFn(exportPayrollRunDatev);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+}
+
