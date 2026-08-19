@@ -7,6 +7,7 @@ import {
   calculatePayrollRun,
   createPayrollRun,
   deletePayrollRun,
+  exportPayrollRunDatev,
   exportPayrollRunPdf,
   listPayrollRunAudit,
   listPayrollRuns,
@@ -104,6 +105,20 @@ export function useRejectPayrollRun() {
 /** Freigegebenen Lohnlauf für den PDF-Export laden (Rolle + Status serverseitig geprüft, protokolliert). */
 export function useExportPayrollRunPdf() {
   const fn = useServerFn(exportPayrollRunPdf);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+}
+
+/**
+ * Freigegebenen Lohnlauf für den DATEV-Lohn-Exportentwurf laden
+ * (Rolle + Status serverseitig geprüft, protokolliert). Enthält
+ * Platzhalter-Lohnarten – nicht ungeprüft in DATEV importieren.
+ */
+export function useExportPayrollRunDatev() {
+  const fn = useServerFn(exportPayrollRunDatev);
   const invalidate = useInvalidateRuns();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),

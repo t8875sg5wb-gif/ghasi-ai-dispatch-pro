@@ -13,6 +13,7 @@ import {
   Loader2,
   Lock,
   Plus,
+  FileSpreadsheet,
   Send,
   ShieldAlert,
   Trash2,
@@ -45,6 +46,8 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { useDrivers } from "@/lib/drivers-store";
+import { buildDatevLohnexport, DATEV_LOHN_WARNUNG } from "@/lib/datev-lohn-export";
+import { downloadCsv } from "@/lib/export-utils";
 import { downloadLohnlaufPdf } from "@/lib/lohn-lauf-pdf";
 import { EUR2 } from "@/lib/finance";
 import {
@@ -52,6 +55,7 @@ import {
   useCalculatePayrollRun,
   useCreatePayrollRun,
   useDeletePayrollRun,
+  useExportPayrollRunDatev,
   useExportPayrollRunPdf,
   usePayrollRunAudit,
   usePayrollRuns,
@@ -110,6 +114,7 @@ function LohnlaufSeitenInhalt() {
   const freigebenMut = useApprovePayrollRun();
   const ablehnenMut = useRejectPayrollRun();
   const exportMut = useExportPayrollRunPdf();
+  const datevMut = useExportPayrollRunDatev();
 
   const [offen, setOffen] = useState(false);
   const [fahrerId, setFahrerId] = useState("");
@@ -117,6 +122,7 @@ function LohnlaufSeitenInhalt() {
   const [notiz, setNotiz] = useState("");
   const [ablehnenId, setAblehnenId] = useState<string | null>(null);
   const [ablehnGrund, setAblehnGrund] = useState("");
+  const [datevLauf, setDatevLauf] = useState<Lohnlauf | null>(null);
 
   const fahrerName = useMemo(() => {
     const m = new Map<string, string>();
@@ -138,6 +144,29 @@ function LohnlaufSeitenInhalt() {
         company,
       );
       toast.success("PDF erstellt – Export wurde protokolliert.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export fehlgeschlagen.");
+    }
+  }
+
+  async function datevExportieren() {
+    const lauf = datevLauf;
+    if (!lauf) return;
+    if (!company) {
+      toast.error("Firmendaten werden noch geladen – bitte kurz warten.");
+      return;
+    }
+    try {
+      // Serverseitig: Rolle + Status "freigegeben" prüfen und Export protokollieren.
+      const geprueft = await datevMut.mutateAsync(lauf.id);
+      const res = buildDatevLohnexport(geprueft, {
+        beraterNr: company.datevBeraterNr,
+        mandantNr: company.datevMandantNr,
+        fahrerName: fahrerName.get(geprueft.fahrerId) ?? "Unbekannter Fahrer",
+      });
+      downloadCsv(res.dateiname, res.csv);
+      setDatevLauf(null);
+      toast.success("DATEV-Entwurf erstellt – Export wurde protokolliert.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Export fehlgeschlagen.");
     }
@@ -224,9 +253,10 @@ function LohnlaufSeitenInhalt() {
             Schichtplan gilt als reine Planung. Fehlt eine Grundlage, wird der Lauf als
             „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Ein berechneter
             Lauf wird zur Freigabe vorgelegt und muss von einer <strong>zweiten</strong> Person
-            freigegeben werden; danach ist er samt Posten unveränderlich und kann als PDF exportiert
-            werden (jeder Export wird protokolliert). Ein DATEV-Austauschformat und die Auszahlung
-            sind bewusst nicht enthalten.
+            freigegeben werden; danach ist er samt Posten unveränderlich und kann als PDF oder als
+            DATEV-Lohn-<strong>Exportentwurf</strong> (CSV mit Platzhalter-Lohnarten) exportiert
+            werden (jeder Export wird protokolliert). Eine Auszahlung/Banküberweisung ist bewusst
+            nicht enthalten.
           </p>
         </CardContent>
       </Card>
@@ -319,6 +349,15 @@ function LohnlaufSeitenInhalt() {
                           disabled={exportMut.isPending}
                         >
                           <FileDown className="h-4 w-4" /> PDF-Export
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => setDatevLauf(lauf)}
+                          disabled={datevMut.isPending}
+                        >
+                          <FileSpreadsheet className="h-4 w-4" /> DATEV-Entwurf
                         </Button>
                       </>
                     ) : (
@@ -585,6 +624,38 @@ function LohnlaufSeitenInhalt() {
             >
               {ablehnenMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Ablehnen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={datevLauf !== null} onOpenChange={(o) => !o && setDatevLauf(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>DATEV-Lohn-Exportentwurf</DialogTitle>
+            <DialogDescription>
+              {datevLauf
+                ? `${monatLabel(datevLauf.periodeMonat)} · ${fahrerName.get(datevLauf.fahrerId) ?? "Unbekannter Fahrer"} · Stand ${datevLauf.version}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+            <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <p className="font-medium">{DATEV_LOHN_WARNUNG}</p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDatevLauf(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => void datevExportieren()}
+              disabled={datevMut.isPending}
+            >
+              {datevMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Entwurf herunterladen
             </Button>
           </DialogFooter>
         </DialogContent>
