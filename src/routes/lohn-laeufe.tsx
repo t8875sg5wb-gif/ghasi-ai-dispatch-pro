@@ -631,6 +631,38 @@ function LohnlaufSeitenInhalt() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={datevLauf !== null} onOpenChange={(o) => !o && setDatevLauf(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>DATEV-Lohn-Exportentwurf</DialogTitle>
+            <DialogDescription>
+              {datevLauf
+                ? `${monatLabel(datevLauf.periodeMonat)} · ${fahrerName.get(datevLauf.fahrerId) ?? "Unbekannter Fahrer"} · Stand ${datevLauf.version}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+            <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <p className="font-medium">{DATEV_LOHN_WARNUNG}</p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDatevLauf(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => void datevExportieren()}
+              disabled={datevMut.isPending}
+            >
+              {datevMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Entwurf herunterladen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
