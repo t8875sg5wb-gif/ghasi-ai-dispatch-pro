@@ -1,12 +1,14 @@
-// Lohnläufe: Anlegen, Berechnen und Vier-Augen-Freigabe (Finanzbereich).
-// Kein Export (kein DATEV, kein Lohnschein/PDF) und keine Auszahlung – das
-// bleibt einem späteren, eigenen Schritt vorbehalten.
+// Lohnläufe: Anlegen, Berechnen, Vier-Augen-Freigabe und PDF-Export
+// freigegebener Läufe (Finanzbereich).
+// Kein DATEV-Austauschformat und keine Auszahlung – das bleibt einem
+// späteren, eigenen Schritt vorbehalten.
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Calculator,
   CheckCircle2,
+  FileDown,
   Info,
   Loader2,
   Lock,
@@ -41,13 +43,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
+import { useCompanySettings } from "@/lib/company-settings-store";
 import { useDrivers } from "@/lib/drivers-store";
+import { downloadLohnlaufPdf } from "@/lib/lohn-lauf-pdf";
 import { EUR2 } from "@/lib/finance";
 import {
   useApprovePayrollRun,
   useCalculatePayrollRun,
   useCreatePayrollRun,
   useDeletePayrollRun,
+  useExportPayrollRunPdf,
   usePayrollRunAudit,
   usePayrollRuns,
   useRejectPayrollRun,
@@ -96,6 +101,7 @@ function LohnlaufSeitenInhalt() {
 
   const { data: audit } = usePayrollRunAudit();
   const { data: fahrer } = useDrivers();
+  const { data: company } = useCompanySettings();
 
   const createMut = useCreatePayrollRun();
   const berechneMut = useCalculatePayrollRun();
@@ -103,6 +109,7 @@ function LohnlaufSeitenInhalt() {
   const vorlegenMut = useSubmitPayrollRun();
   const freigebenMut = useApprovePayrollRun();
   const ablehnenMut = useRejectPayrollRun();
+  const exportMut = useExportPayrollRunPdf();
 
   const [offen, setOffen] = useState(false);
   const [fahrerId, setFahrerId] = useState("");
@@ -116,6 +123,25 @@ function LohnlaufSeitenInhalt() {
     for (const f of fahrer ?? []) m.set(f.id, f.name);
     return m;
   }, [fahrer]);
+
+  async function exportieren(lauf: Lohnlauf) {
+    if (!company) {
+      toast.error("Firmendaten werden noch geladen – bitte kurz warten.");
+      return;
+    }
+    try {
+      // Serverseitig: Rolle + Status "freigegeben" prüfen und Export protokollieren.
+      const geprueft = await exportMut.mutateAsync(lauf.id);
+      downloadLohnlaufPdf(
+        geprueft,
+        fahrerName.get(geprueft.fahrerId) ?? "Unbekannter Fahrer",
+        company,
+      );
+      toast.success("PDF erstellt – Export wurde protokolliert.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export fehlgeschlagen.");
+    }
+  }
 
   async function anlegen() {
     try {
@@ -280,9 +306,20 @@ function LohnlaufSeitenInhalt() {
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
                     {gesperrt ? (
-                      <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Lock className="h-4 w-4" /> Freigegeben – unveränderlich
-                      </span>
+                      <>
+                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Lock className="h-4 w-4" /> Freigegeben – unveränderlich
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="gap-2"
+                          onClick={() => void exportieren(lauf)}
+                          disabled={exportMut.isPending}
+                        >
+                          <FileDown className="h-4 w-4" /> PDF-Export
+                        </Button>
+                      </>
                     ) : (
                       <>
                         <Button
