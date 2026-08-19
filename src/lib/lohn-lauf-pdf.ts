@@ -172,11 +172,7 @@ export function generateLohnlaufPdf(
   return doc;
 }
 
-export function downloadLohnlaufPdf(
-  lauf: Lohnlauf,
-  fahrerName: string,
-  company: CompanySettings,
-) {
+export function downloadLohnlaufPdf(lauf: Lohnlauf, fahrerName: string, company: CompanySettings) {
   generateLohnlaufPdf(lauf, fahrerName, company).save(
     `Lohnlauf-${lauf.periodeMonat.slice(0, 7)}-${fahrerName.replace(/[^\w-]+/g, "_")}.pdf`,
   );
