@@ -224,9 +224,11 @@ function LohnlaufSeitenInhalt() {
             Schichtplan gilt als reine Planung. Fehlt eine Grundlage, wird der Lauf als
             „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Ein berechneter
             Lauf wird zur Freigabe vorgelegt und muss von einer <strong>zweiten</strong> Person
-            freigegeben werden; danach ist er samt Posten unveränderlich und kann als PDF exportiert
-            werden (jeder Export wird protokolliert). Ein DATEV-Austauschformat und die Auszahlung
-            sind bewusst nicht enthalten.
+            freigegeben werden; danach ist er samt Posten unveränderlich und kann als PDF oder als
+            DATEV-Lohn-<strong>Exportentwurf</strong> (CSV mit Platzhalter-Lohnarten) exportiert
+            werden (jeder Export wird protokolliert). Eine Auszahlung/Banküberweisung ist bewusst
+            nicht enthalten.
+
           </p>
         </CardContent>
       </Card>
