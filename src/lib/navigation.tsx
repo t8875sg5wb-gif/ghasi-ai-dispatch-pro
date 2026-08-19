@@ -22,6 +22,7 @@ import {
   FolderArchive,
   Settings,
   ShieldUser,
+  UserCog,
   Plug,
   ShieldAlert,
   Inbox,
