@@ -1,15 +1,18 @@
-// Serverfunktionen für Lohnläufe (Finanzbereich): Anlegen und Berechnen.
+// Serverfunktionen für Lohnläufe (Finanzbereich): Anlegen, Berechnen und
+// Vier-Augen-Freigabe (Vorlegen / Freigeben / Ablehnen).
 //
 // SICHERHEIT:
 // - Nur die Rollen admin/finanz: erzwungen durch RLS, DB-Trigger UND einen
 //   zusätzlichen serverseitigen Rollen-Check (defense in depth).
-// - Version, Zeitpunkt der Berechnung, Ersteller und das vollständige
+// - Version, Zeitstempel, Vorleger, Freigeber und das vollständige
 //   Änderungsprotokoll setzt ausschließlich die Datenbank.
-// - Berechnungsgrundlagen werden serverseitig geladen; der Client kann keine
-//   Beträge, Stunden oder Regeln einreichen.
+// - Vier-Augen-Prinzip, Statusübergänge, Bindung an die Versionsnummer und die
+//   Unveränderlichkeit nach Freigabe werden im DB-Trigger erzwungen; die
+//   Serverfunktionen setzen nur die Absicht (Status bzw. Ablehnungsgrund).
 //
-// UMFANG: Anlegen + Berechnen. KEINE Freigabe, keine Unveränderlichkeit,
-// kein Export, keine Auszahlung – bewusst einem späteren Schritt vorbehalten.
+// UMFANG: KEIN Export (kein DATEV, kein Lohnschein/PDF), keine Auszahlung –
+// bewusst einem späteren Schritt vorbehalten.
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
 
@@ -26,6 +29,7 @@ import {
   type PayrollRuleRow,
 } from "@/lib/payroll-shared";
 import {
+  ablehnenLohnlaufSchema,
   berechneLohnlauf,
   createLohnlaufSchema,
   lohnlaufIdSchema,
@@ -34,6 +38,7 @@ import {
   rowToLohnlauf,
   rowToLohnlaufAudit,
   type Lohnlauf,
+  type LohnlaufAblehnung,
   type LohnlaufAudit,
   type LohnlaufWrite,
   type PayrollRunAuditRow,
@@ -168,6 +173,11 @@ export const calculatePayrollRun = createServerFn({ method: "POST" })
       .single();
     if (runErr) throw new Error(mapLohnlaufDbError(runErr.message));
     const run = runRow as unknown as PayrollRunRow;
+    if (run.status === "freigegeben") {
+      throw new Error(
+        "Ein freigegebener Lohnlauf ist unveränderlich und kann nicht neu berechnet werden.",
+      );
+    }
     const monat = run.periode_monat.slice(0, 7);
 
     // Grundlagen: ausschließlich verifizierte Datensätze.
@@ -283,4 +293,108 @@ export const deletePayrollRun = createServerFn({ method: "POST" })
       context.userId,
     );
     return { ok: true } as const;
+  });
+
+/* ================================================================== *
+ * Vier-Augen-Freigabe
+ * ================================================================== */
+
+/**
+ * Legt einen berechneten Lohnlauf zur Freigabe vor.
+ * Vorlage nur aus Status "berechnet" möglich (Trigger erzwingt dies erneut);
+ * Vorleger, Zeitpunkt und die Bindung an die Versionsnummer setzt die Datenbank.
+ */
+export const submitPayrollRun = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
+  .handler(async ({ data, context }): Promise<Lohnlauf> => {
+    await assertFinanzRolle(context.supabase, context.userId);
+
+    const { error } = await context.supabase
+      .from("payroll_runs")
+      .update({ status: "zur_freigabe" } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(mapLohnlaufDbError(error.message));
+
+    const { logActivitySafe } = await import("@/lib/activity-log.server");
+    await logActivitySafe(
+      {
+        bereich: "Lohnläufe",
+        entitaet: data.id,
+        aktion: "vorgelegt",
+        beschreibung: "Lohnlauf zur Freigabe vorgelegt (Vier-Augen-Prinzip).",
+      },
+      context.userId,
+    );
+
+    return await ladeLauf(context.supabase, data.id);
+  });
+
+/**
+ * Gibt einen vorgelegten Lohnlauf frei. Selbst-Freigabe, veralteter
+ * Rechenstand und unzulässige Ausgangszustände werden im DB-Trigger abgelehnt.
+ * Danach sind Lohnlauf und Posten technisch unveränderlich.
+ */
+export const approvePayrollRun = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown): { id: string } =>
+    parseOrThrow<{ id: string }>(lohnlaufIdSchema, data),
+  )
+  .handler(async ({ data, context }): Promise<Lohnlauf> => {
+    await assertFinanzRolle(context.supabase, context.userId);
+
+    const { error } = await context.supabase
+      .from("payroll_runs")
+      .update({ status: "freigegeben" } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(mapLohnlaufDbError(error.message));
+
+    const { logActivitySafe } = await import("@/lib/activity-log.server");
+    await logActivitySafe(
+      {
+        bereich: "Lohnläufe",
+        entitaet: data.id,
+        aktion: "freigegeben",
+        beschreibung: "Lohnlauf freigegeben – ab jetzt unveränderlich.",
+      },
+      context.userId,
+    );
+
+    return await ladeLauf(context.supabase, data.id);
+  });
+
+/**
+ * Lehnt einen vorgelegten Lohnlauf mit Pflichtgrund ab. Der Lauf geht in den
+ * bearbeitbaren Zustand "berechnet" zurück (Neuberechnung möglich).
+ */
+export const rejectPayrollRun = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (data: unknown): LohnlaufAblehnung =>
+      parseOrThrow<LohnlaufAblehnung>(ablehnenLohnlaufSchema, data),
+  )
+  .handler(async ({ data, context }): Promise<Lohnlauf> => {
+    await assertFinanzRolle(context.supabase, context.userId);
+
+    const { error } = await context.supabase
+      .from("payroll_runs")
+      // Status setzt der Trigger verbindlich auf "berechnet" zurück.
+      .update({ status: "berechnet", ablehnung_grund: data.grund } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(mapLohnlaufDbError(error.message));
+
+    const { logActivitySafe } = await import("@/lib/activity-log.server");
+    await logActivitySafe(
+      {
+        bereich: "Lohnläufe",
+        entitaet: data.id,
+        aktion: "abgelehnt",
+        beschreibung: `Lohnlauf abgelehnt: ${data.grund}`,
+      },
+      context.userId,
+    );
+
+    return await ladeLauf(context.supabase, data.id);
   });

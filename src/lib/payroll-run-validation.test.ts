@@ -6,10 +6,12 @@ import { describe, expect, it } from "bun:test";
 import type { Beschaeftigungsverhaeltnis } from "@/lib/employment-shared";
 import type { LohnFakt, LohnRegel } from "@/lib/payroll-shared";
 import {
+  ablehnenLohnlaufSchema,
   arbeitsstundenSchluessel,
   berechneLohnlauf,
   createLohnlaufSchema,
   GRUND_FEHLENDE_ARBEITSZEIT,
+  istUnveraenderlich,
   mapLohnlaufDbError,
   monatsZeitraum,
 } from "@/lib/payroll-run-shared";
@@ -280,5 +282,45 @@ describe("Fehler-Mapping", () => {
     expect(mapLohnlaufDbError("new row violates row-level security policy")).toContain(
       "Kein Zugriff",
     );
+  });
+});
+
+describe("Vier-Augen-Freigabe", () => {
+  it("Ablehnung erfordert einen ausreichend langen Grund", () => {
+    expect(ablehnenLohnlaufSchema.safeParse({ id: FAHRER, grund: "nein" }).success).toBe(false);
+    expect(
+      ablehnenLohnlaufSchema.safeParse({ id: FAHRER, grund: "Stunden nicht belegt." }).success,
+    ).toBe(true);
+  });
+
+  it("weist unbekannte Felder ab (strict)", () => {
+    expect(
+      ablehnenLohnlaufSchema.safeParse({
+        id: FAHRER,
+        grund: "Stunden nicht belegt.",
+        status: "freigegeben",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("kennzeichnet nur freigegebene Läufe als unveränderlich", () => {
+    expect(istUnveraenderlich("freigegeben")).toBe(true);
+    expect(istUnveraenderlich("zur_freigabe")).toBe(false);
+    expect(istUnveraenderlich("berechnet")).toBe(false);
+  });
+
+  it("übersetzt die fachlichen Trigger-Meldungen des Freigabe-Workflows", () => {
+    expect(mapLohnlaufDbError("Ein freigegebener Lohnlauf ist unveraenderlich.")).toContain(
+      "unveränderlich",
+    );
+    expect(
+      mapLohnlaufDbError("Die Freigabe muss von einer zweiten berechtigten Person erfolgen."),
+    ).toContain("Vier-Augen-Prinzip");
+    expect(mapLohnlaufDbError("Der Lohnlauf muss erneut vorgelegt werden.")).toContain(
+      "erneut vorgelegt",
+    );
+    expect(
+      mapLohnlaufDbError("Nur ein vollstaendig berechneter Lohnlauf kann vorgelegt werden."),
+    ).toContain("vollständig berechneter");
   });
 });

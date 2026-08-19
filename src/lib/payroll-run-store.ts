@@ -3,11 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import {
+  approvePayrollRun,
   calculatePayrollRun,
   createPayrollRun,
   deletePayrollRun,
   listPayrollRunAudit,
   listPayrollRuns,
+  rejectPayrollRun,
+  submitPayrollRun,
 } from "@/lib/payroll-run.functions";
 import type { LohnlaufWrite } from "@/lib/payroll-run-shared";
 
@@ -66,6 +69,33 @@ export function useDeletePayrollRun() {
   const invalidate = useInvalidateRuns();
   return useMutation({
     mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSubmitPayrollRun() {
+  const fn = useServerFn(submitPayrollRun);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useApprovePayrollRun() {
+  const fn = useServerFn(approvePayrollRun);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRejectPayrollRun() {
+  const fn = useServerFn(rejectPayrollRun);
+  const invalidate = useInvalidateRuns();
+  return useMutation({
+    mutationFn: (args: { id: string; grund: string }) => fn({ data: args }),
     onSuccess: invalidate,
   });
 }
