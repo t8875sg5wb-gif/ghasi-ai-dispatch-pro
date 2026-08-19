@@ -250,6 +250,14 @@ export const navGroups: NavGroup[] = [
         description: "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung §4 Nr.17b.",
       },
       {
+        label: "Beschäftigungsverhältnisse",
+        to: "/beschaeftigungsverhaeltnisse",
+        icon: ClipboardCheck,
+        description:
+          "Stundenlohn oder Monatsbrutto je Fahrer – geprüft im Vier-Augen-Prinzip, versioniert.",
+      },
+
+      {
         label: "Versicherungen",
         to: "/versicherungen",
         icon: ShieldCheck,

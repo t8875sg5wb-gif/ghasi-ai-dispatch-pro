@@ -711,6 +711,104 @@ export type Database = {
         }
         Relationships: []
       }
+      employment_audit_log: {
+        Row: {
+          akteur_user_id: string | null
+          aktion: string
+          created_at: string
+          driver_id: string | null
+          employment_id: string
+          id: string
+          new_row: Json | null
+          old_row: Json | null
+          version: number | null
+        }
+        Insert: {
+          akteur_user_id?: string | null
+          aktion: string
+          created_at?: string
+          driver_id?: string | null
+          employment_id: string
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          version?: number | null
+        }
+        Update: {
+          akteur_user_id?: string | null
+          aktion?: string
+          created_at?: string
+          driver_id?: string | null
+          employment_id?: string
+          id?: string
+          new_row?: Json | null
+          old_row?: Json | null
+          version?: number | null
+        }
+        Relationships: []
+      }
+      employment_relationships: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          driver_id: string
+          gueltig_ab: string
+          gueltig_bis: string | null
+          id: string
+          monatsbrutto: number | null
+          notiz: string
+          status: string
+          stundenlohn: number | null
+          updated_at: string
+          verguetungsart: string
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          driver_id: string
+          gueltig_ab: string
+          gueltig_bis?: string | null
+          id?: string
+          monatsbrutto?: number | null
+          notiz?: string
+          status?: string
+          stundenlohn?: number | null
+          updated_at?: string
+          verguetungsart: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string
+          gueltig_ab?: string
+          gueltig_bis?: string | null
+          id?: string
+          monatsbrutto?: number | null
+          notiz?: string
+          status?: string
+          stundenlohn?: number | null
+          updated_at?: string
+          verguetungsart?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employment_relationships_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           beleg_dokument_id: string | null

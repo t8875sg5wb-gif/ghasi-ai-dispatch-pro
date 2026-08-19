@@ -50,6 +50,7 @@ import { Route as ControlCenterRouteImport } from './routes/control-center'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CeoCockpitRouteImport } from './routes/ceo-cockpit'
 import { Route as BuchhaltungRouteImport } from './routes/buchhaltung'
+import { Route as BeschaeftigungsverhaeltnisseRouteImport } from './routes/beschaeftigungsverhaeltnisse'
 import { Route as BerichteRouteImport } from './routes/berichte'
 import { Route as AutomatisierungRouteImport } from './routes/automatisierung'
 import { Route as AusgabenRouteImport } from './routes/ausgaben'
@@ -272,6 +273,12 @@ const BuchhaltungRoute = BuchhaltungRouteImport.update({
   path: '/buchhaltung',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BeschaeftigungsverhaeltnisseRoute =
+  BeschaeftigungsverhaeltnisseRouteImport.update({
+    id: '/beschaeftigungsverhaeltnisse',
+    path: '/beschaeftigungsverhaeltnisse',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BerichteRoute = BerichteRouteImport.update({
   id: '/berichte',
   path: '/berichte',
@@ -365,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
+  '/beschaeftigungsverhaeltnisse': typeof BeschaeftigungsverhaeltnisseRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
@@ -424,6 +432,7 @@ export interface FileRoutesByTo {
   '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
+  '/beschaeftigungsverhaeltnisse': typeof BeschaeftigungsverhaeltnisseRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/ausgaben': typeof AusgabenRoute
   '/automatisierung': typeof AutomatisierungRoute
   '/berichte': typeof BerichteRoute
+  '/beschaeftigungsverhaeltnisse': typeof BeschaeftigungsverhaeltnisseRoute
   '/buchhaltung': typeof BuchhaltungRoute
   '/ceo-cockpit': typeof CeoCockpitRoute
   '/compliance': typeof ComplianceRoute
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
+    | '/beschaeftigungsverhaeltnisse'
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/compliance'
@@ -603,6 +614,7 @@ export interface FileRouteTypes {
     | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
+    | '/beschaeftigungsverhaeltnisse'
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/compliance'
@@ -661,6 +673,7 @@ export interface FileRouteTypes {
     | '/ausgaben'
     | '/automatisierung'
     | '/berichte'
+    | '/beschaeftigungsverhaeltnisse'
     | '/buchhaltung'
     | '/ceo-cockpit'
     | '/compliance'
@@ -721,6 +734,7 @@ export interface RootRouteChildren {
   AusgabenRoute: typeof AusgabenRoute
   AutomatisierungRoute: typeof AutomatisierungRoute
   BerichteRoute: typeof BerichteRoute
+  BeschaeftigungsverhaeltnisseRoute: typeof BeschaeftigungsverhaeltnisseRoute
   BuchhaltungRoute: typeof BuchhaltungRoute
   CeoCockpitRoute: typeof CeoCockpitRoute
   ComplianceRoute: typeof ComplianceRoute
@@ -1059,6 +1073,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuchhaltungRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/beschaeftigungsverhaeltnisse': {
+      id: '/beschaeftigungsverhaeltnisse'
+      path: '/beschaeftigungsverhaeltnisse'
+      fullPath: '/beschaeftigungsverhaeltnisse'
+      preLoaderRoute: typeof BeschaeftigungsverhaeltnisseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/berichte': {
       id: '/berichte'
       path: '/berichte'
@@ -1197,6 +1218,7 @@ const rootRouteChildren: RootRouteChildren = {
   AusgabenRoute: AusgabenRoute,
   AutomatisierungRoute: AutomatisierungRoute,
   BerichteRoute: BerichteRoute,
+  BeschaeftigungsverhaeltnisseRoute: BeschaeftigungsverhaeltnisseRoute,
   BuchhaltungRoute: BuchhaltungRoute,
   CeoCockpitRoute: CeoCockpitRoute,
   ComplianceRoute: ComplianceRoute,
