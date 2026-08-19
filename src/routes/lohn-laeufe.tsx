@@ -13,6 +13,7 @@ import {
   Loader2,
   Lock,
   Plus,
+  FileSpreadsheet,
   Send,
   ShieldAlert,
   Trash2,
@@ -45,6 +46,8 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { useDrivers } from "@/lib/drivers-store";
+import { buildDatevLohnexport, DATEV_LOHN_WARNUNG } from "@/lib/datev-lohn-export";
+import { downloadCsv } from "@/lib/export-utils";
 import { downloadLohnlaufPdf } from "@/lib/lohn-lauf-pdf";
 import { EUR2 } from "@/lib/finance";
 import {
@@ -52,6 +55,7 @@ import {
   useCalculatePayrollRun,
   useCreatePayrollRun,
   useDeletePayrollRun,
+  useExportPayrollRunDatev,
   useExportPayrollRunPdf,
   usePayrollRunAudit,
   usePayrollRuns,
@@ -348,6 +352,15 @@ function LohnlaufSeitenInhalt() {
                           disabled={exportMut.isPending}
                         >
                           <FileDown className="h-4 w-4" /> PDF-Export
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => setDatevLauf(lauf)}
+                          disabled={datevMut.isPending}
+                        >
+                          <FileSpreadsheet className="h-4 w-4" /> DATEV-Entwurf
                         </Button>
                       </>
                     ) : (
