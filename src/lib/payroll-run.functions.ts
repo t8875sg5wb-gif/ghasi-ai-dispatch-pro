@@ -10,7 +10,10 @@
 //
 // UMFANG: Anlegen + Berechnen. KEINE Freigabe, keine Unveränderlichkeit,
 // kein Export, keine Auszahlung – bewusst einem späteren Schritt vorbehalten.
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
+
+import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertFinanzRolle } from "@/lib/employment-security.server";
@@ -50,10 +53,8 @@ function parseOrThrow<T>(
   return parsed.data as T;
 }
 
-type Supa = { supabase: { from: (t: string) => never } };
-
 async function ladeLauf(
-  supabase: Parameters<typeof rowToLohnlauf> extends never ? never : any,
+  supabase: SupabaseClient<Database>,
   id: string,
 ): Promise<Lohnlauf> {
   const { data: run, error } = await supabase
@@ -68,7 +69,7 @@ async function ladeLauf(
     .eq("run_id", id)
     .order("kategorie", { ascending: true });
   if (e2) throw new Error(mapLohnlaufDbError(e2.message));
-  return rowToLohnlauf(run as PayrollRunRow, (items ?? []) as PayrollRunItemRow[]);
+  return rowToLohnlauf(run as unknown as PayrollRunRow, (items ?? []) as unknown as PayrollRunItemRow[]);
 }
 
 export const listPayrollRuns = createServerFn({ method: "GET" })
