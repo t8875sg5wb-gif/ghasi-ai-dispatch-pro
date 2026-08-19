@@ -24,6 +24,23 @@ export interface CompanySettings {
    * UStG nicht automatisch für jedes Fahrzeug/Geschäftsmodell gilt.
    */
   steuerModusBestaetigt: boolean;
+  // --- Strukturierte Adresse + Zahlungsangabe (XRechnung / EN 16931) ---
+  // XRechnung verlangt getrennte Adressfelder, kein Freitext. `adresse` bleibt
+  // als Anzeigetext (PDF, KI, Suche) erhalten und wird nicht ersetzt.
+  adresseStrasse: string;
+  adresseHausnummer: string;
+  adressePlz: string;
+  adresseOrt: string;
+  /** ISO-3166-1-Alpha-2, z. B. "DE". */
+  adresseLand: string;
+  /** IBAN für die Zahlungsangabe in der Rechnung. */
+  iban: string;
+  /**
+   * Wurden die strukturierten Firmendaten (Adresse + IBAN) bewusst von einem
+   * Admin bestätigt (= mit vollständigen Werten gespeichert)? Analog zu
+   * `steuerModusBestaetigt`. Ohne Bestätigung: kein XRechnung-Export.
+   */
+  xrechnungDatenBestaetigt: boolean;
   // DATEV-Export (Steuerberater)
   datevBeraterNr: string;
   datevMandantNr: string;
@@ -57,6 +74,13 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   gewerbesteuerHebesatz: 460,
   steuerModus: DEFAULT_STEUER_MODUS,
   steuerModusBestaetigt: false,
+  adresseStrasse: "",
+  adresseHausnummer: "",
+  adressePlz: "",
+  adresseOrt: "",
+  adresseLand: "DE",
+  iban: "",
+  xrechnungDatenBestaetigt: false,
   datevBeraterNr: "",
   datevMandantNr: "",
   datevErloeskonto: "8120",
@@ -79,6 +103,13 @@ export interface CompanyRow {
   gewerbesteuer_hebesatz: number;
   steuer_modus: string;
   steuer_modus_bestaetigt?: boolean | null;
+  adresse_strasse?: string | null;
+  adresse_hausnummer?: string | null;
+  adresse_plz?: string | null;
+  adresse_ort?: string | null;
+  adresse_land?: string | null;
+  iban?: string | null;
+  xrechnung_daten_bestaetigt?: boolean | null;
   datev_berater_nr?: string;
   datev_mandant_nr?: string;
   datev_erloeskonto?: string;
@@ -102,6 +133,13 @@ export function rowToSettings(r: CompanyRow): CompanySettings {
     gewerbesteuerHebesatz: Number(r.gewerbesteuer_hebesatz ?? 460),
     steuerModus: (r.steuer_modus as SteuerModus) ?? DEFAULT_STEUER_MODUS,
     steuerModusBestaetigt: r.steuer_modus_bestaetigt === true,
+    adresseStrasse: r.adresse_strasse ?? "",
+    adresseHausnummer: r.adresse_hausnummer ?? "",
+    adressePlz: r.adresse_plz ?? "",
+    adresseOrt: r.adresse_ort ?? "",
+    adresseLand: r.adresse_land ?? "DE",
+    iban: r.iban ?? "",
+    xrechnungDatenBestaetigt: r.xrechnung_daten_bestaetigt === true,
     datevBeraterNr: r.datev_berater_nr ?? "",
     datevMandantNr: r.datev_mandant_nr ?? "",
     datevErloeskonto: r.datev_erloeskonto ?? "8120",
@@ -129,6 +167,15 @@ export function settingsToRow(data: CompanySettings): Record<string, unknown> {
     steuer_modus: data.steuerModus,
     // Bewusstes Speichern durch einen Admin = Bestätigung des USt-Modus.
     steuer_modus_bestaetigt: true,
+    adresse_strasse: data.adresseStrasse,
+    adresse_hausnummer: data.adresseHausnummer,
+    adresse_plz: data.adressePlz,
+    adresse_ort: data.adresseOrt,
+    adresse_land: (data.adresseLand || "DE").toUpperCase(),
+    iban: (data.iban || "").replace(/\s+/g, ""),
+    // Bestätigung nur, wenn die XRechnungs-Pflichtfelder wirklich gefüllt sind
+    // (nie automatisch aus dem Freitextfeld geraten).
+    xrechnung_daten_bestaetigt: firmenDatenXrechnungVollstaendig(data),
     datev_berater_nr: data.datevBeraterNr,
     datev_mandant_nr: data.datevMandantNr,
     datev_erloeskonto: data.datevErloeskonto,
@@ -163,6 +210,17 @@ export async function loadCompanySettings(client: unknown): Promise<CompanySetti
   if (error) throw new Error(error.message);
   if (!data) return DEFAULT_COMPANY_SETTINGS;
   return rowToSettings(data as CompanyRow);
+}
+
+/** Sind Adresse (strukturiert) und IBAN vollständig für einen XRechnung-Export? */
+export function firmenDatenXrechnungVollstaendig(data: CompanySettings): boolean {
+  return Boolean(
+    data.adresseStrasse?.trim() &&
+      data.adressePlz?.trim() &&
+      data.adresseOrt?.trim() &&
+      (data.adresseLand ?? "").trim() &&
+      data.iban?.trim(),
+  );
 }
 
 export const STEUER_MODUS_UNBESTAETIGT_FEHLER =

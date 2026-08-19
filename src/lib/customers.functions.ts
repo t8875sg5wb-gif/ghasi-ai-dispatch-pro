@@ -38,6 +38,14 @@ export const customerFieldsSchema = z
     umsatzJahr: z.number().min(0).optional(),
     notiz: z.string().max(2000).optional(),
     aktiv: z.boolean().optional(),
+    // Strukturierte Adressfelder für den XRechnung-Export (EN 16931).
+    adresseStrasse: z.string().trim().max(200).optional(),
+    adresseHausnummer: z.string().trim().max(20).optional(),
+    adressePlz: z.string().trim().max(10).optional(),
+    adresseOrt: z.string().trim().max(120).optional(),
+    adresseLand: z.string().trim().max(2).optional(),
+    /** Leitweg-ID: darf leer bleiben, wird im Export-Dialog angemahnt. */
+    leitwegId: z.string().trim().max(60).optional(),
   })
   .strict();
 

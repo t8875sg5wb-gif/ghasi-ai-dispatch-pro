@@ -18,6 +18,18 @@ export interface Kunde {
   umsatzJahr?: number;
   notiz?: string;
   aktiv?: boolean;
+  // --- Strukturierte Adresse (XRechnung / EN 16931 verlangt Feldtrennung) ---
+  adresseStrasse?: string;
+  adresseHausnummer?: string;
+  adressePlz?: string;
+  adresseOrt?: string;
+  /** ISO-3166-1-Alpha-2, z. B. "DE". */
+  adresseLand?: string;
+  /**
+   * Leitweg-ID des Empfängers (BT-10). Optional, aber für öffentlich-rechtliche
+   * Kostenträger (Krankenkassen, Behörden) faktisch Pflicht.
+   */
+  leitwegId?: string;
 }
 
 export interface Patient {
