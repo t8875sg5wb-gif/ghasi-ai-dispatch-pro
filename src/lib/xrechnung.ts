@@ -159,7 +159,7 @@ export function generateXRechnung(input: XrechnungEingabe): XrechnungErgebnis {
   const brutto = round2(nettoSumme + ust);
 
   // USt-Behandlung: bei 0 % ist eine Befreiungsbegründung Pflicht (BT-120/BT-121).
-  const steuerKategorie = satz > 0 ? "S" : steuerModus === "kleinunternehmer_19" ? "E" : "E";
+  const steuerKategorie = satz > 0 ? "S" : "E";
   const befreiungsgrund = STEUER_HINWEIS[steuerModus];
 
   const leitwegFehlt = !(kaeufer.leitwegId ?? "").trim();
