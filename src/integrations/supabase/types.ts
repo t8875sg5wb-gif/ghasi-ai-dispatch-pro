@@ -1882,6 +1882,7 @@ export type Database = {
       }
       payroll_runs: {
         Row: {
+          ablehnung_grund: string | null
           berechnet_am: string | null
           berechnet_von: string | null
           brutto: number | null
@@ -1889,7 +1890,11 @@ export type Database = {
           created_by: string | null
           driver_id: string
           employment_id: string | null
+          entschieden_am: string | null
+          entschieden_von: string | null
           fehlende_punkte: Json
+          freigegeben_am: string | null
+          freigegeben_von: string | null
           id: string
           netto: number | null
           notiz: string
@@ -1902,8 +1907,12 @@ export type Database = {
           updated_at: string
           verguetungsart: string | null
           version: number
+          vorgelegt_am: string | null
+          vorgelegt_version: number | null
+          vorgelegt_von: string | null
         }
         Insert: {
+          ablehnung_grund?: string | null
           berechnet_am?: string | null
           berechnet_von?: string | null
           brutto?: number | null
@@ -1911,7 +1920,11 @@ export type Database = {
           created_by?: string | null
           driver_id: string
           employment_id?: string | null
+          entschieden_am?: string | null
+          entschieden_von?: string | null
           fehlende_punkte?: Json
+          freigegeben_am?: string | null
+          freigegeben_von?: string | null
           id?: string
           netto?: number | null
           notiz?: string
@@ -1924,8 +1937,12 @@ export type Database = {
           updated_at?: string
           verguetungsart?: string | null
           version?: number
+          vorgelegt_am?: string | null
+          vorgelegt_version?: number | null
+          vorgelegt_von?: string | null
         }
         Update: {
+          ablehnung_grund?: string | null
           berechnet_am?: string | null
           berechnet_von?: string | null
           brutto?: number | null
@@ -1933,7 +1950,11 @@ export type Database = {
           created_by?: string | null
           driver_id?: string
           employment_id?: string | null
+          entschieden_am?: string | null
+          entschieden_von?: string | null
           fehlende_punkte?: Json
+          freigegeben_am?: string | null
+          freigegeben_von?: string | null
           id?: string
           netto?: number | null
           notiz?: string
@@ -1946,6 +1967,9 @@ export type Database = {
           updated_at?: string
           verguetungsart?: string | null
           version?: number
+          vorgelegt_am?: string | null
+          vorgelegt_version?: number | null
+          vorgelegt_von?: string | null
         }
         Relationships: [
           {

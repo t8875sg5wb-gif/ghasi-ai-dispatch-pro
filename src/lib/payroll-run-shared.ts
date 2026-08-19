@@ -1,8 +1,8 @@
 // Client-sichere Typen, Mapper, Validierung UND Berechnungskern für Lohnläufe.
 //
-// UMFANG DIESES SCHRITTS (bewusst begrenzt):
-//   Anlegen + Berechnen. KEINE Freigabe/Vier-Augen-Prüfung des Lohnlaufs,
-//   keine Unveränderlichkeit nach Freigabe, kein Export, keine Auszahlung.
+// UMFANG: Anlegen, Berechnen und Vier-Augen-Freigabe (Vorlage/Freigabe/Ablehnung)
+//   inkl. technischer Unveränderlichkeit nach Freigabe.
+//   KEIN Export (kein DATEV, kein Lohnschein/PDF), KEINE Auszahlung.
 //
 // GRUNDSATZ „NICHTS RATEN“:
 // - Es werden ausschließlich VERIFIZIERTE Daten verwendet:
@@ -24,13 +24,25 @@ import type {
   RegelKategorie,
 } from "@/lib/payroll-shared";
 
-export type LohnlaufStatus = "offen" | "berechnet" | "unvollstaendig";
+export type LohnlaufStatus =
+  | "offen"
+  | "berechnet"
+  | "unvollstaendig"
+  | "zur_freigabe"
+  | "freigegeben";
 
 export const LOHNLAUF_STATUS_LABEL: Record<LohnlaufStatus, string> = {
   offen: "Offen",
   berechnet: "Berechnet",
   unvollstaendig: "Unvollständig",
+  zur_freigabe: "Zur Freigabe vorgelegt",
+  freigegeben: "Freigegeben",
 };
+
+/** Nach der Freigabe ist ein Lohnlauf technisch unveränderlich (DB-Trigger). */
+export function istUnveraenderlich(status: LohnlaufStatus): boolean {
+  return status === "freigegeben";
+}
 
 /** Wortgleicher Grund für fehlende Stundenquelle (fachlich vorgegeben). */
 export const GRUND_FEHLENDE_ARBEITSZEIT = "fehlende geprüfte Arbeitszeiterfassung";
@@ -72,6 +84,15 @@ export interface Lohnlauf {
   summeArbeitgeberkosten: number | null;
   fehlendePunkte: string[];
   berechnetAm: string | null;
+  berechnetVon: string | null;
+  vorgelegtVon: string | null;
+  vorgelegtAm: string | null;
+  vorgelegtVersion: number | null;
+  freigegebenVon: string | null;
+  freigegebenAm: string | null;
+  entschiedenVon: string | null;
+  entschiedenAm: string | null;
+  ablehnungGrund: string | null;
   version: number;
   notiz: string;
   createdAt: string;
@@ -94,7 +115,18 @@ export interface PayrollRunRow {
   summe_arbeitgeberkosten: number | string | null;
   fehlende_punkte: unknown;
   berechnet_am: string | null;
+  berechnet_von: string | null;
+
+  vorgelegt_von: string | null;
+  vorgelegt_am: string | null;
+  vorgelegt_version: number | null;
+  freigegeben_von: string | null;
+  freigegeben_am: string | null;
+  entschieden_von: string | null;
+  entschieden_am: string | null;
+  ablehnung_grund: string | null;
   version: number;
+
   notiz: string | null;
   created_at: string;
   updated_at: string;
@@ -152,8 +184,16 @@ function num(v: number | string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+const STATUS_WERTE: LohnlaufStatus[] = [
+  "offen",
+  "berechnet",
+  "unvollstaendig",
+  "zur_freigabe",
+  "freigegeben",
+];
+
 function status(v: string): LohnlaufStatus {
-  return v === "berechnet" || v === "unvollstaendig" ? v : "offen";
+  return (STATUS_WERTE as string[]).includes(v) ? (v as LohnlaufStatus) : "offen";
 }
 
 export function rowToPosten(r: PayrollRunItemRow): LohnlaufPosten {
@@ -193,7 +233,17 @@ export function rowToLohnlauf(r: PayrollRunRow, posten: PayrollRunItemRow[] = []
       ? (r.fehlende_punkte as unknown[]).filter((x): x is string => typeof x === "string")
       : [],
     berechnetAm: r.berechnet_am ?? null,
+    berechnetVon: r.berechnet_von ?? null,
+    vorgelegtVon: r.vorgelegt_von ?? null,
+    vorgelegtAm: r.vorgelegt_am ?? null,
+    vorgelegtVersion: r.vorgelegt_version ?? null,
+    freigegebenVon: r.freigegeben_von ?? null,
+    freigegebenAm: r.freigegeben_am ?? null,
+    entschiedenVon: r.entschieden_von ?? null,
+    entschiedenAm: r.entschieden_am ?? null,
+    ablehnungGrund: r.ablehnung_grund ?? null,
     version: Number(r.version) || 1,
+
     notiz: r.notiz ?? "",
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -438,6 +488,28 @@ export function mapLohnlaufDbError(message: string): string {
   if (m.includes("payroll_runs_monatsanfang")) {
     return "Der Zeitraum muss ein vollständiger Kalendermonat sein.";
   }
+  // Fachliche Trigger-Meldungen (Freigabe-Workflow) unverändert durchreichen.
+  if (m.includes("unveraenderlich") || m.includes("unveränderlich")) {
+    return "Ein freigegebener Lohnlauf ist unveränderlich – keine Neuberechnung, Änderung oder Löschung möglich.";
+  }
+  if (m.includes("zweiten berechtigten person")) {
+    return "Vier-Augen-Prinzip: Wer vorgelegt oder berechnet hat, darf denselben Lohnlauf nicht selbst entscheiden.";
+  }
+  if (m.includes("erneut vorgelegt")) {
+    return "Der Rechenstand hat sich seit der Vorlage geändert. Der Lohnlauf muss erneut vorgelegt werden.";
+  }
+  if (m.includes("vollstaendig berechneter") || m.includes("vollständig berechneter")) {
+    return "Nur ein vollständig berechneter Lohnlauf kann zur Freigabe vorgelegt werden.";
+  }
+  if (m.includes("vorgelegter lohnlauf") || m.includes("vorgelegter lohnlauf")) {
+    return "Unzulässiger Statuswechsel für einen vorgelegten Lohnlauf.";
+  }
+  if (m.includes("ablehnung erfordert")) {
+    return "Eine Ablehnung erfordert einen Grund.";
+  }
+  if (m.includes("nicht geloescht") || m.includes("nicht gelöscht")) {
+    return "Ein freigegebener Lohnlauf kann nicht gelöscht werden.";
+  }
   if (m.includes("kein zugriff") || m.includes("row-level security") || m.includes("permission")) {
     return "Kein Zugriff: Lohnläufe dürfen nur von Administration oder Finanzen bearbeitet werden.";
   }
@@ -460,3 +532,17 @@ export const createLohnlaufSchema = z
 export type LohnlaufWrite = z.infer<typeof createLohnlaufSchema>;
 
 export const lohnlaufIdSchema = z.object({ id: z.string().uuid() }).strict();
+
+/** Ablehnung: Pflicht-Freitextgrund. */
+export const ablehnenLohnlaufSchema = z
+  .object({
+    id: z.string().uuid(),
+    grund: z
+      .string()
+      .trim()
+      .min(5, "Bitte einen nachvollziehbaren Ablehnungsgrund angeben (mind. 5 Zeichen).")
+      .max(2000),
+  })
+  .strict();
+
+export type LohnlaufAblehnung = z.infer<typeof ablehnenLohnlaufSchema>;

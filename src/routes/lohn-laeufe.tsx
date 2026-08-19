@@ -1,10 +1,22 @@
-// Lohnläufe: Anlegen und Berechnen (Finanzbereich).
-// Bewusst OHNE Freigabe/Vier-Augen-Prüfung, ohne Sperre nach Freigabe, ohne
-// Export und ohne Auszahlung – das folgt in einem eigenen Schritt.
+// Lohnläufe: Anlegen, Berechnen und Vier-Augen-Freigabe (Finanzbereich).
+// Kein Export (kein DATEV, kein Lohnschein/PDF) und keine Auszahlung – das
+// bleibt einem späteren, eigenen Schritt vorbehalten.
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Calculator, Info, Loader2, Plus, ShieldAlert, Trash2, TriangleAlert } from "lucide-react";
+import {
+  Calculator,
+  CheckCircle2,
+  Info,
+  Loader2,
+  Lock,
+  Plus,
+  Send,
+  ShieldAlert,
+  Trash2,
+  TriangleAlert,
+  XCircle,
+} from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { Badge } from "@/components/ui/badge";
@@ -32,13 +44,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { useDrivers } from "@/lib/drivers-store";
 import { EUR2 } from "@/lib/finance";
 import {
+  useApprovePayrollRun,
   useCalculatePayrollRun,
   useCreatePayrollRun,
   useDeletePayrollRun,
   usePayrollRunAudit,
   usePayrollRuns,
+  useRejectPayrollRun,
+  useSubmitPayrollRun,
 } from "@/lib/payroll-run-store";
-import { LOHNLAUF_STATUS_LABEL, monatLabel, type Lohnlauf } from "@/lib/payroll-run-shared";
+import {
+  istUnveraenderlich,
+  LOHNLAUF_STATUS_LABEL,
+  monatLabel,
+  type Lohnlauf,
+} from "@/lib/payroll-run-shared";
 import { REGEL_KATEGORIE_LABEL } from "@/lib/payroll-shared";
 import { VERGUETUNGSART_LABEL } from "@/lib/employment-shared";
 
@@ -70,18 +90,26 @@ function heutigerMonat(): string {
 }
 
 function LohnlaufSeitenInhalt() {
+  const { user } = useAuth();
+  const benutzerId = user?.id ?? null;
   const { data: laeufe, isLoading } = usePayrollRuns();
+
   const { data: audit } = usePayrollRunAudit();
   const { data: fahrer } = useDrivers();
 
   const createMut = useCreatePayrollRun();
   const berechneMut = useCalculatePayrollRun();
   const deleteMut = useDeletePayrollRun();
+  const vorlegenMut = useSubmitPayrollRun();
+  const freigebenMut = useApprovePayrollRun();
+  const ablehnenMut = useRejectPayrollRun();
 
   const [offen, setOffen] = useState(false);
   const [fahrerId, setFahrerId] = useState("");
   const [monat, setMonat] = useState(heutigerMonat());
   const [notiz, setNotiz] = useState("");
+  const [ablehnenId, setAblehnenId] = useState<string | null>(null);
+  const [ablehnGrund, setAblehnGrund] = useState("");
 
   const fahrerName = useMemo(() => {
     const m = new Map<string, string>();
@@ -122,6 +150,36 @@ function LohnlaufSeitenInhalt() {
     }
   }
 
+  async function vorlegen(id: string) {
+    try {
+      await vorlegenMut.mutateAsync(id);
+      toast.success("Lohnlauf zur Freigabe vorgelegt – Freigabe durch eine zweite Person.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Vorlegen fehlgeschlagen.");
+    }
+  }
+
+  async function freigeben(id: string) {
+    try {
+      await freigebenMut.mutateAsync(id);
+      toast.success("Lohnlauf freigegeben – ab jetzt unveränderlich.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Freigabe fehlgeschlagen.");
+    }
+  }
+
+  async function ablehnen() {
+    if (!ablehnenId) return;
+    try {
+      await ablehnenMut.mutateAsync({ id: ablehnenId, grund: ablehnGrund });
+      toast.success("Lohnlauf abgelehnt – wieder bearbeitbar.");
+      setAblehnenId(null);
+      setAblehnGrund("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Ablehnung fehlgeschlagen.");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -138,8 +196,10 @@ function LohnlaufSeitenInhalt() {
             Regelwerken und Lohn-Eingabefakten. Bei Stundenlohn ist die einzige zulässige
             Stundenquelle ein verifizierter Fakt <code>arbeitsstunden_JJJJ_MM</code>; der
             Schichtplan gilt als reine Planung. Fehlt eine Grundlage, wird der Lauf als
-            „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Freigabe, Export
-            und Auszahlung sind in diesem Schritt bewusst nicht enthalten.
+            „unvollständig“ mit Begründung gespeichert – es wird nichts geschätzt. Ein berechneter
+            Lauf wird zur Freigabe vorgelegt und muss von einer <strong>zweiten</strong> Person
+            freigegeben werden; danach ist er samt Posten unveränderlich. Export und Auszahlung sind
+            in diesem Schritt bewusst nicht enthalten.
           </p>
         </CardContent>
       </Card>
@@ -162,127 +222,217 @@ function LohnlaufSeitenInhalt() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {(laeufe ?? []).map((lauf) => (
-            <Card key={lauf.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <CardTitle className="text-base">
-                    {fahrerName.get(lauf.fahrerId) ?? "Unbekannter Fahrer"} ·{" "}
-                    {monatLabel(lauf.periodeMonat)}
-                  </CardTitle>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <Badge
-                      variant={
-                        lauf.status === "berechnet"
-                          ? "default"
-                          : lauf.status === "unvollstaendig"
-                            ? "destructive"
-                            : "secondary"
-                      }
-                    >
-                      {LOHNLAUF_STATUS_LABEL[lauf.status]}
-                    </Badge>
-                    <span>Version {lauf.version}</span>
-                    {lauf.verguetungsart && (
-                      <span>{VERGUETUNGSART_LABEL[lauf.verguetungsart]}</span>
-                    )}
-                    {lauf.berechnetAm && (
-                      <span>berechnet am {new Date(lauf.berechnetAm).toLocaleString("de-DE")}</span>
+          {(laeufe ?? []).map((lauf) => {
+            const gesperrt = istUnveraenderlich(lauf.status);
+            // Vier-Augen-Prinzip: wer vorgelegt oder berechnet hat, darf nicht entscheiden.
+            const selbstEntscheidung =
+              !!benutzerId &&
+              (lauf.vorgelegtVon === benutzerId || lauf.berechnetVon === benutzerId);
+            const ergebnisSichtbar =
+              lauf.status === "berechnet" ||
+              lauf.status === "zur_freigabe" ||
+              lauf.status === "freigegeben";
+            return (
+              <Card key={lauf.id}>
+                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <CardTitle className="text-base">
+                      {fahrerName.get(lauf.fahrerId) ?? "Unbekannter Fahrer"} ·{" "}
+                      {monatLabel(lauf.periodeMonat)}
+                    </CardTitle>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Badge
+                        variant={
+                          lauf.status === "freigegeben"
+                            ? "default"
+                            : lauf.status === "unvollstaendig"
+                              ? "destructive"
+                              : lauf.status === "berechnet" || lauf.status === "zur_freigabe"
+                                ? "outline"
+                                : "secondary"
+                        }
+                        className="gap-1"
+                      >
+                        {lauf.status === "freigegeben" && <Lock className="h-3 w-3" />}
+                        {LOHNLAUF_STATUS_LABEL[lauf.status]}
+                      </Badge>
+                      <span>Version {lauf.version}</span>
+                      {lauf.verguetungsart && (
+                        <span>{VERGUETUNGSART_LABEL[lauf.verguetungsart]}</span>
+                      )}
+                      {lauf.berechnetAm && (
+                        <span>
+                          berechnet am {new Date(lauf.berechnetAm).toLocaleString("de-DE")}
+                        </span>
+                      )}
+                      {lauf.vorgelegtAm && lauf.status === "zur_freigabe" && (
+                        <span>
+                          vorgelegt am {new Date(lauf.vorgelegtAm).toLocaleString("de-DE")} (Stand
+                          Version {lauf.vorgelegtVersion})
+                        </span>
+                      )}
+                      {lauf.freigegebenAm && (
+                        <span>
+                          freigegeben am {new Date(lauf.freigegebenAm).toLocaleString("de-DE")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {gesperrt ? (
+                      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Lock className="h-4 w-4" /> Freigegeben – unveränderlich
+                      </span>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => void berechnen(lauf)}
+                          disabled={berechneMut.isPending}
+                        >
+                          <Calculator className="h-4 w-4" />
+                          {lauf.status === "offen" ? "Berechnen" : "Neu berechnen"}
+                        </Button>
+                        {lauf.status === "berechnet" && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="gap-2"
+                            onClick={() => void vorlegen(lauf.id)}
+                            disabled={vorlegenMut.isPending}
+                          >
+                            <Send className="h-4 w-4" /> Zur Freigabe vorlegen
+                          </Button>
+                        )}
+                        {lauf.status === "zur_freigabe" && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => void freigeben(lauf.id)}
+                              disabled={freigebenMut.isPending || selbstEntscheidung}
+                              title={
+                                selbstEntscheidung
+                                  ? "Vier-Augen-Prinzip: Freigabe nur durch eine zweite Person."
+                                  : undefined
+                              }
+                            >
+                              <CheckCircle2 className="h-4 w-4" /> Freigeben
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="gap-2"
+                              onClick={() => {
+                                setAblehnenId(lauf.id);
+                                setAblehnGrund("");
+                              }}
+                              disabled={selbstEntscheidung}
+                              title={
+                                selbstEntscheidung
+                                  ? "Vier-Augen-Prinzip: Ablehnung nur durch eine zweite Person."
+                                  : undefined
+                              }
+                            >
+                              <XCircle className="h-4 w-4" /> Ablehnen
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void loeschen(lauf.id)}
+                          disabled={deleteMut.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => void berechnen(lauf)}
-                    disabled={berechneMut.isPending}
-                  >
-                    <Calculator className="h-4 w-4" />
-                    {lauf.status === "offen" ? "Berechnen" : "Neu berechnen"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => void loeschen(lauf.id)}
-                    disabled={deleteMut.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {lauf.status === "unvollstaendig" && (
-                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                    <div className="mb-2 flex items-center gap-2 font-medium text-destructive">
-                      <TriangleAlert className="h-4 w-4" /> Unvollständig – fehlende Grundlagen
-                    </div>
-                    <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                      {lauf.fehlendePunkte.map((p, i) => (
-                        <li key={i}>{p}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {lauf.status === "berechnet" && (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-4">
-                      <Kennzahl label="Bruttolohn" wert={lauf.brutto} />
-                      <Kennzahl label="Abzüge" wert={lauf.summeAbzuege} />
-                      <Kennzahl label="Netto" wert={lauf.netto} />
-                      <Kennzahl label="Arbeitgeberkosten" wert={lauf.summeArbeitgeberkosten} />
-                    </div>
-                    {lauf.stunden !== null && (
-                      <p className="text-xs text-muted-foreground">
-                        Grundlage: {lauf.stunden} Stunden × {EUR2(lauf.stundenlohn ?? 0)} (geprüfte
-                        Arbeitszeiterfassung)
-                      </p>
-                    )}
-                    {lauf.posten.length > 0 && (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="text-left text-xs uppercase text-muted-foreground">
-                            <tr>
-                              <th className="py-2">Regel</th>
-                              <th className="py-2">Kategorie</th>
-                              <th className="py-2">Berechnung</th>
-                              <th className="py-2">Quelle</th>
-                              <th className="py-2 text-right">Betrag</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {lauf.posten.map((p) => (
-                              <tr key={p.id} className="border-t">
-                                <td className="py-2">
-                                  <div className="font-medium">{p.regelBezeichnung}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {p.regelKennung}
-                                  </div>
-                                </td>
-                                <td className="py-2">{REGEL_KATEGORIE_LABEL[p.kategorie]}</td>
-                                <td className="py-2">
-                                  {p.berechnungsart === "prozent"
-                                    ? `${p.prozentsatz} % von ${EUR2(p.basisbetrag)}`
-                                    : "Fester Betrag"}
-                                </td>
-                                <td className="py-2 text-xs text-muted-foreground">
-                                  {p.quelle} / {p.quelleVersion}
-                                </td>
-                                <td className="py-2 text-right font-medium">{EUR2(p.betrag)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {lauf.status === "unvollstaendig" && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                      <div className="mb-2 flex items-center gap-2 font-medium text-destructive">
+                        <TriangleAlert className="h-4 w-4" /> Unvollständig – fehlende Grundlagen
                       </div>
-                    )}
-                  </>
-                )}
+                      <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                        {lauf.fehlendePunkte.map((p, i) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-                {lauf.notiz && <p className="text-sm text-muted-foreground">{lauf.notiz}</p>}
-              </CardContent>
-            </Card>
-          ))}
+                  {lauf.ablehnungGrund && lauf.status !== "freigegeben" && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                      <div className="mb-1 flex items-center gap-2 font-medium text-destructive">
+                        <XCircle className="h-4 w-4" /> Zuletzt abgelehnt
+                      </div>
+                      <p className="text-muted-foreground">{lauf.ablehnungGrund}</p>
+                    </div>
+                  )}
+
+                  {ergebnisSichtbar && (
+                    <>
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <Kennzahl label="Bruttolohn" wert={lauf.brutto} />
+                        <Kennzahl label="Abzüge" wert={lauf.summeAbzuege} />
+                        <Kennzahl label="Netto" wert={lauf.netto} />
+                        <Kennzahl label="Arbeitgeberkosten" wert={lauf.summeArbeitgeberkosten} />
+                      </div>
+                      {lauf.stunden !== null && (
+                        <p className="text-xs text-muted-foreground">
+                          Grundlage: {lauf.stunden} Stunden × {EUR2(lauf.stundenlohn ?? 0)}{" "}
+                          (geprüfte Arbeitszeiterfassung)
+                        </p>
+                      )}
+                      {lauf.posten.length > 0 && (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="text-left text-xs uppercase text-muted-foreground">
+                              <tr>
+                                <th className="py-2">Regel</th>
+                                <th className="py-2">Kategorie</th>
+                                <th className="py-2">Berechnung</th>
+                                <th className="py-2">Quelle</th>
+                                <th className="py-2 text-right">Betrag</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {lauf.posten.map((p) => (
+                                <tr key={p.id} className="border-t">
+                                  <td className="py-2">
+                                    <div className="font-medium">{p.regelBezeichnung}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {p.regelKennung}
+                                    </div>
+                                  </td>
+                                  <td className="py-2">{REGEL_KATEGORIE_LABEL[p.kategorie]}</td>
+                                  <td className="py-2">
+                                    {p.berechnungsart === "prozent"
+                                      ? `${p.prozentsatz} % von ${EUR2(p.basisbetrag)}`
+                                      : "Fester Betrag"}
+                                  </td>
+                                  <td className="py-2 text-xs text-muted-foreground">
+                                    {p.quelle} / {p.quelleVersion}
+                                  </td>
+                                  <td className="py-2 text-right font-medium">{EUR2(p.betrag)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {lauf.notiz && <p className="text-sm text-muted-foreground">{lauf.notiz}</p>}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -360,6 +510,43 @@ function LohnlaufSeitenInhalt() {
             >
               {createMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Anlegen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={ablehnenId !== null} onOpenChange={(o) => !o && setAblehnenId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lohnlauf ablehnen</DialogTitle>
+            <DialogDescription>
+              Die Ablehnung wird protokolliert. Der Lohnlauf geht danach zurück in den bearbeitbaren
+              Zustand und kann neu berechnet werden.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label>Grund (Pflichtangabe)</Label>
+            <Textarea
+              rows={3}
+              value={ablehnGrund}
+              onChange={(e) => setAblehnGrund(e.target.value)}
+              placeholder="Warum wird der Lohnlauf abgelehnt?"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAblehnenId(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={() => void ablehnen()}
+              disabled={ablehnGrund.trim().length < 5 || ablehnenMut.isPending}
+            >
+              {ablehnenMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Ablehnen
             </Button>
           </DialogFooter>
         </DialogContent>
