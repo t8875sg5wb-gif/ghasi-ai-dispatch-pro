@@ -72,6 +72,13 @@ import { buildMahnText, naechsteMahnstufe, mahnStufeLabel } from "@/lib/dunning"
 import { rechnungToWrite } from "@/lib/invoices-shared";
 import { downloadText } from "@/lib/export-utils";
 import { RechnungDetailDialog } from "@/components/rechnungen/rechnung-detail-dialog";
+import { exportInvoiceXRechnung } from "@/lib/invoices.functions";
+import {
+  XRECHNUNG_WARNUNG,
+  XRECHNUNG_LEITWEG_FEHLT_HINWEIS,
+  istExportierbar,
+} from "@/lib/xrechnung";
+import { useServerFn } from "@tanstack/react-start";
 import { BankImportDialog } from "@/components/rechnungen/bank-import-dialog";
 import { logActivity } from "@/lib/protokoll";
 import type { Rechnung, MahnEintrag } from "@/lib/finance";
@@ -113,6 +120,27 @@ function RechnungenPage() {
   // Detail-/Zahlungsdialog
   const [detailTarget, setDetailTarget] = useState<Rechnung | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
+
+  // XRechnung-Exportentwurf (EN 16931/UBL) – Pflicht-Warnhinweis vor Download
+  const exportXr = useServerFn(exportInvoiceXRechnung);
+  const [xrTarget, setXrTarget] = useState<Rechnung | null>(null);
+  const [xrLaeuft, setXrLaeuft] = useState(false);
+
+  async function xrechnungHerunterladen() {
+    if (!xrTarget) return;
+    setXrLaeuft(true);
+    try {
+      const r = await exportXr({ data: { id: xrTarget.id } });
+      if (r.leitwegFehlt) toast.warning(XRECHNUNG_LEITWEG_FEHLT_HINWEIS);
+      downloadText(r.dateiname, r.xml, "application/xml");
+      toast.success(`${r.dateiname} erzeugt – bitte mit dem KoSIT-Validator prüfen.`);
+      setXrTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "XRechnung-Export fehlgeschlagen");
+    } finally {
+      setXrLaeuft(false);
+    }
+  }
 
   // Mahnwesen-Dialog
   const [mahnTarget, setMahnTarget] = useState<Rechnung | null>(null);
@@ -439,6 +467,17 @@ function RechnungenPage() {
                             <FileDown className="h-3.5 w-3.5" />
                             PDF
                           </Button>
+                          {istExportierbar(r.status) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-full text-xs"
+                              onClick={() => setXrTarget(r)}
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              XRechnung
+                            </Button>
+                          )}
                           {istMahnbar(r, mounted) && (r.mahnstufe ?? 0) < 3 ? (
                             <Button
                               size="sm"
@@ -505,6 +544,41 @@ function RechnungenPage() {
       />
 
       <BankImportDialog open={bankOpen} onOpenChange={setBankOpen} />
+
+      {/* XRechnung-Exportentwurf: Pflicht-Warnhinweis vor dem Download */}
+      <Dialog open={!!xrTarget} onOpenChange={(o) => !o && setXrTarget(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>
+              XRechnung-Exportentwurf {xrTarget ? `– ${xrTarget.nummer}` : ""}
+            </DialogTitle>
+            <DialogDescription>
+              EN 16931 / UBL-Syntax, lokaler Datei-Download. Kein Versand an Portale (PEPPOL, ZRE).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs font-medium text-destructive">
+            {XRECHNUNG_WARNUNG}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Fehlt beim Kunden die strukturierte Adresse, wird kein Export erzeugt. Fehlt die
+            Leitweg-ID, wird gewarnt – öffentlich-rechtliche Empfänger weisen solche Rechnungen in
+            der Regel zurück. Jeder Export wird protokolliert.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setXrTarget(null)}>
+              Abbrechen
+            </Button>
+            <Button size="sm" disabled={xrLaeuft} onClick={xrechnungHerunterladen}>
+              {xrLaeuft ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              XML herunterladen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mahnwesen-Dialog */}
       <Dialog open={!!mahnTarget} onOpenChange={(o) => !o && setMahnTarget(null)}>
