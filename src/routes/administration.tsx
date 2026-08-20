@@ -107,7 +107,14 @@ function Datensicherung() {
       const res = await exportFn();
       const data = JSON.parse(res.json) as Parameters<typeof downloadBackupZip>[0];
       const { tables, rows } = await downloadBackupZip(data);
-      toast.success(`Backup erstellt: ${tables} Tabellen, ${rows} Datensätze`);
+      if (res.failedTables.length > 0) {
+        toast.warning(
+          `Backup unvollständig: ${res.failedTables.join(", ")} konnte(n) nicht gesichert werden. Erstellt: ${tables} Tabellen, ${rows} Datensätze.`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(`Backup erstellt: ${tables} Tabellen, ${rows} Datensätze`);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Backup fehlgeschlagen");
     } finally {

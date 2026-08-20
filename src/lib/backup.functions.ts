@@ -45,19 +45,30 @@ export const exportAllData = createServerFn({ method: "GET" })
 
     const sb = context.supabase as unknown as {
       from: (t: string) => {
-        select: (c: string) => Promise<{ data: Record<string, unknown>[] | null }>;
+        select: (c: string) => Promise<{
+          data: Record<string, unknown>[] | null;
+          error: { message: string } | null;
+        }>;
       };
     };
 
     const result: BackupData = {};
+    const failedTables: string[] = [];
+
     for (const table of BACKUP_TABLES) {
       try {
-        const { data } = await sb.from(table).select("*");
-        result[table] = data ?? [];
+        const { data, error } = await sb.from(table).select("*");
+        if (error) {
+          failedTables.push(table);
+          result[table] = [];
+        } else {
+          result[table] = data ?? [];
+        }
       } catch {
+        failedTables.push(table);
         result[table] = [];
       }
     }
     // Return as a JSON string to keep the RPC return type serializable.
-    return { json: JSON.stringify(result) };
+    return { json: JSON.stringify(result), failedTables };
   });
