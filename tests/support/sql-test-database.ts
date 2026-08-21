@@ -21,6 +21,7 @@ const bootstrapSql = `
   create role authenticated nologin;
   create role service_role nologin;
   create role supabase_auth_admin nologin;
+  create schema extensions;
   create schema auth;
   create table auth.users (
     id uuid primary key,
@@ -51,7 +52,7 @@ const bootstrapSql = `
     metadata jsonb
   );
   alter table storage.objects enable row level security;
-  grant usage on schema auth, storage to anon, authenticated, service_role;
+  grant usage on schema auth, storage, extensions to anon, authenticated, service_role;
 `;
 
 export type MigrationResult = {
