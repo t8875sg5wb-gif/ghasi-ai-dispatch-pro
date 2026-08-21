@@ -1,10 +1,12 @@
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { uuid_ossp } from "@electric-sql/pglite/contrib/uuid_ossp";
 import { runMigrations, migrationFiles } from "../support/sql-test-database";
 import { readFileSync } from "node:fs";
 const src = readFileSync("tests/support/sql-test-database.ts","utf8");
 const m = src.match(/const bootstrapSql = `([\s\S]*?)`;/)!;
-const db = new PGlite({ extensions: { pgcrypto } });
+const db = new PGlite({ extensions: { pgcrypto, btree_gist, uuid_ossp } });
 await db.exec(m[1]);
 const res = await runMigrations(db);
 console.log("total", migrationFiles.length, "ok", res.filter(r=>r.ok).length);

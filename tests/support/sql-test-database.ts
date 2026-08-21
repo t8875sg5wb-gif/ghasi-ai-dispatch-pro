@@ -1,5 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { uuid_ossp } from "@electric-sql/pglite/contrib/uuid_ossp";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -79,7 +81,7 @@ export async function runMigrations(
 }
 
 export async function createMigratedTestDatabase(): Promise<PGlite> {
-  const db = new PGlite({ extensions: { pgcrypto } });
+  const db = new PGlite({ extensions: { pgcrypto, btree_gist, uuid_ossp } });
   await db.exec(bootstrapSql);
   const results = await runMigrations(db);
   const failed = results.filter((r) => !r.ok);
