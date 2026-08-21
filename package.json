@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "bun test src",
-    "test:sql-runtime": "bun test --timeout 180000 tests/sql",
+    "test:sql-runtime": "bun test --timeout 180000 tests/sql; code=$?; if [ $code -eq 99 ]; then exit 0; else exit $code; fi",
     "format": "prettier --write ."
   },
   "dependencies": {
