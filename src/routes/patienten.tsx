@@ -92,18 +92,6 @@ function mobilitaetTyp(p: Patient): Mobilitaet {
   }
 }
 
-/**
- * Liefert die Transporte, die über die stabile `patientId` mit einem Patienten
- * verknüpft sind. Namensvergleiche sind bewusst nicht erlaubt, um
- * Patientenverwechslungen bei gleichnamigen Personen zu vermeiden.
- */
-export function transporteFuerPatient(
-  patient: Pick<Patient, "id">,
-  auftraege: Pick<Auftrag, "patientId">[],
-) {
-  return auftraege.filter((a) => a.patientId === patient.id);
-}
-
 function PatientenSeite() {
   const { name: akteur } = useAuth();
   const { id: initialId } = Route.useSearch();
