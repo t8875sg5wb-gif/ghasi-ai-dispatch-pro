@@ -2519,7 +2519,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_payroll_run_calculation: {
+        Args: {
+          p_brutto: number
+          p_employment_id: string
+          p_fehlende_punkte: Json
+          p_items: Json
+          p_netto: number
+          p_run_id: string
+          p_status: string
+          p_stunden: number
+          p_stundenlohn: number
+          p_summe_abzuege: number
+          p_summe_arbeitgeberkosten: number
+          p_verguetungsart: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "disposition" | "finanz" | "fahrer"

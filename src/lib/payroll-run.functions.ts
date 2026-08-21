@@ -209,51 +209,45 @@ export const calculatePayrollRun = createServerFn({ method: "POST" })
       fakten: ((factRows ?? []) as unknown as PayrollFactRow[]).map(rowToLohnFakt),
     });
 
-    // 1) Alte Posten restlos entfernen (kein Duplikat, kein Rest).
-    const { error: delErr } = await context.supabase
-      .from("payroll_run_items")
-      .delete()
-      .eq("run_id", data.id);
-    if (delErr) throw new Error(mapLohnlaufDbError(delErr.message));
-
-    // 2) Neue Posten schreiben (nur bei vollständiger Grundlage vorhanden).
-    if (ergebnis.posten.length > 0) {
-      const { error: insErr } = await context.supabase.from("payroll_run_items").insert(
-        ergebnis.posten.map((p) => ({
-          run_id: data.id,
-          rule_id: p.regelId,
-          regel_kennung: p.regelKennung,
-          regel_bezeichnung: p.regelBezeichnung,
-          kategorie: p.kategorie,
-          berechnungsart: p.berechnungsart,
-          prozentsatz: p.prozentsatz,
-          festbetrag: p.festbetrag,
-          basisbetrag: p.basisbetrag,
-          betrag: p.betrag,
-          quelle: p.quelle,
-          quelle_version: p.quelleVersion,
-        })) as never,
-      );
-      if (insErr) throw new Error(mapLohnlaufDbError(insErr.message));
+    // Posten ersetzen und Kopfdaten schreiben in EINER Transaktion.
+    // Die Datenbankfunktion sperrt den Lauf (FOR UPDATE), prüft den Status
+    // innerhalb der Transaktion (kein TOCTOU) und lässt den bestehenden
+    // Trigger enforce_payroll_run_rules unverändert Version/Zeitstempel setzen.
+    const { error: rpcErr } = await context.supabase.rpc("apply_payroll_run_calculation", {
+      p_run_id: data.id,
+      p_items: ergebnis.posten.map((p) => ({
+        rule_id: p.regelId,
+        regel_kennung: p.regelKennung,
+        regel_bezeichnung: p.regelBezeichnung,
+        kategorie: p.kategorie,
+        berechnungsart: p.berechnungsart,
+        prozentsatz: p.prozentsatz,
+        festbetrag: p.festbetrag,
+        basisbetrag: p.basisbetrag,
+        betrag: p.betrag,
+        quelle: p.quelle,
+        quelle_version: p.quelleVersion,
+      })) as never,
+      p_status: ergebnis.status,
+      p_employment_id: ergebnis.beschaeftigungId,
+      p_verguetungsart: ergebnis.verguetungsart,
+      p_stunden: ergebnis.stunden,
+      p_stundenlohn: ergebnis.stundenlohn,
+      p_brutto: ergebnis.brutto,
+      p_summe_abzuege: ergebnis.summeAbzuege,
+      p_netto: ergebnis.netto,
+      p_summe_arbeitgeberkosten: ergebnis.summeArbeitgeberkosten,
+      p_fehlende_punkte: ergebnis.fehlendePunkte as never,
+    } as never);
+    if (rpcErr) {
+      // Gleiche Meldung wie bisher, damit sich die UI nicht ändert.
+      if (/unveraenderlich|unveränderlich/i.test(rpcErr.message)) {
+        throw new Error(
+          "Ein freigegebener Lohnlauf ist unveränderlich und kann nicht neu berechnet werden.",
+        );
+      }
+      throw new Error(mapLohnlaufDbError(rpcErr.message));
     }
-
-    // 3) Kopfdaten aktualisieren (Version/Zeitstempel setzt die Datenbank).
-    const { error: updErr } = await context.supabase
-      .from("payroll_runs")
-      .update({
-        status: ergebnis.status,
-        employment_id: ergebnis.beschaeftigungId,
-        verguetungsart: ergebnis.verguetungsart,
-        stunden: ergebnis.stunden,
-        stundenlohn: ergebnis.stundenlohn,
-        brutto: ergebnis.brutto,
-        summe_abzuege: ergebnis.summeAbzuege,
-        netto: ergebnis.netto,
-        summe_arbeitgeberkosten: ergebnis.summeArbeitgeberkosten,
-        fehlende_punkte: ergebnis.fehlendePunkte as never,
-      } as never)
-      .eq("id", data.id);
-    if (updErr) throw new Error(mapLohnlaufDbError(updErr.message));
 
     const { logActivitySafe } = await import("@/lib/activity-log.server");
     await logActivitySafe(
