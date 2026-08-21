@@ -28,6 +28,7 @@ import { useDocuments } from "@/lib/documents-store";
 import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
 import type { PatientWrite } from "@/lib/patients-shared";
+import { transporteFuerPatient } from "@/lib/patienten-transporte";
 import { Button } from "@/components/ui/button";
 import {
   INITIAL_AUFTRAEGE,
@@ -259,7 +260,7 @@ function PatientenSeite() {
 
 function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => void }) {
   const mob = MOBILITAET_META[mobilitaetTyp(patient)];
-  const transporte = INITIAL_AUFTRAEGE.filter((a) => a.patient === patient.name);
+  const transporte = transporteFuerPatient(patient, INITIAL_AUFTRAEGE);
   const zuzahlung = fristStatus(patient.zuzahlungsbefreitBis ?? null);
   const genehmigung = fristStatus(patient.genehmigungBis ?? null);
 
