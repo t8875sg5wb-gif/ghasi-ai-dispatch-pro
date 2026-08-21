@@ -1358,6 +1358,7 @@ export type Database = {
           destination_additional_info: string
           destination_city: string
           destination_country: string
+          destination_facility_id: string | null
           destination_house_number: string
           destination_postal_code: string
           destination_street: string
@@ -1381,6 +1382,7 @@ export type Database = {
           pickup_additional_info: string
           pickup_city: string
           pickup_country: string
+          pickup_facility_id: string | null
           pickup_house_number: string
           pickup_postal_code: string
           pickup_street: string
@@ -1407,6 +1409,7 @@ export type Database = {
           destination_additional_info?: string
           destination_city?: string
           destination_country?: string
+          destination_facility_id?: string | null
           destination_house_number?: string
           destination_postal_code?: string
           destination_street?: string
@@ -1430,6 +1433,7 @@ export type Database = {
           pickup_additional_info?: string
           pickup_city?: string
           pickup_country?: string
+          pickup_facility_id?: string | null
           pickup_house_number?: string
           pickup_postal_code?: string
           pickup_street?: string
@@ -1456,6 +1460,7 @@ export type Database = {
           destination_additional_info?: string
           destination_city?: string
           destination_country?: string
+          destination_facility_id?: string | null
           destination_house_number?: string
           destination_postal_code?: string
           destination_street?: string
@@ -1479,6 +1484,7 @@ export type Database = {
           pickup_additional_info?: string
           pickup_city?: string
           pickup_country?: string
+          pickup_facility_id?: string | null
           pickup_house_number?: string
           pickup_postal_code?: string
           pickup_street?: string
@@ -1496,6 +1502,13 @@ export type Database = {
           zielort?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_destination_facility_id_fkey"
+            columns: ["destination_facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_fahrer_id_fkey"
             columns: ["fahrer_id"]
@@ -1522,6 +1535,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_pickup_facility_id_fkey"
+            columns: ["pickup_facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
             referencedColumns: ["id"]
           },
           {
