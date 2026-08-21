@@ -101,7 +101,7 @@ beforeAll(async () => {
   await db.query(
     `insert into public.payroll_run_items (run_id, regel_kennung, regel_bezeichnung, kategorie,
        berechnungsart, basisbetrag, betrag, quelle, quelle_version)
-     values ($1,'ALT_LSt','Alte Lohnsteuer','abzug','prozent',1500,300,'Altquelle','2025');`,
+     values ($1,'ALT_LSt','Alte Lohnsteuer','arbeitnehmerabzug','prozent',1500,300,'Altquelle','2025');`,
     [RUN_ID],
   );
 });
@@ -124,8 +124,8 @@ describe("SQL-Runtime: apply_payroll_run_calculation", () => {
     await db.query(applyCall, [
       RUN_ID,
       itemsJson([
-        { kennung: "LSt", kategorie: "abzug", betrag: 400 },
-        { kennung: "KV", kategorie: "abzug", betrag: 160 },
+        { kennung: "LSt", kategorie: "arbeitnehmerabzug", betrag: 400 },
+        { kennung: "KV", kategorie: "arbeitnehmerabzug", betrag: 160 },
         { kennung: "AG_KV", kategorie: "arbeitgeberkosten", betrag: 160 },
       ]),
       "berechnet",
@@ -194,7 +194,7 @@ describe("SQL-Runtime: apply_payroll_run_calculation", () => {
     try {
       await db.query(applyCall, [
         RUN_ID,
-        itemsJson([{ kennung: "NEU", kategorie: "abzug", betrag: 999 }]),
+        itemsJson([{ kennung: "NEU", kategorie: "arbeitnehmerabzug", betrag: 999 }]),
         "berechnet",
         1,
         1,
@@ -237,7 +237,7 @@ describe("SQL-Runtime: RLS fuer Lohnlaeufe", () => {
     try {
       await db.query(applyCall, [
         RUN_ID,
-        itemsJson([{ kennung: "HACK", kategorie: "abzug", betrag: 1 }]),
+        itemsJson([{ kennung: "HACK", kategorie: "arbeitnehmerabzug", betrag: 1 }]),
         "berechnet",
         1,
         1,
