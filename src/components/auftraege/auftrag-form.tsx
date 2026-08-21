@@ -110,10 +110,7 @@ function EinrichtungSelect({
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Select
-        value={value ?? NONE}
-        onValueChange={(v) => onChange(v === NONE ? null : v)}
-      >
+      <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : v)}>
         <SelectTrigger>
           <SelectValue placeholder="Nicht verknüpft" />
         </SelectTrigger>
