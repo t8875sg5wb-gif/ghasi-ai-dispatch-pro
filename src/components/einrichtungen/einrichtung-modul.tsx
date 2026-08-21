@@ -27,6 +27,7 @@ import {
 } from "@/lib/facilities-store";
 import type { FacilityWrite } from "@/lib/facilities-shared";
 import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import { transporteFuerEinrichtung } from "@/lib/einrichtungen-transporte";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
