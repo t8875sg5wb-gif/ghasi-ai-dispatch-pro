@@ -79,6 +79,8 @@ export const orderFieldsSchema = z
     zielort: z.string().trim().max(300).optional(),
     pickup: adresseSchema.optional(),
     destination: adresseSchema.optional(),
+    pickupEinrichtungId: z.string().uuid().nullable().optional(),
+    destinationEinrichtungId: z.string().uuid().nullable().optional(),
     termin: z
       .string()
       .regex(
