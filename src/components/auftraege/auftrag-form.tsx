@@ -17,6 +17,7 @@ import {
 import { useDriverIdOptions, useVehicleIdOptions } from "@/hooks/use-entity-options";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
+import { useFacilities } from "@/lib/facilities-store";
 import { useInsurerContracts } from "@/lib/insurer-contracts-store";
 import {
   ermittleVertragspreis,
@@ -70,6 +71,8 @@ function emptyValues(): AuftragFormValues {
     prioritaet: "normal",
     abholort: "",
     zielort: "",
+    pickupEinrichtungId: null,
+    destinationEinrichtungId: null,
     termin: new Date().toISOString().slice(0, 16),
     fahrer: null,
     fahrerId: null,
@@ -88,6 +91,53 @@ function emptyValues(): AuftragFormValues {
   };
 }
 
+/**
+ * Optionale Verknüpfung einer Adresse mit einer Einrichtung aus den
+ * Stammdaten. Setzt bewusst NUR das ID-Feld — die Adressfelder bleiben
+ * unverändert und werden nicht überschrieben.
+ */
+function EinrichtungSelect({
+  label,
+  value,
+  einrichtungen,
+  onChange,
+}: {
+  label: string;
+  value: string | null;
+  einrichtungen: { id: string; name: string }[];
+  onChange: (id: string | null) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : v)}>
+        <SelectTrigger>
+          <SelectValue placeholder="Nicht verknüpft" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NONE}>Nicht verknüpft</SelectItem>
+          {einrichtungen.length === 0 ? (
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              Noch keine Einrichtungen angelegt.
+            </div>
+          ) : (
+            einrichtungen.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.name}
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+      {!value && (
+        <p className="text-xs text-muted-foreground">
+          Ohne Verknüpfung wird nur die Freitextadresse gespeichert.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function AuftragForm({
   initial,
   prefill,
@@ -103,6 +153,7 @@ export function AuftragForm({
 
   const { data: patienten = [] } = usePatients();
   const { data: kassen = [] } = useInsurers();
+  const { data: einrichtungen = [] } = useFacilities();
   const { data: contracts = [] } = useInsurerContracts();
 
   // Erwarteter Preis aus einem genehmigten Kassenvertrag (nur Anzeige, kein
@@ -296,20 +347,36 @@ export function AuftragForm({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <AddressFields
-          idPrefix="abhol"
-          label="Abholort"
-          required
-          value={abholAdr}
-          onChange={handleAbholAdr}
-        />
-        <AddressFields
-          idPrefix="ziel"
-          label="Zielort"
-          required
-          value={zielAdr}
-          onChange={handleZielAdr}
-        />
+        <div className="space-y-3">
+          <AddressFields
+            idPrefix="abhol"
+            label="Abholort"
+            required
+            value={abholAdr}
+            onChange={handleAbholAdr}
+          />
+          <EinrichtungSelect
+            label="Einrichtung Abholort (Stammdaten)"
+            value={values.pickupEinrichtungId ?? null}
+            einrichtungen={einrichtungen}
+            onChange={(id) => set("pickupEinrichtungId", id)}
+          />
+        </div>
+        <div className="space-y-3">
+          <AddressFields
+            idPrefix="ziel"
+            label="Zielort"
+            required
+            value={zielAdr}
+            onChange={handleZielAdr}
+          />
+          <EinrichtungSelect
+            label="Einrichtung Zielort (Stammdaten)"
+            value={values.destinationEinrichtungId ?? null}
+            einrichtungen={einrichtungen}
+            onChange={(id) => set("destinationEinrichtungId", id)}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

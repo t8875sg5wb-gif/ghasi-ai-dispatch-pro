@@ -45,6 +45,12 @@ export interface OrderWrite {
   zielort?: string;
   pickup?: AdresseStruktur;
   destination?: AdresseStruktur;
+  /**
+   * Stabile Einrichtungs-Zuordnung (facilities.id) für Abhol- und Zielort;
+   * null = nicht verknüpft. Die Adressfelder werden davon NICHT abgeleitet.
+   */
+  pickupEinrichtungId?: string | null;
+  destinationEinrichtungId?: string | null;
   termin?: string;
   /**
    * Stabile Fahrer-Zuordnung über `drivers.id`. Der Anzeigename und
@@ -100,6 +106,8 @@ export interface OrderRow {
   destination_city?: string | null;
   destination_country?: string | null;
   destination_additional_info?: string | null;
+  pickup_facility_id?: string | null;
+  destination_facility_id?: string | null;
   termin: string;
   fahrer: string | null;
   fahrer_id?: string | null;
@@ -176,6 +184,8 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     destination,
     abholort,
     zielort,
+    pickupEinrichtungId: r.pickup_facility_id ?? null,
+    destinationEinrichtungId: r.destination_facility_id ?? null,
     termin: r.termin ?? new Date().toISOString(),
     fahrer: r.fahrer,
     fahrerId: r.fahrer_id ?? null,
@@ -247,6 +257,8 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
     set("destination_country", destination.country || "Deutschland");
     set("destination_additional_info", destination.additionalInfo);
   }
+  set("pickup_facility_id", w.pickupEinrichtungId);
+  set("destination_facility_id", w.destinationEinrichtungId);
   set("termin", w.termin);
   // `fahrer` (Anzeigename) wird nie vom Client geschrieben — der DB-Trigger
   // leitet ihn aus `fahrer_id` ab.

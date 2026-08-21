@@ -27,6 +27,7 @@ import {
 } from "@/lib/facilities-store";
 import type { FacilityWrite } from "@/lib/facilities-shared";
 import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import { transporteFuerEinrichtung } from "@/lib/einrichtungen-transporte";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
@@ -257,7 +258,7 @@ function buildHinweise(items: Einrichtung[], config: ModulConfig): string[] {
   const inaktiv = items.filter((e) => e.aktiv === false).length;
   if (inaktiv > 0) out.push(`${inaktiv} Einrichtung(en) sind als inaktiv markiert.`);
   for (const e of items) {
-    const transporte = transporteFuer(e.name);
+    const transporte = transporteFuer(e.id, e.name);
     if (transporte.length >= 3) {
       out.push(`„${e.name}“ ist mit ${transporte.length} Transporten ein wichtiger Partner.`);
     }
@@ -267,11 +268,8 @@ function buildHinweise(items: Einrichtung[], config: ModulConfig): string[] {
   return out.slice(0, 4);
 }
 
-function transporteFuer(name: string) {
-  const n = name.toLowerCase();
-  return INITIAL_AUFTRAEGE.filter(
-    (a) => a.abholort.toLowerCase().includes(n) || a.zielort.toLowerCase().includes(n),
-  );
+function transporteFuer(einrichtungId: string, name: string) {
+  return transporteFuerEinrichtung(einrichtungId, name, INITIAL_AUFTRAEGE);
 }
 
 function EinrichtungDetail({
@@ -283,7 +281,7 @@ function EinrichtungDetail({
   config: ModulConfig;
   onEdit: () => void;
 }) {
-  const transporte = transporteFuer(einrichtung.name);
+  const transporte = transporteFuer(einrichtung.id, einrichtung.name);
   return (
     <div className="space-y-6">
       <Card>

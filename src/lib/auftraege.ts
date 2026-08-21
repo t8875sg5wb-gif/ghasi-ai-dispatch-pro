@@ -62,6 +62,10 @@ export interface Auftrag {
   destination?: AdresseStruktur;
   abholort: string;
   zielort: string;
+  /** Stabile Einrichtungs-Zuordnung des Abholorts (facilities.id); null = nicht verknüpft. */
+  pickupEinrichtungId?: string | null;
+  /** Stabile Einrichtungs-Zuordnung des Zielorts (facilities.id); null = nicht verknüpft. */
+  destinationEinrichtungId?: string | null;
   termin: string; // ISO datetime
   /** Angezeigter Fahrername (abgeleitet, read-only aus Sicht des Clients). */
   fahrer: string | null;
