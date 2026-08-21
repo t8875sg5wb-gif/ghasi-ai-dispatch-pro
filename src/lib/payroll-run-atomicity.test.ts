@@ -33,7 +33,13 @@ type Db = { runs: Kopf[]; items: Posten[] };
  */
 function applyPayrollRunCalculation(
   db: Db,
-  p: { runId: string; items: Omit<Posten, "run_id">[]; status: string; brutto: number | null; netto: number | null },
+  p: {
+    runId: string;
+    items: Omit<Posten, "run_id">[];
+    status: string;
+    brutto: number | null;
+    netto: number | null;
+  },
 ): { error: { message: string } | null } {
   // Arbeitskopie = Transaktion. Wird nur bei Erfolg übernommen.
   const next: Db = {
