@@ -1,33 +1,15 @@
-// Admin-only full data export ("Backup"). Reads every persisted domain table
-// as the signed-in user (RLS applies; only admins can read everything) and
-// returns the raw rows. The client turns this into a ZIP of CSV files.
+// Admin-only full data export ("Backup"). Reads every persisted table of the
+// public schema as the signed-in user (RLS applies; only admins can read
+// everything) and returns the raw rows. Reads are paginated, so tables with
+// more than 1000 rows are exported completely. The client turns this into a
+// ZIP of CSV files.
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { BACKUP_TABLES, collectBackupData, type BackupClient } from "@/lib/backup-tables";
 
-/** Tables covered by the backup, in a sensible export order. */
-export const BACKUP_TABLES = [
-  "orders",
-  "recurring_orders",
-  "drivers",
-  "vehicles",
-  "customers",
-  "patients",
-  "facilities",
-  "insurers",
-  "insurance_policies",
-  "insurer_contracts",
-  "leasing_contracts",
-  "calls",
-  "invoices",
-  "documents",
-  "driver_shifts",
-  "vehicle_trips",
-  "conversations",
-  "communication_drafts",
-] as const;
-
-export type BackupData = Record<string, Record<string, unknown>[]>;
+export { BACKUP_TABLES };
+export type { BackupData } from "@/lib/backup-tables";
 
 export const exportAllData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -43,32 +25,11 @@ export const exportAllData = createServerFn({ method: "GET" })
       throw new Error("Kein Zugriff: Der Datenexport ist Administratoren vorbehalten.");
     }
 
-    const sb = context.supabase as unknown as {
-      from: (t: string) => {
-        select: (c: string) => Promise<{
-          data: Record<string, unknown>[] | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
+    const { result, failedTables } = await collectBackupData(
+      context.supabase as unknown as BackupClient,
+      BACKUP_TABLES,
+    );
 
-    const result: BackupData = {};
-    const failedTables: string[] = [];
-
-    for (const table of BACKUP_TABLES) {
-      try {
-        const { data, error } = await sb.from(table).select("*");
-        if (error) {
-          failedTables.push(table);
-          result[table] = [];
-        } else {
-          result[table] = data ?? [];
-        }
-      } catch {
-        failedTables.push(table);
-        result[table] = [];
-      }
-    }
     // Return as a JSON string to keep the RPC return type serializable.
     return { json: JSON.stringify(result), failedTables };
   });
