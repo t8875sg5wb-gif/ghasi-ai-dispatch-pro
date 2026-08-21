@@ -61,9 +61,7 @@ export type MigrationResult = {
   error?: string;
 };
 
-export async function runMigrations(
-  db: PGlite,
-): Promise<MigrationResult[]> {
+export async function runMigrations(db: PGlite): Promise<MigrationResult[]> {
   const results: MigrationResult[] = [];
   for (const file of migrationFiles) {
     const sql = readFileSync(join(migrationDirectory, file), "utf8");
@@ -94,19 +92,10 @@ export async function createMigratedTestDatabase(): Promise<PGlite> {
   return db;
 }
 
-export async function useAuthenticatedUser(
-  db: PGlite,
-  userId: string,
-): Promise<void> {
+export async function useAuthenticatedUser(db: PGlite, userId: string): Promise<void> {
   await db.exec("set role authenticated;");
-  await db.query("select set_config($1, $2, false);", [
-    "request.jwt.claim.sub",
-    userId,
-  ]);
-  await db.query("select set_config($1, $2, false);", [
-    "request.jwt.claim.role",
-    "authenticated",
-  ]);
+  await db.query("select set_config($1, $2, false);", ["request.jwt.claim.sub", userId]);
+  await db.query("select set_config($1, $2, false);", ["request.jwt.claim.role", "authenticated"]);
   await db.query("select set_config($1, $2, false);", [
     "request.jwt.claims",
     JSON.stringify({ sub: userId, role: "authenticated" }),
@@ -115,14 +104,8 @@ export async function useAuthenticatedUser(
 
 export async function useServiceRole(db: PGlite): Promise<void> {
   await db.exec("reset role;");
-  await db.query("select set_config($1, $2, false);", [
-    "request.jwt.claim.sub",
-    "",
-  ]);
-  await db.query("select set_config($1, $2, false);", [
-    "request.jwt.claim.role",
-    "service_role",
-  ]);
+  await db.query("select set_config($1, $2, false);", ["request.jwt.claim.sub", ""]);
+  await db.query("select set_config($1, $2, false);", ["request.jwt.claim.role", "service_role"]);
   await db.query("select set_config($1, $2, false);", [
     "request.jwt.claims",
     JSON.stringify({ role: "service_role" }),

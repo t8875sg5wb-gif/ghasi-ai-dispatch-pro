@@ -40,12 +40,9 @@ type ItemRow = {
   betrag: string | number;
 };
 
-const num = (v: string | number | null): number | null =>
-  v === null ? null : Number(v);
+const num = (v: string | number | null): number | null => (v === null ? null : Number(v));
 
-function itemsJson(
-  entries: Array<{ kennung: string; kategorie: string; betrag: number }>,
-): string {
+function itemsJson(entries: Array<{ kennung: string; kategorie: string; betrag: number }>): string {
   return JSON.stringify(
     entries.map((e) => ({
       rule_id: null,
@@ -154,11 +151,7 @@ describe("SQL-Runtime: apply_payroll_run_calculation", () => {
          where run_id = $1 order by regel_kennung;`,
       [RUN_ID],
     );
-    expect(items.rows.map((r) => r.regel_kennung)).toEqual([
-      "AG_KV",
-      "KV",
-      "LSt",
-    ]);
+    expect(items.rows.map((r) => r.regel_kennung)).toEqual(["AG_KV", "KV", "LSt"]);
     // Der alte Posten wurde im selben Aufruf entfernt.
     expect(items.rows.some((r) => r.regel_kennung === "ALT_LSt")).toBe(false);
     expect(items.rows.map((r) => num(r.betrag))).toEqual([160, 160, 400]);
@@ -167,15 +160,9 @@ describe("SQL-Runtime: apply_payroll_run_calculation", () => {
   test("Fehlerfall: freigegebener Lauf bricht ab, Posten und Kopf bleiben unveraendert", async () => {
     // Echter Vier-Augen-Weg zum Status 'freigegeben'.
     await useAuthenticatedUser(db, FINANZ_USER);
-    await db.query(
-      `update public.payroll_runs set status='zur_freigabe' where id=$1;`,
-      [RUN_ID],
-    );
+    await db.query(`update public.payroll_runs set status='zur_freigabe' where id=$1;`, [RUN_ID]);
     await useAuthenticatedUser(db, ADMIN_USER);
-    await db.query(
-      `update public.payroll_runs set status='freigegeben' where id=$1;`,
-      [RUN_ID],
-    );
+    await db.query(`update public.payroll_runs set status='freigegeben' where id=$1;`, [RUN_ID]);
 
     const before = await db.query<RunRow>(
       `select status, brutto, netto, summe_abzuege, summe_arbeitgeberkosten, stunden, version
