@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { berechneAutoDispatchVorschlaege, type AutoDispatchVorschlag } from "@/lib/auto-dispatch";
 import { logActivity } from "@/lib/protokoll";
 
 import { PRIORITAET_META, verordnungFehlt, effektiveVerordnung } from "@/lib/auftraege";
@@ -102,6 +104,10 @@ function DispatchCenter() {
   const [mounted, setMounted] = useState(false);
   const [aktiv, setAktiv] = useState<DispatchTransport | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [autoDispatchVorschlaege, setAutoDispatchVorschlaege] = useState<
+    AutoDispatchVorschlag[] | null
+  >(null);
+  const [autoDispatchAusgewaehlt, setAutoDispatchAusgewaehlt] = useState<Set<string>>(new Set());
 
   useEffect(() => setMounted(true), []);
 
@@ -200,38 +206,38 @@ function DispatchCenter() {
   );
 
   const autoDispatch = useCallback(() => {
-    const updates: { id: string; patch: Partial<DispatchTransport> }[] = [];
+    const vorschlaege = berechneAutoDispatchVorschlaege(transporte, fahrer, fahrzeuge);
+    if (vorschlaege.length === 0) {
+      toast.error("Keine passende Ressource für offene Transporte gefunden");
+      return;
+    }
+    setAutoDispatchVorschlaege(vorschlaege);
+    setAutoDispatchAusgewaehlt(new Set(vorschlaege.map((v) => v.transport.id)));
+  }, [transporte, fahrer, fahrzeuge]);
+
+  const uebernehmeAutoDispatch = useCallback(() => {
+    if (!autoDispatchVorschlaege) return;
+    const ausgewaehlt = autoDispatchVorschlaege.filter((v) =>
+      autoDispatchAusgewaehlt.has(v.transport.id),
+    );
     setTransporte((prev) =>
       prev.map((t) => {
-        if (
-          t.liveStatus === "abgeschlossen" ||
-          t.liveStatus === "storniert" ||
-          (t.fahrer && t.fahrzeug)
-        )
-          return t;
-        const empf = empfehleDisposition(t, fahrer, fahrzeuge);
-        if (!empf.fahrer) return t;
-        const patch: Partial<DispatchTransport> = {
-          fahrerId: empf.fahrer.id,
-          fahrer: empf.fahrer.name,
-          fahrzeug: empf.fahrzeug?.kennzeichen ?? t.fahrzeug,
-          liveStatus: t.liveStatus === "geplant" ? "fahrzeug_zugewiesen" : t.liveStatus,
-        };
-        updates.push({ id: t.id, patch });
-        return { ...t, ...patch };
+        const v = ausgewaehlt.find((x) => x.transport.id === t.id);
+        return v ? { ...t, ...v.patch } : t;
       }),
     );
-    for (const u of updates) persist(u.id, u.patch);
-    const count = updates.length;
+    for (const v of ausgewaehlt) persist(v.transport.id, v.patch);
+    const count = ausgewaehlt.length;
     toast.success("GHASI AI Auto-Dispatch abgeschlossen", {
-      description: `${count} Transporte automatisch disponiert.`,
+      description: `${count} Transporte übernommen.`,
     });
     logActivity({
       bereich: "Dispatch",
       aktion: "auto-dispatch",
-      beschreibung: `GHASI AI hat ${count} Transporte automatisch disponiert`,
+      beschreibung: `GHASI AI hat ${count} Transporte übernommen`,
     });
-  }, [fahrer, fahrzeuge, persist]);
+    setAutoDispatchVorschlaege(null);
+  }, [autoDispatchVorschlaege, autoDispatchAusgewaehlt, persist]);
 
   const statusVor = useCallback(
     (t: DispatchTransport) => {
@@ -649,7 +655,96 @@ function DispatchCenter() {
         onStatus={statusVor}
         onAssign={zuweisen}
       />
+
+      {/* Auto-Dispatch Review-Dialog */}
+      <AutoDispatchDialog
+        vorschlaege={autoDispatchVorschlaege ?? []}
+        ausgewaehlt={autoDispatchAusgewaehlt}
+        onToggle={(id) =>
+          setAutoDispatchAusgewaehlt((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          })
+        }
+        onUebernehmen={uebernehmeAutoDispatch}
+        onAbbrechen={() => setAutoDispatchVorschlaege(null)}
+      />
     </div>
+  );
+}
+
+function AutoDispatchDialog({
+  vorschlaege,
+  ausgewaehlt,
+  onToggle,
+  onUebernehmen,
+  onAbbrechen,
+}: {
+  vorschlaege: AutoDispatchVorschlag[];
+  ausgewaehlt: Set<string>;
+  onToggle: (id: string) => void;
+  onUebernehmen: () => void;
+  onAbbrechen: () => void;
+}) {
+  const count = ausgewaehlt.size;
+  return (
+    <Dialog open={vorschlaege.length > 0} onOpenChange={(o) => !o && onAbbrechen()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-accent" />
+            KI Auto-Dispatch – Vorschau
+          </DialogTitle>
+          <DialogDescription>
+            GHASI AI schlägt folgende Zuweisungen vor. Wähle aus, welche übernommen werden sollen.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-[55vh] pr-3">
+          <div className="space-y-3">
+            {vorschlaege.map((v) => (
+              <div
+                key={v.transport.id}
+                className="flex items-start gap-3 rounded-xl border border-border/70 p-3"
+              >
+                <Checkbox
+                  id={`ad-${v.transport.id}`}
+                  checked={ausgewaehlt.has(v.transport.id)}
+                  onCheckedChange={() => onToggle(v.transport.id)}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor={`ad-${v.transport.id}`} className="text-sm font-semibold">
+                      {v.transport.nummer}
+                    </label>
+                    <span className="text-xs text-muted-foreground">· {v.transport.patient}</span>
+                    <Badge variant="secondary" className="ml-auto">
+                      Score {v.gesamtScore}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-sm">
+                    <span className="font-medium">{v.fahrer.name}</span>
+                    {v.fahrzeug && (
+                      <span className="text-muted-foreground"> · {v.fahrzeug.kennzeichen}</span>
+                    )}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{v.erklaerung}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onAbbrechen}>
+            Abbrechen
+          </Button>
+          <Button onClick={onUebernehmen} disabled={count === 0}>
+            Ausgewählte übernehmen ({count})
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
