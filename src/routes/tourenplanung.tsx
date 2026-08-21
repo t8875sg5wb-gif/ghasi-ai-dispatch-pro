@@ -33,10 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import {
-  berechneAutoDispatchVorschlaege,
-  type AutoDispatchVorschlag,
-} from "@/lib/auto-dispatch";
+import { berechneAutoDispatchVorschlaege, type AutoDispatchVorschlag } from "@/lib/auto-dispatch";
 import { logActivity } from "@/lib/protokoll";
 
 import { PRIORITAET_META, verordnungFehlt, effektiveVerordnung } from "@/lib/auftraege";
