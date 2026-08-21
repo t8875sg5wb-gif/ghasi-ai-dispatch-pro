@@ -37,7 +37,6 @@ import {
   effektiveVerordnung,
   formatTermin,
   type Mobilitaet,
-  type Auftrag,
 } from "@/lib/auftraege";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
