@@ -60,7 +60,11 @@ export function findeUnverknuepfteTransporte<T extends UnverknuepftAuftrag>(
 
 export function filterUnverknuepft<T extends UnverknuepftAuftrag>(
   eintraege: UnverknuepftEintrag<T>[],
-  filter: { einrichtungId?: string | null; status?: string | null; seite?: UnverknuepftSeite | null },
+  filter: {
+    einrichtungId?: string | null;
+    status?: string | null;
+    seite?: UnverknuepftSeite | null;
+  },
 ): UnverknuepftEintrag<T>[] {
   return eintraege.filter((e) => {
     if (filter.status && e.auftrag.status !== filter.status) return false;
