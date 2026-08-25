@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getVerbindungsHealth } from "@/lib/verbindungen.functions";
+import { getMcpMonitoring } from "@/lib/mcp-monitoring.functions";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -115,6 +116,15 @@ function Verbindungen() {
     staleTime: 60_000,
   });
 
+  const ladeMcp = useServerFn(getMcpMonitoring);
+  // Nur Admins erhalten Daten; für alle anderen bleibt das Widget verborgen.
+  const { data: mcp } = useQuery({
+    queryKey: ["mcp", "monitoring"],
+    queryFn: () => ladeMcp({ data: { limit: 25 } }),
+    staleTime: 30_000,
+    retry: false,
+  });
+
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
 
@@ -208,6 +218,61 @@ function Verbindungen() {
           </CardContent>
         </Card>
       </section>
+
+      {mcp && (
+        <section>
+          <Card className="border-border/70 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Agenten-Zugriffe (MCP)</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {mcp.gesamt} Aufrufe · {mcp.erfolge} erfolgreich · {mcp.abgelehnt} abgelehnt ·{" "}
+                {mcp.fehler} Fehler · Ø {mcp.durchschnittMs} ms
+              </span>
+            </CardHeader>
+            <CardContent className="p-0">
+              {mcp.aufrufe.length === 0 ? (
+                <p className="px-4 pb-4 text-sm text-muted-foreground">
+                  Noch keine Werkzeug-Ausführungen protokolliert.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border/60">
+                  {mcp.aufrufe.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          aria-hidden
+                          className={`h-2 w-2 rounded-full ${
+                            a.status === "erfolg"
+                              ? "bg-success"
+                              : a.status === "abgelehnt"
+                                ? "bg-warning"
+                                : "bg-destructive"
+                          }`}
+                        />
+                        <span className="font-medium">{a.tool}</span>
+                        <span className="text-xs text-muted-foreground">{a.scope ?? "–"}</span>
+                      </span>
+                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{a.rolle ?? "ohne Rolle"}</span>
+                        <span>{a.dauerMs ?? 0} ms</span>
+                        <span>
+                          {new Date(a.zeitpunkt).toLocaleString("de-DE", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       <section>
         <Card className="border-border/70 bg-muted/30 shadow-sm">
