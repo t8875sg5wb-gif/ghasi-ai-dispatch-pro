@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { fahrerHinweise, fahrzeugHinweise, tageBis } from "@/lib/ghasi-hinweise";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
-import { INITIAL_FAHRER } from "@/lib/fahrer";
+import type { Fahrer } from "@/lib/fahrer";
 
 const inTagen = (tage: number) =>
   new Date(Date.now() + tage * 86_400_000).toISOString().slice(0, 10);
@@ -18,18 +18,19 @@ const basisFahrzeug = () => ({
   leasingEnde: inTagen(400),
 });
 
-const basisFahrer = () => {
-  const f = INITIAL_FAHRER[0]!;
-  return {
-    ...f,
+const basisFahrer = (): Fahrer =>
+  ({
     id: "test-fahrer",
     name: "Test Fahrer",
     ueberstunden: 0,
-    fuehrerschein: { ...f.fuehrerschein, gueltigBis: inTagen(400) },
-    pSchein: { ...f.pSchein, gueltigBis: inTagen(400) },
-    ersteHilfe: { ...f.ersteHilfe, gueltigBis: inTagen(400) },
-  };
-};
+    fuehrerschein: { gueltigBis: inTagen(400) },
+    pSchein: { gueltigBis: inTagen(400) },
+    ersteHilfe: { gueltigBis: inTagen(400) },
+    pScheinGueltigBis: inTagen(400),
+    fuehrungszeugnisDatum: inTagen(-30),
+    svAusweisVorhanden: true,
+    steuerId: "12345678901",
+  }) as Fahrer;
 
 describe("tageBis", () => {
   it("liefert null bei leerem oder ungültigem Datum", () => {
@@ -82,9 +83,9 @@ describe("fahrerHinweise – fail-closed bei fehlenden Nachweisen", () => {
     const hinweise = fahrerHinweise([
       {
         ...f,
-        fuehrerschein: { ...f.fuehrerschein, gueltigBis: "" },
-        pSchein: { ...f.pSchein, gueltigBis: "" },
-        ersteHilfe: { ...f.ersteHilfe, gueltigBis: "" },
+        fuehrerschein: { gueltigBis: "" },
+        pSchein: { gueltigBis: "" },
+        ersteHilfe: { gueltigBis: "" },
       },
     ]).filter((x) => x.id.startsWith("nw-test-fahrer"));
     expect(hinweise).toHaveLength(3);
