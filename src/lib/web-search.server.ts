@@ -102,6 +102,11 @@ export async function firecrawlScrape(url: string): Promise<WebScrapeErgebnis> {
  * Reine Ableitung: Ist der Web-Connector konfiguriert?
  * Gibt ausschließlich einen Boolean zurück, niemals den Key selbst.
  */
-export function istWebZugriffKonfiguriert(apiKey: string | undefined = key()): boolean {
+export function istKeyGesetzt(apiKey: string | undefined): boolean {
   return typeof apiKey === "string" && apiKey.trim().length > 0;
+}
+
+/** Ist der Web-Connector in dieser Umgebung konfiguriert? */
+export function istWebZugriffKonfiguriert(): boolean {
+  return istKeyGesetzt(key());
 }
