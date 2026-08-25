@@ -394,3 +394,21 @@ und (b) die serverseitig aus `user_roles` gelesene Rolle.
 Fehlt der Scope oder die Rolle, antwortet das Tool mit `isError: true` und einer
 Berechtigungsmeldung — ohne Daten preiszugeben. Enthält das Token keine `ghasi:*`-Scopes
 (Standard bei `openid email profile`), entscheidet allein die Rolle.
+
+## Monitoring & Audit-Log
+
+Jede Werkzeug-Ausführung wird protokolliert (Tabelle `ai_audit_log`, `modell = "mcp"`):
+
+| Feld                                    | Inhalt                                                  |
+| --------------------------------------- | ------------------------------------------------------- |
+| `created_at`                            | Zeitpunkt der Ausführung                                |
+| `werkzeuge` / `quellen.tool`            | Name des Werkzeugs                                      |
+| `quellen.scope`                         | angeforderter Scope                                     |
+| `quellen.status`                        | `erfolg`, `fehler` oder `abgelehnt` (Scope/Rolle fehlt) |
+| `dauer_ms`                              | Dauer der Ausführung in Millisekunden                   |
+| `rolle`, `user_id`, `quellen.client_id` | Rolle, Nutzer und OAuth-Client                          |
+
+Protokolliert werden ausschließlich Metadaten – niemals Eingabeparameter, Patientendaten,
+Rückgabewerte oder Tokens. Fehler beim Protokollieren brechen einen Tool-Aufruf nie ab.
+Die letzten Aufrufe samt Erfolgsquote und Durchschnittsdauer zeigt die Seite
+**Verbindungen → Agenten-Zugriffe (MCP)** (nur für Administratoren).
