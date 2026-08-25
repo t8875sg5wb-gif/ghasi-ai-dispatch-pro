@@ -185,7 +185,9 @@ function TelefonSeite() {
           });
         },
         onError: (e) => {
-          toast.error(e instanceof Error ? e.message : "Anruf konnte nicht als Auftrag markiert werden");
+          toast.error(
+            e instanceof Error ? e.message : "Anruf konnte nicht als Auftrag markiert werden",
+          );
         },
       },
     );
