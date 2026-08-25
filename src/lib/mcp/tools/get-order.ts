@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { autorisiere } from "../authz";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 
 export default defineTool({
@@ -13,16 +13,15 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ id, nummer }, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Nicht authentifiziert." }], isError: true };
-    }
+    const gate = await autorisiere(ctx, "ghasi:orders.read");
+    if (!gate.ok) return gate.error;
     if (!id && !nummer) {
       return {
         content: [{ type: "text", text: "Bitte 'id' oder 'nummer' angeben." }],
         isError: true,
       };
     }
-    const supabase = supabaseForUser(ctx);
+    const supabase = gate.supabase;
     const q = supabase.from("orders").select("*").limit(1);
     const { data, error } = id ? await q.eq("id", id) : await q.eq("nummer", nummer!);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

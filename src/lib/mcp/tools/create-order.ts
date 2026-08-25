@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { autorisiere } from "../authz";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 import {
   assertDriverExists,
@@ -53,10 +53,9 @@ export default defineTool({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   handler: async (input, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Nicht authentifiziert." }], isError: true };
-    }
-    const supabase = supabaseForUser(ctx);
+    const gate = await autorisiere(ctx, "ghasi:orders.write");
+    if (!gate.ok) return gate.error;
+    const supabase = gate.supabase;
     try {
       if (input.fahrerId) await assertDriverExists(supabase, input.fahrerId);
       if (input.fahrzeugId) await assertVehicleExists(supabase, input.fahrzeugId);

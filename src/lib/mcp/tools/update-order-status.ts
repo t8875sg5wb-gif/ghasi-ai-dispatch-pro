@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { autorisiere } from "../authz";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 
 export default defineTool({
@@ -22,10 +22,9 @@ export default defineTool({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   handler: async ({ id, status, detailStatus }, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Nicht authentifiziert." }], isError: true };
-    }
-    const supabase = supabaseForUser(ctx);
+    const gate = await autorisiere(ctx, "ghasi:orders.status");
+    if (!gate.ok) return gate.error;
+    const supabase = gate.supabase;
     const row: Record<string, unknown> = { status };
     if (detailStatus !== undefined) row.detail_status = detailStatus;
     const { data, error } = await supabase

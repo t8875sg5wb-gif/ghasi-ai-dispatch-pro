@@ -19,7 +19,12 @@ export default defineMcp({
   title: "GHASI AI Executive",
   version: "0.1.0",
   instructions:
-    "Tools für GHASI AI (digitaler Geschäftsführer für Krankentransportunternehmen). Lesende und schreibende Tools gelten für die Firma des angemeldeten Benutzers (RLS).",
+    "Tools für GHASI AI (digitaler Geschäftsführer für Krankentransportunternehmen). " +
+    "Alle Tools gelten für die Firma des angemeldeten Benutzers (RLS). Jedes Tool ist zusätzlich " +
+    "an einen feingranularen Scope und die Rolle des Benutzers gebunden: " +
+    "Administrator = alle Scopes; Disposition = Aufträge (lesen/schreiben/Status), Fahrer, Fahrzeuge; " +
+    "Finanzen = Rechnungen (lesen/schreiben) und Aufträge lesen; Fahrer = eigene Aufträge lesen, " +
+    "Auftragsstatus ändern, Fahrzeuge lesen. Nicht erlaubte Tools antworten mit einem Berechtigungsfehler.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
