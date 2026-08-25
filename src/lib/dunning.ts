@@ -2,7 +2,7 @@
 // fertigen Mahntexten (zum Kopieren / Download). Kein Versand – GHASI AI
 // bereitet nur vor, der Versand erfolgt manuell.
 import type { Rechnung } from "@/lib/finance";
-import { brutto, EUR, formatDatum, tageUeberfaellig } from "@/lib/finance";
+import { EUR, formatDatum, offenerBetrag, tageUeberfaellig } from "@/lib/finance";
 import type { CompanySettings } from "@/lib/company-settings.functions";
 
 export const MAHN_STUFE_LABEL: Record<number, string> = {
@@ -43,7 +43,8 @@ export function buildMahnText(
 ): string {
   const tage = tageUeberfaellig(r);
   const gebuehr = mahngebuehr(stufe);
-  const summe = brutto(r) + gebuehr;
+  const offen = offenerBetrag(r);
+  const summe = offen + gebuehr;
   const frist = new Date();
   frist.setDate(frist.getDate() + zahlungsfristTage);
   const fristStr = frist.toLocaleDateString("de-DE");
@@ -63,7 +64,7 @@ export function buildMahnText(
   zeilen.push(`Rechnungsnummer: ${r.nummer}`);
   zeilen.push(`Rechnungsdatum:  ${formatDatum(r.datum)}`);
   zeilen.push(`Fällig seit:     ${formatDatum(r.faelligkeit)} (${tage} Tage überfällig)`);
-  zeilen.push(`Offener Betrag:  ${EUR(brutto(r))}`);
+  zeilen.push(`Offener Betrag:  ${EUR(offen)}`);
   if (gebuehr > 0) {
     zeilen.push(`Mahngebühr:      ${EUR(gebuehr)}`);
     zeilen.push(`Gesamtbetrag:    ${EUR(summe)}`);
