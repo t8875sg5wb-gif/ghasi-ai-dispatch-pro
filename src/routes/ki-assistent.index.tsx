@@ -49,7 +49,7 @@ function AssistantStart() {
           <div className="bg-gradient-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl shadow-glow">
             <Bot className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Guten Tag, ich bin GHASI AI</h1>
+          <h1 className="text-2xl font-bold tracking-tight">KI-Assistent – GHASI AI</h1>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
             Ihr digitaler Geschäftsführer und persönlicher KI-Assistent. Fragen Sie mich alles – zum
             Betrieb oder ganz alltäglich. Wichtige Aktionen führe ich nie eigenmächtig aus.

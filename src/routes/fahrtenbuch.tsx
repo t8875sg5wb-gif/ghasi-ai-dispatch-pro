@@ -46,6 +46,11 @@ export const Route = createFileRoute("/fahrtenbuch")({
         name: "description",
         content: "Kilometernachweis je Fahrzeug für Steuer- und Prüfzwecke.",
       },
+      { property: "og:title", content: "Fahrtenbuch – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Kilometernachweis je Fahrzeug für Steuer- und Prüfzwecke.",
+      },
     ],
   }),
   component: FahrtenbuchPage,

@@ -62,6 +62,11 @@ export const Route = createFileRoute("/telefon")({
         name: "description",
         content: "Anrufannahme, Rückrufliste, Gesprächsnotizen und Anrufstatistik.",
       },
+      { property: "og:title", content: "Telefon – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Anrufannahme, Rückrufliste, Gesprächsnotizen und Anrufstatistik.",
+      },
     ],
   }),
   component: TelefonSeite,

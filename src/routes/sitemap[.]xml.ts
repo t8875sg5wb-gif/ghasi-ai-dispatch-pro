@@ -3,13 +3,26 @@ import type {} from "@tanstack/react-start";
 
 import { allNavItems } from "@/lib/navigation";
 
-const BASE_URL = "";
+const BASE_URL = "https://ghasi-ai-dispatch-pro.lovable.app";
+
+/** Routen, die (noch) nicht in der Navigation stehen, aber existieren. */
+const ZUSATZ_ROUTEN = [
+  "/berichte",
+  "/control-center",
+  "/dialysezentren",
+  "/insights",
+  "/krankenhaeuser",
+];
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const urls = allNavItems.map((item) =>
+        const pfade = [...new Set([...allNavItems.map((i) => i.to), ...ZUSATZ_ROUTEN])].map(
+          (to) => ({ to }),
+        );
+
+        const urls = pfade.map((item) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${item.to}</loc>`,

@@ -35,6 +35,12 @@ export const Route = createFileRoute("/ceo-cockpit")({
         content:
           "Zentraler Analyse-Hub: CEO Cockpit, Control Center, KI-Insights, Prognosen, Statistiken und Berichte an einem Ort.",
       },
+      { property: "og:title", content: "Analyse-Hub – GHASI AI" },
+      {
+        property: "og:description",
+        content:
+          "Zentraler Analyse-Hub: CEO Cockpit, Control Center, KI-Insights, Prognosen, Statistiken und Berichte an einem Ort.",
+      },
     ],
   }),
   component: AnalyseHub,

@@ -54,6 +54,12 @@ export const Route = createFileRoute("/fahrer")({
         content:
           "Fahrerverwaltung mit Live-Status, GPS, Nachweisen, Leistung und KI-Fahrervorschlag für neue Aufträge.",
       },
+      { property: "og:title", content: "Fahrer – GHASI AI" },
+      {
+        property: "og:description",
+        content:
+          "Fahrerverwaltung mit Live-Status, GPS, Nachweisen, Leistung und KI-Fahrervorschlag für neue Aufträge.",
+      },
     ],
   }),
   component: FahrerPage,

@@ -73,6 +73,11 @@ export const Route = createFileRoute("/patienten")({
     meta: [
       { title: "Patienten – GHASI AI" },
       { name: "description", content: "Patientenakten, Mobilität und Transportbedarf verwalten." },
+      { property: "og:title", content: "Patienten – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Patientenakten, Mobilität und Transportbedarf verwalten.",
+      },
     ],
   }),
   component: PatientenSeite,

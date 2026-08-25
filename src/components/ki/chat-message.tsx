@@ -295,7 +295,7 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                 <img
                   key={i}
                   src={f.url}
-                  alt={f.filename ?? "Bild"}
+                  alt={f.filename ?? "Angehängtes Bild aus der Unterhaltung"}
                   className="max-h-44 rounded-xl border border-border/60 object-cover"
                 />
               ) : (

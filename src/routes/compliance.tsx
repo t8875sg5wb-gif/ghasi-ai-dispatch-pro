@@ -40,6 +40,11 @@ export const Route = createFileRoute("/compliance")({
         name: "description",
         content: "Fristen, Nachweise und Vollständigkeit für Schiene-A-Krankenfahrten.",
       },
+      { property: "og:title", content: "Compliance-Cockpit – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Fristen, Nachweise und Vollständigkeit für Schiene-A-Krankenfahrten.",
+      },
     ],
   }),
   component: CompliancePage,

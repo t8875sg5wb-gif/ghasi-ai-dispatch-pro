@@ -1,0 +1,11 @@
+# GHASI AI
+
+> Digitaler Geschäftsführer für Krankenfahrdienste: Disposition, Aufträge, Fahrzeuge, Personal, Rechnungen und Auswertungen in einer Anwendung.
+
+## Pages
+
+- [Startseite](/): Übersicht über GHASI AI, den digitalen Geschäftsführer für Krankentransport-Unternehmen.
+
+## Optional
+
+- Alle weiteren Bereiche der Anwendung sind interne Betriebsansichten und benötigen eine Anmeldung.

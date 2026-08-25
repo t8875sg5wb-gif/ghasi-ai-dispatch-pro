@@ -41,6 +41,12 @@ export const Route = createFileRoute("/wartung")({
         content:
           "Wartungsübersicht: Ölwechsel, TÜV, Reifen, Reparaturen und nächste Wartung mit KI-Warnungen.",
       },
+      { property: "og:title", content: "Wartung – GHASI AI" },
+      {
+        property: "og:description",
+        content:
+          "Wartungsübersicht: Ölwechsel, TÜV, Reifen, Reparaturen und nächste Wartung mit KI-Warnungen.",
+      },
     ],
   }),
   component: WartungPage,

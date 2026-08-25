@@ -40,6 +40,12 @@ export const Route = createFileRoute("/live-gps")({
         content:
           "Echtzeit-Flottenkarte mit Google Maps: Live-Fahrzeuge, Routen, Transport-Status und automatische Alerts.",
       },
+      { property: "og:title", content: "Live-GPS – GHASI AI" },
+      {
+        property: "og:description",
+        content:
+          "Echtzeit-Flottenkarte mit Google Maps: Live-Fahrzeuge, Routen, Transport-Status und automatische Alerts.",
+      },
     ],
   }),
   component: LiveGps,

@@ -91,6 +91,11 @@ export const Route = createFileRoute("/rechnungen")({
         name: "description",
         content: "Abrechnung, Mahnwesen, offene Posten und KI-Rechnungsprüfung.",
       },
+      { property: "og:title", content: "Rechnungen – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Abrechnung, Mahnwesen, offene Posten und KI-Rechnungsprüfung.",
+      },
     ],
   }),
   component: RechnungenPage,

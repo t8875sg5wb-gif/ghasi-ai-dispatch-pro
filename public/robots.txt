@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://ghasi-ai-dispatch-pro.lovable.app/sitemap.xml

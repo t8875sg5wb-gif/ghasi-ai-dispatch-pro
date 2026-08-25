@@ -35,6 +35,12 @@ export const Route = createFileRoute("/posteingang")({
         content:
           "Vereinheitlichter Posteingang von GHASI AI: alle Nachrichten zu Dispatch, Fahrern, Patienten, Kunden, Finanzen, Wartung, KI & kritischen Alarmen – verknüpft mit dem Ursprungsobjekt.",
       },
+      { property: "og:title", content: "Posteingang – GHASI AI" },
+      {
+        property: "og:description",
+        content:
+          "Vereinheitlichter Posteingang von GHASI AI: alle Nachrichten zu Dispatch, Fahrern, Patienten, Kunden, Finanzen, Wartung, KI & kritischen Alarmen – verknüpft mit dem Ursprungsobjekt.",
+      },
     ],
   }),
   component: Posteingang,

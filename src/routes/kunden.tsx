@@ -64,6 +64,11 @@ export const Route = createFileRoute("/kunden")({
         name: "description",
         content: "Auftraggeber, Kassen und Vertragspartner zentral verwalten.",
       },
+      { property: "og:title", content: "Kunden – GHASI AI" },
+      {
+        property: "og:description",
+        content: "Auftraggeber, Kassen und Vertragspartner zentral verwalten.",
+      },
     ],
   }),
   component: KundenSeite,
