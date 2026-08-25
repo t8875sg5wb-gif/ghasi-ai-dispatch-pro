@@ -13,6 +13,13 @@ import {
 } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
 import {
+  kodiereFeldFehler,
+  pruefeDauerauftragRegeln,
+  zuFeldFehlern,
+  type DauerauftragRegelInput,
+  type FeldFehler,
+} from "@/lib/recurring-validation";
+import {
   rowToDauerauftrag,
   writeToRecurringRow,
   type RecurringRow,
@@ -82,9 +89,26 @@ const updateRecurringSchema = z
 
 const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
 
-function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
+/**
+ * Validiert und wirft bei Fehlern eine Meldung, die zusätzlich eine
+ * strukturierte Feldliste (`path` + `label` + `message`) transportiert.
+ * Optional werden fachliche Querregeln geprüft.
+ */
+function parseOrThrow<T>(
+  schema: z.ZodType<T>,
+  data: unknown,
+  regeln?: (wert: T) => FeldFehler[],
+): T {
   const parsed = schema.safeParse(data);
-  if (!parsed.success) throw new Error("Ungültige Dauerauftragsdaten.");
+  if (!parsed.success) {
+    throw new Error(
+      kodiereFeldFehler("Ungültige Dauerauftragsdaten.", zuFeldFehlern(parsed.error)),
+    );
+  }
+  const regelFehler = regeln?.(parsed.data) ?? [];
+  if (regelFehler.length > 0) {
+    throw new Error(kodiereFeldFehler("Ungültige Dauerauftragsdaten.", regelFehler));
+  }
   return parsed.data;
 }
 
@@ -101,7 +125,12 @@ export const listRecurring = createServerFn({ method: "GET" })
 
 export const createRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => parseOrThrow(createRecurringSchema, data) as RecurringWrite)
+  .validator(
+    (data: unknown) =>
+      parseOrThrow(createRecurringSchema, data, (wert) =>
+        pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
+      ) as RecurringWrite,
+  )
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
@@ -123,7 +152,9 @@ export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     (data: unknown) =>
-      parseOrThrow(updateRecurringSchema, data) as {
+      parseOrThrow(updateRecurringSchema, data, (wert) =>
+        pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
+      ) as {
         id: string;
         values: Partial<RecurringWrite>;
       },
