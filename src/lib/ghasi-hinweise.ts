@@ -159,7 +159,7 @@ export function fahrerHinweise(fahrer: readonly Fahrer[]): Hinweis[] {
 
     // Compliance-Vollständigkeit (Schiene A): fehlende Pflichtangaben je Fahrer
     const fehlend: string[] = [];
-    if (!f.pScheinGueltigBis) fehlend.push("P-Schein-Datum");
+    if (!f.pSchein?.gueltigBis) fehlend.push("P-Schein-Datum");
     if (!f.fuehrungszeugnisDatum) fehlend.push("Führungszeugnis");
     if (!f.svAusweisVorhanden) fehlend.push("SV-Ausweis");
     if (!f.steuerId) fehlend.push("Steuer-ID");
