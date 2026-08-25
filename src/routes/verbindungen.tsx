@@ -16,7 +16,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getWebZugriffStatus } from "@/lib/verbindungen.functions";
+import { getVerbindungsHealth } from "@/lib/verbindungen.functions";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/verbindungen")({
 type Status = "aktiv" | "geplant";
 
 interface Verbindung {
+  id: string;
   icon: LucideIcon;
   name: string;
   beschreibung: string;
@@ -43,6 +44,7 @@ interface Verbindung {
 
 const verbindungen: Verbindung[] = [
   {
+    id: "web-zugriff",
     icon: Globe,
     name: "Web-Zugriff",
     beschreibung:
@@ -50,36 +52,42 @@ const verbindungen: Verbindung[] = [
     status: "geplant",
   },
   {
+    id: "whatsapp",
     icon: MessageCircle,
     name: "WhatsApp Business",
     beschreibung: "Nachrichten als Entwurf vorbereiten und nach Ihrer Bestätigung versenden.",
     status: "geplant",
   },
   {
+    id: "email",
     icon: Mail,
     name: "E-Mail",
     beschreibung: "Eingang lesen, Antworten entwerfen – Versand erst nach Freigabe.",
     status: "geplant",
   },
   {
+    id: "kalender",
     icon: Calendar,
     name: "Google Kalender & Outlook",
     beschreibung: "Termine, Touren und Wartungen im Blick behalten und planen.",
     status: "geplant",
   },
   {
+    id: "karten",
     icon: Map,
     name: "Google & Apple Maps",
     beschreibung: "Routen, Navigation, Entfernungen und Verkehr für die Tourenplanung.",
     status: "geplant",
   },
   {
+    id: "cloud",
     icon: Cloud,
     name: "Cloud-Speicher",
     beschreibung: "Dokumente und Belege zentral ablegen und durchsuchbar machen.",
     status: "geplant",
   },
   {
+    id: "buchhaltung",
     icon: Calculator,
     name: "Buchhaltungssoftware",
     beschreibung: "Rechnungen, Belege und Auswertungen automatisch abgleichen.",
@@ -87,19 +95,40 @@ const verbindungen: Verbindung[] = [
   },
 ];
 
+/** Zusätzliche interne Dienste, die nur im Health-Widget erscheinen. */
+const INTERNE_DIENSTE: { id: string; name: string }[] = [
+  { id: "ki-dienst", name: "KI-Dienst" },
+  { id: "datenbank", name: "Datenbank" },
+];
+
 function Verbindungen() {
-  const ladeWebStatus = useServerFn(getWebZugriffStatus);
-  const { data: webStatus } = useQuery({
-    queryKey: ["verbindungen", "web-zugriff"],
-    queryFn: () => ladeWebStatus(),
+  const ladeHealth = useServerFn(getVerbindungsHealth);
+  const { data: health, isFetching } = useQuery({
+    queryKey: ["verbindungen", "health"],
+    queryFn: () => ladeHealth(),
     staleTime: 60_000,
   });
 
-  // Nur der Web-Zugriff ist dynamisch: bis die echte Antwort da ist bleibt es
-  // neutral ("Geplant"), nie optimistisch "Aktiv".
+  const konfiguriert = (id: string): boolean =>
+    health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
+
+  // Nur geprüfte Dienste werden dynamisch: bis die echte Antwort da ist bleibt
+  // es neutral ("Geplant"), nie optimistisch "Aktiv".
   const eintraege: Verbindung[] = verbindungen.map((v) =>
-    v.name === "Web-Zugriff" ? { ...v, status: webStatus?.konfiguriert ? "aktiv" : "geplant" } : v,
+    konfiguriert(v.id) ? { ...v, status: "aktiv" } : v,
   );
+
+  const healthZeilen = [
+    ...verbindungen.map((v) => ({ id: v.id, name: v.name })),
+    ...INTERNE_DIENSTE,
+  ];
+
+  const geprueftAmText = health
+    ? new Date(health.geprueftAm).toLocaleString("de-DE", {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : "–";
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -139,6 +168,39 @@ function Verbindungen() {
             </CardContent>
           </Card>
         ))}
+      </section>
+
+      <section>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-base">Verbindungs-Health</CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {isFetching ? "Prüfe …" : `Letzter Check: ${geprueftAmText}`}
+            </span>
+          </CardHeader>
+          <CardContent className="divide-y divide-border/60 p-0">
+            {healthZeilen.map((z) => {
+              const ok = konfiguriert(z.id);
+              return (
+                <div
+                  key={z.id}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-muted-foreground/40"}`}
+                    />
+                    {z.name}
+                  </span>
+                  <span className={`text-xs ${ok ? "text-success" : "text-muted-foreground"}`}>
+                    {ok ? "Konfiguriert" : "Nicht konfiguriert"}
+                  </span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       </section>
 
       <section>
