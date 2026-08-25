@@ -125,13 +125,15 @@ export const listRecurring = createServerFn({ method: "GET" })
 
 export const createRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(
-    (data: unknown) =>
-      parseOrThrow(createRecurringSchema, data, (wert) =>
-        pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
-      ) as RecurringWrite,
-  )
-  .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+  .validator((data: RecurringWrite) => data)
+  .handler(async ({ data: roh, context }): Promise<Dauerauftrag> => {
+    const data = (await parseOrLog(
+      context.supabase as unknown as SupabaseClient,
+      "create",
+      createRecurringSchema,
+      roh,
+      (wert) => pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
+    )) as RecurringWrite;
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     if (data.bevorzugterFahrerId)
