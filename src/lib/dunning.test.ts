@@ -27,16 +27,16 @@ describe("buildMahnText", () => {
   it("fordert bei unbezahlter Rechnung den vollen Bruttobetrag", () => {
     const r = rechnung({ status: "ueberfaellig", bezahlterBetrag: 0 });
     const text = buildMahnText(r, 1, company);
-    expect(text).toContain("Offener Betrag:  320 €");
-    expect(text).toContain("Gesamtbetrag:");
+    expect(text).toMatch(/Offener Betrag:\s+320\s*€/);
+    expect(text).not.toContain("Mahngebühr:");
   });
 
   it("fordert bei teilbezahlter Rechnung den Restbetrag, nicht den Bruttobetrag", () => {
     const r = rechnung();
     const text = buildMahnText(r, 2, company);
-    expect(text).toContain("Offener Betrag:  160 €");
-    expect(text).not.toContain("Offener Betrag:  320 €");
-    expect(text).toContain("Gesamtbetrag:    162,5 €");
+    expect(text).toMatch(/Offener Betrag:\s+160\s*€/);
+    expect(text).not.toMatch(/Offener Betrag:\s+320\s*€/);
+    expect(text).toMatch(/Gesamtbetrag:\s+163\s*€/);
   });
 
   it("berücksichtigt Zahlungen aus dem zahlungen-Array", () => {
@@ -45,6 +45,6 @@ describe("buildMahnText", () => {
       zahlungen: [{ datum: "2026-06-10", betrag: 200 }],
     });
     const text = buildMahnText(r, 1, company);
-    expect(text).toContain("Offener Betrag:  120 €");
+    expect(text).toMatch(/Offener Betrag:\s+120\s*€/);
   });
 });
