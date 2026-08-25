@@ -49,14 +49,16 @@ describe("filterAufrufe", () => {
   it("filtert nach Tool, Rolle, Scope und Status", () => {
     expect(filterAufrufe(aufrufe, { tool: "create_order" }).map((a) => a.id)).toEqual(["2"]);
     expect(filterAufrufe(aufrufe, { rolle: "admin" }).map((a) => a.id)).toEqual(["1"]);
-    expect(filterAufrufe(aufrufe, { scope: "ghasi:invoices.read" }).map((a) => a.id)).toEqual(["3"]);
+    expect(filterAufrufe(aufrufe, { scope: "ghasi:invoices.read" }).map((a) => a.id)).toEqual([
+      "3",
+    ]);
     expect(filterAufrufe(aufrufe, { status: "fehler" }).map((a) => a.id)).toEqual(["3"]);
   });
 
   it("filtert den Zeitraum inklusiv", () => {
-    expect(filterAufrufe(aufrufe, { von: "2026-08-22", bis: "2026-08-25" }).map((a) => a.id)).toEqual(
-      ["2", "3"],
-    );
+    expect(
+      filterAufrufe(aufrufe, { von: "2026-08-22", bis: "2026-08-25" }).map((a) => a.id),
+    ).toEqual(["2", "3"]);
   });
 
   it("sucht in Tool, Scope, Rolle und Client", () => {
