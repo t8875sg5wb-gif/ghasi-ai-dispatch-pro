@@ -7,7 +7,7 @@
 // Ziel-Tabelle ist `ai_audit_log` (dieselbe wie im Chat-Audit); MCP-Einträge
 // sind über `modell = "mcp"` erkennbar.
 import type { ToolContext } from "@lovable.dev/mcp-js";
-import { rolleAusKontext, type McpScope } from "./authz";
+import { entscheidungAusKontext, type McpScope } from "./authz";
 
 /** Ergebnisstatus einer Werkzeug-Ausführung. */
 export type ToolStatus = "erfolg" | "fehler" | "abgelehnt";
@@ -68,7 +68,7 @@ export function mitAudit<I>(
       scope,
       dauerMs: Date.now() - start,
       userId: ctx.getUserId(),
-      rolle: rolleAusKontext(ctx),
+      rolle: entscheidungAusKontext(ctx)?.role ?? null,
       clientId: ctx.getClientId(),
     });
     try {
@@ -76,7 +76,7 @@ export function mitAudit<I>(
       // Ein isError-Ergebnis ohne aufgelöste Rolle ist eine Autorisierungsabweisung.
       const status: ToolStatus = !ergebnis.isError
         ? "erfolg"
-        : rolleAusKontext(ctx) === null
+        : entscheidungAusKontext(ctx)?.abgelehnt
           ? "abgelehnt"
           : "fehler";
       await schreibeAudit({ ...basis(), status });

@@ -128,10 +128,7 @@ export async function autorisiere(ctx: ToolContext, scope: McpScope): Promise<Au
   const userId = ctx.getUserId();
   if (!userId) return ablehnen("Nicht authentifiziert.");
   if (!tokenHatScope(ctx.getScopes(), scope)) {
-    return {
-      ok: false,
-      ...ablehnen(`Der erteilte Zugriff umfasst den Scope "${scope}" nicht.`),
-    };
+    return ablehnen(`Der erteilte Zugriff umfasst den Scope "${scope}" nicht.`);
   }
   const supabase = supabaseForUser(ctx);
   const role = await leseRolle(supabase, userId);
