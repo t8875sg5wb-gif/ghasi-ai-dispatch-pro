@@ -174,10 +174,19 @@ export function fahrerHinweise(fahrer: readonly Fahrer[]): Hinweis[] {
       });
     }
   }
+  return h;
+}
+
+export function generateHinweise(): Hinweis[] {
+  const h: Hinweis[] = [
+    ...fahrzeugHinweise(INITIAL_FAHRZEUGE),
+    ...fahrerHinweise(INITIAL_FAHRER),
+  ];
 
   // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();
   for (const a of INITIAL_AUFTRAEGE) {
+
     const minBis = (new Date(a.termin).getTime() - jetzt) / 60000;
     const aktiv = a.status === "neu" || a.status === "disponiert" || a.status === "unterwegs";
     const unzugewiesen = aktiv && (!a.fahrer || !a.fahrzeug);
