@@ -67,9 +67,7 @@ export const DAUERAUFTRAG_FELD_LABEL: Record<string, string> = {
 /** Label zu einem Pfad; fällt auf den Pfad selbst zurück. */
 export function feldLabel(path: string): string {
   return (
-    DAUERAUFTRAG_FELD_LABEL[path] ??
-    DAUERAUFTRAG_FELD_LABEL[path.replace(/^values\./, "")] ??
-    path
+    DAUERAUFTRAG_FELD_LABEL[path] ?? DAUERAUFTRAG_FELD_LABEL[path.replace(/^values\./, "")] ?? path
   );
 }
 
@@ -140,4 +138,79 @@ export function feldFehlerMap(fields: FeldFehler[]): Record<string, string> {
   const map: Record<string, string> = {};
   for (const f of fields) map[f.path] = f.message;
   return map;
+}
+
+/* ------------------------------------------------------------------ *
+ * Fachliche Querregeln (identisch in Formular und Serverfunktion)
+ * ------------------------------------------------------------------ */
+
+type AdresseLike = {
+  street?: string | null;
+  houseNumber?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+} | null;
+
+function adresseLeer(a: AdresseLike, legacy?: string | null): boolean {
+  const text = [a?.street, a?.houseNumber, a?.postalCode, a?.city, legacy]
+    .map((v) => (v ?? "").trim())
+    .join("");
+  return text.length === 0;
+}
+
+/** Eingaben, die für die Querregeln relevant sind (Teilmengen erlaubt). */
+export type DauerauftragRegelInput = {
+  patient?: string | null;
+  pickup?: AdresseLike;
+  destination?: AdresseLike;
+  abholort?: string | null;
+  zielort?: string | null;
+  rhythmus?: string | null;
+  wochentage?: number[] | null;
+  rueckfahrt?: boolean | null;
+  rueckfahrtzeit?: string | null;
+  startDatum?: string | null;
+  endDatum?: string | null;
+  pauseVon?: string | null;
+  pauseBis?: string | null;
+};
+
+/**
+ * Prüft Regeln, die mehrere Felder betreffen. `vollstaendig = false` (Teil-
+ * Update) überspringt Pflichtfeld-Prüfungen für nicht übergebene Felder.
+ */
+export function pruefeDauerauftragRegeln(
+  input: DauerauftragRegelInput,
+  vollstaendig = true,
+): FeldFehler[] {
+  const fehler: FeldFehler[] = [];
+  const add = (path: string, message: string) =>
+    fehler.push({ path, label: feldLabel(path), message });
+  const vorhanden = (k: keyof DauerauftragRegelInput) => input[k] !== undefined;
+
+  if (vollstaendig || vorhanden("patient")) {
+    if (!(input.patient ?? "").trim()) add("patient", "Bitte den Namen des Patienten angeben.");
+  }
+  if (vollstaendig || vorhanden("pickup") || vorhanden("abholort")) {
+    if (adresseLeer(input.pickup, input.abholort))
+      add("pickup", "Bitte Straße, PLZ oder Ort der Abholadresse angeben.");
+  }
+  if (vollstaendig || vorhanden("destination") || vorhanden("zielort")) {
+    if (adresseLeer(input.destination, input.zielort))
+      add("destination", "Bitte Straße, PLZ oder Ort der Zieladresse angeben.");
+  }
+  if (input.rhythmus === "woechentlich" && (vollstaendig || vorhanden("wochentage"))) {
+    if (!input.wochentage || input.wochentage.length === 0)
+      add("wochentage", "Bei wöchentlichem Rhythmus mindestens einen Wochentag wählen.");
+  }
+  if (input.rueckfahrt === true && !(input.rueckfahrtzeit ?? "").trim())
+    add("rueckfahrtzeit", "Bei aktivierter Rückfahrt bitte die Rückfahrtzeit angeben.");
+  if (input.startDatum && input.endDatum && input.endDatum < input.startDatum)
+    add("endDatum", "Das Enddatum darf nicht vor dem Startdatum liegen.");
+  if (input.pauseVon && !input.pauseBis) add("pauseBis", "Bitte auch „Pause bis“ angeben.");
+  if (input.pauseBis && !input.pauseVon) add("pauseVon", "Bitte auch „Pause von“ angeben.");
+  if (input.pauseVon && input.pauseBis && input.pauseBis < input.pauseVon)
+    add("pauseBis", "„Pause bis“ darf nicht vor „Pause von“ liegen.");
+
+  return fehler;
 }
