@@ -56,7 +56,7 @@ function toISODate(v: string | undefined): string {
   const s = trim(v);
   if (!s) return "";
   // dd.mm.yyyy or dd/mm/yyyy
-  const de = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})$/);
+  const de = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2,4})$/);
   if (de) {
     const [, d, m, y] = de;
     const year = y.length === 2 ? `20${y}` : y;
@@ -195,6 +195,24 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         aliases: ["tüv", "tuev", "hu", "hauptuntersuchung"],
         hint: "Datum",
       },
+      {
+        key: "versicherungBis",
+        label: "Versicherung bis",
+        aliases: ["versicherung bis", "versicherungsablauf", "kfz-versicherung bis"],
+        hint: "Datum",
+      },
+      {
+        key: "naechsteWartung",
+        label: "Nächste Wartung",
+        aliases: ["nächste wartung", "naechste wartung", "wartung fällig", "wartungstermin"],
+        hint: "Datum",
+      },
+      {
+        key: "leasingEnde",
+        label: "Leasingende",
+        aliases: ["leasingende", "leasing ende", "leasing bis"],
+        hint: "Datum",
+      },
       { key: "versicherung", label: "Versicherung", aliases: ["versicherung", "insurance"] },
     ],
     build: (m) => {
@@ -226,13 +244,13 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         monatsgewinn: 0,
         tuevBis: toISODate(m.tuevBis),
         oelwechselBei: 0,
-        naechsteWartung: "",
+        naechsteWartung: toISODate(m.naechsteWartung),
         reifenstatus: "gut",
         reparaturen: [],
         versicherung: trim(m.versicherung),
-        versicherungBis: "",
+        versicherungBis: toISODate(m.versicherungBis),
         leasingrate: 0,
-        leasingEnde: "",
+        leasingEnde: toISODate(m.leasingEnde),
         dokumente: [],
         fotos: [],
         notizen: "",
