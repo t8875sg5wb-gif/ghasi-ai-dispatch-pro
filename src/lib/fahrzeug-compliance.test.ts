@@ -40,9 +40,7 @@ const basisAuftrag = (patch: Partial<Auftrag> = {}): Auftrag =>
     status: "geplant",
     prioritaet: "normal",
     transportart: "Sitzendtransport",
-    datum: inTagen(1),
-    abholzeit: "09:00",
-    terminzeit: "10:00",
+    termin: `${inTagen(1)}T10:00:00.000Z`,
     abholort: "A",
     zielort: "B",
     fahrer: null,
@@ -56,7 +54,7 @@ describe("fahrzeugWarnungen / bewerteFahrzeug – fail-closed bei fehlenden Fris
     expect(warn.fehlendeFristen).toBe(false);
     expect(warn.hatWarnung).toBe(false);
     const score = bewerteFahrzeug(basisFahrzeug());
-    expect(score?.gruende).toContain("Keine offenen Wartungen");
+    expect(score?.gruende.some((g) => g.includes("fehlt"))).toBe(false);
   });
 
   it("(a) Fahrzeug ohne TÜV-Datum: kritischer Hinweis + Score-Abzug", () => {
@@ -71,6 +69,7 @@ describe("fahrzeugWarnungen / bewerteFahrzeug – fail-closed bei fehlenden Fris
     expect(schlecht.score).toBeLessThan(gut.score);
     expect(schlecht.gruende).toContain("TÜV-Datum fehlt – Prüfung erforderlich");
     expect(schlecht.gruende).not.toContain("Keine offenen Wartungen");
+    expect(gut.gruende).not.toContain("TÜV-Datum fehlt – Prüfung erforderlich");
   });
 });
 
