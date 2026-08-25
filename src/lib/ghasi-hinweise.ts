@@ -3,6 +3,12 @@
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
+import {
+  INITIAL_RECHNUNGEN,
+  istUeberfaellig,
+  tageUeberfaellig,
+  type Rechnung,
+} from "@/lib/finance";
 
 export type HinweisStufe = "kritisch" | "warnung" | "info" | "positiv";
 
