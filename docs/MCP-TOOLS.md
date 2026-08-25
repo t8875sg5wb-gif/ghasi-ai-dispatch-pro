@@ -22,10 +22,10 @@ Häufige Fehlermeldungen: `"Nicht authentifiziert."`, `"Auftrag nicht gefunden."
 
 Listet Krankentransport-Aufträge, sortiert nach `termin` (absteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | Statusfilter, z. B. `neu`, `geplant`, `in_fahrt`, `abgeschlossen` |
-| `limit` | integer 1–100 | nein | Max. Ergebnisse, Standard 25 |
+| Parameter | Typ           | Pflicht | Beschreibung                                                      |
+| --------- | ------------- | ------- | ----------------------------------------------------------------- |
+| `status`  | string        | nein    | Statusfilter, z. B. `neu`, `geplant`, `in_fahrt`, `abgeschlossen` |
+| `limit`   | integer 1–100 | nein    | Max. Ergebnisse, Standard 25                                      |
 
 Beispiel-Request:
 
@@ -59,10 +59,10 @@ Beispiel-Response (`structuredContent`):
 Einzelner Auftrag per UUID **oder** Auftragsnummer. Mindestens eines von beiden
 muss gesetzt sein; ist `id` gesetzt, hat es Vorrang.
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `id` | string (UUID) | nein* | UUID des Auftrags |
-| `nummer` | string | nein* | Auftragsnummer, z. B. `A-2026-0042` |
+| Parameter | Typ           | Pflicht | Beschreibung                        |
+| --------- | ------------- | ------- | ----------------------------------- |
+| `id`      | string (UUID) | nein\*  | UUID des Auftrags                   |
+| `nummer`  | string        | nein\*  | Auftragsnummer, z. B. `A-2026-0042` |
 
 \* genau eines von beiden ist erforderlich.
 
@@ -99,10 +99,10 @@ Fehlerfall (kein Treffer):
 
 Alle Fahrer der eigenen Firma, sortiert nach Name (aufsteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `aktiv`, `krank`, `urlaub` |
-| `limit` | integer 1–200 | nein | Max. Ergebnisse, Standard 100 |
+| Parameter | Typ           | Pflicht | Beschreibung                     |
+| --------- | ------------- | ------- | -------------------------------- |
+| `status`  | string        | nein    | z. B. `aktiv`, `krank`, `urlaub` |
+| `limit`   | integer 1–200 | nein    | Max. Ergebnisse, Standard 100    |
 
 Beispiel-Request:
 
@@ -135,10 +135,10 @@ Beispiel-Response (`structuredContent`):
 
 Gesamte Flotte, sortiert nach Kennzeichen (aufsteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `verfuegbar`, `im_einsatz`, `wartung` |
-| `limit` | integer 1–200 | nein | Max. Ergebnisse, Standard 100 |
+| Parameter | Typ           | Pflicht | Beschreibung                                |
+| --------- | ------------- | ------- | ------------------------------------------- |
+| `status`  | string        | nein    | z. B. `verfuegbar`, `im_einsatz`, `wartung` |
+| `limit`   | integer 1–200 | nein    | Max. Ergebnisse, Standard 100               |
 
 Beispiel-Request:
 
@@ -173,10 +173,10 @@ Beispiel-Response (`structuredContent`):
 
 Rechnungen und Gutschriften, sortiert nach `datum` (absteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `offen`, `bezahlt`, `ueberfaellig` |
-| `limit` | integer 1–100 | nein | Max. Ergebnisse, Standard 25 |
+| Parameter | Typ           | Pflicht | Beschreibung                             |
+| --------- | ------------- | ------- | ---------------------------------------- |
+| `status`  | string        | nein    | z. B. `offen`, `bezahlt`, `ueberfaellig` |
+| `limit`   | integer 1–100 | nein    | Max. Ergebnisse, Standard 25             |
 
 Beispiel-Request:
 
@@ -233,20 +233,20 @@ Auftragsnummer und Status (`neu`) werden serverseitig gesetzt.
 Bei angegebenen IDs wird die Existenz geprüft (Fahrer, Fahrzeug, Patient,
 Kostenträger) — unbekannte IDs führen zu einem Fehler.
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `patient` | string 1–200 | **ja** | Patientenname |
-| `patientId`, `insurerId` | UUID | nein | Stammdaten-Verknüpfung |
-| `telefon` | string ≤50 | nein | Rückrufnummer |
-| `transportart` | `Liegendtransport` \| `Sitzendtransport` \| `Rollstuhl` \| `Dialysefahrt` | nein | |
-| `prioritaet` | `niedrig` \| `normal` \| `hoch` \| `dringend` | nein | |
-| `termin` | string `YYYY-MM-DDTHH:mm` | nein | Abholtermin |
-| `abholort`, `zielort` | string ≤300 | nein | Freitext-Adresse |
-| `pickup`, `destination` | Objekt | nein | strukturierte Adresse (`street`, `houseNumber`, `postalCode`, `city`, `country`, `additionalInfo`) |
-| `mobilitaet` | string ≤200 | nein | z. B. `rollstuhl` |
-| `begleitperson` | boolean | nein | |
-| `fahrerId`, `fahrzeugId` | UUID | nein | Zuordnung |
-| `notiz` | string ≤2000 | nein | |
+| Parameter                | Typ                                                                       | Pflicht | Beschreibung                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `patient`                | string 1–200                                                              | **ja**  | Patientenname                                                                                      |
+| `patientId`, `insurerId` | UUID                                                                      | nein    | Stammdaten-Verknüpfung                                                                             |
+| `telefon`                | string ≤50                                                                | nein    | Rückrufnummer                                                                                      |
+| `transportart`           | `Liegendtransport` \| `Sitzendtransport` \| `Rollstuhl` \| `Dialysefahrt` | nein    |                                                                                                    |
+| `prioritaet`             | `niedrig` \| `normal` \| `hoch` \| `dringend`                             | nein    |                                                                                                    |
+| `termin`                 | string `YYYY-MM-DDTHH:mm`                                                 | nein    | Abholtermin                                                                                        |
+| `abholort`, `zielort`    | string ≤300                                                               | nein    | Freitext-Adresse                                                                                   |
+| `pickup`, `destination`  | Objekt                                                                    | nein    | strukturierte Adresse (`street`, `houseNumber`, `postalCode`, `city`, `country`, `additionalInfo`) |
+| `mobilitaet`             | string ≤200                                                               | nein    | z. B. `rollstuhl`                                                                                  |
+| `begleitperson`          | boolean                                                                   | nein    |                                                                                                    |
+| `fahrerId`, `fahrzeugId` | UUID                                                                      | nein    | Zuordnung                                                                                          |
+| `notiz`                  | string ≤2000                                                              | nein    |                                                                                                    |
 
 Beispiel-Request:
 
@@ -284,11 +284,11 @@ Beispiel-Response (`structuredContent`):
 Ändert ausschließlich Status bzw. Detail-Status; alle anderen Felder bleiben
 unangetastet.
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `id` | UUID | **ja** | Auftrag |
-| `status` | `neu` \| `disponiert` \| `unterwegs` \| `abgeschlossen` \| `storniert` | **ja** | Neuer Status |
-| `detailStatus` | string ≤100 | nein | z. B. `beim_patienten` |
+| Parameter      | Typ                                                                    | Pflicht | Beschreibung           |
+| -------------- | ---------------------------------------------------------------------- | ------- | ---------------------- |
+| `id`           | UUID                                                                   | **ja**  | Auftrag                |
+| `status`       | `neu` \| `disponiert` \| `unterwegs` \| `abgeschlossen` \| `storniert` | **ja**  | Neuer Status           |
+| `detailStatus` | string ≤100                                                            | nein    | z. B. `beim_patienten` |
 
 Beispiel-Request:
 
@@ -302,7 +302,14 @@ Beispiel-Request:
 Beispiel-Response (`structuredContent`):
 
 ```json
-{ "order": { "id": "e4b7…", "nummer": "A-2061", "status": "unterwegs", "detailStatus": "beim_patienten" } }
+{
+  "order": {
+    "id": "e4b7…",
+    "nummer": "A-2061",
+    "status": "unterwegs",
+    "detailStatus": "beim_patienten"
+  }
+}
 ```
 
 Fehlerfall: `"Auftrag nicht gefunden."` bzw. bei fehlender Berechtigung die
@@ -315,20 +322,20 @@ Legt Rechnung oder Gutschrift an. Rechnungsnummer wird serverseitig erzeugt
 den Firmeneinstellungen — sonst schlägt der Aufruf mit der entsprechenden
 Meldung fehl. Negative Beträge sind für Gutschriften ausdrücklich erlaubt.
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `kunde` | string 1–200 | **ja** | Rechnungsempfänger |
-| `kundeId` | string ≤100 | nein | Kunden-/Kostenträger-ID |
-| `typ` | `rechnung` \| `gutschrift` | nein | Standard `rechnung` |
-| `abrechnungsart` | `Krankenkasse` \| `Patient` \| `Kunde` | nein | Standard `Kunde` |
-| `betrag` | number | **ja** | Nettobetrag in Euro (negativ = Gutschrift) |
-| `mwstSatz` | number 0–100 | **ja** | USt-Satz in Prozent |
-| `status` | `entwurf` \| `offen` \| `bezahlt` \| `teilbezahlt` \| `ueberfaellig` \| `storniert` | nein | Standard `entwurf` |
-| `datum`, `faelligkeit` | `YYYY-MM-DD` | **ja** | Rechnungs-/Fälligkeitsdatum |
-| `leistungsdatum` | `YYYY-MM-DD` | nein | |
-| `bezugAuftrag` | string ≤50 | nein | Auftragsnummer, z. B. `A-2052` |
-| `positionen` | Array ≤100 | nein | je Position `beschreibung`, `menge`, `einzelpreis` |
-| `notiz` | string ≤5000 | nein | |
+| Parameter              | Typ                                                                                 | Pflicht | Beschreibung                                       |
+| ---------------------- | ----------------------------------------------------------------------------------- | ------- | -------------------------------------------------- |
+| `kunde`                | string 1–200                                                                        | **ja**  | Rechnungsempfänger                                 |
+| `kundeId`              | string ≤100                                                                         | nein    | Kunden-/Kostenträger-ID                            |
+| `typ`                  | `rechnung` \| `gutschrift`                                                          | nein    | Standard `rechnung`                                |
+| `abrechnungsart`       | `Krankenkasse` \| `Patient` \| `Kunde`                                              | nein    | Standard `Kunde`                                   |
+| `betrag`               | number                                                                              | **ja**  | Nettobetrag in Euro (negativ = Gutschrift)         |
+| `mwstSatz`             | number 0–100                                                                        | **ja**  | USt-Satz in Prozent                                |
+| `status`               | `entwurf` \| `offen` \| `bezahlt` \| `teilbezahlt` \| `ueberfaellig` \| `storniert` | nein    | Standard `entwurf`                                 |
+| `datum`, `faelligkeit` | `YYYY-MM-DD`                                                                        | **ja**  | Rechnungs-/Fälligkeitsdatum                        |
+| `leistungsdatum`       | `YYYY-MM-DD`                                                                        | nein    |                                                    |
+| `bezugAuftrag`         | string ≤50                                                                          | nein    | Auftragsnummer, z. B. `A-2052`                     |
+| `positionen`           | Array ≤100                                                                          | nein    | je Position `beschreibung`, `menge`, `einzelpreis` |
+| `notiz`                | string ≤5000                                                                        | nein    |                                                    |
 
 Beispiel-Request:
 
