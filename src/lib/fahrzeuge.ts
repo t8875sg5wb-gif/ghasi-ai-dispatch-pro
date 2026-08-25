@@ -305,7 +305,20 @@ export function bewerteFahrzeug(
   if (warn.oel || warn.wartung) score -= 10;
   if (warn.tuev || warn.versicherung) score -= 14;
   if (warn.reifen) score -= 8;
-  if (!warn.hatWarnung) gruende.push("Keine offenen Wartungen");
+
+  // Fail-closed: fehlende Fristen sind ein eigener Zustand (nicht "bestätigt gut")
+  // und bekommen einen zusätzlichen, klar erkennbaren Abzug.
+  const fehlendeLabels: string[] = [];
+  if (warn.tuevFehlt) fehlendeLabels.push("TÜV-Datum fehlt – Prüfung erforderlich");
+  if (warn.versicherungFehlt)
+    fehlendeLabels.push("Versicherungsdatum fehlt – Prüfung erforderlich");
+  if (warn.wartungFehlt) fehlendeLabels.push("Wartungsdatum fehlt – Prüfung erforderlich");
+  if (fehlendeLabels.length > 0) {
+    score -= 20 * fehlendeLabels.length;
+    gruende.unshift(...fehlendeLabels);
+  } else if (!warn.hatWarnung) {
+    gruende.push("Keine offenen Wartungen");
+  }
 
   return { fahrzeug, score: Math.round(score), gruende: gruende.slice(0, 3) };
 }
