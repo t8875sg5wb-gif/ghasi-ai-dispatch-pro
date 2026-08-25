@@ -92,6 +92,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_audit_log_archive: {
+        Row: {
+          archiv_frist_monate: number
+          archiviert_am: string
+          created_at: string
+          dauer_ms: number | null
+          erfolg: boolean
+          id: string
+          modell: string | null
+          quellen: Json | null
+          rolle: string | null
+          thread_id: string | null
+          user_id: string | null
+          vorbereitete_aktionen: Json | null
+          werkzeuge: string[] | null
+        }
+        Insert: {
+          archiv_frist_monate: number
+          archiviert_am?: string
+          created_at: string
+          dauer_ms?: number | null
+          erfolg?: boolean
+          id: string
+          modell?: string | null
+          quellen?: Json | null
+          rolle?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+          vorbereitete_aktionen?: Json | null
+          werkzeuge?: string[] | null
+        }
+        Update: {
+          archiv_frist_monate?: number
+          archiviert_am?: string
+          created_at?: string
+          dauer_ms?: number | null
+          erfolg?: boolean
+          id?: string
+          modell?: string | null
+          quellen?: Json | null
+          rolle?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+          vorbereitete_aktionen?: Json | null
+          werkzeuge?: string[] | null
+        }
+        Relationships: []
+      }
       automation_states: {
         Row: {
           automation_id: string
@@ -303,6 +351,7 @@ export type Database = {
           id: string
           ik_nummer: string | null
           inhaber: string
+          mcp_audit_retention_months: number
           rechtsform: string
           singleton: number
           steuer_modus: string
@@ -335,6 +384,7 @@ export type Database = {
           id?: string
           ik_nummer?: string | null
           inhaber?: string
+          mcp_audit_retention_months?: number
           rechtsform?: string
           singleton?: number
           steuer_modus?: string
@@ -367,6 +417,7 @@ export type Database = {
           id?: string
           ik_nummer?: string | null
           inhaber?: string
+          mcp_audit_retention_months?: number
           rechtsform?: string
           singleton?: number
           steuer_modus?: string
@@ -2589,6 +2640,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      archive_mcp_audit_logs: { Args: { p_monate: number }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "disposition" | "finanz" | "fahrer"
