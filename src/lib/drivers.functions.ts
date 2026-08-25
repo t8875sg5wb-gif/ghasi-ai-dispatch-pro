@@ -112,7 +112,16 @@ export const updateDriver = createServerFn({ method: "POST" })
     return parsed.data as unknown as { id: string; values: Partial<DriverWrite> };
   })
   .handler(async ({ data, context }): Promise<Fahrer> => {
+    // Gehaltsfelder sind Administration/Finanzen vorbehalten (Zugriffskontrolle
+    // serverseitig, nicht nur im UI).
+    const { assertLohnFelderBerechtigung } = await import("@/lib/drivers-security.server");
+    await assertLohnFelderBerechtigung(
+      context.supabase,
+      context.userId,
+      data.values as Record<string, unknown>,
+    );
     const row = writeToRow(data.values);
+
     const { data: updated, error } = await context.supabase
       .from("drivers")
       .update(row as never)
