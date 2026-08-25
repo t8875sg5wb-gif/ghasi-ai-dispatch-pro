@@ -1,10 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  fahrerHinweise,
-  fahrzeugHinweise,
-  rechnungHinweise,
-  tageBis,
-} from "@/lib/ghasi-hinweise";
+import { fahrerHinweise, fahrzeugHinweise, rechnungHinweise, tageBis } from "@/lib/ghasi-hinweise";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import type { Fahrer } from "@/lib/fahrer";
 import type { Rechnung } from "@/lib/finance";
