@@ -21,7 +21,11 @@ export const Route = createFileRoute("/aktions-center")({
           "Aktions-Center von GHASI AI: alle KI-generierten Nachrichten-Entwürfe (SMS, E-Mail, WhatsApp) warten auf manuelle Freigabe. Die KI versendet niemals automatisch.",
       },
       { property: "og:title", content: "Aktions-Center – GHASI AI" },
-      { property: "og:description", content: "Aktions-Center von GHASI AI: alle KI-generierten Nachrichten-Entwürfe (SMS, E-Mail, WhatsApp) warten auf manuelle Freigabe. Die KI versendet niemals automatisch." },
+      {
+        property: "og:description",
+        content:
+          "Aktions-Center von GHASI AI: alle KI-generierten Nachrichten-Entwürfe (SMS, E-Mail, WhatsApp) warten auf manuelle Freigabe. Die KI versendet niemals automatisch.",
+      },
     ],
   }),
   component: AktionsCenter,

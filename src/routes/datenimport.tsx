@@ -50,7 +50,10 @@ export const Route = createFileRoute("/datenimport")({
         content: "Fahrer, Fahrzeuge, Kunden und Patienten per CSV oder Excel importieren.",
       },
       { property: "og:title", content: "Datenimport – GHASI AI" },
-      { property: "og:description", content: "Fahrer, Fahrzeuge, Kunden und Patienten per CSV oder Excel importieren." },
+      {
+        property: "og:description",
+        content: "Fahrer, Fahrzeuge, Kunden und Patienten per CSV oder Excel importieren.",
+      },
     ],
   }),
   component: DatenimportPage,

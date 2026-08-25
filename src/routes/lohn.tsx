@@ -35,7 +35,10 @@ export const Route = createFileRoute("/lohn")({
         content: "Netto-, Arbeitgeberkosten- und Minijob-Näherung je Fahrer.",
       },
       { property: "og:title", content: "Lohn-Rechner – GHASI AI" },
-      { property: "og:description", content: "Netto-, Arbeitgeberkosten- und Minijob-Näherung je Fahrer." },
+      {
+        property: "og:description",
+        content: "Netto-, Arbeitgeberkosten- und Minijob-Näherung je Fahrer.",
+      },
     ],
   }),
   component: LohnPage,

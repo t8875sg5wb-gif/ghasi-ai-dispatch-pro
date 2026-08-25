@@ -31,7 +31,11 @@ export const Route = createFileRoute("/automatisierung")({
           "Wiederkehrende Aufgaben, Abrechnung, Wartung und Erinnerungen – nichts wird ohne Freigabe ausgeführt.",
       },
       { property: "og:title", content: "Automatisierung – GHASI AI" },
-      { property: "og:description", content: "Wiederkehrende Aufgaben, Abrechnung, Wartung und Erinnerungen – nichts wird ohne Freigabe ausgeführt." },
+      {
+        property: "og:description",
+        content:
+          "Wiederkehrende Aufgaben, Abrechnung, Wartung und Erinnerungen – nichts wird ohne Freigabe ausgeführt.",
+      },
     ],
   }),
   component: AutomationPage,

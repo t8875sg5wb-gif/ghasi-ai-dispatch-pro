@@ -67,7 +67,10 @@ export const Route = createFileRoute("/leasing")({
         content: "Leasing- und Finanzierungsverträge, Raten, Laufzeiten und Kilometer.",
       },
       { property: "og:title", content: "Leasing – GHASI AI" },
-      { property: "og:description", content: "Leasing- und Finanzierungsverträge, Raten, Laufzeiten und Kilometer." },
+      {
+        property: "og:description",
+        content: "Leasing- und Finanzierungsverträge, Raten, Laufzeiten und Kilometer.",
+      },
     ],
   }),
   component: LeasingSeite,

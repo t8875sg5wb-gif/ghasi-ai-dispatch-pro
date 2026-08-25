@@ -33,7 +33,10 @@ export const Route = createFileRoute("/euer")({
         content: "Einnahmen-Überschuss-Rechnung als Vorbereitung für ELSTER.",
       },
       { property: "og:title", content: "EÜR – GHASI AI" },
-      { property: "og:description", content: "Einnahmen-Überschuss-Rechnung als Vorbereitung für ELSTER." },
+      {
+        property: "og:description",
+        content: "Einnahmen-Überschuss-Rechnung als Vorbereitung für ELSTER.",
+      },
     ],
   }),
   component: EuerPage,

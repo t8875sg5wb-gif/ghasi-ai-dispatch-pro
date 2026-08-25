@@ -105,7 +105,11 @@ export const Route = createFileRoute("/dauerauftraege")({
           "Wiederkehrende Krankentransporte als Serie verwalten: Dialyse-, Pflegeheim- und Klinikfahrten automatisch als reale Aufträge erzeugen, pausieren und steuern.",
       },
       { property: "og:title", content: "Daueraufträge – GHASI AI" },
-      { property: "og:description", content: "Wiederkehrende Krankentransporte als Serie verwalten: Dialyse-, Pflegeheim- und Klinikfahrten automatisch als reale Aufträge erzeugen, pausieren und steuern." },
+      {
+        property: "og:description",
+        content:
+          "Wiederkehrende Krankentransporte als Serie verwalten: Dialyse-, Pflegeheim- und Klinikfahrten automatisch als reale Aufträge erzeugen, pausieren und steuern.",
+      },
     ],
   }),
   component: DauerauftraegePage,

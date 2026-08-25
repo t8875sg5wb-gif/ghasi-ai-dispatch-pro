@@ -24,7 +24,11 @@ export const Route = createFileRoute("/warnungen")({
           "Smart Alert Center von GHASI AI: alle Warnungen zu Wartung, Fristen, Dokumenten, Disposition und Kosten – kategorisiert nach Priorität.",
       },
       { property: "og:title", content: "Alert-Center – GHASI AI" },
-      { property: "og:description", content: "Smart Alert Center von GHASI AI: alle Warnungen zu Wartung, Fristen, Dokumenten, Disposition und Kosten – kategorisiert nach Priorität." },
+      {
+        property: "og:description",
+        content:
+          "Smart Alert Center von GHASI AI: alle Warnungen zu Wartung, Fristen, Dokumenten, Disposition und Kosten – kategorisiert nach Priorität.",
+      },
     ],
   }),
   component: AlertCenter,

@@ -65,7 +65,10 @@ export const Route = createFileRoute("/ausgaben")({
         content: "Betriebsausgaben mit Belegfotos, Kategorien und Vorsteuer-Hinweis.",
       },
       { property: "og:title", content: "Ausgaben – GHASI AI" },
-      { property: "og:description", content: "Betriebsausgaben mit Belegfotos, Kategorien und Vorsteuer-Hinweis." },
+      {
+        property: "og:description",
+        content: "Betriebsausgaben mit Belegfotos, Kategorien und Vorsteuer-Hinweis.",
+      },
     ],
   }),
   component: AusgabenPage,

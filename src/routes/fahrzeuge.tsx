@@ -59,7 +59,11 @@ export const Route = createFileRoute("/fahrzeuge")({
           "Fahrzeugverwaltung mit Status, Live-GPS, Kosten, Wartungswarnungen und KI-Fahrzeugvorschlag für neue Aufträge.",
       },
       { property: "og:title", content: "Fahrzeuge – GHASI AI" },
-      { property: "og:description", content: "Fahrzeugverwaltung mit Status, Live-GPS, Kosten, Wartungswarnungen und KI-Fahrzeugvorschlag für neue Aufträge." },
+      {
+        property: "og:description",
+        content:
+          "Fahrzeugverwaltung mit Status, Live-GPS, Kosten, Wartungswarnungen und KI-Fahrzeugvorschlag für neue Aufträge.",
+      },
     ],
   }),
   component: FahrzeugePage,

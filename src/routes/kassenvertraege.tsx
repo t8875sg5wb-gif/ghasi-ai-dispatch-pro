@@ -46,7 +46,11 @@ export const Route = createFileRoute("/kassenvertraege")({
           "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung nach §4 Nr.17b UStG.",
       },
       { property: "og:title", content: "Kassenverträge – GHASI AI" },
-      { property: "og:description", content: "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung nach §4 Nr.17b UStG." },
+      {
+        property: "og:description",
+        content:
+          "Genehmigte Preise je Krankenkasse – Grundlage der USt-Befreiung nach §4 Nr.17b UStG.",
+      },
     ],
   }),
   component: KassenvertraegePage,

@@ -108,7 +108,11 @@ export const Route = createFileRoute("/auftraege")({
           "Krankentransporte erfassen, im Status-Workflow disponieren, filtern, im Detail prüfen und bearbeiten.",
       },
       { property: "og:title", content: "Aufträge – GHASI AI" },
-      { property: "og:description", content: "Krankentransporte erfassen, im Status-Workflow disponieren, filtern, im Detail prüfen und bearbeiten." },
+      {
+        property: "og:description",
+        content:
+          "Krankentransporte erfassen, im Status-Workflow disponieren, filtern, im Detail prüfen und bearbeiten.",
+      },
     ],
   }),
   component: AuftraegePage,

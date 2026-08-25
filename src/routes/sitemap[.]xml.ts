@@ -18,9 +18,9 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const pfade = [
-          ...new Set([...allNavItems.map((i) => i.to), ...ZUSATZ_ROUTEN]),
-        ].map((to) => ({ to }));
+        const pfade = [...new Set([...allNavItems.map((i) => i.to), ...ZUSATZ_ROUTEN])].map(
+          (to) => ({ to }),
+        );
 
         const urls = pfade.map((item) =>
           [

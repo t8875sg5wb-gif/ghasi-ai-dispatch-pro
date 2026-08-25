@@ -82,7 +82,11 @@ export const Route = createFileRoute("/tourenplanung")({
           "Intelligente Disposition: Plantafel, Drag & Drop, KI-Fahrer- und Fahrzeugzuteilung, Konflikterkennung und Live-Status für Krankentransporte.",
       },
       { property: "og:title", content: "Dispatch-Center – GHASI AI" },
-      { property: "og:description", content: "Intelligente Disposition: Plantafel, Drag & Drop, KI-Fahrer- und Fahrzeugzuteilung, Konflikterkennung und Live-Status für Krankentransporte." },
+      {
+        property: "og:description",
+        content:
+          "Intelligente Disposition: Plantafel, Drag & Drop, KI-Fahrer- und Fahrzeugzuteilung, Konflikterkennung und Live-Status für Krankentransporte.",
+      },
     ],
   }),
   component: DispatchCenter,

@@ -60,7 +60,11 @@ export const Route = createFileRoute("/einrichtungen")({
           "Krankenhäuser, Dialysezentren und Pflegeheime zentral verwalten – Kontakte, Kapazitäten und Transporte.",
       },
       { property: "og:title", content: "Einrichtungen – GHASI AI" },
-      { property: "og:description", content: "Krankenhäuser, Dialysezentren und Pflegeheime zentral verwalten – Kontakte, Kapazitäten und Transporte." },
+      {
+        property: "og:description",
+        content:
+          "Krankenhäuser, Dialysezentren und Pflegeheime zentral verwalten – Kontakte, Kapazitäten und Transporte.",
+      },
     ],
   }),
   component: EinrichtungenHub,

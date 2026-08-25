@@ -17,7 +17,11 @@ export const Route = createFileRoute("/aktivitaeten")({
           "Lückenloses Aktivitätsprotokoll: Wer hat wann welche Änderung vorgenommen – nachvollziehbar dokumentiert.",
       },
       { property: "og:title", content: "Aktivitäten – GHASI AI" },
-      { property: "og:description", content: "Lückenloses Aktivitätsprotokoll: Wer hat wann welche Änderung vorgenommen – nachvollziehbar dokumentiert." },
+      {
+        property: "og:description",
+        content:
+          "Lückenloses Aktivitätsprotokoll: Wer hat wann welche Änderung vorgenommen – nachvollziehbar dokumentiert.",
+      },
     ],
   }),
   component: AktivitaetenPage,

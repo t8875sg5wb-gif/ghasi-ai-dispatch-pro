@@ -41,7 +41,10 @@ export const Route = createFileRoute("/fahrer-mobil")({
         content: "Mobile Fahreransicht: heutige Touren, Status und Navigation.",
       },
       { property: "og:title", content: "Meine Touren – GHASI AI" },
-      { property: "og:description", content: "Mobile Fahreransicht: heutige Touren, Status und Navigation." },
+      {
+        property: "og:description",
+        content: "Mobile Fahreransicht: heutige Touren, Status und Navigation.",
+      },
     ],
   }),
   component: FahrerMobilPage,

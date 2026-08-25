@@ -66,7 +66,10 @@ export const Route = createFileRoute("/versicherungen")({
         content: "Fahrzeug- und Betriebsversicherungen, Beiträge und Laufzeiten.",
       },
       { property: "og:title", content: "Versicherungen – GHASI AI" },
-      { property: "og:description", content: "Fahrzeug- und Betriebsversicherungen, Beiträge und Laufzeiten." },
+      {
+        property: "og:description",
+        content: "Fahrzeug- und Betriebsversicherungen, Beiträge und Laufzeiten.",
+      },
     ],
   }),
   component: VersicherungenSeite,
