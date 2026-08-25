@@ -351,6 +351,12 @@ export const navGroups: NavGroup[] = [
         description: "Unternehmensdaten, Benachrichtigungen und Präferenzen.",
       },
       {
+        label: "Abgelehnte Daueraufträge",
+        to: "/dauerauftrag-ablehnungen",
+        icon: ShieldAlert,
+        description: "Bericht über ungültige Dauerauftragsversuche mit Grund und Zeitpunkt.",
+      },
+      {
         label: "Administration",
         to: "/administration",
         icon: ShieldUser,
@@ -376,7 +382,8 @@ function itemRoles(groupLabel: string, to: string): AppRole[] {
   // Mobile Fahrer-Ansicht: einzige Seite für die Fahrer-Rolle.
   if (to === "/fahrer-mobil") return ["admin", "disposition", "fahrer"];
   // Nur Admins verwalten Nutzer/Systemkonfiguration & Verbindungen.
-  if (to === "/administration" || to === "/verbindungen") return ["admin"];
+  if (to === "/administration" || to === "/verbindungen" || to === "/dauerauftrag-ablehnungen")
+    return ["admin"];
   // Finanzbereich: Admin + Finanzrolle.
   if (groupLabel === "Finanzen") return ["admin", "finanz"];
   // Übersicht & Kommunikation: alle Innendienst-Rollen.

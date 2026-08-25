@@ -2247,6 +2247,39 @@ export type Database = {
           },
         ]
       }
+      recurring_rejections: {
+        Row: {
+          aktion: string
+          created_at: string
+          felder: Json
+          grund: string
+          id: string
+          patient: string | null
+          user_id: string
+          ziel_id: string | null
+        }
+        Insert: {
+          aktion: string
+          created_at?: string
+          felder?: Json
+          grund: string
+          id?: string
+          patient?: string | null
+          user_id?: string
+          ziel_id?: string | null
+        }
+        Update: {
+          aktion?: string
+          created_at?: string
+          felder?: Json
+          grund?: string
+          id?: string
+          patient?: string | null
+          user_id?: string
+          ziel_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

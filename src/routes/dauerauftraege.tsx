@@ -35,6 +35,7 @@ import {
   naechsteTermine,
   offeneTermineImZeitraum,
 } from "@/lib/dauerauftraege";
+import { TerminVorschau } from "@/components/dauerauftraege/termin-vorschau";
 import { MOBILITAET_META, MOBILITAET_OPTIONEN, type Mobilitaet } from "@/lib/auftraege";
 import { recurringFieldsSchema } from "@/lib/recurring.functions";
 import {
@@ -1258,6 +1259,8 @@ function DauerauftragForm({
             onChange={(v) => set("pausiert", v)}
           />
         </div>
+
+        <TerminVorschau dauerauftrag={f} />
 
         <div>
           <Label>Notiz</Label>

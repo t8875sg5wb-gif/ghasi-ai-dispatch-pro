@@ -1,6 +1,7 @@
 // Server functions for persisted recurring transport orders (Daueraufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -12,13 +13,8 @@ import {
   assertVehicleExists,
 } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
-import {
-  kodiereFeldFehler,
-  pruefeDauerauftragRegeln,
-  zuFeldFehlern,
-  type DauerauftragRegelInput,
-  type FeldFehler,
-} from "@/lib/recurring-validation";
+import { pruefeDauerauftragRegeln, type DauerauftragRegelInput } from "@/lib/recurring-validation";
+import { parseOrLog } from "@/lib/recurring-reject.server";
 import {
   rowToDauerauftrag,
   writeToRecurringRow,
@@ -89,29 +85,6 @@ const updateRecurringSchema = z
 
 const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
 
-/**
- * Validiert und wirft bei Fehlern eine Meldung, die zusätzlich eine
- * strukturierte Feldliste (`path` + `label` + `message`) transportiert.
- * Optional werden fachliche Querregeln geprüft.
- */
-function parseOrThrow<T>(
-  schema: z.ZodType<T>,
-  data: unknown,
-  regeln?: (wert: T) => FeldFehler[],
-): T {
-  const parsed = schema.safeParse(data);
-  if (!parsed.success) {
-    throw new Error(
-      kodiereFeldFehler("Ungültige Dauerauftragsdaten.", zuFeldFehlern(parsed.error)),
-    );
-  }
-  const regelFehler = regeln?.(parsed.data) ?? [];
-  if (regelFehler.length > 0) {
-    throw new Error(kodiereFeldFehler("Ungültige Dauerauftragsdaten.", regelFehler));
-  }
-  return parsed.data;
-}
-
 export const listRecurring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Dauerauftrag[]> => {
@@ -125,13 +98,15 @@ export const listRecurring = createServerFn({ method: "GET" })
 
 export const createRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(
-    (data: unknown) =>
-      parseOrThrow(createRecurringSchema, data, (wert) =>
-        pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
-      ) as RecurringWrite,
-  )
-  .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+  .validator((data: RecurringWrite) => data)
+  .handler(async ({ data: roh, context }): Promise<Dauerauftrag> => {
+    const data = (await parseOrLog(
+      context.supabase as unknown as SupabaseClient,
+      "create",
+      createRecurringSchema,
+      roh,
+      (wert) => pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
+    )) as RecurringWrite;
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
     if (data.bevorzugterFahrerId)
@@ -150,17 +125,15 @@ export const createRecurring = createServerFn({ method: "POST" })
 
 export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(
-    (data: unknown) =>
-      parseOrThrow(updateRecurringSchema, data, (wert) =>
-        pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
-      ) as {
-        id: string;
-        values: Partial<RecurringWrite>;
-      },
-  )
-
-  .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+  .validator((data: { id: string; values: Partial<RecurringWrite> }) => data)
+  .handler(async ({ data: roh, context }): Promise<Dauerauftrag> => {
+    const data = (await parseOrLog(
+      context.supabase as unknown as SupabaseClient,
+      "update",
+      updateRecurringSchema,
+      roh,
+      (wert) => pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
+    )) as { id: string; values: Partial<RecurringWrite> };
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     if (data.values.bevorzugterFahrerId)
@@ -180,9 +153,14 @@ export const updateRecurring = createServerFn({ method: "POST" })
 
 export const deleteRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => parseOrThrow(deleteRecurringSchema, data))
-
-  .handler(async ({ data, context }) => {
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data: roh, context }) => {
+    const data = await parseOrLog(
+      context.supabase as unknown as SupabaseClient,
+      "delete",
+      deleteRecurringSchema,
+      roh,
+    );
     const { error } = await context.supabase.from("recurring_orders").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
