@@ -96,6 +96,8 @@ describe("fahrerHinweise – fail-closed bei fehlenden Nachweisen", () => {
     ]).filter((x) => x.id.startsWith("nw-test-fahrer"));
     expect(hinweise).toHaveLength(3);
     expect(hinweise.every((x) => x.stufe === "kritisch")).toBe(true);
+  });
+});
 
 describe("rechnungHinweise – überfällige Rechnungen", () => {
   const basisRechnung = (tage: number): Rechnung =>
