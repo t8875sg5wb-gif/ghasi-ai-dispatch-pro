@@ -2,10 +2,7 @@
 // alle übrigen Felder bleiben für andere Rollen änderbar.
 import { describe, expect, test } from "bun:test";
 
-import {
-  assertLohnFelderBerechtigung,
-  beruehrtLohnFelder,
-} from "@/lib/drivers-security.server";
+import { assertLohnFelderBerechtigung, beruehrtLohnFelder } from "@/lib/drivers-security.server";
 
 const UID = "11111111-1111-4111-8111-111111111111";
 
