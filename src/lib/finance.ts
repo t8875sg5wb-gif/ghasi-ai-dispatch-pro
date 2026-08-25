@@ -570,9 +570,14 @@ export function computeFinanzKpis(
   const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(brutto(r)), 0);
 
   const kosten = computeKostenaufstellung(config);
-  const umsatzMonat = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0);
-  const gewinnMonat = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsgewinn, 0);
+  // Single source of truth for company-wide monthly revenue: the real invoice
+  // data (gross incl. VAT). Drafts are excluded (not yet issued), credit notes
+  // carry negative amounts and therefore reduce revenue automatically.
+  const umsatzMonat = round(
+    aktiv.filter((r) => r.status !== "entwurf").reduce((s, r) => s + brutto(r), 0),
+  );
   const ausgabenMonat = kosten.gesamt;
+  const gewinnMonat = round(umsatzMonat - ausgabenMonat);
   const margeProzent = umsatzMonat > 0 ? round((gewinnMonat / umsatzMonat) * 100) : 0;
 
   return {

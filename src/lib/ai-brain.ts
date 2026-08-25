@@ -26,6 +26,7 @@ import {
 } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { computeFinanzKpis } from "@/lib/finance";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 
 export const EUR = (n: number) =>
@@ -85,9 +86,12 @@ export function computeKpis(): BrainKpis {
 
   const umsatzHeute = fahrer.reduce((s, f) => s + f.umsatzHeute, 0);
   const gewinnHeute = fahrer.reduce((s, f) => s + f.gewinnHeute, 0);
-  const umsatzMonat = fzg.reduce((s, v) => s + v.monatsumsatz, 0);
-  const gewinnMonat = fzg.reduce((s, v) => s + v.monatsgewinn, 0);
-  const margeProzent = umsatzMonat > 0 ? round((gewinnMonat / umsatzMonat) * 100) : 0;
+  // Company-wide monthly figures come exclusively from the finance layer
+  // (invoice-derived) so Buchhaltung, CEO-Cockpit und Health Score identisch sind.
+  const fin = computeFinanzKpis();
+  const umsatzMonat = fin.umsatzMonat;
+  const gewinnMonat = fin.gewinnMonat;
+  const margeProzent = fin.margeProzent;
 
   const offeneRechnungen = KUNDEN.reduce((s, k) => s + k.offeneRechnungen, 0);
 
