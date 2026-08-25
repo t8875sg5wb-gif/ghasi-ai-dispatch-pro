@@ -40,7 +40,6 @@ import { recurringFieldsSchema } from "@/lib/recurring.functions";
 import {
   dekodiereFeldFehler,
   feldFehlerMap,
-  feldLabel,
   lesbarerFehlerText,
   pruefeDauerauftragRegeln,
   zuFeldFehlern,
