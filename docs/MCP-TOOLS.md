@@ -374,3 +374,23 @@ Beispiel-Response (`structuredContent`):
 ```
 
 Jede Rechnungsänderung wird weiterhin über den GoBD-Audit-Trail protokolliert.
+
+## Scopes & rollenbasierte Autorisierung
+
+Jedes Tool ist an einen feingranularen Scope gebunden. Zusätzlich zur RLS prüft der
+Server bei jedem Aufruf (a) die im Token erteilten `ghasi:*`-Scopes — sofern vorhanden —
+und (b) die serverseitig aus `user_roles` gelesene Rolle.
+
+| Tool                       | Scope                  | Erlaubte Rollen                      |
+| -------------------------- | ---------------------- | ------------------------------------ |
+| `list_orders`, `get_order` | `ghasi:orders.read`    | Admin, Disposition, Finanzen, Fahrer |
+| `create_order`             | `ghasi:orders.write`   | Admin, Disposition                   |
+| `update_order_status`      | `ghasi:orders.status`  | Admin, Disposition, Fahrer           |
+| `list_drivers`             | `ghasi:drivers.read`   | Admin, Disposition                   |
+| `list_vehicles`            | `ghasi:vehicles.read`  | Admin, Disposition, Fahrer           |
+| `list_invoices`            | `ghasi:invoices.read`  | Admin, Finanzen                      |
+| `create_invoice`           | `ghasi:invoices.write` | Admin, Finanzen                      |
+
+Fehlt der Scope oder die Rolle, antwortet das Tool mit `isError: true` und einer
+Berechtigungsmeldung — ohne Daten preiszugeben. Enthält das Token keine `ghasi:*`-Scopes
+(Standard bei `openid email profile`), entscheidet allein die Rolle.
