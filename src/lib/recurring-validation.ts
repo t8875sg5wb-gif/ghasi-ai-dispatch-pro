@@ -151,7 +151,7 @@ type AdresseLike = {
   city?: string | null;
 } | null;
 
-function adresseLeer(a: AdresseLike, legacy?: string | null): boolean {
+function adresseLeer(a: AdresseLike | undefined, legacy?: string | null): boolean {
   const text = [a?.street, a?.houseNumber, a?.postalCode, a?.city, legacy]
     .map((v) => (v ?? "").trim())
     .join("");
