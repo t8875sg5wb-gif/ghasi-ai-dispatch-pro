@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { autorisiere } from "../authz";
 import { rowToFahrer, type DriverRow } from "@/lib/drivers-shared";
 
 export default defineTool({
@@ -13,10 +13,9 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ status, limit }, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Nicht authentifiziert." }], isError: true };
-    }
-    const supabase = supabaseForUser(ctx);
+    const gate = await autorisiere(ctx, "ghasi:drivers.read");
+    if (!gate.ok) return gate.error;
+    const supabase = gate.supabase;
     let q = supabase
       .from("drivers")
       .select("*")

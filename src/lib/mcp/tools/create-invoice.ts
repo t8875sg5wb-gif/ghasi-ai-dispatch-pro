@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { supabaseForUser } from "../supabase";
+import { autorisiere } from "../authz";
 import {
   rowToRechnung,
   writeToInvoiceRow,
@@ -47,10 +47,9 @@ export default defineTool({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   handler: async (input, ctx) => {
-    if (!ctx.isAuthenticated()) {
-      return { content: [{ type: "text", text: "Nicht authentifiziert." }], isError: true };
-    }
-    const supabase = supabaseForUser(ctx);
+    const gate = await autorisiere(ctx, "ghasi:invoices.write");
+    if (!gate.ok) return gate.error;
+    const supabase = gate.supabase;
     try {
       await requireBestaetigtenSteuerModus(supabase);
 
