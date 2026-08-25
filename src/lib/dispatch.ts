@@ -586,12 +586,56 @@ export function erkenneKonflikte(
             transportId: t.id,
           });
         }
-        if (laeuftAb(v.tuevBis, 14) || laeuftAb(v.naechsteWartung, 7)) {
+        // TÜV: fehlendes oder abgelaufenes Datum blockiert (fail-closed),
+        // eine bald ablaufende Frist bleibt eine Warnung.
+        if (warn.tuevFehlt) {
+          konflikte.push({
+            id: `tuev-fehlt-${t.id}`,
+            typ: "wartung",
+            schwere: "kritisch",
+            text: `${t.nummer}: ${v.kennzeichen} hat kein TÜV-Datum – Prüfung erforderlich, Einsatz nicht freigegeben.`,
+            transportId: t.id,
+          });
+        } else if (istAbgelaufen(v.tuevBis)) {
+          konflikte.push({
+            id: `tuev-ab-${t.id}`,
+            typ: "wartung",
+            schwere: "kritisch",
+            text: `${t.nummer}: TÜV von ${v.kennzeichen} ist abgelaufen (${formatDatum(v.tuevBis)}) – Einsatz nicht zulässig.`,
+            transportId: t.id,
+          });
+        } else if (laeuftAb(v.tuevBis, 14) || laeuftAb(v.naechsteWartung, 7)) {
           konflikte.push({
             id: `war-${t.id}`,
             typ: "wartung",
             schwere: "warnung",
             text: `${t.nummer}: ${v.kennzeichen} hat eine baldige Wartungs-/TÜV-Frist.`,
+            transportId: t.id,
+          });
+        }
+        // Versicherung: gleiche Logik – fehlt/abgelaufen blockiert, bald = Warnung.
+        if (warn.versicherungFehlt) {
+          konflikte.push({
+            id: `vers-fehlt-${t.id}`,
+            typ: "wartung",
+            schwere: "kritisch",
+            text: `${t.nummer}: ${v.kennzeichen} hat kein Versicherungsdatum – Prüfung erforderlich, Einsatz nicht freigegeben.`,
+            transportId: t.id,
+          });
+        } else if (istAbgelaufen(v.versicherungBis)) {
+          konflikte.push({
+            id: `vers-ab-${t.id}`,
+            typ: "wartung",
+            schwere: "kritisch",
+            text: `${t.nummer}: Versicherung von ${v.kennzeichen} ist abgelaufen (${formatDatum(v.versicherungBis)}) – Einsatz nicht zulässig.`,
+            transportId: t.id,
+          });
+        } else if (laeuftAb(v.versicherungBis, 30)) {
+          konflikte.push({
+            id: `vers-bald-${t.id}`,
+            typ: "wartung",
+            schwere: "warnung",
+            text: `${t.nummer}: Versicherung von ${v.kennzeichen} läuft bald ab (${formatDatum(v.versicherungBis)}).`,
             transportId: t.id,
           });
         }
