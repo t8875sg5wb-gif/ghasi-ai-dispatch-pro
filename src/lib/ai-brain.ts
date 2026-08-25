@@ -26,6 +26,7 @@ import {
 } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { computeFinanzKpis } from "@/lib/finance";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 
 export const EUR = (n: number) =>
