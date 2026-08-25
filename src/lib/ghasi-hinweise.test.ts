@@ -140,4 +140,3 @@ describe("rechnungHinweise – überfällige Rechnungen", () => {
     expect(rechnungHinweise([gutschrift])).toHaveLength(0);
   });
 });
-});
