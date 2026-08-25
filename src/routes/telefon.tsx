@@ -163,16 +163,34 @@ function TelefonSeite() {
   }
 
   function auftragAusAnruf(anruf: Anruf) {
-    updateMut.mutate({ id: anruf.id, values: { auftragErstellt: true, status: "erledigt" } });
-    logActivity({
-      bereich: "Telefon",
-      entitaet: anruf.name ?? anruf.nummer,
-      aktion: "Auftrag aus Anruf",
-      beschreibung: `Aus dem Anruf von ${anruf.name ?? anruf.nummer} wird ein Auftrag vorbereitet.`,
-      akteur,
-    });
-    toast.success("Auftrag wird angelegt – weiter zur Auftragserfassung");
-    void navigate({ to: "/auftraege" });
+    updateMut.mutate(
+      { id: anruf.id, values: { auftragErstellt: true, status: "erledigt" } },
+      {
+        onSuccess: () => {
+          logActivity({
+            bereich: "Telefon",
+            entitaet: anruf.name ?? anruf.nummer,
+            aktion: "Auftrag aus Anruf",
+            beschreibung: `Aus dem Anruf von ${anruf.name ?? anruf.nummer} wird ein Auftrag vorbereitet.`,
+            akteur,
+          });
+          toast.success("Auftrag wird angelegt – weiter zur Auftragserfassung");
+          void navigate({
+            to: "/auftraege",
+            search: {
+              neuPatient: anruf.name,
+              neuTelefon: anruf.nummer,
+              neuNotiz: anruf.notiz,
+            },
+          });
+        },
+        onError: (e) => {
+          toast.error(
+            e instanceof Error ? e.message : "Anruf konnte nicht als Auftrag markiert werden",
+          );
+        },
+      },
+    );
   }
 
   return (
