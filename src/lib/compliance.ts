@@ -88,7 +88,7 @@ export function computePflichten(input: ComplianceInput): CompliancePflicht[] {
 
   // P-Schein je Fahrer
   for (const d of input.fahrer) {
-    const f = fristStatus(d.pScheinGueltigBis, 45);
+    const f = fristStatus(d.pSchein?.gueltigBis, 45);
     out.push({
       id: `pschein-${d.id}`,
       kategorie: "Fahrer",
@@ -177,7 +177,7 @@ export function computeVollstaendigkeit(input: ComplianceInput): Vollstaendigkei
 
   for (const d of input.fahrer) {
     const fehlend: string[] = [];
-    if (!d.pScheinGueltigBis) fehlend.push("P-Schein-Datum");
+    if (!d.pSchein?.gueltigBis) fehlend.push("P-Schein-Datum");
     if (!d.fuehrungszeugnisDatum) fehlend.push("Führungszeugnis");
     if (!d.svAusweisVorhanden) fehlend.push("SV-Ausweis");
     if (!d.steuerId) fehlend.push("Steuer-ID");
