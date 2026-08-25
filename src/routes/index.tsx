@@ -348,7 +348,9 @@ function Dashboard() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
                 <Bot className="h-4 w-4" />
               </div>
-              <CardTitle className="text-base">Proaktive Hinweise von GHASI AI</CardTitle>
+              <h2 className="text-base font-semibold leading-none tracking-tight">
+                Proaktive Hinweise von GHASI AI
+              </h2>
             </div>
             <Badge variant="secondary">{hinweise.length}</Badge>
           </CardHeader>
@@ -379,7 +381,9 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
               <TrendingUp className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base">Gewinnprognose (7 Tage)</CardTitle>
+            <h2 className="text-base font-semibold leading-none tracking-tight">
+              Gewinnprognose (7 Tage)
+            </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -449,7 +453,7 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Activity className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base">Auslastung</CardTitle>
+            <h2 className="text-base font-semibold leading-none tracking-tight">Auslastung</h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -483,7 +487,7 @@ function Dashboard() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/20 text-warning">
                 <AlertTriangle className="h-4 w-4" />
               </div>
-              <CardTitle className="text-base">Warnungen</CardTitle>
+              <h2 className="text-base font-semibold leading-none tracking-tight">Warnungen</h2>
             </div>
             <Badge variant="secondary">{warnungen.length}</Badge>
           </CardHeader>
@@ -514,7 +518,9 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
               <Sparkles className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base text-primary-foreground">KI-Empfehlungen</CardTitle>
+            <h2 className="text-base text-primary-foreground font-semibold leading-none tracking-tight">
+              KI-Empfehlungen
+            </h2>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {recs.slice(0, 3).map((r) => (
@@ -547,7 +553,7 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
               <CalendarDays className="h-4 w-4" />
             </div>
-            <CardTitle className="text-base">Termine heute</CardTitle>
+            <h2 className="text-base font-semibold leading-none tracking-tight">Termine heute</h2>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {termineHeute.map((a) => (

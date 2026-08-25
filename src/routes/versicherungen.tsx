@@ -205,8 +205,12 @@ function VersicherungenSeite() {
         <Card>
           <CardHeader className="space-y-3 pb-3">
             <div className="relative">
+              <label htmlFor="versicherungen-suche" className="sr-only">
+                Versicherungen durchsuchen
+              </label>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id="versicherungen-suche"
                 placeholder="Police, Versicherer, Fahrzeug…"
                 value={suche}
                 onChange={(e) => setSuche(e.target.value)}
