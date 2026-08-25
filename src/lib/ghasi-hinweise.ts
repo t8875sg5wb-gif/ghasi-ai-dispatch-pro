@@ -1,7 +1,7 @@
 // Proaktive Hinweise: GHASI AI wertet die Unternehmensdaten regelbasiert aus
 // und meldet von sich aus, worauf der Unternehmer achten sollte.
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
+import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
 
 export type HinweisStufe = "kritisch" | "warnung" | "info" | "positiv";
@@ -22,51 +22,83 @@ const EUR = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-function tageBis(iso: string): number {
+/**
+ * Tage bis zum Zieldatum. Gibt `null` zurück, wenn das Datum fehlt oder
+ * ungültig ist – analog zu `fristStatus` in compliance-dates.ts.
+ * WICHTIG: `null` bedeutet „Prüfung erforderlich" und MUSS an jeder
+ * Aufrufstelle einen Alarm auslösen (fail-closed), niemals still „kein Alarm".
+ */
+export function tageBis(iso: string | null | undefined): number | null {
+  if (!iso) return null;
   const ziel = new Date(iso).getTime();
+  if (Number.isNaN(ziel)) return null;
   return Math.round((ziel - Date.now()) / 86_400_000);
 }
 
-export function generateHinweise(): Hinweis[] {
-  const h: Hinweis[] = [];
+/** Fail-closed: fehlendes Datum (null) gilt immer als Alarm. */
+function faelligIn(tage: number | null, grenze: number): boolean {
+  return tage === null || tage <= grenze;
+}
 
-  // Fahrzeuge: Wartung, TÜV, Versicherung, Leasing, Tank
-  for (const v of INITIAL_FAHRZEUGE) {
+const FEHLT = "kein Datum hinterlegt – Prüfung erforderlich";
+
+/** Hinweise für eine Fahrzeugliste (fehlende Fristen = kritisch). */
+export function fahrzeugHinweise(fahrzeuge: readonly Fahrzeug[]): Hinweis[] {
+  const h: Hinweis[] = [];
+  for (const v of fahrzeuge) {
     const wartung = tageBis(v.naechsteWartung);
-    if (wartung <= 14) {
+    if (faelligIn(wartung, 14)) {
       h.push({
         id: `wartung-${v.id}`,
-        stufe: wartung <= 5 ? "kritisch" : "warnung",
+        stufe: wartung === null || wartung <= 5 ? "kritisch" : "warnung",
         bereich: "Wartung",
         to: "/wartung",
-        titel: `${v.kennzeichen}: Wartung fällig`,
-        text: `Die nächste Wartung ist in ${wartung} Tag(en) (${v.naechsteWartung}) geplant.`,
+        titel: `${v.kennzeichen}: Wartung ${wartung === null ? "ungeklärt" : "fällig"}`,
+        text:
+          wartung === null
+            ? `Nächste Wartung: ${FEHLT}.`
+            : `Die nächste Wartung ist in ${wartung} Tag(en) (${v.naechsteWartung}) geplant.`,
       });
     }
     const tuev = tageBis(v.tuevBis);
-    if (tuev <= 30) {
+    if (faelligIn(tuev, 30)) {
       h.push({
         id: `tuev-${v.id}`,
-        stufe: tuev <= 10 ? "kritisch" : "warnung",
+        stufe: tuev === null || tuev <= 10 ? "kritisch" : "warnung",
         bereich: "Fahrzeuge",
         to: "/fahrzeuge",
-        titel: `${v.kennzeichen}: TÜV läuft ab`,
-        text: `Der TÜV ist nur noch ${tuev} Tag(e) gültig (${v.tuevBis}).`,
+        titel: `${v.kennzeichen}: TÜV ${tuev === null ? "ungeklärt" : "läuft ab"}`,
+        text:
+          tuev === null
+            ? `TÜV-Datum: ${FEHLT}. Fahrzeug gilt bis zur Klärung als nicht nachgewiesen.`
+            : `Der TÜV ist nur noch ${tuev} Tag(e) gültig (${v.tuevBis}).`,
       });
     }
     const vers = tageBis(v.versicherungBis);
-    if (vers <= 30) {
+    if (faelligIn(vers, 30)) {
       h.push({
         id: `vers-${v.id}`,
-        stufe: vers <= 10 ? "kritisch" : "warnung",
+        stufe: vers === null || vers <= 10 ? "kritisch" : "warnung",
         bereich: "Versicherungen",
         to: "/versicherungen",
-        titel: `${v.kennzeichen}: Versicherung läuft bald ab`,
-        text: `Die Versicherung endet in ${vers} Tag(en) (${v.versicherungBis}).`,
+        titel: `${v.kennzeichen}: Versicherung ${vers === null ? "ungeklärt" : "läuft bald ab"}`,
+        text:
+          vers === null
+            ? `Versicherungsende: ${FEHLT}.`
+            : `Die Versicherung endet in ${vers} Tag(en) (${v.versicherungBis}).`,
       });
     }
     const leasing = tageBis(v.leasingEnde);
-    if (leasing <= 60 && leasing >= 0) {
+    if (leasing === null) {
+      h.push({
+        id: `leasing-${v.id}`,
+        stufe: "kritisch",
+        bereich: "Leasing",
+        to: "/leasing",
+        titel: `${v.kennzeichen}: Leasingende ungeklärt`,
+        text: `Leasingende: ${FEHLT}.`,
+      });
+    } else if (leasing <= 60 && leasing >= 0) {
       h.push({
         id: `leasing-${v.id}`,
         stufe: "info",
@@ -87,9 +119,13 @@ export function generateHinweise(): Hinweis[] {
       });
     }
   }
+  return h;
+}
 
-  // Fahrer: Überstunden, Nachweise
-  for (const f of INITIAL_FAHRER) {
+/** Hinweise für eine Fahrerliste (fehlende Nachweisdaten = kritisch). */
+export function fahrerHinweise(fahrer: readonly Fahrer[]): Hinweis[] {
+  const h: Hinweis[] = [];
+  for (const f of fahrer) {
     if (f.ueberstunden >= 20) {
       h.push({
         id: `ueber-${f.id}`,
@@ -106,17 +142,21 @@ export function generateHinweise(): Hinweis[] {
       ["Erste-Hilfe", f.ersteHilfe],
     ] as const) {
       const d = tageBis(nw.gueltigBis);
-      if (d <= 30) {
+      if (faelligIn(d, 30)) {
         h.push({
           id: `nw-${f.id}-${label}`,
-          stufe: d <= 0 ? "kritisch" : d <= 10 ? "warnung" : "info",
+          stufe: d === null || d <= 0 ? "kritisch" : d <= 10 ? "warnung" : "info",
           bereich: "Fahrer",
           to: "/fahrer",
-          titel: `${f.name}: ${label} ${d <= 0 ? "abgelaufen" : "läuft ab"}`,
-          text: `${label} ${d <= 0 ? `seit ${-d} Tag(en) abgelaufen` : `nur noch ${d} Tag(e) gültig`} (${nw.gueltigBis}).`,
+          titel: `${f.name}: ${label} ${d === null ? "ungeklärt" : d <= 0 ? "abgelaufen" : "läuft ab"}`,
+          text:
+            d === null
+              ? `${label}: ${FEHLT}. Einsatz erst nach Nachweis.`
+              : `${label} ${d <= 0 ? `seit ${-d} Tag(en) abgelaufen` : `nur noch ${d} Tag(e) gültig`} (${nw.gueltigBis}).`,
         });
       }
     }
+
     // Compliance-Vollständigkeit (Schiene A): fehlende Pflichtangaben je Fahrer
     const fehlend: string[] = [];
     if (!f.pScheinGueltigBis) fehlend.push("P-Schein-Datum");
@@ -134,6 +174,11 @@ export function generateHinweise(): Hinweis[] {
       });
     }
   }
+  return h;
+}
+
+export function generateHinweise(): Hinweis[] {
+  const h: Hinweis[] = [...fahrzeugHinweise(INITIAL_FAHRZEUGE), ...fahrerHinweise(INITIAL_FAHRER)];
 
   // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();
