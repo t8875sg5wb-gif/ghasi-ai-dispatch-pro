@@ -152,17 +152,15 @@ export const createRecurring = createServerFn({ method: "POST" })
 
 export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(
-    (data: unknown) =>
-      parseOrThrow(updateRecurringSchema, data, (wert) =>
-        pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
-      ) as {
-        id: string;
-        values: Partial<RecurringWrite>;
-      },
-  )
-
-  .handler(async ({ data, context }): Promise<Dauerauftrag> => {
+  .validator((data: { id: string; values: Partial<RecurringWrite> }) => data)
+  .handler(async ({ data: roh, context }): Promise<Dauerauftrag> => {
+    const data = (await parseOrLog(
+      context.supabase as unknown as SupabaseClient,
+      "update",
+      updateRecurringSchema,
+      roh,
+      (wert) => pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
+    )) as { id: string; values: Partial<RecurringWrite> };
     if (data.values.patientId) await assertPatientExists(context.supabase, data.values.patientId);
     if (data.values.insurerId) await assertInsurerExists(context.supabase, data.values.insurerId);
     if (data.values.bevorzugterFahrerId)
