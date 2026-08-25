@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 
 export default defineTool({
@@ -16,7 +17,7 @@ export default defineTool({
     limit: z.number().int().min(1).max(100).optional().describe("Max. Ergebnisse (Standard 25)."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, limit }, ctx) => {
+  handler: mitAudit("list_orders", "ghasi:orders.read", async ({ status, limit }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:orders.read");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -35,5 +36,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(auftraege, null, 2) }],
       structuredContent: { orders: auftraege, count: auftraege.length },
     };
-  },
+  }),
 });

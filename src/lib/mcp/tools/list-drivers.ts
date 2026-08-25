@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToFahrer, type DriverRow } from "@/lib/drivers-shared";
 
 export default defineTool({
@@ -12,7 +13,7 @@ export default defineTool({
     limit: z.number().int().min(1).max(200).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, limit }, ctx) => {
+  handler: mitAudit("list_drivers", "ghasi:drivers.read", async ({ status, limit }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:drivers.read");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -29,5 +30,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(fahrer, null, 2) }],
       structuredContent: { drivers: fahrer, count: fahrer.length },
     };
-  },
+  }),
 });

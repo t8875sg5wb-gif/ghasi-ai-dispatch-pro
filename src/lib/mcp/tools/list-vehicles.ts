@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToFahrzeug, type VehicleRow } from "@/lib/vehicles-shared";
 
 export default defineTool({
@@ -15,7 +16,7 @@ export default defineTool({
     limit: z.number().int().min(1).max(200).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, limit }, ctx) => {
+  handler: mitAudit("list_vehicles", "ghasi:vehicles.read", async ({ status, limit }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:vehicles.read");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -32,5 +33,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(fahrzeuge, null, 2) }],
       structuredContent: { vehicles: fahrzeuge, count: fahrzeuge.length },
     };
-  },
+  }),
 });

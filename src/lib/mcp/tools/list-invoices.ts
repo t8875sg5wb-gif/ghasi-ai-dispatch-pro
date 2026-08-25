@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToRechnung, type InvoiceRow } from "@/lib/invoices-shared";
 
 export default defineTool({
@@ -13,7 +14,7 @@ export default defineTool({
     limit: z.number().int().min(1).max(100).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, limit }, ctx) => {
+  handler: mitAudit("list_invoices", "ghasi:invoices.read", async ({ status, limit }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:invoices.read");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -30,5 +31,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(rechnungen, null, 2) }],
       structuredContent: { invoices: rechnungen, count: rechnungen.length },
     };
-  },
+  }),
 });

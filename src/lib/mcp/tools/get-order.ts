@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 
 export default defineTool({
@@ -12,7 +13,7 @@ export default defineTool({
     nummer: z.string().optional().describe("Auftragsnummer, z.B. 'A-2026-0042'."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ id, nummer }, ctx) => {
+  handler: mitAudit("get_order", "ghasi:orders.read", async ({ id, nummer }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:orders.read");
     if (!gate.ok) return gate.error;
     if (!id && !nummer) {
@@ -33,5 +34,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(auftrag, null, 2) }],
       structuredContent: { order: auftrag },
     };
-  },
+  }),
 });

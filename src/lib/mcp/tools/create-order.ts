@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToAuftrag, writeToRow, type OrderRow, type OrderWrite } from "@/lib/orders-shared";
 import {
   assertDriverExists,
@@ -52,7 +53,7 @@ export default defineTool({
     notiz: z.string().max(2000).optional(),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  handler: async (input, ctx) => {
+  handler: mitAudit("create_order", "ghasi:orders.write", async (input, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:orders.write");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -87,5 +88,5 @@ export default defineTool({
         isError: true,
       };
     }
-  },
+  }),
 });

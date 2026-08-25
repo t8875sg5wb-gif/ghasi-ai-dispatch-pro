@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import {
   rowToRechnung,
   writeToInvoiceRow,
@@ -46,7 +47,7 @@ export default defineTool({
     notiz: z.string().max(5000).optional(),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-  handler: async (input, ctx) => {
+  handler: mitAudit("create_invoice", "ghasi:invoices.write", async (input, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:invoices.write");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -86,5 +87,5 @@ export default defineTool({
         isError: true,
       };
     }
-  },
+  }),
 });

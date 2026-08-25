@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { autorisiere } from "../authz";
+import { mitAudit } from "../audit";
 import { rowToAuftrag, type OrderRow } from "@/lib/orders-shared";
 
 export default defineTool({
@@ -21,7 +22,7 @@ export default defineTool({
       .describe("Optionaler Detail-Status, z.B. 'beim_patienten'."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  handler: async ({ id, status, detailStatus }, ctx) => {
+  handler: mitAudit("update_order_status", "ghasi:orders.status", async ({ id, status, detailStatus }, ctx) => {
     const gate = await autorisiere(ctx, "ghasi:orders.status");
     if (!gate.ok) return gate.error;
     const supabase = gate.supabase;
@@ -42,5 +43,5 @@ export default defineTool({
       content: [{ type: "text", text: JSON.stringify(auftrag, null, 2) }],
       structuredContent: { order: auftrag },
     };
-  },
+  }),
 });
