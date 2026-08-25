@@ -82,7 +82,9 @@ export default defineTool({
       };
     } catch (e) {
       return {
-        content: [{ type: "text", text: e instanceof Error ? e.message : "Anlegen fehlgeschlagen." }],
+        content: [
+          { type: "text", text: e instanceof Error ? e.message : "Anlegen fehlgeschlagen." },
+        ],
         isError: true,
       };
     }
