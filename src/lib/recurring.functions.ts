@@ -13,6 +13,13 @@ import {
 } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
 import {
+  kodiereFeldFehler,
+  pruefeDauerauftragRegeln,
+  zuFeldFehlern,
+  type DauerauftragRegelInput,
+  type FeldFehler,
+} from "@/lib/recurring-validation";
+import {
   rowToDauerauftrag,
   writeToRecurringRow,
   type RecurringRow,
@@ -118,7 +125,12 @@ export const listRecurring = createServerFn({ method: "GET" })
 
 export const createRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => parseOrThrow(createRecurringSchema, data) as RecurringWrite)
+  .validator(
+    (data: unknown) =>
+      parseOrThrow(createRecurringSchema, data, (wert) =>
+        pruefeDauerauftragRegeln(wert as DauerauftragRegelInput, true),
+      ) as RecurringWrite,
+  )
   .handler(async ({ data, context }): Promise<Dauerauftrag> => {
     if (data.patientId) await assertPatientExists(context.supabase, data.patientId);
     if (data.insurerId) await assertInsurerExists(context.supabase, data.insurerId);
@@ -140,7 +152,9 @@ export const updateRecurring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     (data: unknown) =>
-      parseOrThrow(updateRecurringSchema, data) as {
+      parseOrThrow(updateRecurringSchema, data, (wert) =>
+        pruefeDauerauftragRegeln(wert.values as DauerauftragRegelInput, false),
+      ) as {
         id: string;
         values: Partial<RecurringWrite>;
       },
