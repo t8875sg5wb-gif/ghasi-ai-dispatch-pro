@@ -481,6 +481,7 @@ function AuftraegePage() {
             size="icon"
             onClick={() => refetch()}
             title="Aktualisieren"
+            aria-label="Aktualisieren"
             disabled={isFetching}
           >
             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
