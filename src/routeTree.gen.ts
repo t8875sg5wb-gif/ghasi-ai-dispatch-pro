@@ -46,6 +46,7 @@ import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as EinrichtungenRouteImport } from './routes/einrichtungen'
 import { Route as DokumenteRouteImport } from './routes/dokumente'
 import { Route as DialysezentrenRouteImport } from './routes/dialysezentren'
+import { Route as DauerauftragAblehnungenRouteImport } from './routes/dauerauftrag-ablehnungen'
 import { Route as DauerauftraegeRouteImport } from './routes/dauerauftraege'
 import { Route as DatenimportRouteImport } from './routes/datenimport'
 import { Route as DatenabgleichRouteImport } from './routes/datenabgleich'
@@ -256,6 +257,11 @@ const DialysezentrenRoute = DialysezentrenRouteImport.update({
   path: '/dialysezentren',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DauerauftragAblehnungenRoute = DauerauftragAblehnungenRouteImport.update({
+  id: '/dauerauftrag-ablehnungen',
+  path: '/dauerauftrag-ablehnungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DauerauftraegeRoute = DauerauftraegeRouteImport.update({
   id: '/dauerauftraege',
   path: '/dauerauftraege',
@@ -398,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
+  '/dauerauftrag-ablehnungen': typeof DauerauftragAblehnungenRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
@@ -461,6 +468,7 @@ export interface FileRoutesByTo {
   '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
+  '/dauerauftrag-ablehnungen': typeof DauerauftragAblehnungenRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
@@ -524,6 +532,7 @@ export interface FileRoutesById {
   '/datenabgleich': typeof DatenabgleichRoute
   '/datenimport': typeof DatenimportRoute
   '/dauerauftraege': typeof DauerauftraegeRoute
+  '/dauerauftrag-ablehnungen': typeof DauerauftragAblehnungenRoute
   '/dialysezentren': typeof DialysezentrenRoute
   '/dokumente': typeof DokumenteRoute
   '/einrichtungen': typeof EinrichtungenRoute
@@ -589,6 +598,7 @@ export interface FileRouteTypes {
     | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
+    | '/dauerauftrag-ablehnungen'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
@@ -652,6 +662,7 @@ export interface FileRouteTypes {
     | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
+    | '/dauerauftrag-ablehnungen'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
@@ -714,6 +725,7 @@ export interface FileRouteTypes {
     | '/datenabgleich'
     | '/datenimport'
     | '/dauerauftraege'
+    | '/dauerauftrag-ablehnungen'
     | '/dialysezentren'
     | '/dokumente'
     | '/einrichtungen'
@@ -778,6 +790,7 @@ export interface RootRouteChildren {
   DatenabgleichRoute: typeof DatenabgleichRoute
   DatenimportRoute: typeof DatenimportRoute
   DauerauftraegeRoute: typeof DauerauftraegeRoute
+  DauerauftragAblehnungenRoute: typeof DauerauftragAblehnungenRoute
   DialysezentrenRoute: typeof DialysezentrenRoute
   DokumenteRoute: typeof DokumenteRoute
   EinrichtungenRoute: typeof EinrichtungenRoute
@@ -1084,6 +1097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DialysezentrenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dauerauftrag-ablehnungen': {
+      id: '/dauerauftrag-ablehnungen'
+      path: '/dauerauftrag-ablehnungen'
+      fullPath: '/dauerauftrag-ablehnungen'
+      preLoaderRoute: typeof DauerauftragAblehnungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dauerauftraege': {
       id: '/dauerauftraege'
       path: '/dauerauftraege'
@@ -1286,6 +1306,7 @@ const rootRouteChildren: RootRouteChildren = {
   DatenabgleichRoute: DatenabgleichRoute,
   DatenimportRoute: DatenimportRoute,
   DauerauftraegeRoute: DauerauftraegeRoute,
+  DauerauftragAblehnungenRoute: DauerauftragAblehnungenRoute,
   DialysezentrenRoute: DialysezentrenRoute,
   DokumenteRoute: DokumenteRoute,
   EinrichtungenRoute: EinrichtungenRoute,
