@@ -38,7 +38,8 @@ export function TerminVorschau({ dauerauftrag }: { dauerauftrag: Dauerauftrag })
     (d.rhythmus !== "woechentlich" || d.wochentage.length > 0);
 
   const { termine, ausgeschlossen } = useMemo(() => {
-    if (!gueltigeEingabe) return { termine: [] as string[], ausgeschlossen: [] as Ausgeschlossen[] };
+    if (!gueltigeEingabe)
+      return { termine: [] as string[], ausgeschlossen: [] as Ausgeschlossen[] };
     const treffer = naechsteTermine(d, MAX_TERMINE, d.startDatum);
     const grenze = d.endDatum ?? isoPlusTage(d.startDatum, FENSTER_TAGE);
     const bis = treffer.length > 0 ? treffer[treffer.length - 1] : grenze;
@@ -72,8 +73,8 @@ export function TerminVorschau({ dauerauftrag }: { dauerauftrag: Dauerauftrag })
         </h3>
         {termine.length > 0 && (
           <Badge variant="secondary">
-            {termine.length === MAX_TERMINE ? `erste ${MAX_TERMINE}` : `${termine.length}`} Termine ·{" "}
-            {termine.length * fahrtenJeTermin} Fahrten
+            {termine.length === MAX_TERMINE ? `erste ${MAX_TERMINE}` : `${termine.length}`} Termine
+            · {termine.length * fahrtenJeTermin} Fahrten
           </Badge>
         )}
       </div>

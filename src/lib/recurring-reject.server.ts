@@ -15,7 +15,9 @@ function patientAus(data: unknown): string | null {
   const direkt = typeof o["patient"] === "string" ? (o["patient"] as string) : null;
   const values = o["values"];
   const verschachtelt =
-    values && typeof values === "object" && typeof (values as Record<string, unknown>)["patient"] === "string"
+    values &&
+    typeof values === "object" &&
+    typeof (values as Record<string, unknown>)["patient"] === "string"
       ? ((values as Record<string, unknown>)["patient"] as string)
       : null;
   const name = (direkt ?? verschachtelt ?? "").trim();
@@ -37,8 +39,10 @@ export async function protokolliereAblehnung(
 ): Promise<void> {
   try {
     const grund =
-      felder.map((f) => `${f.label}: ${f.message}`).join(" | ").slice(0, 2000) ||
-      "Ungültige Dauerauftragsdaten.";
+      felder
+        .map((f) => `${f.label}: ${f.message}`)
+        .join(" | ")
+        .slice(0, 2000) || "Ungültige Dauerauftragsdaten.";
     await supabase.from("recurring_rejections").insert({
       aktion,
       ziel_id: zielIdAus(data),

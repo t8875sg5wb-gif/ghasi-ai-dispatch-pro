@@ -13,10 +13,7 @@ import {
   assertVehicleExists,
 } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
-import {
-  pruefeDauerauftragRegeln,
-  type DauerauftragRegelInput,
-} from "@/lib/recurring-validation";
+import { pruefeDauerauftragRegeln, type DauerauftragRegelInput } from "@/lib/recurring-validation";
 import { parseOrLog } from "@/lib/recurring-reject.server";
 import {
   rowToDauerauftrag,

@@ -54,7 +54,14 @@ function formatZeit(iso: string): string {
 function AblehnungenPage() {
   const [tage, setTage] = useState("30");
   const fetchAblehnungen = useServerFn(listRecurringRejections);
-  const { data = [], isLoading, isError, error, refetch, isFetching } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["recurring_rejections", tage],
     queryFn: () => fetchAblehnungen({ data: { tage: Number(tage) } }),
     staleTime: 15_000,

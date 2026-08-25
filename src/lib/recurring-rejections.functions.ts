@@ -28,7 +28,10 @@ type Row = {
 };
 
 const listSchema = z
-  .object({ tage: z.number().int().min(1).max(365).optional(), limit: z.number().int().min(1).max(500).optional() })
+  .object({
+    tage: z.number().int().min(1).max(365).optional(),
+    limit: z.number().int().min(1).max(500).optional(),
+  })
   .strict();
 
 export const listRecurringRejections = createServerFn({ method: "GET" })
