@@ -1,8 +1,9 @@
 // Proaktive Hinweise: GHASI AI wertet die Unternehmensdaten regelbasiert aus
 // und meldet von sich aus, worauf der Unternehmer achten sollte.
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
+import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
+import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
+
 
 export type HinweisStufe = "kritisch" | "warnung" | "info" | "positiv";
 
