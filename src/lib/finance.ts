@@ -564,13 +564,10 @@ export function computeFinanzKpis(
   const ueberfaellig = aktiv.filter((r) => istUeberfaellig(r) || r.status === "ueberfaellig");
   const gutschriften = aktiv.filter((r) => r.typ === "gutschrift");
 
-  const offenePosten = offen.reduce((s, r) => s + (r.betrag - (r.bezahlterBetrag ?? 0)), 0);
-  const ueberfaelligeSumme = ueberfaellig.reduce(
-    (s, r) => s + (r.betrag - (r.bezahlterBetrag ?? 0)),
-    0,
-  );
-  const bezahltSumme = bezahlt.reduce((s, r) => s + (r.bezahlterBetrag ?? r.betrag), 0);
-  const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(r.betrag), 0);
+  const offenePosten = offen.reduce((s, r) => s + offenerBetrag(r), 0);
+  const ueberfaelligeSumme = ueberfaellig.reduce((s, r) => s + offenerBetrag(r), 0);
+  const bezahltSumme = bezahlt.reduce((s, r) => s + summeZahlungen(r), 0);
+  const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(brutto(r)), 0);
 
   const kosten = computeKostenaufstellung(config);
   const umsatzMonat = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0);
@@ -607,7 +604,7 @@ export function offenePostenJeKunde(rechnungen: Rechnung[] = INITIAL_RECHNUNGEN)
   const map = new Map<string, OffenerPosten>();
   for (const r of rechnungen) {
     if (r.status === "bezahlt" || r.status === "storniert" || r.typ === "gutschrift") continue;
-    const rest = r.betrag - (r.bezahlterBetrag ?? 0);
+    const rest = offenerBetrag(r);
     if (rest <= 0) continue;
     const cur = map.get(r.kundeId) ?? {
       kunde: r.kunde,
