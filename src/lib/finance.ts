@@ -580,7 +580,6 @@ export function computeFinanzKpis(
   const gewinnMonat = round(umsatzMonat - ausgabenMonat);
   const margeProzent = umsatzMonat > 0 ? round((gewinnMonat / umsatzMonat) * 100) : 0;
 
-
   return {
     umsatzMonat,
     gewinnMonat,
