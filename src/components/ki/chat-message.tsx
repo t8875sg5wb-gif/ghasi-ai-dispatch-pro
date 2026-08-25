@@ -295,7 +295,11 @@ export function ChatMessage({ message }: { message: UIMessage }) {
                 <img
                   key={i}
                   src={f.url}
-                  alt={f.filename ?? "Angehängtes Bild aus der Unterhaltung"}
+                  alt={
+                    isUser
+                      ? "Vom Nutzer an GHASI AI gesendetes Bild"
+                      : "Von GHASI AI bereitgestelltes Bild"
+                  }
                   className="max-h-44 rounded-xl border border-border/60 object-cover"
                 />
               ) : (
