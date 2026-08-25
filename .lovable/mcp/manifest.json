@@ -11,9 +11,9 @@
   },
   "mcp": {
     "server": {
-      "name": "ghasi-ai-mcp",
+      "name": "ghasi-ai-executive",
       "version": "0.1.0",
-      "title": "GHASI AI"
+      "title": "GHASI AI Executive"
     },
     "tools": [
       {
