@@ -56,7 +56,7 @@ function toISODate(v: string | undefined): string {
   const s = trim(v);
   if (!s) return "";
   // dd.mm.yyyy or dd/mm/yyyy
-  const de = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})$/);
+  const de = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2,4})$/);
   if (de) {
     const [, d, m, y] = de;
     const year = y.length === 2 ? `20${y}` : y;
