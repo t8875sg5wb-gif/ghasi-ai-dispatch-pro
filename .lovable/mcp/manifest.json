@@ -144,6 +144,312 @@
           }
         },
         "outputSchema": null
+      },
+      {
+        "name": "create_order",
+        "title": "Auftrag anlegen",
+        "description": "Legt einen neuen Krankentransport-Auftrag an. Zuordnungen (Patient, Kostenträger, Fahrer, Fahrzeug) nur über IDs; Anzeigenamen werden serverseitig abgeleitet.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "patient": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Patientenname (Pflicht)."
+            },
+            "patientId": {
+              "description": "UUID des Patienten-Stammdatensatzes.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "insurerId": {
+              "description": "UUID des Kostenträgers.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "telefon": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "transportart": {
+              "type": "string",
+              "enum": [
+                "Liegendtransport",
+                "Sitzendtransport",
+                "Rollstuhl",
+                "Dialysefahrt"
+              ]
+            },
+            "prioritaet": {
+              "type": "string",
+              "enum": [
+                "niedrig",
+                "normal",
+                "hoch",
+                "dringend"
+              ]
+            },
+            "termin": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$"
+            },
+            "abholort": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "zielort": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "pickup": {
+              "type": "object",
+              "properties": {
+                "street": {
+                  "type": "string"
+                },
+                "houseNumber": {
+                  "type": "string"
+                },
+                "postalCode": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                },
+                "additionalInfo": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "destination": {
+              "type": "object",
+              "properties": {
+                "street": {
+                  "type": "string"
+                },
+                "houseNumber": {
+                  "type": "string"
+                },
+                "postalCode": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                },
+                "additionalInfo": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "mobilitaet": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "begleitperson": {
+              "type": "boolean"
+            },
+            "fahrerId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "fahrzeugId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "notiz": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "patient"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_order_status",
+        "title": "Auftragsstatus ändern",
+        "description": "Setzt den Status eines bestehenden Auftrags (optional zusätzlich den Detail-Status). Andere Auftragsfelder werden nicht verändert.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "UUID des Auftrags."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "neu",
+                "disponiert",
+                "unterwegs",
+                "abgeschlossen",
+                "storniert"
+              ],
+              "description": "Neuer Auftragsstatus."
+            },
+            "detailStatus": {
+              "description": "Optionaler Detail-Status, z.B. 'beim_patienten'.",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          "required": [
+            "id",
+            "status"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_invoice",
+        "title": "Rechnung anlegen",
+        "description": "Legt eine Rechnung oder Gutschrift an. Beträge dürfen für Gutschriften negativ sein. Erfordert einen bestätigten Steuermodus in den Firmeneinstellungen.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "kunde": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Name des Rechnungsempfängers (Pflicht)."
+            },
+            "kundeId": {
+              "description": "Kunden-/Kostenträger-ID, falls bekannt.",
+              "type": "string",
+              "maxLength": 100
+            },
+            "typ": {
+              "description": "Standard: 'rechnung'.",
+              "type": "string",
+              "enum": [
+                "rechnung",
+                "gutschrift"
+              ]
+            },
+            "abrechnungsart": {
+              "type": "string",
+              "enum": [
+                "Krankenkasse",
+                "Patient",
+                "Kunde"
+              ]
+            },
+            "betrag": {
+              "type": "number",
+              "description": "Nettobetrag in Euro (negativ bei Gutschrift)."
+            },
+            "mwstSatz": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "USt-Satz in Prozent, z.B. 7."
+            },
+            "status": {
+              "description": "Standard: 'entwurf'.",
+              "type": "string",
+              "enum": [
+                "entwurf",
+                "offen",
+                "bezahlt",
+                "teilbezahlt",
+                "ueberfaellig",
+                "storniert"
+              ]
+            },
+            "datum": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Rechnungsdatum (YYYY-MM-DD)."
+            },
+            "faelligkeit": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Fälligkeitsdatum (YYYY-MM-DD)."
+            },
+            "leistungsdatum": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "bezugAuftrag": {
+              "description": "Auftragsnummer, z.B. 'A-2052'.",
+              "type": "string",
+              "maxLength": 50
+            },
+            "positionen": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "beschreibung": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "menge": {
+                    "type": "number"
+                  },
+                  "einzelpreis": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "beschreibung",
+                  "menge",
+                  "einzelpreis"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "notiz": {
+              "type": "string",
+              "maxLength": 5000
+            }
+          },
+          "required": [
+            "kunde",
+            "betrag",
+            "mwstSatz",
+            "datum",
+            "faelligkeit"
+          ]
+        },
+        "outputSchema": null
       }
     ]
   }

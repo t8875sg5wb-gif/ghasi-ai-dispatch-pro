@@ -22,10 +22,10 @@ Häufige Fehlermeldungen: `"Nicht authentifiziert."`, `"Auftrag nicht gefunden."
 
 Listet Krankentransport-Aufträge, sortiert nach `termin` (absteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | Statusfilter, z. B. `neu`, `geplant`, `in_fahrt`, `abgeschlossen` |
-| `limit` | integer 1–100 | nein | Max. Ergebnisse, Standard 25 |
+| Parameter | Typ           | Pflicht | Beschreibung                                                      |
+| --------- | ------------- | ------- | ----------------------------------------------------------------- |
+| `status`  | string        | nein    | Statusfilter, z. B. `neu`, `geplant`, `in_fahrt`, `abgeschlossen` |
+| `limit`   | integer 1–100 | nein    | Max. Ergebnisse, Standard 25                                      |
 
 Beispiel-Request:
 
@@ -59,10 +59,10 @@ Beispiel-Response (`structuredContent`):
 Einzelner Auftrag per UUID **oder** Auftragsnummer. Mindestens eines von beiden
 muss gesetzt sein; ist `id` gesetzt, hat es Vorrang.
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `id` | string (UUID) | nein* | UUID des Auftrags |
-| `nummer` | string | nein* | Auftragsnummer, z. B. `A-2026-0042` |
+| Parameter | Typ           | Pflicht | Beschreibung                        |
+| --------- | ------------- | ------- | ----------------------------------- |
+| `id`      | string (UUID) | nein\*  | UUID des Auftrags                   |
+| `nummer`  | string        | nein\*  | Auftragsnummer, z. B. `A-2026-0042` |
 
 \* genau eines von beiden ist erforderlich.
 
@@ -99,10 +99,10 @@ Fehlerfall (kein Treffer):
 
 Alle Fahrer der eigenen Firma, sortiert nach Name (aufsteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `aktiv`, `krank`, `urlaub` |
-| `limit` | integer 1–200 | nein | Max. Ergebnisse, Standard 100 |
+| Parameter | Typ           | Pflicht | Beschreibung                     |
+| --------- | ------------- | ------- | -------------------------------- |
+| `status`  | string        | nein    | z. B. `aktiv`, `krank`, `urlaub` |
+| `limit`   | integer 1–200 | nein    | Max. Ergebnisse, Standard 100    |
 
 Beispiel-Request:
 
@@ -135,10 +135,10 @@ Beispiel-Response (`structuredContent`):
 
 Gesamte Flotte, sortiert nach Kennzeichen (aufsteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `verfuegbar`, `im_einsatz`, `wartung` |
-| `limit` | integer 1–200 | nein | Max. Ergebnisse, Standard 100 |
+| Parameter | Typ           | Pflicht | Beschreibung                                |
+| --------- | ------------- | ------- | ------------------------------------------- |
+| `status`  | string        | nein    | z. B. `verfuegbar`, `im_einsatz`, `wartung` |
+| `limit`   | integer 1–200 | nein    | Max. Ergebnisse, Standard 100               |
 
 Beispiel-Request:
 
@@ -173,10 +173,10 @@ Beispiel-Response (`structuredContent`):
 
 Rechnungen und Gutschriften, sortiert nach `datum` (absteigend).
 
-| Parameter | Typ | Pflicht | Beschreibung |
-| --- | --- | --- | --- |
-| `status` | string | nein | z. B. `offen`, `bezahlt`, `ueberfaellig` |
-| `limit` | integer 1–100 | nein | Max. Ergebnisse, Standard 25 |
+| Parameter | Typ           | Pflicht | Beschreibung                             |
+| --------- | ------------- | ------- | ---------------------------------------- |
+| `status`  | string        | nein    | z. B. `offen`, `bezahlt`, `ueberfaellig` |
+| `limit`   | integer 1–100 | nein    | Max. Ergebnisse, Standard 25             |
 
 Beispiel-Request:
 
@@ -216,3 +216,161 @@ Beispiel-Response (`structuredContent`):
 - Der Statusfilter ist eine exakte Gleichheitsprüfung — unbekannte Werte liefern
   eine leere Liste (`count: 0`), keinen Fehler.
 - Es gibt bewusst keine schreibenden Tools; Änderungen erfolgen nur in der App.
+
+---
+
+# Schreibende Tools
+
+Diese Tools verändern Daten. Sie laufen als der angemeldete Benutzer, RLS und
+alle Datenbank-Trigger (Identitätsketten, Spalten-Whitelists, Audit-Logs)
+greifen unverändert. Anzeigenamen (Fahrer, Fahrzeug, Patient, Kostenträger)
+werden serverseitig aus den IDs abgeleitet und können nicht direkt gesetzt
+werden.
+
+## 6. `create_order` — Auftrag anlegen
+
+Auftragsnummer und Status (`neu`) werden serverseitig gesetzt.
+Bei angegebenen IDs wird die Existenz geprüft (Fahrer, Fahrzeug, Patient,
+Kostenträger) — unbekannte IDs führen zu einem Fehler.
+
+| Parameter                | Typ                                                                       | Pflicht | Beschreibung                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `patient`                | string 1–200                                                              | **ja**  | Patientenname                                                                                      |
+| `patientId`, `insurerId` | UUID                                                                      | nein    | Stammdaten-Verknüpfung                                                                             |
+| `telefon`                | string ≤50                                                                | nein    | Rückrufnummer                                                                                      |
+| `transportart`           | `Liegendtransport` \| `Sitzendtransport` \| `Rollstuhl` \| `Dialysefahrt` | nein    |                                                                                                    |
+| `prioritaet`             | `niedrig` \| `normal` \| `hoch` \| `dringend`                             | nein    |                                                                                                    |
+| `termin`                 | string `YYYY-MM-DDTHH:mm`                                                 | nein    | Abholtermin                                                                                        |
+| `abholort`, `zielort`    | string ≤300                                                               | nein    | Freitext-Adresse                                                                                   |
+| `pickup`, `destination`  | Objekt                                                                    | nein    | strukturierte Adresse (`street`, `houseNumber`, `postalCode`, `city`, `country`, `additionalInfo`) |
+| `mobilitaet`             | string ≤200                                                               | nein    | z. B. `rollstuhl`                                                                                  |
+| `begleitperson`          | boolean                                                                   | nein    |                                                                                                    |
+| `fahrerId`, `fahrzeugId` | UUID                                                                      | nein    | Zuordnung                                                                                          |
+| `notiz`                  | string ≤2000                                                              | nein    |                                                                                                    |
+
+Beispiel-Request:
+
+```json
+{
+  "name": "create_order",
+  "arguments": {
+    "patient": "Maria Schulz",
+    "patientId": "3f0a…",
+    "termin": "2026-08-27T09:15",
+    "transportart": "Rollstuhl",
+    "abholort": "Bahnhofstr. 12, 49074 Osnabrück",
+    "zielort": "Dialysezentrum, Natruper Str. 5, 49076 Osnabrück"
+  }
+}
+```
+
+Beispiel-Response (`structuredContent`):
+
+```json
+{
+  "order": {
+    "id": "e4b7…",
+    "nummer": "A-2061",
+    "patient": "Maria Schulz",
+    "status": "neu",
+    "termin": "2026-08-27T09:15:00+02:00",
+    "transportart": "Rollstuhl"
+  }
+}
+```
+
+## 7. `update_order_status` — Auftragsstatus ändern
+
+Ändert ausschließlich Status bzw. Detail-Status; alle anderen Felder bleiben
+unangetastet.
+
+| Parameter      | Typ                                                                    | Pflicht | Beschreibung           |
+| -------------- | ---------------------------------------------------------------------- | ------- | ---------------------- |
+| `id`           | UUID                                                                   | **ja**  | Auftrag                |
+| `status`       | `neu` \| `disponiert` \| `unterwegs` \| `abgeschlossen` \| `storniert` | **ja**  | Neuer Status           |
+| `detailStatus` | string ≤100                                                            | nein    | z. B. `beim_patienten` |
+
+Beispiel-Request:
+
+```json
+{
+  "name": "update_order_status",
+  "arguments": { "id": "e4b7…", "status": "unterwegs", "detailStatus": "beim_patienten" }
+}
+```
+
+Beispiel-Response (`structuredContent`):
+
+```json
+{
+  "order": {
+    "id": "e4b7…",
+    "nummer": "A-2061",
+    "status": "unterwegs",
+    "detailStatus": "beim_patienten"
+  }
+}
+```
+
+Fehlerfall: `"Auftrag nicht gefunden."` bzw. bei fehlender Berechtigung die
+Meldung des Datenbank-Triggers (Fahrer dürfen nur Statusfelder ändern).
+
+## 8. `create_invoice` — Rechnung anlegen
+
+Legt Rechnung oder Gutschrift an. Rechnungsnummer wird serverseitig erzeugt
+(`R-JJJJ-NNNN` bzw. `GU-JJJJ-NNNN`). Voraussetzung: bestätigter Steuermodus in
+den Firmeneinstellungen — sonst schlägt der Aufruf mit der entsprechenden
+Meldung fehl. Negative Beträge sind für Gutschriften ausdrücklich erlaubt.
+
+| Parameter              | Typ                                                                                 | Pflicht | Beschreibung                                       |
+| ---------------------- | ----------------------------------------------------------------------------------- | ------- | -------------------------------------------------- |
+| `kunde`                | string 1–200                                                                        | **ja**  | Rechnungsempfänger                                 |
+| `kundeId`              | string ≤100                                                                         | nein    | Kunden-/Kostenträger-ID                            |
+| `typ`                  | `rechnung` \| `gutschrift`                                                          | nein    | Standard `rechnung`                                |
+| `abrechnungsart`       | `Krankenkasse` \| `Patient` \| `Kunde`                                              | nein    | Standard `Kunde`                                   |
+| `betrag`               | number                                                                              | **ja**  | Nettobetrag in Euro (negativ = Gutschrift)         |
+| `mwstSatz`             | number 0–100                                                                        | **ja**  | USt-Satz in Prozent                                |
+| `status`               | `entwurf` \| `offen` \| `bezahlt` \| `teilbezahlt` \| `ueberfaellig` \| `storniert` | nein    | Standard `entwurf`                                 |
+| `datum`, `faelligkeit` | `YYYY-MM-DD`                                                                        | **ja**  | Rechnungs-/Fälligkeitsdatum                        |
+| `leistungsdatum`       | `YYYY-MM-DD`                                                                        | nein    |                                                    |
+| `bezugAuftrag`         | string ≤50                                                                          | nein    | Auftragsnummer, z. B. `A-2052`                     |
+| `positionen`           | Array ≤100                                                                          | nein    | je Position `beschreibung`, `menge`, `einzelpreis` |
+| `notiz`                | string ≤5000                                                                        | nein    |                                                    |
+
+Beispiel-Request:
+
+```json
+{
+  "name": "create_invoice",
+  "arguments": {
+    "kunde": "AOK Niedersachsen",
+    "abrechnungsart": "Krankenkasse",
+    "betrag": 82.5,
+    "mwstSatz": 7,
+    "datum": "2026-08-25",
+    "faelligkeit": "2026-09-24",
+    "bezugAuftrag": "A-2061",
+    "positionen": [{ "beschreibung": "Rollstuhltransport", "menge": 1, "einzelpreis": 82.5 }]
+  }
+}
+```
+
+Beispiel-Response (`structuredContent`):
+
+```json
+{
+  "invoice": {
+    "id": "a19d…",
+    "nummer": "R-2026-0192",
+    "typ": "rechnung",
+    "kunde": "AOK Niedersachsen",
+    "betrag": 82.5,
+    "mwstSatz": 7,
+    "status": "entwurf",
+    "datum": "2026-08-25",
+    "faelligkeit": "2026-09-24"
+  }
+}
+```
+
+Jede Rechnungsänderung wird weiterhin über den GoBD-Audit-Trail protokolliert.
