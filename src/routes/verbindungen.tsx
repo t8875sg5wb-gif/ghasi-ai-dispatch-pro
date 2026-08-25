@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Globe,
   MessageCircle,
@@ -11,6 +12,8 @@ import {
   Calculator,
   CheckCircle2,
   Clock,
+  Download,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,6 +21,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getVerbindungsHealth } from "@/lib/verbindungen.functions";
 import { getMcpMonitoring } from "@/lib/mcp-monitoring.functions";
+import {
+  csvZeilen,
+  MCP_CSV_SPALTEN,
+  MCP_STATUS_LABEL,
+  MCP_STATUS_WERTE,
+} from "@/lib/mcp-monitoring-shared";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { downloadCsv, toCsv } from "@/lib/export-utils";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -117,13 +137,48 @@ function Verbindungen() {
   });
 
   const ladeMcp = useServerFn(getMcpMonitoring);
+  const [mcpFilter, setMcpFilter] = useState({
+    suche: "",
+    tool: "alle",
+    rolle: "alle",
+    scope: "alle",
+    status: "alle",
+    von: "",
+    bis: "",
+  });
+  const setzeFilter = (feld: keyof typeof mcpFilter, wert: string) =>
+    setMcpFilter((f) => ({ ...f, [feld]: wert }));
+  const filterAktiv =
+    mcpFilter.suche !== "" ||
+    mcpFilter.von !== "" ||
+    mcpFilter.bis !== "" ||
+    [mcpFilter.tool, mcpFilter.rolle, mcpFilter.scope, mcpFilter.status].some((v) => v !== "alle");
+
   // Nur Admins erhalten Daten; für alle anderen bleibt das Widget verborgen.
   const { data: mcp } = useQuery({
-    queryKey: ["mcp", "monitoring"],
-    queryFn: () => ladeMcp({ data: { limit: 25 } }),
+    queryKey: ["mcp", "monitoring", mcpFilter],
+    queryFn: () =>
+      ladeMcp({
+        data: {
+          limit: 200,
+          suche: mcpFilter.suche || undefined,
+          tool: mcpFilter.tool,
+          rolle: mcpFilter.rolle,
+          scope: mcpFilter.scope,
+          status: mcpFilter.status as (typeof MCP_STATUS_WERTE)[number] | "alle",
+          von: mcpFilter.von || undefined,
+          bis: mcpFilter.bis || undefined,
+        },
+      }),
     staleTime: 30_000,
     retry: false,
   });
+
+  const exportiereMcpCsv = () => {
+    if (!mcp || mcp.aufrufe.length === 0) return;
+    const csv = toCsv(csvZeilen(mcp.aufrufe), MCP_CSV_SPALTEN);
+    downloadCsv(`mcp-audit-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+  };
 
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
@@ -224,15 +279,136 @@ function Verbindungen() {
           <Card className="border-border/70 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base">Agenten-Zugriffe (MCP)</CardTitle>
-              <span className="text-xs text-muted-foreground">
-                {mcp.gesamt} Aufrufe · {mcp.erfolge} erfolgreich · {mcp.abgelehnt} abgelehnt ·{" "}
-                {mcp.fehler} Fehler · Ø {mcp.durchschnittMs} ms
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {mcp.gesamt} Aufrufe · {mcp.erfolge} erfolgreich · {mcp.abgelehnt} abgelehnt ·{" "}
+                  {mcp.fehler} Fehler · Ø {mcp.durchschnittMs} ms
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={exportiereMcpCsv}
+                  disabled={mcp.aufrufe.length === 0}
+                >
+                  <Download className="h-3.5 w-3.5" /> CSV
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="space-y-4 p-0">
+              <div className="grid gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                  <Label htmlFor="mcp-suche" className="text-xs">
+                    Suche
+                  </Label>
+                  <div className="relative">
+                    <Search
+                      aria-hidden
+                      className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                    />
+                    <Input
+                      id="mcp-suche"
+                      className="pl-8"
+                      placeholder="Tool, Scope, Rolle, Client …"
+                      value={mcpFilter.suche}
+                      onChange={(e) => setzeFilter("suche", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Tool</Label>
+                  <Select value={mcpFilter.tool} onValueChange={(v) => setzeFilter("tool", v)}>
+                    <SelectTrigger aria-label="Tool filtern">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle Tools</SelectItem>
+                      {mcp.tools.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Rolle</Label>
+                  <Select value={mcpFilter.rolle} onValueChange={(v) => setzeFilter("rolle", v)}>
+                    <SelectTrigger aria-label="Rolle filtern">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle Rollen</SelectItem>
+                      {mcp.rollen.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Scope</Label>
+                  <Select value={mcpFilter.scope} onValueChange={(v) => setzeFilter("scope", v)}>
+                    <SelectTrigger aria-label="Scope filtern">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle Scopes</SelectItem>
+                      {mcp.scopes.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Ergebnisstatus</Label>
+                  <Select value={mcpFilter.status} onValueChange={(v) => setzeFilter("status", v)}>
+                    <SelectTrigger aria-label="Status filtern">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alle">Alle Ergebnisse</SelectItem>
+                      {MCP_STATUS_WERTE.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {MCP_STATUS_LABEL[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mcp-von" className="text-xs">
+                      Von
+                    </Label>
+                    <Input
+                      id="mcp-von"
+                      type="date"
+                      value={mcpFilter.von}
+                      onChange={(e) => setzeFilter("von", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mcp-bis" className="text-xs">
+                      Bis
+                    </Label>
+                    <Input
+                      id="mcp-bis"
+                      type="date"
+                      value={mcpFilter.bis}
+                      onChange={(e) => setzeFilter("bis", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
               {mcp.aufrufe.length === 0 ? (
                 <p className="px-4 pb-4 text-sm text-muted-foreground">
-                  Noch keine Werkzeug-Ausführungen protokolliert.
+                  {filterAktiv
+                    ? "Keine Einträge für die gewählten Filter."
+                    : "Noch keine Werkzeug-Ausführungen protokolliert."}
                 </p>
               ) : (
                 <ul className="divide-y divide-border/60">
