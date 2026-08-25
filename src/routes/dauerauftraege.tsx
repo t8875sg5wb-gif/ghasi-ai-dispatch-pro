@@ -36,6 +36,16 @@ import {
   offeneTermineImZeitraum,
 } from "@/lib/dauerauftraege";
 import { MOBILITAET_META, MOBILITAET_OPTIONEN, type Mobilitaet } from "@/lib/auftraege";
+import { recurringFieldsSchema } from "@/lib/recurring.functions";
+import {
+  dekodiereFeldFehler,
+  feldFehlerMap,
+  feldLabel,
+  lesbarerFehlerText,
+  pruefeDauerauftragRegeln,
+  zuFeldFehlern,
+  type FeldFehler,
+} from "@/lib/recurring-validation";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
@@ -176,6 +186,7 @@ function DauerauftraegePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
   const [neueVorlage, setNeueVorlage] = useState<Dauerauftrag>(() => leereVorlage());
+  const [serverFeldFehler, setServerFeldFehler] = useState<FeldFehler[]>([]);
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
@@ -302,6 +313,18 @@ function DauerauftraegePage() {
   };
 
   const speichern = (werte: Dauerauftrag) => {
+    setServerFeldFehler([]);
+    const zeigeFehler = (praefix: string) => (e: unknown) => {
+      const message = (e as Error).message ?? "";
+      const felder = dekodiereFeldFehler(message);
+      setServerFeldFehler(felder);
+      toast.error(`${praefix}: ${lesbarerFehlerText(message)}`, {
+        description:
+          felder.length > 0
+            ? felder.map((f) => `${f.label}: ${f.message}`).join(" · ")
+            : undefined,
+      });
+    };
     if (editTarget) {
       updateMut.mutate(
         { id: editTarget.id, values: dauerauftragToWrite(werte) },
@@ -317,7 +340,7 @@ function DauerauftraegePage() {
             setFormOpen(false);
             setEditTarget(null);
           },
-          onError: (e) => toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`),
+          onError: zeigeFehler("Speichern fehlgeschlagen"),
         },
       );
     } else {
@@ -333,7 +356,7 @@ function DauerauftraegePage() {
           setFormOpen(false);
           setEditTarget(null);
         },
-        onError: (e) => toast.error(`Anlegen fehlgeschlagen: ${(e as Error).message}`),
+        onError: zeigeFehler("Anlegen fehlgeschlagen"),
       });
     }
   };
@@ -569,6 +592,7 @@ function DauerauftraegePage() {
         open={formOpen}
         onOpenChange={(o) => {
           setFormOpen(o);
+          setServerFeldFehler([]);
           if (!o) setEditTarget(null);
         }}
       >
@@ -577,6 +601,7 @@ function DauerauftraegePage() {
             initial={editTarget ?? neueVorlage}
             istEdit={!!editTarget}
             saving={saving}
+            serverFehler={serverFeldFehler}
             onSubmit={speichern}
             onCancel={() => {
               setFormOpen(false);
@@ -771,12 +796,14 @@ function DauerauftragForm({
   initial,
   istEdit,
   saving,
+  serverFehler = [],
   onSubmit,
   onCancel,
 }: {
   initial: Dauerauftrag;
   istEdit: boolean;
   saving?: boolean;
+  serverFehler?: FeldFehler[];
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
@@ -786,6 +813,15 @@ function DauerauftragForm({
     destination: d.destination ?? parseAdresse(d.zielort),
   });
   const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
+  const [eigeneFehler, setEigeneFehler] = useState<FeldFehler[]>([]);
+  const fehler = eigeneFehler.length > 0 ? eigeneFehler : serverFehler;
+  const fehlerMap = useMemo(() => feldFehlerMap(fehler), [fehler]);
+  const FeldFehlerText = ({ path }: { path: string }) =>
+    fehlerMap[path] ? (
+      <p id={`fehler-${path}`} className="pt-1 text-xs font-medium text-destructive">
+        {fehlerMap[path]}
+      </p>
+    ) : null;
   const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleIdOptions();
   const kundeOpt = useCustomerOptions();
@@ -794,6 +830,7 @@ function DauerauftragForm({
 
   useEffect(() => {
     setF(normalisiere(initial));
+    setEigeneFehler([]);
   }, [initial]);
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
@@ -817,21 +854,22 @@ function DauerauftragForm({
   const submit = () => {
     const pickup = f.pickup ?? parseAdresse(f.abholort);
     const destination = f.destination ?? parseAdresse(f.zielort);
-    if (!f.patient.trim() || !adresseGefuellt(pickup) || !adresseGefuellt(destination)) {
-      toast.error("Bitte Patient, Pickup- und Destination-Adresse angeben.");
+    const werte: Dauerauftrag = { ...f, pickup, destination, abholort: "", zielort: "" };
+
+    // Gleiche Regeln wie serverseitig – Feldfehler direkt am Feld anzeigen.
+    const parsed = recurringFieldsSchema.safeParse(dauerauftragToWrite(werte));
+    const gefunden: FeldFehler[] = parsed.success
+      ? pruefeDauerauftragRegeln(dauerauftragToWrite(werte), true)
+      : zuFeldFehlern(parsed.error);
+    if (gefunden.length > 0) {
+      setEigeneFehler(gefunden);
+      toast.error("Bitte die markierten Felder korrigieren.", {
+        description: gefunden.map((x) => `${x.label}: ${x.message}`).join(" · "),
+      });
       return;
     }
-    if (f.rhythmus === "woechentlich" && f.wochentage.length === 0) {
-      toast.error("Bitte mindestens einen Wochentag wählen.");
-      return;
-    }
-    onSubmit({
-      ...f,
-      pickup,
-      destination,
-      abholort: "",
-      zielort: "",
-    });
+    setEigeneFehler([]);
+    onSubmit(werte);
   };
 
   return (
