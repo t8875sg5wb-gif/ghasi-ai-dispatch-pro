@@ -4,7 +4,6 @@ import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
 
-
 export type HinweisStufe = "kritisch" | "warnung" | "info" | "positiv";
 
 export interface Hinweis {
@@ -179,15 +178,11 @@ export function fahrerHinweise(fahrer: readonly Fahrer[]): Hinweis[] {
 }
 
 export function generateHinweise(): Hinweis[] {
-  const h: Hinweis[] = [
-    ...fahrzeugHinweise(INITIAL_FAHRZEUGE),
-    ...fahrerHinweise(INITIAL_FAHRER),
-  ];
+  const h: Hinweis[] = [...fahrzeugHinweise(INITIAL_FAHRZEUGE), ...fahrerHinweise(INITIAL_FAHRER)];
 
   // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();
   for (const a of INITIAL_AUFTRAEGE) {
-
     const minBis = (new Date(a.termin).getTime() - jetzt) / 60000;
     const aktiv = a.status === "neu" || a.status === "disponiert" || a.status === "unterwegs";
     const unzugewiesen = aktiv && (!a.fahrer || !a.fahrzeug);
