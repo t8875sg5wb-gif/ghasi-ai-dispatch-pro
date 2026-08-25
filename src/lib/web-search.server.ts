@@ -97,3 +97,16 @@ export async function firecrawlScrape(url: string): Promise<WebScrapeErgebnis> {
     return { verbunden: true, url, fehler: e instanceof Error ? e.message : "Unbekannter Fehler." };
   }
 }
+
+/**
+ * Reine Ableitung: Ist der Web-Connector konfiguriert?
+ * Gibt ausschließlich einen Boolean zurück, niemals den Key selbst.
+ */
+export function istKeyGesetzt(apiKey: string | undefined): boolean {
+  return typeof apiKey === "string" && apiKey.trim().length > 0;
+}
+
+/** Ist der Web-Connector in dieser Umgebung konfiguriert? */
+export function istWebZugriffKonfiguriert(): boolean {
+  return istKeyGesetzt(key());
+}
