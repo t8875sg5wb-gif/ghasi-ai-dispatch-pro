@@ -98,7 +98,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { darfAuftragVerwalten } from "@/lib/roles";
 import { AddressFields } from "@/components/forms/address-fields";
 import {
-  adresseGefuellt,
   formatAdresseMehrzeilig,
   leereAdresse,
   parseAdresse,
@@ -320,9 +319,7 @@ function DauerauftraegePage() {
       setServerFeldFehler(felder);
       toast.error(`${praefix}: ${lesbarerFehlerText(message)}`, {
         description:
-          felder.length > 0
-            ? felder.map((f) => `${f.label}: ${f.message}`).join(" · ")
-            : undefined,
+          felder.length > 0 ? felder.map((f) => `${f.label}: ${f.message}`).join(" · ") : undefined,
       });
     };
     if (editTarget) {
@@ -885,6 +882,26 @@ function DauerauftragForm({
       </DialogHeader>
 
       <div className="space-y-4">
+        {fehler.length > 0 && (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"
+          >
+            <p className="font-medium text-destructive">
+              {fehler.length === 1
+                ? "1 Feld ist ungültig"
+                : `${fehler.length} Felder sind ungültig`}
+            </p>
+            <ul className="mt-1 space-y-0.5 text-destructive">
+              {fehler.map((x) => (
+                <li key={x.path}>
+                  <span className="font-medium">{x.label}</span>{" "}
+                  <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>Patient (Stammdaten)</Label>
@@ -926,7 +943,10 @@ function DauerauftragForm({
               value={f.patient}
               onChange={(e) => set("patient", e.target.value)}
               placeholder="Name des Patienten"
+              aria-invalid={!!fehlerMap["patient"]}
+              aria-describedby={fehlerMap["patient"] ? "fehler-patient" : undefined}
             />
+            <FeldFehlerText path="patient" />
             {!f.patientId && (
               <p className="text-xs text-muted-foreground">
                 Ohne Verknüpfung wird nur der Freitext gespeichert.
@@ -941,6 +961,8 @@ function DauerauftragForm({
               value={f.pickup ?? parseAdresse(f.abholort)}
               onChange={(value) => setAdresse("pickup", value)}
             />
+            <FeldFehlerText path="pickup" />
+            <FeldFehlerText path="pickup.postalCode" />
           </div>
           <div className="sm:col-span-2">
             <AddressFields
@@ -950,6 +972,8 @@ function DauerauftragForm({
               value={f.destination ?? parseAdresse(f.zielort)}
               onChange={(value) => setAdresse("destination", value)}
             />
+            <FeldFehlerText path="destination" />
+            <FeldFehlerText path="destination.postalCode" />
           </div>
           <div>
             <Label>Kategorie</Label>
@@ -1010,7 +1034,9 @@ function DauerauftragForm({
                 type="time"
                 value={f.terminzeit}
                 onChange={(e) => set("terminzeit", e.target.value)}
+                aria-invalid={!!fehlerMap["terminzeit"]}
               />
+              <FeldFehlerText path="terminzeit" />
             </div>
             <div>
               <Label>Uhrzeit Rückfahrt</Label>
@@ -1019,7 +1045,9 @@ function DauerauftragForm({
                 value={f.rueckfahrtzeit ?? ""}
                 disabled={!f.rueckfahrt}
                 onChange={(e) => set("rueckfahrtzeit", e.target.value)}
+                aria-invalid={!!fehlerMap["rueckfahrtzeit"]}
               />
+              <FeldFehlerText path="rueckfahrtzeit" />
             </div>
           </div>
           {f.rhythmus === "woechentlich" && (
@@ -1039,6 +1067,7 @@ function DauerauftragForm({
                   </Button>
                 ))}
               </div>
+              <FeldFehlerText path="wochentage" />
             </div>
           )}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1048,7 +1077,9 @@ function DauerauftragForm({
                 type="date"
                 value={f.startDatum}
                 onChange={(e) => set("startDatum", e.target.value)}
+                aria-invalid={!!fehlerMap["startDatum"]}
               />
+              <FeldFehlerText path="startDatum" />
             </div>
             <div>
               <Label>Enddatum (optional)</Label>
@@ -1056,7 +1087,9 @@ function DauerauftragForm({
                 type="date"
                 value={f.endDatum ?? ""}
                 onChange={(e) => set("endDatum", e.target.value || null)}
+                aria-invalid={!!fehlerMap["endDatum"]}
               />
+              <FeldFehlerText path="endDatum" />
             </div>
             <div>
               <Label>Pause von (optional)</Label>
@@ -1064,7 +1097,9 @@ function DauerauftragForm({
                 type="date"
                 value={f.pauseVon ?? ""}
                 onChange={(e) => set("pauseVon", e.target.value || null)}
+                aria-invalid={!!fehlerMap["pauseVon"]}
               />
+              <FeldFehlerText path="pauseVon" />
             </div>
             <div>
               <Label>Pause bis (optional)</Label>
@@ -1072,7 +1107,9 @@ function DauerauftragForm({
                 type="date"
                 value={f.pauseBis ?? ""}
                 onChange={(e) => set("pauseBis", e.target.value || null)}
+                aria-invalid={!!fehlerMap["pauseBis"]}
               />
+              <FeldFehlerText path="pauseBis" />
             </div>
           </div>
         </div>
