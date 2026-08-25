@@ -124,6 +124,8 @@ function AuftraegePage() {
     id: deepId,
     q: deepQ,
     neuPatient,
+    neuTelefon,
+    neuNotiz,
     neuMobilitaet,
     neuTransportart,
   } = Route.useSearch();
