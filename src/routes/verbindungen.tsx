@@ -16,7 +16,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getWebZugriffStatus } from "@/lib/verbindungen.functions";
+import { getVerbindungsHealth } from "@/lib/verbindungen.functions";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -103,11 +103,7 @@ const INTERNE_DIENSTE: { id: string; name: string }[] = [
 
 function Verbindungen() {
   const ladeHealth = useServerFn(getVerbindungsHealth);
-  const {
-    data: health,
-    isFetching,
-    dataUpdatedAt,
-  } = useQuery({
+  const { data: health, isFetching } = useQuery({
     queryKey: ["verbindungen", "health"],
     queryFn: () => ladeHealth(),
     staleTime: 60_000,
@@ -133,8 +129,6 @@ function Verbindungen() {
         timeStyle: "short",
       })
     : "–";
-  void dataUpdatedAt;
-
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -174,6 +168,39 @@ function Verbindungen() {
             </CardContent>
           </Card>
         ))}
+      </section>
+
+      <section>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-base">Verbindungs-Health</CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {isFetching ? "Prüfe …" : `Letzter Check: ${geprueftAmText}`}
+            </span>
+          </CardHeader>
+          <CardContent className="divide-y divide-border/60 p-0">
+            {healthZeilen.map((z) => {
+              const ok = konfiguriert(z.id);
+              return (
+                <div
+                  key={z.id}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className={`h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-muted-foreground/40"}`}
+                    />
+                    {z.name}
+                  </span>
+                  <span className={`text-xs ${ok ? "text-success" : "text-muted-foreground"}`}>
+                    {ok ? "Konfiguriert" : "Nicht konfiguriert"}
+                  </span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       </section>
 
       <section>
