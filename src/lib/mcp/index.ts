@@ -12,8 +12,8 @@ import listInvoices from "./tools/list-invoices";
 const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "ghasi-ai-mcp",
-  title: "GHASI AI",
+  name: "ghasi-ai-executive",
+  title: "GHASI AI Executive",
   version: "0.1.0",
   instructions:
     "Tools für GHASI AI (digitaler Geschäftsführer für Krankentransportunternehmen). Alle Tools sind lesend und gelten für die Firma des angemeldeten Benutzers (RLS).",
