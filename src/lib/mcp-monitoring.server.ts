@@ -9,7 +9,7 @@ const isoTag = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum im Format JJJJ-MM-TT erwartet")
   .optional();
 
-export const mcpFilterSchema = z
+const filterSchema = z
   .object({
     limit: z.number().int().min(1).max(500).default(100),
     suche: z.string().max(120).optional(),
@@ -20,8 +20,9 @@ export const mcpFilterSchema = z
     von: isoTag,
     bis: isoTag,
   })
-  .strict()
-  .parse;
+  .strict();
+
+export const mcpFilterSchema = (data: unknown) => filterSchema.parse(data ?? {});
 
 interface QuellenMeta {
   kanal?: string;
