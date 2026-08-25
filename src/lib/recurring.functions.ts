@@ -82,9 +82,26 @@ const updateRecurringSchema = z
 
 const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
 
-function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
+/**
+ * Validiert und wirft bei Fehlern eine Meldung, die zusätzlich eine
+ * strukturierte Feldliste (`path` + `label` + `message`) transportiert.
+ * Optional werden fachliche Querregeln geprüft.
+ */
+function parseOrThrow<T>(
+  schema: z.ZodType<T>,
+  data: unknown,
+  regeln?: (wert: T) => FeldFehler[],
+): T {
   const parsed = schema.safeParse(data);
-  if (!parsed.success) throw new Error("Ungültige Dauerauftragsdaten.");
+  if (!parsed.success) {
+    throw new Error(
+      kodiereFeldFehler("Ungültige Dauerauftragsdaten.", zuFeldFehlern(parsed.error)),
+    );
+  }
+  const regelFehler = regeln?.(parsed.data) ?? [];
+  if (regelFehler.length > 0) {
+    throw new Error(kodiereFeldFehler("Ungültige Dauerauftragsdaten.", regelFehler));
+  }
   return parsed.data;
 }
 
