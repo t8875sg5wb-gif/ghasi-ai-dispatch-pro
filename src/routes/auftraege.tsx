@@ -85,6 +85,8 @@ export const Route = createFileRoute("/auftraege")({
     id?: string;
     q?: string;
     neuPatient?: string;
+    neuTelefon?: string;
+    neuNotiz?: string;
     neuMobilitaet?: Mobilitaet;
     neuTransportart?: Transportart;
   } => ({
@@ -92,6 +94,8 @@ export const Route = createFileRoute("/auftraege")({
     id: typeof search.id === "string" ? search.id : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
     neuPatient: typeof search.neuPatient === "string" ? search.neuPatient : undefined,
+    neuTelefon: typeof search.neuTelefon === "string" ? search.neuTelefon : undefined,
+    neuNotiz: typeof search.neuNotiz === "string" ? search.neuNotiz : undefined,
     neuMobilitaet: istMobilitaet(search.neuMobilitaet) ? search.neuMobilitaet : undefined,
     neuTransportart: istTransportart(search.neuTransportart) ? search.neuTransportart : undefined,
   }),
