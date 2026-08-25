@@ -9,14 +9,17 @@ import type { Fahrer } from "@/lib/fahrer";
 import type { Fahrzeug } from "@/lib/fahrzeuge";
 
 /**
- * Nur Konflikte, die direkt aus dieser Zuweisung folgen. Wartung, Verspätung,
- * Dokument und Überstunden sind allgemeine Board-Hinweise und bleiben außen vor.
+ * Konflikte, die direkt aus dieser Zuweisung folgen. „wartung" ist bewusst
+ * enthalten: TÜV-/Versicherungs-/Wartungsfristen (inkl. fehlender Daten)
+ * entscheiden darüber, ob das Fahrzeug überhaupt einsetzbar ist, und müssen
+ * genau im Moment der Zuweisung sichtbar sein.
  */
 const ZUWEISUNGS_TYPEN: ReadonlySet<KonfliktTyp> = new Set<KonfliktTyp>([
   "doppelbuchung",
   "fahrer_nicht_verfuegbar",
   "fahrzeug_nicht_verfuegbar",
   "ungeeignet",
+  "wartung",
 ]);
 
 /** Warnungstexte für genau einen Auftrag (leer, wenn alles sauber ist). */

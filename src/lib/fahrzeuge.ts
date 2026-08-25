@@ -151,15 +151,29 @@ export function formatDatum(iso: string): string {
   });
 }
 
-/** Returns true when a date is within the next `tage` days (or already passed). */
+/**
+ * Milliseconds until `iso`, or `null` when the date is missing/unparsable.
+ * Fail-closed helper: callers MUST treat `null` as "Prüfung erforderlich",
+ * never as "alles in Ordnung" (same contract as `tageBis` in ghasi-hinweise).
+ */
+export function fristFehlt(iso: string | null | undefined): boolean {
+  if (!iso) return true;
+  return Number.isNaN(new Date(iso).getTime());
+}
+
+/**
+ * Returns true when a date is within the next `tage` days, already passed,
+ * OR missing/invalid (fail-closed: a missing deadline is never "fine").
+ */
 export function laeuftAb(iso: string, tage = 30): boolean {
-  if (!iso) return false;
+  if (fristFehlt(iso)) return true;
   const ms = new Date(iso).getTime() - Date.now();
   return ms < tage * 24 * 60 * 60 * 1000;
 }
 
+/** True when expired OR missing/invalid (fail-closed). */
 export function istAbgelaufen(iso: string): boolean {
-  if (!iso) return false;
+  if (fristFehlt(iso)) return true;
   return new Date(iso).getTime() < Date.now();
 }
 
@@ -177,6 +191,12 @@ export interface FahrzeugWarnungen {
   versicherung: boolean;
   leasing: boolean;
   reifen: boolean;
+  /** compliance deadline is missing/unparsable – not confirmed good, must be checked */
+  tuevFehlt: boolean;
+  versicherungFehlt: boolean;
+  wartungFehlt: boolean;
+  /** any deadline missing → own state, distinct from "expired" */
+  fehlendeFristen: boolean;
   /** any maintenance/deadline warning active */
   hatWarnung: boolean;
 }
@@ -187,8 +207,14 @@ export function fahrzeugWarnungen(f: Fahrzeug): FahrzeugWarnungen {
   const wartung = laeuftAb(f.naechsteWartung);
   const tuev = laeuftAb(f.tuevBis, 45);
   const versicherung = laeuftAb(f.versicherungBis, 45);
-  const leasing = laeuftAb(f.leasingEnde, 60);
+  // Ein leeres Leasing-Enddatum bedeutet fachlich "kein Leasingvertrag"
+  // (siehe INITIAL_FAHRZEUGE: Eigentumsfahrzeuge mit leasingrate 0) und ist
+  // daher bewusst KEINE fehlende Compliance-Frist.
+  const leasing = f.leasingEnde ? laeuftAb(f.leasingEnde, 60) : false;
   const reifen = f.reifenstatus === "wechseln";
+  const tuevFehlt = fristFehlt(f.tuevBis);
+  const versicherungFehlt = fristFehlt(f.versicherungBis);
+  const wartungFehlt = fristFehlt(f.naechsteWartung);
   return {
     tank,
     oel,
@@ -197,6 +223,10 @@ export function fahrzeugWarnungen(f: Fahrzeug): FahrzeugWarnungen {
     versicherung,
     leasing,
     reifen,
+    tuevFehlt,
+    versicherungFehlt,
+    wartungFehlt,
+    fehlendeFristen: tuevFehlt || versicherungFehlt || wartungFehlt,
     hatWarnung: tank || oel || wartung || tuev || versicherung || leasing || reifen,
   };
 }
@@ -275,7 +305,20 @@ export function bewerteFahrzeug(
   if (warn.oel || warn.wartung) score -= 10;
   if (warn.tuev || warn.versicherung) score -= 14;
   if (warn.reifen) score -= 8;
-  if (!warn.hatWarnung) gruende.push("Keine offenen Wartungen");
+
+  // Fail-closed: fehlende Fristen sind ein eigener Zustand (nicht "bestätigt gut")
+  // und bekommen einen zusätzlichen, klar erkennbaren Abzug.
+  const fehlendeLabels: string[] = [];
+  if (warn.tuevFehlt) fehlendeLabels.push("TÜV-Datum fehlt – Prüfung erforderlich");
+  if (warn.versicherungFehlt)
+    fehlendeLabels.push("Versicherungsdatum fehlt – Prüfung erforderlich");
+  if (warn.wartungFehlt) fehlendeLabels.push("Wartungsdatum fehlt – Prüfung erforderlich");
+  if (fehlendeLabels.length > 0) {
+    score -= 20 * fehlendeLabels.length;
+    gruende.unshift(...fehlendeLabels);
+  } else if (!warn.hatWarnung) {
+    gruende.push("Keine offenen Wartungen");
+  }
 
   return { fahrzeug, score: Math.round(score), gruende: gruende.slice(0, 3) };
 }
