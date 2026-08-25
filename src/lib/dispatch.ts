@@ -41,6 +41,8 @@ import {
   FAHRZEUG_STATUS_META,
   bewerteFahrzeug,
   fahrzeugWarnungen,
+  formatDatum,
+  istAbgelaufen,
   laeuftAb,
 } from "@/lib/fahrzeuge";
 
