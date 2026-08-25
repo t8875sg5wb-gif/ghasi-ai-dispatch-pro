@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Wallet, FileDown, Users, Building2, Landmark } from "lucide-react";
+import { Wallet, FileDown, Users, Building2, Landmark, ShieldAlert } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -24,6 +24,7 @@ import { downloadLohnPdf, type LohnZeile } from "@/lib/lohn-pdf";
 import { BESCHAEFTIGUNGSART_LABEL, type Beschaeftigungsart, type Fahrer } from "@/lib/fahrer";
 import { STEUER_DISCLAIMER } from "@/lib/steuer";
 import { logActivity } from "@/lib/protokoll";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/lohn")({
   head: () => ({
@@ -54,6 +55,8 @@ const MONATE = [
 ];
 
 function LohnPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: drivers } = useDrivers();
   const { data: company } = useCompanySettings();
   const updateMut = useUpdateDriver();
@@ -111,6 +114,27 @@ function LohnPage() {
       aktion: "PDF-Export",
       beschreibung: `Lohn-Vorbereitung ${monat}: ${EUR2(summe.netto)} Netto gesamt`,
     });
+  }
+
+  if (!berechtigt) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          title="Lohn-Rechner (informativ)"
+          description="Lohn- und Arbeitgeberkosten je Fahrer – ausschließlich für Administration und Finanzen."
+          icon={Wallet}
+          badge="Personal"
+        />
+        <Card className="border-border/70 shadow-card">
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <ShieldAlert className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Diese Daten sind Administration und Finanzen vorbehalten.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
