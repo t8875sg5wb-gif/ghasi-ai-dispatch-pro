@@ -191,6 +191,12 @@ export interface FahrzeugWarnungen {
   versicherung: boolean;
   leasing: boolean;
   reifen: boolean;
+  /** compliance deadline is missing/unparsable – not confirmed good, must be checked */
+  tuevFehlt: boolean;
+  versicherungFehlt: boolean;
+  wartungFehlt: boolean;
+  /** any deadline missing → own state, distinct from "expired" */
+  fehlendeFristen: boolean;
   /** any maintenance/deadline warning active */
   hatWarnung: boolean;
 }
@@ -201,8 +207,14 @@ export function fahrzeugWarnungen(f: Fahrzeug): FahrzeugWarnungen {
   const wartung = laeuftAb(f.naechsteWartung);
   const tuev = laeuftAb(f.tuevBis, 45);
   const versicherung = laeuftAb(f.versicherungBis, 45);
-  const leasing = laeuftAb(f.leasingEnde, 60);
+  // Ein leeres Leasing-Enddatum bedeutet fachlich "kein Leasingvertrag"
+  // (siehe INITIAL_FAHRZEUGE: Eigentumsfahrzeuge mit leasingrate 0) und ist
+  // daher bewusst KEINE fehlende Compliance-Frist.
+  const leasing = f.leasingEnde ? laeuftAb(f.leasingEnde, 60) : false;
   const reifen = f.reifenstatus === "wechseln";
+  const tuevFehlt = fristFehlt(f.tuevBis);
+  const versicherungFehlt = fristFehlt(f.versicherungBis);
+  const wartungFehlt = fristFehlt(f.naechsteWartung);
   return {
     tank,
     oel,
@@ -211,6 +223,10 @@ export function fahrzeugWarnungen(f: Fahrzeug): FahrzeugWarnungen {
     versicherung,
     leasing,
     reifen,
+    tuevFehlt,
+    versicherungFehlt,
+    wartungFehlt,
+    fehlendeFristen: tuevFehlt || versicherungFehlt || wartungFehlt,
     hatWarnung: tank || oel || wartung || tuev || versicherung || leasing || reifen,
   };
 }
