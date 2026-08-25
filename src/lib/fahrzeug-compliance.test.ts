@@ -103,11 +103,7 @@ describe("erkenneKonflikte – blockierende Compliance-Konflikte", () => {
 
   it("fehlendes Versicherungs-/TÜV-Datum blockiert ebenfalls", () => {
     const fahrzeug = basisFahrzeug({ versicherungBis: "", tuevBis: "" });
-    const konflikte = erkenneKonflikte(
-      dispatchAusAuftraege([basisAuftrag()]),
-      fahrer,
-      [fahrzeug],
-    );
+    const konflikte = erkenneKonflikte(dispatchAusAuftraege([basisAuftrag()]), fahrer, [fahrzeug]);
     expect(konflikte.some((k) => k.id.startsWith("tuev-fehlt-") && k.schwere === "kritisch")).toBe(
       true,
     );
