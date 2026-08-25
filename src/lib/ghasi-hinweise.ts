@@ -3,6 +3,12 @@
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
+import {
+  INITIAL_RECHNUNGEN,
+  istUeberfaellig,
+  tageUeberfaellig,
+  type Rechnung,
+} from "@/lib/finance";
 
 export type HinweisStufe = "kritisch" | "warnung" | "info" | "positiv";
 
@@ -177,8 +183,30 @@ export function fahrerHinweise(fahrer: readonly Fahrer[]): Hinweis[] {
   return h;
 }
 
+/** Hinweise für überfällige Rechnungen (Alert-Center / Kosten). */
+export function rechnungHinweise(rechnungen: readonly Rechnung[]): Hinweis[] {
+  const h: Hinweis[] = [];
+  for (const r of rechnungen) {
+    if (r.typ !== "rechnung" || !istUeberfaellig(r)) continue;
+    const tage = tageUeberfaellig(r);
+    h.push({
+      id: `rechnung-${r.id}`,
+      stufe: tage > 21 ? "kritisch" : "warnung",
+      bereich: "Rechnungen",
+      to: "/rechnungen",
+      titel: `${r.nummer}: ${r.kunde}`,
+      text: `Rechnung ist seit ${tage} Tag(en) überfällig (${EUR(r.betrag)} brutto).`,
+    });
+  }
+  return h;
+}
+
 export function generateHinweise(): Hinweis[] {
-  const h: Hinweis[] = [...fahrzeugHinweise(INITIAL_FAHRZEUGE), ...fahrerHinweise(INITIAL_FAHRER)];
+  const h: Hinweis[] = [
+    ...fahrzeugHinweise(INITIAL_FAHRZEUGE),
+    ...fahrerHinweise(INITIAL_FAHRER),
+    ...rechnungHinweise(INITIAL_RECHNUNGEN),
+  ];
 
   // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();

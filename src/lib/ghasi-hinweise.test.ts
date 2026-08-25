@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { fahrerHinweise, fahrzeugHinweise, tageBis } from "@/lib/ghasi-hinweise";
+import { fahrerHinweise, fahrzeugHinweise, rechnungHinweise, tageBis } from "@/lib/ghasi-hinweise";
 import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
 import type { Fahrer } from "@/lib/fahrer";
+import type { Rechnung } from "@/lib/finance";
 
 const inTagen = (tage: number) =>
   new Date(Date.now() + tage * 86_400_000).toISOString().slice(0, 10);
@@ -90,5 +91,47 @@ describe("fahrerHinweise – fail-closed bei fehlenden Nachweisen", () => {
     ]).filter((x) => x.id.startsWith("nw-test-fahrer"));
     expect(hinweise).toHaveLength(3);
     expect(hinweise.every((x) => x.stufe === "kritisch")).toBe(true);
+  });
+});
+
+describe("rechnungHinweise – überfällige Rechnungen", () => {
+  const basisRechnung = (tage: number): Rechnung =>
+    ({
+      id: "test-rechnung",
+      nummer: "RE-001",
+      typ: "rechnung",
+      kunde: "Testkunde",
+      kundeId: "kunde-1",
+      abrechnungsart: "Kunde",
+      betrag: 1234.56,
+      mwstSatz: 19,
+      status: "offen",
+      datum: inTagen(-30),
+      faelligkeit: inTagen(tage),
+      positionen: [],
+    }) as Rechnung;
+
+  it("erzeugt eine Meldung für überfällige Rechnungen", () => {
+    const hinweise = rechnungHinweise([basisRechnung(-10)]);
+    expect(hinweise).toHaveLength(1);
+    expect(hinweise[0]!.id).toBe("rechnung-test-rechnung");
+    expect(hinweise[0]!.bereich).toBe("Rechnungen");
+    expect(hinweise[0]!.stufe).toBe("warnung");
+    expect(hinweise[0]!.text).toContain("10 Tag(en)");
+  });
+
+  it("erzeugt keine Meldung für pünktlich bezahlte Rechnungen", () => {
+    const bezahlt = { ...basisRechnung(10), status: "bezahlt" as const };
+    expect(rechnungHinweise([bezahlt])).toHaveLength(0);
+  });
+
+  it("klassifiziert lange Überfälligkeit als kritisch", () => {
+    const hinweise = rechnungHinweise([basisRechnung(-25)]);
+    expect(hinweise[0]!.stufe).toBe("kritisch");
+  });
+
+  it("ignoriert Gutschriften", () => {
+    const gutschrift = { ...basisRechnung(-10), typ: "gutschrift" as const };
+    expect(rechnungHinweise([gutschrift])).toHaveLength(0);
   });
 });
