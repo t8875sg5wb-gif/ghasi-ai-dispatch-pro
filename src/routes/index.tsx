@@ -348,7 +348,9 @@ function Dashboard() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
                 <Bot className="h-4 w-4" />
               </div>
-              <h2 className="text-base font-semibold leading-none tracking-tight">Proaktive Hinweise von GHASI AI</h2>
+              <h2 className="text-base font-semibold leading-none tracking-tight">
+                Proaktive Hinweise von GHASI AI
+              </h2>
             </div>
             <Badge variant="secondary">{hinweise.length}</Badge>
           </CardHeader>
@@ -379,7 +381,9 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success">
               <TrendingUp className="h-4 w-4" />
             </div>
-            <h2 className="text-base font-semibold leading-none tracking-tight">Gewinnprognose (7 Tage)</h2>
+            <h2 className="text-base font-semibold leading-none tracking-tight">
+              Gewinnprognose (7 Tage)
+            </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -514,7 +518,9 @@ function Dashboard() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
               <Sparkles className="h-4 w-4" />
             </div>
-            <h2 className="text-base text-primary-foreground font-semibold leading-none tracking-tight">KI-Empfehlungen</h2>
+            <h2 className="text-base text-primary-foreground font-semibold leading-none tracking-tight">
+              KI-Empfehlungen
+            </h2>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {recs.slice(0, 3).map((r) => (
