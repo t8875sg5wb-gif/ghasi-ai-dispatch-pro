@@ -43,7 +43,12 @@ function AssistantLayout() {
         <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3.5 sm:px-5">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Menü anzeigen"
+                className="h-9 w-9 shrink-0 rounded-xl md:hidden"
+              >
                 <PanelLeft className="h-5 w-5" />
               </Button>
             </SheetTrigger>
