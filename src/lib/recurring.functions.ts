@@ -1,6 +1,7 @@
 // Server functions for persisted recurring transport orders (Daueraufträge).
 // All run as the signed-in user (RLS enforces role-based access).
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -13,12 +14,10 @@ import {
 } from "@/lib/identity-checks.server";
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
 import {
-  kodiereFeldFehler,
   pruefeDauerauftragRegeln,
-  zuFeldFehlern,
   type DauerauftragRegelInput,
-  type FeldFehler,
 } from "@/lib/recurring-validation";
+import { parseOrLog } from "@/lib/recurring-reject.server";
 import {
   rowToDauerauftrag,
   writeToRecurringRow,
@@ -88,29 +87,6 @@ const updateRecurringSchema = z
   });
 
 const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
-
-/**
- * Validiert und wirft bei Fehlern eine Meldung, die zusätzlich eine
- * strukturierte Feldliste (`path` + `label` + `message`) transportiert.
- * Optional werden fachliche Querregeln geprüft.
- */
-function parseOrThrow<T>(
-  schema: z.ZodType<T>,
-  data: unknown,
-  regeln?: (wert: T) => FeldFehler[],
-): T {
-  const parsed = schema.safeParse(data);
-  if (!parsed.success) {
-    throw new Error(
-      kodiereFeldFehler("Ungültige Dauerauftragsdaten.", zuFeldFehlern(parsed.error)),
-    );
-  }
-  const regelFehler = regeln?.(parsed.data) ?? [];
-  if (regelFehler.length > 0) {
-    throw new Error(kodiereFeldFehler("Ungültige Dauerauftragsdaten.", regelFehler));
-  }
-  return parsed.data;
-}
 
 export const listRecurring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
