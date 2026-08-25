@@ -98,9 +98,7 @@ function Verbindungen() {
   // Nur der Web-Zugriff ist dynamisch: bis die echte Antwort da ist bleibt es
   // neutral ("Geplant"), nie optimistisch "Aktiv".
   const eintraege: Verbindung[] = verbindungen.map((v) =>
-    v.name === "Web-Zugriff"
-      ? { ...v, status: webStatus?.konfiguriert ? "aktiv" : "geplant" }
-      : v,
+    v.name === "Web-Zugriff" ? { ...v, status: webStatus?.konfiguriert ? "aktiv" : "geplant" } : v,
   );
 
   return (
