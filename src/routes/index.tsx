@@ -280,7 +280,7 @@ function Dashboard() {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Guten Tag 👋</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Krankentransport Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Hier ist die Echtzeit-Übersicht Ihres Unternehmens.
             </p>
