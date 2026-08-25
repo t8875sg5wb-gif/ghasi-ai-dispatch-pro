@@ -6,6 +6,9 @@ import getOrder from "./tools/get-order";
 import listDrivers from "./tools/list-drivers";
 import listVehicles from "./tools/list-vehicles";
 import listInvoices from "./tools/list-invoices";
+import createOrder from "./tools/create-order";
+import updateOrderStatus from "./tools/update-order-status";
+import createInvoice from "./tools/create-invoice";
 
 // Direkter Supabase-Auth-Issuer (nicht die .lovable.cloud-Proxy-URL).
 // VITE_SUPABASE_PROJECT_ID wird von Vite als Literal eingebettet.
@@ -16,10 +19,19 @@ export default defineMcp({
   title: "GHASI AI Executive",
   version: "0.1.0",
   instructions:
-    "Tools für GHASI AI (digitaler Geschäftsführer für Krankentransportunternehmen). Alle Tools sind lesend und gelten für die Firma des angemeldeten Benutzers (RLS).",
+    "Tools für GHASI AI (digitaler Geschäftsführer für Krankentransportunternehmen). Lesende und schreibende Tools gelten für die Firma des angemeldeten Benutzers (RLS).",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [listOrders, getOrder, listDrivers, listVehicles, listInvoices],
+  tools: [
+    listOrders,
+    getOrder,
+    listDrivers,
+    listVehicles,
+    listInvoices,
+    createOrder,
+    updateOrderStatus,
+    createInvoice,
+  ],
 });
