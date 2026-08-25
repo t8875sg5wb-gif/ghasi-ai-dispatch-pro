@@ -1259,6 +1259,8 @@ function DauerauftragForm({
           />
         </div>
 
+        <TerminVorschau dauerauftrag={f} />
+
         <div>
           <Label>Notiz</Label>
           <Textarea value={f.notiz} onChange={(e) => set("notiz", e.target.value)} rows={2} />
