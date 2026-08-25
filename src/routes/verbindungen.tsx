@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   Globe,
   MessageCircle,
@@ -14,6 +16,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getWebZugriffStatus } from "@/lib/verbindungen.functions";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -44,7 +47,7 @@ const verbindungen: Verbindung[] = [
     name: "Web-Zugriff",
     beschreibung:
       "Echtzeit-Internetsuche für News, Wetter, Verkehr, Börse, Spritpreise, Adressen und Fakten – mit Quellenangabe.",
-    status: "aktiv",
+    status: "geplant",
   },
   {
     icon: MessageCircle,
@@ -85,6 +88,21 @@ const verbindungen: Verbindung[] = [
 ];
 
 function Verbindungen() {
+  const ladeWebStatus = useServerFn(getWebZugriffStatus);
+  const { data: webStatus } = useQuery({
+    queryKey: ["verbindungen", "web-zugriff"],
+    queryFn: () => ladeWebStatus(),
+    staleTime: 60_000,
+  });
+
+  // Nur der Web-Zugriff ist dynamisch: bis die echte Antwort da ist bleibt es
+  // neutral ("Geplant"), nie optimistisch "Aktiv".
+  const eintraege: Verbindung[] = verbindungen.map((v) =>
+    v.name === "Web-Zugriff"
+      ? { ...v, status: webStatus?.konfiguriert ? "aktiv" : "geplant" }
+      : v,
+  );
+
   return (
     <div className="animate-fade-in space-y-6">
       <section>
@@ -96,7 +114,7 @@ function Verbindungen() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {verbindungen.map((v) => (
+        {eintraege.map((v) => (
           <Card
             key={v.name}
             className="border-border/70 shadow-sm transition-all hover:shadow-card"
