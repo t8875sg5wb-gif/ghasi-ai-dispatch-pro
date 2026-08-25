@@ -22,26 +22,30 @@ export default defineTool({
       .describe("Optionaler Detail-Status, z.B. 'beim_patienten'."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  handler: mitAudit("update_order_status", "ghasi:orders.status", async ({ id, status, detailStatus }, ctx) => {
-    const gate = await autorisiere(ctx, "ghasi:orders.status");
-    if (!gate.ok) return gate.error;
-    const supabase = gate.supabase;
-    const row: Record<string, unknown> = { status };
-    if (detailStatus !== undefined) row.detail_status = detailStatus;
-    const { data, error } = await supabase
-      .from("orders")
-      .update(row as never)
-      .eq("id", id)
-      .select()
-      .maybeSingle();
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
-    if (!data) {
-      return { content: [{ type: "text", text: "Auftrag nicht gefunden." }], isError: true };
-    }
-    const auftrag = rowToAuftrag(data as unknown as OrderRow);
-    return {
-      content: [{ type: "text", text: JSON.stringify(auftrag, null, 2) }],
-      structuredContent: { order: auftrag },
-    };
-  }),
+  handler: mitAudit(
+    "update_order_status",
+    "ghasi:orders.status",
+    async ({ id, status, detailStatus }, ctx) => {
+      const gate = await autorisiere(ctx, "ghasi:orders.status");
+      if (!gate.ok) return gate.error;
+      const supabase = gate.supabase;
+      const row: Record<string, unknown> = { status };
+      if (detailStatus !== undefined) row.detail_status = detailStatus;
+      const { data, error } = await supabase
+        .from("orders")
+        .update(row as never)
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+      if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+      if (!data) {
+        return { content: [{ type: "text", text: "Auftrag nicht gefunden." }], isError: true };
+      }
+      const auftrag = rowToAuftrag(data as unknown as OrderRow);
+      return {
+        content: [{ type: "text", text: JSON.stringify(auftrag, null, 2) }],
+        structuredContent: { order: auftrag },
+      };
+    },
+  ),
 });
