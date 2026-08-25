@@ -55,6 +55,8 @@ export const Route = createFileRoute("/schichtplan")({
         content:
           "Kalender für Fahrerdienste, Urlaub und Krankheit mit automatischer Doppelbelegungs-Prüfung.",
       },
+      { property: "og:title", content: "Schichtplan – GHASI AI" },
+      { property: "og:description", content: "Kalender für Fahrerdienste, Urlaub und Krankheit mit automatischer Doppelbelegungs-Prüfung." },
     ],
   }),
   component: SchichtplanPage,

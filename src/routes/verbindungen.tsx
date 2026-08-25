@@ -27,6 +27,8 @@ export const Route = createFileRoute("/verbindungen")({
         content:
           "Verbundene Dienste für GHASI AI: Web-Zugriff, WhatsApp Business, E-Mail, Kalender, Karten, Cloud und Buchhaltung – modular und optional.",
       },
+      { property: "og:title", content: "Verbindungen – GHASI AI" },
+      { property: "og:description", content: "Verbundene Dienste für GHASI AI: Web-Zugriff, WhatsApp Business, E-Mail, Kalender, Karten, Cloud und Buchhaltung – modular und optional." },
     ],
   }),
   component: Verbindungen,

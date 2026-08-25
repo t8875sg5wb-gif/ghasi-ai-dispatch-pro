@@ -40,6 +40,8 @@ export const Route = createFileRoute("/standorte")({
         content:
           "Kliniken, Ärzte, Apotheken, Tank- und Ladesäulen im Umkreis finden – mit Google Maps, Distanzen, Service-Gebiet und Favoriten.",
       },
+      { property: "og:title", content: "Standorte & Umgebung – GHASI AI" },
+      { property: "og:description", content: "Kliniken, Ärzte, Apotheken, Tank- und Ladesäulen im Umkreis finden – mit Google Maps, Distanzen, Service-Gebiet und Favoriten." },
     ],
   }),
   component: StandorteSeite,

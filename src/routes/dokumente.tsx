@@ -64,6 +64,8 @@ export const Route = createFileRoute("/dokumente")({
         content:
           "Zentrales Dokumentenarchiv: Upload, Vorschau, Versionen, Tags, OCR-Suche und Verknüpfungen.",
       },
+      { property: "og:title", content: "Dokumente – GHASI AI" },
+      { property: "og:description", content: "Zentrales Dokumentenarchiv: Upload, Vorschau, Versionen, Tags, OCR-Suche und Verknüpfungen." },
     ],
   }),
   component: DokumentePage,

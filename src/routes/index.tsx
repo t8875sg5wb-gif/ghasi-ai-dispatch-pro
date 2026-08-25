@@ -54,6 +54,8 @@ export const Route = createFileRoute("/")({
         content:
           "Echtzeit-Dashboard für Ihr Krankentransportunternehmen: Umsatz, Aufträge, Flotte, Auslastung und KI-Empfehlungen auf einen Blick.",
       },
+      { property: "og:title", content: "Dashboard – GHASI AI" },
+      { property: "og:description", content: "Echtzeit-Dashboard für Ihr Krankentransportunternehmen: Umsatz, Aufträge, Flotte, Auslastung und KI-Empfehlungen auf einen Blick." },
     ],
   }),
   component: Dashboard,

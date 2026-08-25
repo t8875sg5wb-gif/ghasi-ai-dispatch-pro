@@ -31,6 +31,8 @@ export const Route = createFileRoute("/jahresabschluss")({
     meta: [
       { title: "Jahresabschluss – GHASI AI" },
       { name: "description", content: "Steuerschätzung, Fristen und Jahresabschluss-Checkliste." },
+      { property: "og:title", content: "Jahresabschluss – GHASI AI" },
+      { property: "og:description", content: "Steuerschätzung, Fristen und Jahresabschluss-Checkliste." },
     ],
   }),
   component: JahresabschlussPage,

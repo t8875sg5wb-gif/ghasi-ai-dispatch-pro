@@ -42,6 +42,8 @@ export const Route = createFileRoute("/buchhaltung")({
         name: "description",
         content: "Einnahmen, Ausgaben, Kostenstellen und betriebswirtschaftliche Auswertung.",
       },
+      { property: "og:title", content: "Buchhaltung – GHASI AI" },
+      { property: "og:description", content: "Einnahmen, Ausgaben, Kostenstellen und betriebswirtschaftliche Auswertung." },
     ],
   }),
   component: BuchhaltungPage,

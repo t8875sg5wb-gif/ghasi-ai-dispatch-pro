@@ -67,6 +67,8 @@ export const Route = createFileRoute("/einstellungen")({
         name: "description",
         content: "Unternehmensdaten, Steuern, Benachrichtigungen und Präferenzen.",
       },
+      { property: "og:title", content: "Einstellungen – GHASI AI" },
+      { property: "og:description", content: "Unternehmensdaten, Steuern, Benachrichtigungen und Präferenzen." },
     ],
   }),
   component: EinstellungenSeite,

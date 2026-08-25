@@ -16,6 +16,8 @@ export const Route = createFileRoute("/ki-assistent")({
         content:
           "GHASI AI, Ihr digitaler Geschäftsführer & persönlicher KI-Assistent: Geschäftswissen, Echtzeit-Internet, Dateien, Sprache – in natürlicher Unterhaltung.",
       },
+      { property: "og:title", content: "GHASI AI – Executive-Assistent" },
+      { property: "og:description", content: "GHASI AI, Ihr digitaler Geschäftsführer & persönlicher KI-Assistent: Geschäftswissen, Echtzeit-Internet, Dateien, Sprache – in natürlicher Unterhaltung." },
     ],
   }),
   component: AssistantLayout,

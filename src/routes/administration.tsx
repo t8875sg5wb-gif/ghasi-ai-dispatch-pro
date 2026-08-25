@@ -47,6 +47,8 @@ export const Route = createFileRoute("/administration")({
         name: "description",
         content: "Benutzer, Rollen, Rechte und Systemkonfiguration verwalten.",
       },
+      { property: "og:title", content: "Administration – GHASI AI" },
+      { property: "og:description", content: "Benutzer, Rollen, Rechte und Systemkonfiguration verwalten." },
     ],
   }),
   component: AdministrationSeite,
