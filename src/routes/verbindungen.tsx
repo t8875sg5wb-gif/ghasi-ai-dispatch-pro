@@ -481,6 +481,82 @@ function Verbindungen() {
         </section>
       )}
 
+      {archiv && (
+        <section>
+          <Card className="border-border/70 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Archive aria-hidden className="h-4 w-4 text-muted-foreground" />
+                Audit-Archiv (MCP)
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {archiv.gesamt} archiviert · Frist {archiv.fristMonate} Monate
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => archivLauf.mutate()}
+                  disabled={archivLauf.isPending}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  {archivLauf.isPending ? "Archiviere …" : "Jetzt archivieren"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 p-0">
+              <p className="px-4 text-xs text-muted-foreground">
+                Einträge älter als {archiv.fristMonate} Monate werden automatisch täglich in diesen
+                Archivbereich verschoben – nie gelöscht, damit der Prüfpfad vollständig bleibt. Die
+                Frist ändern Sie unter Einstellungen → Datenschutz. Ältester aktiver Eintrag:{" "}
+                {archiv.aeltesterAktiv
+                  ? new Date(archiv.aeltesterAktiv).toLocaleString("de-DE", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })
+                  : "–"}
+                .
+              </p>
+              {archiv.eintraege.length === 0 ? (
+                <p className="px-4 pb-4 text-sm text-muted-foreground">
+                  Noch keine archivierten Einträge.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border/60">
+                  {archiv.eintraege.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{a.tool}</span>
+                        <span className="text-xs text-muted-foreground">{a.scope ?? "–"}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {MCP_STATUS_LABEL[a.status] ?? a.status}
+                        </Badge>
+                      </span>
+                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{a.rolle ?? "ohne Rolle"}</span>
+                        <span>{a.dauerMs ?? 0} ms</span>
+                        <span>
+                          {new Date(a.zeitpunkt).toLocaleString("de-DE", { dateStyle: "short" })}
+                        </span>
+                        <span>
+                          archiviert{" "}
+                          {new Date(a.archiviertAm).toLocaleString("de-DE", { dateStyle: "short" })}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+
       <section>
         <Card className="border-border/70 bg-muted/30 shadow-sm">
           <CardContent className="flex items-start gap-3 p-4 text-sm text-muted-foreground">
