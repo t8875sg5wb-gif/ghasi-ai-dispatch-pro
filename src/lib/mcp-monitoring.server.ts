@@ -32,14 +32,20 @@ interface QuellenMeta {
   client_id?: string | null;
 }
 
+/** Fail-closed Admin-Prüfung über den Client des Aufrufers (RLS gilt). */
+async function assertAdmin(supabase: SupabaseClient<Database>, userId: string): Promise<void> {
+  const { data: rollen } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const istAdmin = (rollen ?? []).some((r) => r.role === "admin");
+  if (!istAdmin) throw new Error("Kein Zugriff auf das Agenten-Monitoring.");
+}
+
 export async function ladeMcpAufrufe(
   supabase: SupabaseClient<Database>,
   userId: string,
   limit: number,
 ): Promise<McpAufruf[]> {
-  const { data: rollen } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  const istAdmin = (rollen ?? []).some((r) => r.role === "admin");
-  if (!istAdmin) throw new Error("Kein Zugriff auf das Agenten-Monitoring.");
+  await assertAdmin(supabase, userId);
+
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: zeilen, error } = await supabaseAdmin
