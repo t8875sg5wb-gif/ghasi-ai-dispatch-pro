@@ -195,6 +195,10 @@ export function settingsToRow(data: CompanySettings): Record<string, unknown> {
       120,
       Math.max(1, Math.round(Number(data.chatRetentionMonths) || 12)),
     ),
+    mcp_audit_retention_months: Math.min(
+      120,
+      Math.max(1, Math.round(Number(data.mcpAuditRetentionMonths) || 12)),
+    ),
   };
 }
 
