@@ -59,6 +59,12 @@ export interface CompanySettings {
    * (GoBD/Belege) abgeleitet.
    */
   chatRetentionMonths: number;
+  /**
+   * Aufbewahrungsdauer für MCP-Agenten-Audit-Logs im aktiven Bereich (1–120
+   * Monate). Ältere Einträge werden NICHT gelöscht, sondern automatisch in
+   * `ai_audit_log_archive` verschoben – der Prüfpfad bleibt vollständig.
+   */
+  mcpAuditRetentionMonths: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -88,6 +94,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   dieselpreis: 1.75,
   arbeitstageMonat: 21,
   chatRetentionMonths: 12,
+  mcpAuditRetentionMonths: 12,
 };
 
 export interface CompanyRow {
@@ -117,6 +124,7 @@ export interface CompanyRow {
   betriebskosten_dieselpreis?: number | string;
   betriebskosten_arbeitstage?: number | string;
   chat_retention_months?: number | string;
+  mcp_audit_retention_months?: number | string;
 }
 
 export function rowToSettings(r: CompanyRow): CompanySettings {
@@ -147,6 +155,7 @@ export function rowToSettings(r: CompanyRow): CompanySettings {
     dieselpreis: Number(r.betriebskosten_dieselpreis ?? 1.75),
     arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
     chatRetentionMonths: Number(r.chat_retention_months ?? 12),
+    mcpAuditRetentionMonths: Number(r.mcp_audit_retention_months ?? 12),
   };
 }
 
@@ -185,6 +194,10 @@ export function settingsToRow(data: CompanySettings): Record<string, unknown> {
     chat_retention_months: Math.min(
       120,
       Math.max(1, Math.round(Number(data.chatRetentionMonths) || 12)),
+    ),
+    mcp_audit_retention_months: Math.min(
+      120,
+      Math.max(1, Math.round(Number(data.mcpAuditRetentionMonths) || 12)),
     ),
   };
 }

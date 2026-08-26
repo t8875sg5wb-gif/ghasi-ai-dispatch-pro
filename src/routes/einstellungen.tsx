@@ -489,6 +489,22 @@ function EinstellungenSeite() {
                 </p>
               </Feld>
 
+              <Feld label="Aufbewahrungsdauer Agenten-Audit-Logs, aktiv (Monate)">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={120}
+                  value={company.mcpAuditRetentionMonths}
+                  onChange={(e) => setC("mcpAuditRetentionMonths", Number(e.target.value) || 0)}
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ältere Agenten-Zugriffe (MCP) werden automatisch täglich in den Archivbereich
+                  verschoben und dort weiter aufbewahrt – sie werden nicht gelöscht. Das Archiv
+                  finden Sie unter Verbindungen → Audit-Archiv (MCP).
+                </p>
+              </Feld>
+
               <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                 <p className="mb-1 text-sm font-medium">Alten Chatverlauf jetzt löschen</p>
                 <p className="mb-3 text-xs text-muted-foreground">

@@ -53,7 +53,32 @@ const bootstrapSql = `
   );
   alter table storage.objects enable row level security;
   grant usage on schema auth, storage, extensions to anon, authenticated, service_role;
+  -- pg_cron ist in PGlite nicht verfügbar. Wir stellen die von Migrationen
+  -- genutzte Oberfläche nachgebildet bereit, damit Zeitplan-Migrationen
+  -- durchlaufen. Die Ausführung selbst wird bewusst nicht simuliert.
+  create schema cron;
+  create table cron.job (
+    jobid bigserial primary key,
+    jobname text unique,
+    schedule text,
+    command text
+  );
+  create or replace function cron.schedule(job_name text, schedule text, command text)
+  returns bigint language sql as $$
+    insert into cron.job (jobname, schedule, command) values (job_name, schedule, command)
+    on conflict (jobname) do update set schedule = excluded.schedule, command = excluded.command
+    returning jobid;
+  $$;
+  create or replace function cron.unschedule(job_name text)
+  returns boolean language sql as $$
+    delete from cron.job where jobname = job_name returning true;
+  $$;
 `;
+
+/** In PGlite nicht installierbare Extensions werden für den Test entfernt. */
+function fuerTestVorbereiten(sql: string): string {
+  return sql.replace(/CREATE\s+EXTENSION[^;]*pg_(cron|net)[^;]*;/gi, "");
+}
 
 export type MigrationResult = {
   file: string;
@@ -66,7 +91,7 @@ export async function runMigrations(db: PGlite): Promise<MigrationResult[]> {
   for (const file of migrationFiles) {
     const sql = readFileSync(join(migrationDirectory, file), "utf8");
     try {
-      await db.exec(sql);
+      await db.exec(fuerTestVorbereiten(sql));
       results.push({ file, ok: true });
     } catch (error) {
       results.push({

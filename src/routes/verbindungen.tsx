@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
+  Archive,
   Globe,
   MessageCircle,
   Mail,
@@ -20,7 +22,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getVerbindungsHealth } from "@/lib/verbindungen.functions";
-import { getMcpMonitoring } from "@/lib/mcp-monitoring.functions";
+import {
+  archiviereMcpAuditJetzt,
+  getMcpArchiv,
+  getMcpMonitoring,
+} from "@/lib/mcp-monitoring.functions";
 import {
   csvZeilen,
   MCP_CSV_SPALTEN,
@@ -137,6 +143,31 @@ function Verbindungen() {
   });
 
   const ladeMcp = useServerFn(getMcpMonitoring);
+  const ladeArchiv = useServerFn(getMcpArchiv);
+  const archiviere = useServerFn(archiviereMcpAuditJetzt);
+  const queryClient = useQueryClient();
+
+  // Archivbereich: nur Admins erhalten Daten (serverseitig geprüft).
+  const { data: archiv } = useQuery({
+    queryKey: ["mcp", "archiv"],
+    queryFn: () => ladeArchiv({ data: { limit: 100 } }),
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const archivLauf = useMutation({
+    mutationFn: () => archiviere(),
+    onSuccess: (e) => {
+      toast.success(
+        e.verschoben === 0
+          ? `Keine Einträge älter als ${e.fristMonate} Monate.`
+          : `${e.verschoben} Einträge ins Archiv verschoben (Frist: ${e.fristMonate} Monate).`,
+      );
+      void queryClient.invalidateQueries({ queryKey: ["mcp"] });
+    },
+    onError: (f: Error) => toast.error(f.message),
+  });
+
   const [mcpFilter, setMcpFilter] = useState({
     suche: "",
     tool: "alle",
@@ -439,6 +470,81 @@ function Verbindungen() {
                             dateStyle: "short",
                             timeStyle: "short",
                           })}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {archiv && (
+        <section>
+          <Card className="border-border/70 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Archive aria-hidden className="h-4 w-4 text-muted-foreground" />
+                Audit-Archiv (MCP)
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {archiv.gesamt} archiviert · Frist {archiv.fristMonate} Monate
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => archivLauf.mutate()}
+                  disabled={archivLauf.isPending}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  {archivLauf.isPending ? "Archiviere …" : "Jetzt archivieren"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 p-0">
+              <p className="px-4 text-xs text-muted-foreground">
+                Einträge älter als {archiv.fristMonate} Monate werden automatisch täglich in diesen
+                Archivbereich verschoben – nie gelöscht, damit der Prüfpfad vollständig bleibt. Die
+                Frist ändern Sie unter Einstellungen → Datenschutz. Ältester aktiver Eintrag:{" "}
+                {archiv.aeltesterAktiv
+                  ? new Date(archiv.aeltesterAktiv).toLocaleString("de-DE", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })
+                  : "–"}
+                .
+              </p>
+              {archiv.eintraege.length === 0 ? (
+                <p className="px-4 pb-4 text-sm text-muted-foreground">
+                  Noch keine archivierten Einträge.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border/60">
+                  {archiv.eintraege.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{a.tool}</span>
+                        <span className="text-xs text-muted-foreground">{a.scope ?? "–"}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {MCP_STATUS_LABEL[a.status] ?? a.status}
+                        </Badge>
+                      </span>
+                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{a.rolle ?? "ohne Rolle"}</span>
+                        <span>{a.dauerMs ?? 0} ms</span>
+                        <span>
+                          {new Date(a.zeitpunkt).toLocaleString("de-DE", { dateStyle: "short" })}
+                        </span>
+                        <span>
+                          archiviert{" "}
+                          {new Date(a.archiviertAm).toLocaleString("de-DE", { dateStyle: "short" })}
                         </span>
                       </span>
                     </li>
