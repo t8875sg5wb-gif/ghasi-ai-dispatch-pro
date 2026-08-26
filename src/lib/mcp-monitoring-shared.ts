@@ -41,6 +41,24 @@ export interface McpMonitoring {
   scopes: string[];
 }
 
+/** Ein ins Archiv verschobener Audit-Eintrag (identische Metadaten + Archivinfo). */
+export interface McpArchivEintrag extends McpAufruf {
+  /** ISO-Zeitpunkt der Archivierung. */
+  archiviertAm: string;
+  /** Frist (Monate), die zum Zeitpunkt der Archivierung galt. */
+  fristMonate: number;
+}
+
+export interface McpArchiv {
+  eintraege: McpArchivEintrag[];
+  /** Gesamtzahl der archivierten Einträge (nicht nur das geladene Fenster). */
+  gesamt: number;
+  /** Aktuell eingestellte Aufbewahrungsdauer im aktiven Bereich (Monate). */
+  fristMonate: number;
+  /** ISO-Zeitpunkt des ältesten aktiven Eintrags – oder null. */
+  aeltesterAktiv: string | null;
+}
+
 export const MCP_STATUS_WERTE = ["erfolg", "abgelehnt", "fehler"] as const;
 
 export const MCP_STATUS_LABEL: Record<string, string> = {
