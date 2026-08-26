@@ -59,6 +59,12 @@ export interface CompanySettings {
    * (GoBD/Belege) abgeleitet.
    */
   chatRetentionMonths: number;
+  /**
+   * Aufbewahrungsdauer für MCP-Agenten-Audit-Logs im aktiven Bereich (1–120
+   * Monate). Ältere Einträge werden NICHT gelöscht, sondern automatisch in
+   * `ai_audit_log_archive` verschoben – der Prüfpfad bleibt vollständig.
+   */
+  mcpAuditRetentionMonths: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
