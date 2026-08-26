@@ -94,6 +94,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   dieselpreis: 1.75,
   arbeitstageMonat: 21,
   chatRetentionMonths: 12,
+  mcpAuditRetentionMonths: 12,
 };
 
 export interface CompanyRow {
@@ -123,6 +124,7 @@ export interface CompanyRow {
   betriebskosten_dieselpreis?: number | string;
   betriebskosten_arbeitstage?: number | string;
   chat_retention_months?: number | string;
+  mcp_audit_retention_months?: number | string;
 }
 
 export function rowToSettings(r: CompanyRow): CompanySettings {
@@ -153,6 +155,7 @@ export function rowToSettings(r: CompanyRow): CompanySettings {
     dieselpreis: Number(r.betriebskosten_dieselpreis ?? 1.75),
     arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
     chatRetentionMonths: Number(r.chat_retention_months ?? 12),
+    mcpAuditRetentionMonths: Number(r.mcp_audit_retention_months ?? 12),
   };
 }
 
