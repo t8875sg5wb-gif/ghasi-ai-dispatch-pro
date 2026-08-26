@@ -91,7 +91,7 @@ export async function runMigrations(db: PGlite): Promise<MigrationResult[]> {
   for (const file of migrationFiles) {
     const sql = readFileSync(join(migrationDirectory, file), "utf8");
     try {
-      await db.exec(sql);
+      await db.exec(fuerTestVorbereiten(sql));
       results.push({ file, ok: true });
     } catch (error) {
       results.push({
