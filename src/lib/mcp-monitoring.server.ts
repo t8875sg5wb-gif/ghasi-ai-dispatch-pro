@@ -51,7 +51,6 @@ export async function ladeMcpAufrufe(
 ): Promise<McpAufruf[]> {
   await assertAdmin(supabase, userId);
 
-
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: zeilen, error } = await supabaseAdmin
     .from("ai_audit_log")

@@ -20,9 +20,7 @@ export const getMcpMonitoring = createServerFn({ method: "GET" })
     return { aufrufe: gefiltert, ...fasseZusammen(gefiltert, alle) };
   });
 
-const archivSchema = z
-  .object({ limit: z.number().int().min(1).max(500).default(100) })
-  .strict();
+const archivSchema = z.object({ limit: z.number().int().min(1).max(500).default(100) }).strict();
 
 /** Archivbereich: Einträge, die die Aufbewahrungsdauer im aktiven Bereich überschritten haben. */
 export const getMcpArchiv = createServerFn({ method: "GET" })

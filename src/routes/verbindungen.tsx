@@ -556,7 +556,6 @@ function Verbindungen() {
         </section>
       )}
 
-
       <section>
         <Card className="border-border/70 bg-muted/30 shadow-sm">
           <CardContent className="flex items-start gap-3 p-4 text-sm text-muted-foreground">

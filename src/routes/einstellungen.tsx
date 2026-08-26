@@ -505,7 +505,6 @@ function EinstellungenSeite() {
                 </p>
               </Feld>
 
-
               <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                 <p className="mb-1 text-sm font-medium">Alten Chatverlauf jetzt löschen</p>
                 <p className="mb-3 text-xs text-muted-foreground">
