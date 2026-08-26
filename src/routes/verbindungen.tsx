@@ -137,6 +137,31 @@ function Verbindungen() {
   });
 
   const ladeMcp = useServerFn(getMcpMonitoring);
+  const ladeArchiv = useServerFn(getMcpArchiv);
+  const archiviere = useServerFn(archiviereMcpAuditJetzt);
+  const queryClient = useQueryClient();
+
+  // Archivbereich: nur Admins erhalten Daten (serverseitig geprüft).
+  const { data: archiv } = useQuery({
+    queryKey: ["mcp", "archiv"],
+    queryFn: () => ladeArchiv({ data: { limit: 100 } }),
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const archivLauf = useMutation({
+    mutationFn: () => archiviere(),
+    onSuccess: (e) => {
+      toast.success(
+        e.verschoben === 0
+          ? `Keine Einträge älter als ${e.fristMonate} Monate.`
+          : `${e.verschoben} Einträge ins Archiv verschoben (Frist: ${e.fristMonate} Monate).`,
+      );
+      void queryClient.invalidateQueries({ queryKey: ["mcp"] });
+    },
+    onError: (f: Error) => toast.error(f.message),
+  });
+
   const [mcpFilter, setMcpFilter] = useState({
     suche: "",
     tool: "alle",
