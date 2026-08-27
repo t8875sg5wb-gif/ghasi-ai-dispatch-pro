@@ -934,11 +934,19 @@ function DauerauftragForm({
             <ul className="mt-1 space-y-0.5 text-destructive">
               {fehler.map((x) => (
                 <li key={x.path}>
-                  <span className="font-medium">{x.label}</span>{" "}
-                  <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                  <button
+                    type="button"
+                    onClick={() => springeZuFeld(x.path)}
+                    className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
+                    aria-label={`Zum Feld ${x.label} springen`}
+                  >
+                    <span className="font-medium">{x.label}</span>{" "}
+                    <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                  </button>
                 </li>
               ))}
             </ul>
+
           </div>
         )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
