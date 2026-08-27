@@ -173,6 +173,86 @@ function AblehnungenPage() {
         </Card>
       )}
 
+      {gruende.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Drilldown nach Ablehnungsgrund</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {gruende.map((g) => {
+              const offen = offenerGrund === g.grund;
+              return (
+                <div key={g.grund} className="rounded-lg border">
+                  <button
+                    type="button"
+                    className="flex w-full flex-wrap items-center gap-2 p-3 text-left"
+                    aria-expanded={offen}
+                    onClick={() => setOffenerGrund(offen ? null : g.grund)}
+                  >
+                    <ChevronRight
+                      className={`size-4 shrink-0 transition-transform ${offen ? "rotate-90" : ""}`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium">{g.grund}</span>
+                    <Badge variant="secondary" className="ml-auto">
+                      {g.eintraege.length}{" "}
+                      {g.eintraege.length === 1 ? "Vorgang" : "Vorgänge"}
+                    </Badge>
+                  </button>
+                  {offen && (
+                    <div className="space-y-3 border-t p-3">
+                      <div>
+                        <p className="pb-1 text-xs font-medium text-muted-foreground">
+                          Häufigste Feldpfade
+                        </p>
+                        {g.topPfade.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Keine Feldpfade protokolliert.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {g.topPfade.map((p) => (
+                              <Badge key={p.path} variant="outline">
+                                {p.label} ({p.path}) · {p.anzahl}×
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="pb-1 text-xs font-medium text-muted-foreground">
+                          Betroffene Serien / Fahrten
+                        </p>
+                        <ul className="space-y-1 text-xs">
+                          {g.eintraege.map((e) => (
+                            <li key={e.id} className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium">
+                                {e.patient ?? "Ohne Patientenbezug"}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {AKTION_LABEL[e.aktion] ?? e.aktion}
+                              </span>
+                              {e.zielId && (
+                                <span className="text-muted-foreground">
+                                  Datensatz: {e.zielId}
+                                </span>
+                              )}
+                              <span className="ml-auto text-muted-foreground">
+                                {formatZeit(e.zeitpunkt)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Protokoll</CardTitle>
