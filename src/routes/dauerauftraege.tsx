@@ -810,8 +810,49 @@ function DauerauftragForm({
     destination: d.destination ?? parseAdresse(d.zielort),
   });
   const [f, setF] = useState<Dauerauftrag>(() => normalisiere(initial));
-  const [eigeneFehler, setEigeneFehler] = useState<FeldFehler[]>([]);
-  const fehler = eigeneFehler.length > 0 ? eigeneFehler : serverFehler;
+  const [beruehrt, setBeruehrt] = useState<string[]>([]);
+  const [submitVersucht, setSubmitVersucht] = useState(false);
+
+  const merkeBeruehrt = (...paths: string[]) =>
+    setBeruehrt((prev) => {
+      const neu = paths.filter((p) => !prev.includes(p));
+      return neu.length > 0 ? [...prev, ...neu] : prev;
+    });
+
+  /** Vollständige Feldwerte (Adressen normalisiert) – Basis für jede Prüfung. */
+  const werteFuerPruefung = (quelle: Dauerauftrag): Dauerauftrag => ({
+    ...quelle,
+    pickup: quelle.pickup ?? parseAdresse(quelle.abholort),
+    destination: quelle.destination ?? parseAdresse(quelle.zielort),
+    abholort: "",
+    zielort: "",
+  });
+
+  /** Gleiche Regeln wie serverseitig – für Live- und Submit-Prüfung. */
+  const validiere = (quelle: Dauerauftrag): FeldFehler[] => {
+    const write = dauerauftragToWrite(werteFuerPruefung(quelle));
+    const parsed = recurringFieldsSchema.safeParse(write);
+    return parsed.success ? pruefeDauerauftragRegeln(write, true) : zuFeldFehlern(parsed.error);
+  };
+
+  // Live-Validierung: bei jeder Änderung neu berechnet.
+  const liveFehler = useMemo(() => validiere(f), [f]);
+
+  const istBeruehrt = (path: string) =>
+    beruehrt.includes(path) || beruehrt.includes(path.split(".")[0] ?? path);
+
+  // Vor dem ersten Absenden nur Fehler zu bereits bearbeiteten Feldern zeigen.
+  const sichtbareLiveFehler = submitVersucht
+    ? liveFehler
+    : liveFehler.filter((x) => istBeruehrt(x.path));
+  // Serverfehler zu Feldern, die inzwischen bearbeitet wurden, ausblenden.
+  const offeneServerFehler = serverFehler.filter(
+    (x) => !istBeruehrt(x.path) && !liveFehler.some((l) => l.path === x.path),
+  );
+  const fehler: FeldFehler[] = [
+    ...sichtbareLiveFehler,
+    ...offeneServerFehler.filter((s) => !sichtbareLiveFehler.some((l) => l.path === s.path)),
+  ];
   const fehlerMap = useMemo(() => feldFehlerMap(fehler), [fehler]);
   const FeldFehlerText = ({ path }: { path: string }) =>
     fehlerMap[path] ? (
@@ -827,19 +868,25 @@ function DauerauftragForm({
 
   useEffect(() => {
     setF(normalisiere(initial));
-    setEigeneFehler([]);
+    setBeruehrt([]);
+    setSubmitVersucht(false);
   }, [initial]);
 
-  const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) =>
+  const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
+    merkeBeruehrt(String(k));
     setF((prev) => ({ ...prev, [k]: v }));
-  const setAdresse = (key: "pickup" | "destination", value: AdresseStruktur) =>
+  };
+  const setAdresse = (key: "pickup" | "destination", value: AdresseStruktur) => {
+    merkeBeruehrt(key);
     setF((prev) => ({
       ...prev,
       [key]: value,
       ...(key === "pickup" ? { abholort: "" } : { zielort: "" }),
     }));
+  };
 
   const toggleTag = (wert: number) => {
+    merkeBeruehrt("wochentage");
     setF((prev) => ({
       ...prev,
       wochentage: prev.wochentage.includes(wert)
@@ -849,23 +896,15 @@ function DauerauftragForm({
   };
 
   const submit = () => {
-    const pickup = f.pickup ?? parseAdresse(f.abholort);
-    const destination = f.destination ?? parseAdresse(f.zielort);
-    const werte: Dauerauftrag = { ...f, pickup, destination, abholort: "", zielort: "" };
-
-    // Gleiche Regeln wie serverseitig – Feldfehler direkt am Feld anzeigen.
-    const parsed = recurringFieldsSchema.safeParse(dauerauftragToWrite(werte));
-    const gefunden: FeldFehler[] = parsed.success
-      ? pruefeDauerauftragRegeln(dauerauftragToWrite(werte), true)
-      : zuFeldFehlern(parsed.error);
+    setSubmitVersucht(true);
+    const werte = werteFuerPruefung(f);
+    const gefunden = validiere(f);
     if (gefunden.length > 0) {
-      setEigeneFehler(gefunden);
       toast.error("Bitte die markierten Felder korrigieren.", {
         description: gefunden.map((x) => `${x.label}: ${x.message}`).join(" · "),
       });
       return;
     }
-    setEigeneFehler([]);
     onSubmit(werte);
   };
 
