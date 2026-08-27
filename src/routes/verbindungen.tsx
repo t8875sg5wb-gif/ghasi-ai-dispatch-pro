@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Archive,
@@ -16,6 +16,7 @@ import {
   Clock,
   Download,
   Search,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -44,6 +45,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { downloadCsv, toCsv } from "@/lib/export-utils";
+import { bewerteMcpAlarm, mcpAlarmId } from "@/lib/mcp-alerting";
+import { pushNotification } from "@/lib/notifications";
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
@@ -211,6 +214,29 @@ function Verbindungen() {
     downloadCsv(`mcp-audit-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   };
 
+  // Alerting: ungefiltertes Fenster, damit ein aktiver Filter keinen Alarm verdeckt.
+  const { data: alarmDaten } = useQuery({
+    queryKey: ["mcp", "alarm"],
+    queryFn: () => ladeMcp({ data: { limit: 200 } }),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    retry: false,
+  });
+  const alarm = alarmDaten ? bewerteMcpAlarm(alarmDaten.aufrufe) : null;
+
+  // Gehäufte Fehler/Abweisungen zusätzlich ins Benachrichtigungszentrum spiegeln.
+  useEffect(() => {
+    if (!alarm || alarm.stufe === "normal") return;
+    pushNotification({
+      id: mcpAlarmId(alarm),
+      stufe: alarm.stufe === "kritisch" ? "kritisch" : "warnung",
+      titel: "Gehäufte Agenten-Fehler (MCP)",
+      text: alarm.text,
+      to: "/verbindungen",
+      quelle: "mcp-alerting",
+    });
+  }, [alarm?.stufe, alarm?.text]);
+
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
 
@@ -327,6 +353,24 @@ function Verbindungen() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-0">
+              {alarm && alarm.stufe !== "normal" && (
+                <div
+                  role="alert"
+                  className={`mx-4 flex items-start gap-2 rounded-lg border p-3 text-sm ${
+                    alarm.stufe === "kritisch"
+                      ? "border-destructive/30 bg-destructive/10 text-destructive"
+                      : "border-warning/30 bg-warning/10 text-warning"
+                  }`}
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">
+                      {alarm.stufe === "kritisch" ? "Kritisch" : "Warnung"}: gehäufte Agenten-Fehler
+                    </p>
+                    <p className="text-xs opacity-90">{alarm.text}</p>
+                  </div>
+                </div>
+              )}
               <div className="grid gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
                   <Label htmlFor="mcp-suche" className="text-xs">
