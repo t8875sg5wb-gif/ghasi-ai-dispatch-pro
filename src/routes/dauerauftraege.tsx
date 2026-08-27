@@ -967,12 +967,10 @@ function DauerauftragForm({
                 </li>
               ))}
             </ul>
-
           </div>
         )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2" id="feld-patient">
-
             <Label>Patient (Stammdaten)</Label>
             <Select
               value={f.patientId ?? KEINE}
