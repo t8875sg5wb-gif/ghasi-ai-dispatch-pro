@@ -87,9 +87,7 @@ function AblehnungenPage() {
       Patient: a.patient ?? "",
       Grund: a.grund,
       "Ziel-ID": a.zielId ?? "",
-      Felder: a.felder
-        .map((f) => `${f.label} (${f.path}): ${f.message}`)
-        .join(" | "),
+      Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
     }));
     const filename = `dauerauftrag-ablehnungen-${new Date().toISOString().slice(0, 10)}.csv`;
     downloadCsv(filename, toCsv(rows));
