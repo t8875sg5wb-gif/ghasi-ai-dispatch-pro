@@ -860,6 +860,27 @@ function DauerauftragForm({
         {fehlerMap[path]}
       </p>
     ) : null;
+
+  /** Scrollt zum fehlerhaften Feld, fokussiert es und hebt es kurz hervor. */
+  const springeZuFeld = (path: string) => {
+    const wurzel = path.split(".")[0] ?? path;
+    const ziel =
+      document.getElementById(`feld-${path}`) ??
+      document.getElementById(`feld-${wurzel}`) ??
+      document.getElementById(`fehler-${path}`);
+    if (!ziel) return;
+    ziel.scrollIntoView({ behavior: "smooth", block: "center" });
+    const fokussierbar = ziel.querySelector<HTMLElement>(
+      "input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])",
+    );
+    fokussierbar?.focus({ preventScroll: true });
+    ziel.classList.add("ring-2", "ring-destructive", "rounded-lg", "ring-offset-2");
+    window.setTimeout(
+      () => ziel.classList.remove("ring-2", "ring-destructive", "rounded-lg", "ring-offset-2"),
+      1600,
+    );
+  };
+
   const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleIdOptions();
   const kundeOpt = useCustomerOptions();
@@ -934,15 +955,22 @@ function DauerauftragForm({
             <ul className="mt-1 space-y-0.5 text-destructive">
               {fehler.map((x) => (
                 <li key={x.path}>
-                  <span className="font-medium">{x.label}</span>{" "}
-                  <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                  <button
+                    type="button"
+                    onClick={() => springeZuFeld(x.path)}
+                    className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
+                    aria-label={`Zum Feld ${x.label} springen`}
+                  >
+                    <span className="font-medium">{x.label}</span>{" "}
+                    <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2" id="feld-patient">
             <Label>Patient (Stammdaten)</Label>
             <Select
               value={f.patientId ?? KEINE}
@@ -992,7 +1020,7 @@ function DauerauftragForm({
               </p>
             )}
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2" id="feld-pickup">
             <AddressFields
               idPrefix="dauer-pickup"
               label="Pickup"
@@ -1003,7 +1031,7 @@ function DauerauftragForm({
             <FeldFehlerText path="pickup" />
             <FeldFehlerText path="pickup.postalCode" />
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2" id="feld-destination">
             <AddressFields
               idPrefix="dauer-destination"
               label="Destination"
@@ -1067,7 +1095,7 @@ function DauerauftragForm({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div id="feld-terminzeit">
               <Label>Uhrzeit Hinfahrt</Label>
               <Input
                 type="time"
@@ -1077,7 +1105,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="terminzeit" />
             </div>
-            <div>
+            <div id="feld-rueckfahrtzeit">
               <Label>Uhrzeit Rückfahrt</Label>
               <Input
                 type="time"
@@ -1090,7 +1118,7 @@ function DauerauftragForm({
             </div>
           </div>
           {f.rhythmus === "woechentlich" && (
-            <div className="mt-3">
+            <div className="mt-3" id="feld-wochentage">
               <Label>Wochentage</Label>
               <div className="mt-1 flex flex-wrap gap-1">
                 {WOCHENTAGE.map((w) => (
@@ -1110,7 +1138,7 @@ function DauerauftragForm({
             </div>
           )}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
+            <div id="feld-startDatum">
               <Label>Startdatum</Label>
               <Input
                 type="date"
@@ -1120,7 +1148,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="startDatum" />
             </div>
-            <div>
+            <div id="feld-endDatum">
               <Label>Enddatum (optional)</Label>
               <Input
                 type="date"
@@ -1130,7 +1158,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="endDatum" />
             </div>
-            <div>
+            <div id="feld-pauseVon">
               <Label>Pause von (optional)</Label>
               <Input
                 type="date"
@@ -1140,7 +1168,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="pauseVon" />
             </div>
-            <div>
+            <div id="feld-pauseBis">
               <Label>Pause bis (optional)</Label>
               <Input
                 type="date"
