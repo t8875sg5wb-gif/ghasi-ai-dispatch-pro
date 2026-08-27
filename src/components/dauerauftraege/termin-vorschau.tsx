@@ -97,7 +97,7 @@ export function TerminVorschau({
           <CalendarClock className="size-4 text-primary" aria-hidden="true" />
           Terminvorschau
         </h3>
-        {termine.length > 0 && (
+        {serienFehler.length === 0 && termine.length > 0 && (
           <Badge variant="secondary">
             {termine.length === MAX_TERMINE ? `erste ${MAX_TERMINE}` : `${termine.length}`} Termine
             · {termine.length * fahrtenJeTermin} Fahrten
