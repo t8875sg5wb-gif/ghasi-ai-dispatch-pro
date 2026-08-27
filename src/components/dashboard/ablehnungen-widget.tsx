@@ -84,9 +84,7 @@ export function AblehnungenWidget() {
               <div className="rounded-lg border p-3">
                 <p className="text-xs text-muted-foreground">Ablehnungen</p>
                 <p className="text-xl font-semibold">{kennzahlen.abgelehnt}</p>
-                <p className="text-xs text-muted-foreground">
-                  von {kennzahlen.versuche} Versuchen
-                </p>
+                <p className="text-xs text-muted-foreground">von {kennzahlen.versuche} Versuchen</p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="text-xs text-muted-foreground">Ø Korrekturdauer</p>

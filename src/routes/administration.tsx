@@ -25,6 +25,7 @@ import { listeBenutzer, setzeRolle, type BenutzerEintrag } from "@/lib/admin.fun
 import { ROLE_LABELS, ROLE_BESCHREIBUNG, ROLE_BEREICHE, type AppRole } from "@/lib/roles";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
+import { AblehnungenWidget } from "@/components/dashboard/ablehnungen-widget";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,6 +93,7 @@ function AdministrationSeite() {
         </Card>
       ) : (
         <>
+          <AblehnungenWidget />
           <Benutzerverwaltung />
           <Rollenmatrix />
           <Datensicherung />

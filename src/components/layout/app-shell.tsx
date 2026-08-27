@@ -3,6 +3,7 @@ import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useRejectionAlerts } from "@/hooks/use-rejection-alerts";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useGlobalSearchHotkey(setSearchOpen);
   const orders = useHydrateStores();
   useOrderNotificationSync(orders.data);
+  useRejectionAlerts();
 
   // Drivers (only the "fahrer" role) land on the simplified mobile view.
   const nurFahrer = rollenGeladen && rollen.length === 1 && rollen[0] === "fahrer";
