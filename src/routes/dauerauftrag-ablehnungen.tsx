@@ -76,6 +76,35 @@ function AblehnungenPage() {
     return [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [data]);
 
+  const gruende = useMemo(() => {
+    const map = new Map<string, typeof data>();
+    for (const a of data) {
+      const liste = map.get(a.grund) ?? [];
+      liste.push(a);
+      map.set(a.grund, liste);
+    }
+    return [...map.entries()]
+      .map(([grund, eintraege]) => {
+        const pfade = new Map<string, { anzahl: number; label: string }>();
+        for (const e of eintraege)
+          for (const f of e.felder) {
+            const vorher = pfade.get(f.path);
+            pfade.set(f.path, { anzahl: (vorher?.anzahl ?? 0) + 1, label: f.label });
+          }
+        return {
+          grund,
+          eintraege,
+          topPfade: [...pfade.entries()]
+            .sort((a, b) => b[1].anzahl - a[1].anzahl)
+            .slice(0, 5)
+            .map(([path, info]) => ({ path, ...info })),
+        };
+      })
+      .sort((a, b) => b.eintraege.length - a.eintraege.length);
+  }, [data]);
+
+  const [offenerGrund, setOffenerGrund] = useState<string | null>(null);
+
   const exportiereCsv = () => {
     if (data.length === 0) {
       toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
