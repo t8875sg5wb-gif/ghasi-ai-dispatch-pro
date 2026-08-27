@@ -211,6 +211,30 @@ function Verbindungen() {
     downloadCsv(`mcp-audit-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   };
 
+  // Alerting: ungefiltertes Fenster, damit ein aktiver Filter keinen Alarm verdeckt.
+  const { data: alarmDaten } = useQuery({
+    queryKey: ["mcp", "alarm"],
+    queryFn: () => ladeMcp({ data: { limit: 200 } }),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    retry: false,
+  });
+  const alarm = alarmDaten ? bewerteMcpAlarm(alarmDaten.aufrufe) : null;
+
+  // Gehäufte Fehler/Abweisungen zusätzlich ins Benachrichtigungszentrum spiegeln.
+  useEffect(() => {
+    if (!alarm || alarm.stufe === "normal") return;
+    pushNotification({
+      id: mcpAlarmId(alarm),
+      stufe: alarm.stufe === "kritisch" ? "kritisch" : "warnung",
+      titel: "Gehäufte Agenten-Fehler (MCP)",
+      text: alarm.text,
+      to: "/verbindungen",
+      quelle: "mcp-alerting",
+    });
+  }, [alarm?.stufe, alarm?.text]);
+
+
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
 
