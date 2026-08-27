@@ -3,7 +3,7 @@
 // übersprungenen Tagen tatsächlich entstehen. Rein clientseitige Ableitung –
 // identische Logik wie die Transport-Erzeugung (src/lib/dauerauftraege.ts).
 import { useMemo } from "react";
-import { CalendarClock, PauseCircle } from "lucide-react";
+import { AlertTriangle, CalendarClock, PauseCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +23,21 @@ const FENSTER_TAGE = 120;
 
 type Ausgeschlossen = { iso: string; grund: string };
 
+/** Live gemeldeter Regelfehler (Feldpfad + Meldung) aus der Formularvalidierung. */
+export type RegelFehler = { path: string; label: string; message: string };
+
+/** Feldpfade, die die Serienregel bestimmen – nur diese blockieren die Vorschau. */
+export const SERIEN_FELDER = [
+  "startDatum",
+  "endDatum",
+  "wochentage",
+  "pauseVon",
+  "pauseBis",
+  "rhythmus",
+  "terminzeit",
+  "rueckfahrtzeit",
+];
+
 function grundFuer(d: Dauerauftrag, iso: string): string | null {
   if (d.pauseVon && d.pauseBis && iso >= d.pauseVon && iso <= d.pauseBis) return "Pausenzeitraum";
   if (d.uebersprungeneTermine.includes(iso)) return "manuell übersprungen";
@@ -30,8 +45,19 @@ function grundFuer(d: Dauerauftrag, iso: string): string | null {
   return null;
 }
 
-export function TerminVorschau({ dauerauftrag }: { dauerauftrag: Dauerauftrag }) {
+export function TerminVorschau({
+  dauerauftrag,
+  regelFehler = [],
+  onFehlerKlick,
+}: {
+  dauerauftrag: Dauerauftrag;
+  regelFehler?: RegelFehler[];
+  onFehlerKlick?: (path: string) => void;
+}) {
   const d = dauerauftrag;
+  const serienFehler = regelFehler.filter((x) =>
+    SERIEN_FELDER.includes(x.path.split(".")[0] ?? x.path),
+  );
   const gueltigeEingabe =
     ISO.test(d.startDatum ?? "") &&
     (!d.endDatum || ISO.test(d.endDatum)) &&
@@ -71,7 +97,7 @@ export function TerminVorschau({ dauerauftrag }: { dauerauftrag: Dauerauftrag })
           <CalendarClock className="size-4 text-primary" aria-hidden="true" />
           Terminvorschau
         </h3>
-        {termine.length > 0 && (
+        {serienFehler.length === 0 && termine.length > 0 && (
           <Badge variant="secondary">
             {termine.length === MAX_TERMINE ? `erste ${MAX_TERMINE}` : `${termine.length}`} Termine
             · {termine.length * fahrtenJeTermin} Fahrten
@@ -79,7 +105,31 @@ export function TerminVorschau({ dauerauftrag }: { dauerauftrag: Dauerauftrag })
         )}
       </div>
 
-      {!gueltigeEingabe ? (
+      {serienFehler.length > 0 && (
+        <ul className="space-y-1 pt-2" data-testid="termin-vorschau-fehler">
+          {serienFehler.map((x) => (
+            <li key={`${x.path}-${x.message}`}>
+              <button
+                type="button"
+                onClick={() => onFehlerKlick?.(x.path)}
+                className="flex w-full items-start gap-2 rounded text-left text-xs font-medium text-destructive underline-offset-2 hover:underline"
+              >
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                <span>
+                  {x.label}: {x.message}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {serienFehler.length > 0 ? (
+        <p className="pt-2 text-xs text-muted-foreground">
+          Die Serienregel ist derzeit ungültig – die Vorschau aktualisiert sich, sobald die
+          markierten Felder korrigiert sind.
+        </p>
+      ) : !gueltigeEingabe ? (
         <p className="pt-2 text-xs text-muted-foreground">
           Bitte Startdatum
           {d.rhythmus === "woechentlich" ? " und mindestens einen Wochentag" : ""} angeben – dann
