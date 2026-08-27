@@ -860,6 +860,27 @@ function DauerauftragForm({
         {fehlerMap[path]}
       </p>
     ) : null;
+
+  /** Scrollt zum fehlerhaften Feld, fokussiert es und hebt es kurz hervor. */
+  const springeZuFeld = (path: string) => {
+    const wurzel = path.split(".")[0] ?? path;
+    const ziel =
+      document.getElementById(`feld-${path}`) ??
+      document.getElementById(`feld-${wurzel}`) ??
+      document.getElementById(`fehler-${path}`);
+    if (!ziel) return;
+    ziel.scrollIntoView({ behavior: "smooth", block: "center" });
+    const fokussierbar = ziel.querySelector<HTMLElement>(
+      "input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex='-1'])",
+    );
+    fokussierbar?.focus({ preventScroll: true });
+    ziel.classList.add("ring-2", "ring-destructive", "rounded-lg", "ring-offset-2");
+    window.setTimeout(
+      () => ziel.classList.remove("ring-2", "ring-destructive", "rounded-lg", "ring-offset-2"),
+      1600,
+    );
+  };
+
   const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleIdOptions();
   const kundeOpt = useCustomerOptions();
