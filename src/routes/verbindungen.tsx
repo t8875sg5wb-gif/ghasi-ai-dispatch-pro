@@ -237,7 +237,6 @@ function Verbindungen() {
     });
   }, [alarm?.stufe, alarm?.text]);
 
-
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
 
