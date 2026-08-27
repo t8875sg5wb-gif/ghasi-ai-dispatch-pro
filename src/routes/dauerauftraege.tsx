@@ -1328,7 +1328,11 @@ function DauerauftragForm({
           />
         </div>
 
-        <TerminVorschau dauerauftrag={f} />
+        <TerminVorschau
+          dauerauftrag={f}
+          regelFehler={fehler}
+          onFehlerKlick={springeZuFeld}
+        />
 
         <div id="feld-notiz">
           <Label>Notiz</Label>
