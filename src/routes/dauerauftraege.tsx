@@ -924,6 +924,7 @@ function DauerauftragForm({
       toast.error("Bitte die markierten Felder korrigieren.", {
         description: gefunden.map((x) => `${x.label}: ${x.message}`).join(" · "),
       });
+      window.setTimeout(() => springeZuFeld(gefunden[0].path), 0);
       return;
     }
     onSubmit(werte);
@@ -1042,7 +1043,7 @@ function DauerauftragForm({
             <FeldFehlerText path="destination" />
             <FeldFehlerText path="destination.postalCode" />
           </div>
-          <div>
+          <div id="feld-kategorie">
             <Label>Kategorie</Label>
             <Select
               value={f.kategorie}
@@ -1060,7 +1061,7 @@ function DauerauftragForm({
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div id="feld-mobilitaet">
             <Label>Mobilität</Label>
             <Select value={f.mobilitaet} onValueChange={(v) => set("mobilitaet", v as Mobilitaet)}>
               <SelectTrigger>
@@ -1080,7 +1081,7 @@ function DauerauftragForm({
         {/* Wiederholung */}
         <div className="rounded-lg border p-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div>
+            <div id="feld-rhythmus">
               <Label>Rhythmus</Label>
               <Select value={f.rhythmus} onValueChange={(v) => set("rhythmus", v as Rhythmus)}>
                 <SelectTrigger>
@@ -1183,7 +1184,7 @@ function DauerauftragForm({
 
         {/* Abrechnung & Präferenzen */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
+          <div id="feld-kostentraeger">
             <Label>Abrechnungskunde</Label>
             <Select value={f.kostentraeger} onValueChange={(v) => set("kostentraeger", v)}>
               <SelectTrigger>
@@ -1204,7 +1205,7 @@ function DauerauftragForm({
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div id="feld-krankenkasse">
             <Label>Krankenkasse</Label>
             <Select
               value={f.insurerId ?? KEINE}
@@ -1246,7 +1247,7 @@ function DauerauftragForm({
               placeholder="z. B. AOK Nordost"
             />
           </div>
-          <div>
+          <div id="feld-bevorzugtesFahrzeugId">
             <Label>Bevorzugtes Fahrzeug</Label>
             {f.bevorzugtesFahrzeug && !f.bevorzugtesFahrzeugId && (
               <p className="text-xs text-amber-600 dark:text-amber-500">
@@ -1271,7 +1272,7 @@ function DauerauftragForm({
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div id="feld-bevorzugterFahrerId">
             <Label>Bevorzugter Fahrer</Label>
             {f.bevorzugterFahrer && !f.bevorzugterFahrerId && (
               <p className="text-xs text-amber-600 dark:text-amber-500">
@@ -1329,11 +1330,11 @@ function DauerauftragForm({
 
         <TerminVorschau dauerauftrag={f} />
 
-        <div>
+        <div id="feld-notiz">
           <Label>Notiz</Label>
           <Textarea value={f.notiz} onChange={(e) => set("notiz", e.target.value)} rows={2} />
         </div>
-        <div>
+        <div id="feld-medizinischeNotiz">
           <Label>Medizinische Notiz</Label>
           <Textarea
             value={f.medizinischeNotiz}
