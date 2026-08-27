@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, Download, Loader2, RefreshCw, ShieldAlert } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Download,
+  Loader2,
+  RefreshCw,
+  ShieldAlert,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -195,8 +202,7 @@ function AblehnungenPage() {
                     />
                     <span className="text-sm font-medium">{g.grund}</span>
                     <Badge variant="secondary" className="ml-auto">
-                      {g.eintraege.length}{" "}
-                      {g.eintraege.length === 1 ? "Vorgang" : "Vorgänge"}
+                      {g.eintraege.length} {g.eintraege.length === 1 ? "Vorgang" : "Vorgänge"}
                     </Badge>
                   </button>
                   {offen && (
@@ -233,9 +239,7 @@ function AblehnungenPage() {
                                 {AKTION_LABEL[e.aktion] ?? e.aktion}
                               </span>
                               {e.zielId && (
-                                <span className="text-muted-foreground">
-                                  Datensatz: {e.zielId}
-                                </span>
+                                <span className="text-muted-foreground">Datensatz: {e.zielId}</span>
                               )}
                               <span className="ml-auto text-muted-foreground">
                                 {formatZeit(e.zeitpunkt)}
