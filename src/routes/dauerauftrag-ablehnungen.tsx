@@ -76,6 +76,26 @@ function AblehnungenPage() {
     return [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [data]);
 
+  const exportiereCsv = () => {
+    if (data.length === 0) {
+      toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
+      return;
+    }
+    const rows = data.map((a) => ({
+      Zeitpunkt: formatZeit(a.zeitpunkt),
+      Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
+      Patient: a.patient ?? "",
+      Grund: a.grund,
+      "Ziel-ID": a.zielId ?? "",
+      Felder: a.felder
+        .map((f) => `${f.label} (${f.path}): ${f.message}`)
+        .join(" | "),
+    }));
+    const filename = `dauerauftrag-ablehnungen-${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCsv(filename, toCsv(rows));
+    toast.success("CSV-Export wurde heruntergeladen.");
+  };
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -103,6 +123,10 @@ function AblehnungenPage() {
             <RefreshCw className="size-4" />
           )}
           Aktualisieren
+        </Button>
+        <Button variant="outline" onClick={exportiereCsv}>
+          <Download className="size-4" />
+          CSV-Export
         </Button>
         <Badge variant="secondary">{data.length} Einträge</Badge>
       </div>
