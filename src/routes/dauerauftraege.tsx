@@ -1001,7 +1001,7 @@ function DauerauftragForm({
               </p>
             )}
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2" id="feld-pickup">
             <AddressFields
               idPrefix="dauer-pickup"
               label="Pickup"
@@ -1012,7 +1012,7 @@ function DauerauftragForm({
             <FeldFehlerText path="pickup" />
             <FeldFehlerText path="pickup.postalCode" />
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2" id="feld-destination">
             <AddressFields
               idPrefix="dauer-destination"
               label="Destination"
@@ -1076,7 +1076,7 @@ function DauerauftragForm({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div id="feld-terminzeit">
               <Label>Uhrzeit Hinfahrt</Label>
               <Input
                 type="time"
@@ -1086,7 +1086,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="terminzeit" />
             </div>
-            <div>
+            <div id="feld-rueckfahrtzeit">
               <Label>Uhrzeit Rückfahrt</Label>
               <Input
                 type="time"
@@ -1099,7 +1099,7 @@ function DauerauftragForm({
             </div>
           </div>
           {f.rhythmus === "woechentlich" && (
-            <div className="mt-3">
+            <div className="mt-3" id="feld-wochentage">
               <Label>Wochentage</Label>
               <div className="mt-1 flex flex-wrap gap-1">
                 {WOCHENTAGE.map((w) => (
@@ -1119,7 +1119,7 @@ function DauerauftragForm({
             </div>
           )}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
+            <div id="feld-startDatum">
               <Label>Startdatum</Label>
               <Input
                 type="date"
@@ -1129,7 +1129,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="startDatum" />
             </div>
-            <div>
+            <div id="feld-endDatum">
               <Label>Enddatum (optional)</Label>
               <Input
                 type="date"
@@ -1139,7 +1139,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="endDatum" />
             </div>
-            <div>
+            <div id="feld-pauseVon">
               <Label>Pause von (optional)</Label>
               <Input
                 type="date"
@@ -1149,7 +1149,7 @@ function DauerauftragForm({
               />
               <FeldFehlerText path="pauseVon" />
             </div>
-            <div>
+            <div id="feld-pauseBis">
               <Label>Pause bis (optional)</Label>
               <Input
                 type="date"
