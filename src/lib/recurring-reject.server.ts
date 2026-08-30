@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { z } from "zod";
 
+import { bereinigeEingaben } from "@/lib/recurring-rejection-detail";
 import { kodiereFeldFehler, zuFeldFehlern, type FeldFehler } from "@/lib/recurring-validation";
 
 export type AblehnungsAktion = "create" | "update" | "delete" | "generate";
@@ -49,6 +50,7 @@ export async function protokolliereAblehnung(
       patient: patientAus(data),
       grund,
       felder,
+      eingaben: bereinigeEingaben(data),
     });
   } catch {
     // Protokollierung ist best effort – die Validierungsmeldung hat Vorrang.

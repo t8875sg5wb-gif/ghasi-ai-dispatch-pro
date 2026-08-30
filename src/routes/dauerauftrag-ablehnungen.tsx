@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -320,6 +320,14 @@ function AblehnungenPage() {
                   {a.zielId && (
                     <p className="pt-1 text-xs text-muted-foreground">Datensatz: {a.zielId}</p>
                   )}
+                  <div className="pt-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/dauerauftrag-ablehnung/$id" params={{ id: a.id }}>
+                        Details ansehen
+                        <ChevronRight className="size-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
