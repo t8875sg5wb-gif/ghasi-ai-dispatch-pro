@@ -7,7 +7,10 @@ import { PageHero } from "@/components/enterprise/page-hero";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getRecurringRejection } from "@/lib/recurring-rejections.functions";
+import {
+  getRecurringRejection,
+  type DauerauftragAblehnungDetail,
+} from "@/lib/recurring-rejections.functions";
 import { feldLabel } from "@/lib/recurring-validation";
 import { regelErklaerung } from "@/lib/recurring-rejection-detail";
 
@@ -53,12 +56,20 @@ function formatWert(wert: unknown): string {
 function AblehnungDetailPage() {
   const { id } = Route.useParams();
   const laden = useServerFn(getRecurringRejection);
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<DauerauftragAblehnungDetail>({
     queryKey: ["recurring_rejection", id],
     queryFn: () => laden({ data: { id } }),
   });
 
-  const eintraege = data ? Object.entries(data.eingaben) : [];
+  let eingaben: Record<string, unknown> = {};
+  try {
+    const geparst = data ? (JSON.parse(data.eingabenJson) as unknown) : {};
+    if (geparst && typeof geparst === "object" && !Array.isArray(geparst))
+      eingaben = geparst as Record<string, unknown>;
+  } catch {
+    eingaben = {};
+  }
+  const eintraege = Object.entries(eingaben);
   const fehlerPfade = new Set((data?.felder ?? []).map((f) => f.path.split(".")[0]));
 
   return (

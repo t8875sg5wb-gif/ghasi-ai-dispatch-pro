@@ -18,8 +18,8 @@ export type DauerauftragAblehnung = {
 };
 
 export type DauerauftragAblehnungDetail = DauerauftragAblehnung & {
-  /** Bereinigte Eingabewerte (ohne sensible Inhalte). */
-  eingaben: Record<string, unknown>;
+  /** Bereinigte Eingabewerte als JSON-Text (RPC-Transport ist typsicher nur für Primitive). */
+  eingabenJson: string;
 };
 
 type Row = {
@@ -97,6 +97,6 @@ export const getRecurringRejection = createServerFn({ method: "GET" })
       patient: r.patient,
       grund: r.grund,
       felder: Array.isArray(r.felder) ? (r.felder as FeldFehler[]) : [],
-      eingaben,
+      eingabenJson: JSON.stringify(eingaben),
     };
   });
