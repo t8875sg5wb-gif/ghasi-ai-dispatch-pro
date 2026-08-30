@@ -121,16 +121,28 @@ function AblehnungenPage() {
     }
     const rows = data.map((a) => ({
       Zeitpunkt: formatZeit(a.zeitpunkt),
+      Zeitraum: `Letzte ${tage} Tage`,
       Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
       Patient: a.patient ?? "",
       Grund: a.grund,
       "Ziel-ID": a.zielId ?? "",
       Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
     }));
-    const filename = `dauerauftrag-ablehnungen-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.csv`;
     downloadCsv(filename, toCsv(rows));
     toast.success("CSV-Export wurde heruntergeladen.");
   };
+
+  const exportierePdf = () => {
+    if (data.length === 0) {
+      toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
+      return;
+    }
+    const doc = generateAblehnungenPdf(data, { tage: Number(tage) });
+    doc.save(`dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success("PDF-Export wurde heruntergeladen.");
+  };
+
 
   return (
     <div className="space-y-6">
