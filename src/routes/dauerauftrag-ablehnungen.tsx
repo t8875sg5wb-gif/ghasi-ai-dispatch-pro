@@ -143,7 +143,6 @@ function AblehnungenPage() {
     toast.success("PDF-Export wurde heruntergeladen.");
   };
 
-
   return (
     <div className="space-y-6">
       <PageHero
