@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Download,
+  FileText,
   Loader2,
   RefreshCw,
   ShieldAlert,
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toCsv, downloadCsv } from "@/lib/export-utils";
+import { generateAblehnungenPdf } from "@/lib/ablehnungen-pdf";
 import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
 
 export const Route = createFileRoute("/dauerauftrag-ablehnungen")({
@@ -119,15 +121,26 @@ function AblehnungenPage() {
     }
     const rows = data.map((a) => ({
       Zeitpunkt: formatZeit(a.zeitpunkt),
+      Zeitraum: `Letzte ${tage} Tage`,
       Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
       Patient: a.patient ?? "",
       Grund: a.grund,
       "Ziel-ID": a.zielId ?? "",
       Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
     }));
-    const filename = `dauerauftrag-ablehnungen-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.csv`;
     downloadCsv(filename, toCsv(rows));
     toast.success("CSV-Export wurde heruntergeladen.");
+  };
+
+  const exportierePdf = () => {
+    if (data.length === 0) {
+      toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
+      return;
+    }
+    const doc = generateAblehnungenPdf(data, { tage: Number(tage) });
+    doc.save(`dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success("PDF-Export wurde heruntergeladen.");
   };
 
   return (
@@ -162,6 +175,11 @@ function AblehnungenPage() {
           <Download className="size-4" />
           CSV-Export
         </Button>
+        <Button variant="outline" onClick={exportierePdf}>
+          <FileText className="size-4" />
+          PDF-Export
+        </Button>
+
         <Badge variant="secondary">{data.length} Einträge</Badge>
       </div>
 
