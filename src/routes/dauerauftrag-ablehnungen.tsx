@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Download,
+  FileText,
   Loader2,
   RefreshCw,
   ShieldAlert,
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toCsv, downloadCsv } from "@/lib/export-utils";
+import { generateAblehnungenPdf } from "@/lib/ablehnungen-pdf";
 import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
 
 export const Route = createFileRoute("/dauerauftrag-ablehnungen")({
