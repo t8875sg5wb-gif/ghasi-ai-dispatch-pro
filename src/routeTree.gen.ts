@@ -65,6 +65,7 @@ import { Route as AdministrationRouteImport } from './routes/administration'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as KiAssistentIndexRouteImport } from './routes/ki-assistent.index'
 import { Route as KiAssistentThreadIdRouteImport } from './routes/ki-assistent.$threadId'
+import { Route as DauerauftragAblehnungIdRouteImport } from './routes/dauerauftrag-ablehnung.$id'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -353,6 +354,11 @@ const KiAssistentThreadIdRoute = KiAssistentThreadIdRouteImport.update({
   path: '/$threadId',
   getParentRoute: () => KiAssistentRoute,
 } as any)
+const DauerauftragAblehnungIdRoute = DauerauftragAblehnungIdRouteImport.update({
+  id: '/dauerauftrag-ablehnung/$id',
+  path: '/dauerauftrag-ablehnung/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -445,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/dauerauftrag-ablehnung/$id': typeof DauerauftragAblehnungIdRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/dauerauftrag-ablehnung/$id': typeof DauerauftragAblehnungIdRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent': typeof KiAssistentIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/dauerauftrag-ablehnung/$id': typeof DauerauftragAblehnungIdRoute
   '/ki-assistent/$threadId': typeof KiAssistentThreadIdRoute
   '/ki-assistent/': typeof KiAssistentIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -639,6 +648,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/dauerauftrag-ablehnung/$id'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
     | '/.lovable/oauth/consent'
@@ -702,6 +712,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/dauerauftrag-ablehnung/$id'
     | '/ki-assistent/$threadId'
     | '/ki-assistent'
     | '/.lovable/oauth/consent'
@@ -766,6 +777,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/dauerauftrag-ablehnung/$id'
     | '/ki-assistent/$threadId'
     | '/ki-assistent/'
     | '/.lovable/oauth/consent'
@@ -831,6 +843,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  DauerauftragAblehnungIdRoute: typeof DauerauftragAblehnungIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiDocumentsUploadRoute: typeof ApiDocumentsUploadRoute
@@ -1230,6 +1243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KiAssistentThreadIdRouteImport
       parentRoute: typeof KiAssistentRoute
     }
+    '/dauerauftrag-ablehnung/$id': {
+      id: '/dauerauftrag-ablehnung/$id'
+      path: '/dauerauftrag-ablehnung/$id'
+      fullPath: '/dauerauftrag-ablehnung/$id'
+      preLoaderRoute: typeof DauerauftragAblehnungIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -1348,6 +1368,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  DauerauftragAblehnungIdRoute: DauerauftragAblehnungIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiDocumentsUploadRoute: ApiDocumentsUploadRoute,
