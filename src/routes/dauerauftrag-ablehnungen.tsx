@@ -176,6 +176,11 @@ function AblehnungenPage() {
           <Download className="size-4" />
           CSV-Export
         </Button>
+        <Button variant="outline" onClick={exportierePdf}>
+          <FileText className="size-4" />
+          PDF-Export
+        </Button>
+
         <Badge variant="secondary">{data.length} Einträge</Badge>
       </div>
 
