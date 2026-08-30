@@ -17,6 +17,11 @@ export type DauerauftragAblehnung = {
   felder: FeldFehler[];
 };
 
+export type DauerauftragAblehnungDetail = DauerauftragAblehnung & {
+  /** Bereinigte Eingabewerte (ohne sensible Inhalte). */
+  eingaben: Record<string, unknown>;
+};
+
 type Row = {
   id: string;
   created_at: string;
