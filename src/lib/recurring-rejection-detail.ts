@@ -74,7 +74,8 @@ export function bereinigeEingaben(data: unknown): Record<string, unknown> {
 /** Regelerklärungen pro Feldpfad (Klartext, ohne Technikjargon). */
 const REGEL_ERKLAERUNG: Record<string, string> = {
   patient: "Ein Dauerauftrag wird nur gespeichert, wenn ein Patientenname angegeben ist.",
-  patientId: "Die angegebene Patienten-Verknüpfung muss auf einen bestehenden Stammdatensatz zeigen.",
+  patientId:
+    "Die angegebene Patienten-Verknüpfung muss auf einen bestehenden Stammdatensatz zeigen.",
   insurerId: "Die Krankenkasse muss als Stammdatensatz existieren; freie IDs werden abgewiesen.",
   pickup:
     "Die Abholadresse muss mindestens Straße, PLZ oder Ort enthalten – vollständig leere Adressen werden abgewiesen.",
