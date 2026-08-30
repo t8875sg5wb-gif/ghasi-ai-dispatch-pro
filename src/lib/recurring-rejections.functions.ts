@@ -64,3 +64,39 @@ export const listRecurringRejections = createServerFn({ method: "GET" })
       felder: Array.isArray(r.felder) ? (r.felder as FeldFehler[]) : [],
     }));
   });
+
+const detailSchema = z.object({ id: z.string().uuid() }).strict();
+
+/**
+ * Einzelne Ablehnung inkl. bereinigter Eingabewerte (Admin-Detailansicht).
+ * RLS lässt SELECT nur für Administratoren zu.
+ */
+export const getRecurringRejection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { id: string }) => detailSchema.parse(data))
+  .handler(async ({ data, context }): Promise<DauerauftragAblehnungDetail> => {
+    const { data: row, error } = await context.supabase
+      .from("recurring_rejections")
+      .select("id, created_at, aktion, ziel_id, patient, grund, felder, eingaben")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Ablehnung nicht gefunden oder kein Zugriff.");
+    const r = row as unknown as Row & { eingaben: unknown };
+    const eingaben =
+      r.eingaben && typeof r.eingaben === "object" && !Array.isArray(r.eingaben)
+        ? (r.eingaben as Record<string, unknown>)
+        : {};
+    return {
+      id: r.id,
+      zeitpunkt: r.created_at,
+      aktion: (["create", "update", "delete", "generate"].includes(r.aktion)
+        ? r.aktion
+        : "create") as DauerauftragAblehnung["aktion"],
+      zielId: r.ziel_id,
+      patient: r.patient,
+      grund: r.grund,
+      felder: Array.isArray(r.felder) ? (r.felder as FeldFehler[]) : [],
+      eingaben,
+    };
+  });
