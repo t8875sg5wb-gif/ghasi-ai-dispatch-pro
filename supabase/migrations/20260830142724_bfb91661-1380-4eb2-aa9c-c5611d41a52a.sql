@@ -1,0 +1,1 @@
+ALTER TABLE public.recurring_rejections ADD COLUMN IF NOT EXISTS eingaben jsonb NOT NULL DEFAULT '{}'::jsonb;

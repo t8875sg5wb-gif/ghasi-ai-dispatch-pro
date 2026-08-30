@@ -2302,6 +2302,7 @@ export type Database = {
         Row: {
           aktion: string
           created_at: string
+          eingaben: Json
           felder: Json
           grund: string
           id: string
@@ -2312,6 +2313,7 @@ export type Database = {
         Insert: {
           aktion: string
           created_at?: string
+          eingaben?: Json
           felder?: Json
           grund: string
           id?: string
@@ -2322,6 +2324,7 @@ export type Database = {
         Update: {
           aktion?: string
           created_at?: string
+          eingaben?: Json
           felder?: Json
           grund?: string
           id?: string
