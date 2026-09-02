@@ -24,6 +24,7 @@ import {
 
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ExecutiveHealth } from "@/components/dashboard/executive-health";
+import { AblehnungenWidget } from "@/components/dashboard/ablehnungen-widget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
