@@ -322,6 +322,9 @@ function Dashboard() {
       {/* Executive Business Health */}
       <ExecutiveHealth />
 
+      {/* Dauerauftrag-Ablehnungen (nur für Administratoren sichtbar) */}
+      <AblehnungenWidget />
+
       {/* Dringende, nicht zugewiesene Aufträge */}
       <UnassignedAlerts auftraege={auftraege} />
 
