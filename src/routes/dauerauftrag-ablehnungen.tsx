@@ -91,10 +91,7 @@ function AblehnungenPage() {
   const [aktionen, setAktionen] = useState<string[]>([]);
   const [feldpfade, setFeldpfade] = useState<string[]>([]);
 
-  const aktionFacetten = useMemo(
-    () => aktionsFacetten(data, (a) => AKTION_LABEL[a] ?? a),
-    [data],
-  );
+  const aktionFacetten = useMemo(() => aktionsFacetten(data, (a) => AKTION_LABEL[a] ?? a), [data]);
   const pfadFacetten = useMemo(() => feldpfadFacetten(data), [data]);
   const gefiltert = useMemo(
     () => filtereAblehnungen(data, { suche, aktionen, feldpfade }),

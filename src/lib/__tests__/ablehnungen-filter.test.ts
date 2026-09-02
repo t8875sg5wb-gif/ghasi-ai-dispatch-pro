@@ -42,7 +42,9 @@ describe("filtereAblehnungen", () => {
     expect(filtereAblehnungen(daten, { suche: "murat", aktionen: [], feldpfade: [] })).toHaveLength(
       1,
     );
-    expect(filtereAblehnungen(daten, { suche: "tk", aktionen: [], feldpfade: [] })[0]?.id).toBe("b");
+    expect(filtereAblehnungen(daten, { suche: "tk", aktionen: [], feldpfade: [] })[0]?.id).toBe(
+      "b",
+    );
     expect(
       filtereAblehnungen(daten, { suche: "klinikum nord", aktionen: [], feldpfade: [] })[0]?.id,
     ).toBe("a");
@@ -76,14 +78,16 @@ describe("filtereAblehnungen", () => {
 
 describe("Facetten", () => {
   it("zählt Aktionen und Feldpfade", () => {
-    expect(aktionsFacetten(daten, (a) => a).map((f) => f.wert).sort()).toEqual([
-      "create",
-      "update",
-    ]);
-    expect(feldpfadFacetten(daten).map((f) => f.wert).sort()).toEqual([
-      "terminzeit",
-      "wochentage",
-    ]);
+    expect(
+      aktionsFacetten(daten, (a) => a)
+        .map((f) => f.wert)
+        .sort(),
+    ).toEqual(["create", "update"]);
+    expect(
+      feldpfadFacetten(daten)
+        .map((f) => f.wert)
+        .sort(),
+    ).toEqual(["terminzeit", "wochentage"]);
     expect(feldpfadFacetten(daten)[0]?.anzahl).toBe(1);
   });
 

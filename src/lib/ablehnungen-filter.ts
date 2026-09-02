@@ -41,10 +41,7 @@ export function filtereAblehnungen(
     .filter(Boolean);
   return eintraege.filter((a) => {
     if (filter.aktionen.length > 0 && !filter.aktionen.includes(a.aktion)) return false;
-    if (
-      filter.feldpfade.length > 0 &&
-      !a.felder.some((f) => filter.feldpfade.includes(f.path))
-    )
+    if (filter.feldpfade.length > 0 && !a.felder.some((f) => filter.feldpfade.includes(f.path)))
       return false;
     if (begriffe.length === 0) return true;
     const text = suchtext(a);
