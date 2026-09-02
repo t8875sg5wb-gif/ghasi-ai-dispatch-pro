@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { FeldFehler } from "@/lib/recurring-validation";
+import { ableiteSuchfelder, type AblehnungSuchfelder } from "@/lib/recurring-rejection-detail";
 
 export type DauerauftragAblehnung = {
   id: string;
@@ -15,6 +16,8 @@ export type DauerauftragAblehnung = {
   patient: string | null;
   grund: string;
   felder: FeldFehler[];
+  /** Aus den bereinigten Eingaben abgeleitete Suchfelder (Fahrer, Kunde, Träger). */
+  suchfelder: AblehnungSuchfelder;
 };
 
 export type DauerauftragAblehnungDetail = DauerauftragAblehnung & {
@@ -32,6 +35,14 @@ type Row = {
   felder: unknown;
 };
 
+function suchfelderAusRow(eingaben: unknown): AblehnungSuchfelder {
+  const objekt =
+    eingaben && typeof eingaben === "object" && !Array.isArray(eingaben)
+      ? (eingaben as Record<string, unknown>)
+      : {};
+  return ableiteSuchfelder(objekt);
+}
+
 const listSchema = z
   .object({
     tage: z.number().int().min(1).max(365).optional(),
@@ -47,12 +58,12 @@ export const listRecurringRejections = createServerFn({ method: "GET" })
     const ab = new Date(Date.now() - tage * 86_400_000).toISOString();
     const { data: rows, error } = await context.supabase
       .from("recurring_rejections")
-      .select("id, created_at, aktion, ziel_id, patient, grund, felder")
+      .select("id, created_at, aktion, ziel_id, patient, grund, felder, eingaben")
       .gte("created_at", ab)
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 200);
     if (error) throw new Error(error.message);
-    return ((rows ?? []) as unknown as Row[]).map((r) => ({
+    return ((rows ?? []) as unknown as (Row & { eingaben: unknown })[]).map((r) => ({
       id: r.id,
       zeitpunkt: r.created_at,
       aktion: (["create", "update", "delete", "generate"].includes(r.aktion)
@@ -62,6 +73,7 @@ export const listRecurringRejections = createServerFn({ method: "GET" })
       patient: r.patient,
       grund: r.grund,
       felder: Array.isArray(r.felder) ? (r.felder as FeldFehler[]) : [],
+      suchfelder: suchfelderAusRow(r.eingaben),
     }));
   });
 
@@ -97,6 +109,7 @@ export const getRecurringRejection = createServerFn({ method: "GET" })
       patient: r.patient,
       grund: r.grund,
       felder: Array.isArray(r.felder) ? (r.felder as FeldFehler[]) : [],
+      suchfelder: ableiteSuchfelder(eingaben),
       eingabenJson: JSON.stringify(eingaben),
     };
   });
