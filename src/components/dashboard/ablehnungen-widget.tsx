@@ -4,23 +4,11 @@ import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  ArrowRight,
-  Loader2,
-  ShieldAlert,
-  TrendingDown,
-  TrendingUp,
-  Minus,
-} from "lucide-react";
+import { ArrowRight, Loader2, ShieldAlert, TrendingDown, TrendingUp, Minus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -142,14 +130,8 @@ export function AblehnungenWidget() {
     return { aktuell, vorher, trend: { diff, prozent } };
   }, [ablehnungen.data, ranges, erfolgeAktuell.data, erfolgeVorher.data]);
 
-  const lade =
-    ablehnungen.isLoading ||
-    erfolgeAktuell.isLoading ||
-    erfolgeVorher.isLoading;
-  const fehler =
-    ablehnungen.isError ||
-    erfolgeAktuell.isError ||
-    erfolgeVorher.isError;
+  const lade = ablehnungen.isLoading || erfolgeAktuell.isLoading || erfolgeVorher.isLoading;
+  const fehler = ablehnungen.isError || erfolgeAktuell.isError || erfolgeVorher.isError;
 
   if (!istAdmin) return null;
 
