@@ -9,7 +9,9 @@ import {
   FileText,
   Loader2,
   RefreshCw,
+  Search,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  aktionsFacetten,
+  feldpfadFacetten,
+  filtereAblehnungen,
+  toggleWert,
+} from "@/lib/ablehnungen-filter";
 import { toCsv, downloadCsv } from "@/lib/export-utils";
 import { generateAblehnungenPdf } from "@/lib/ablehnungen-pdf";
 import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
@@ -78,16 +87,31 @@ function AblehnungenPage() {
     staleTime: 15_000,
   });
 
+  const [suche, setSuche] = useState("");
+  const [aktionen, setAktionen] = useState<string[]>([]);
+  const [feldpfade, setFeldpfade] = useState<string[]>([]);
+
+  const aktionFacetten = useMemo(
+    () => aktionsFacetten(data, (a) => AKTION_LABEL[a] ?? a),
+    [data],
+  );
+  const pfadFacetten = useMemo(() => feldpfadFacetten(data), [data]);
+  const gefiltert = useMemo(
+    () => filtereAblehnungen(data, { suche, aktionen, feldpfade }),
+    [data, suche, aktionen, feldpfade],
+  );
+  const filterAktiv = suche.trim() !== "" || aktionen.length > 0 || feldpfade.length > 0;
+
   const topFelder = useMemo(() => {
     const zaehler = new Map<string, number>();
-    for (const a of data)
+    for (const a of gefiltert)
       for (const f of a.felder) zaehler.set(f.label, (zaehler.get(f.label) ?? 0) + 1);
     return [...zaehler.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [data]);
+  }, [gefiltert]);
 
   const gruende = useMemo(() => {
-    const map = new Map<string, typeof data>();
-    for (const a of data) {
+    const map = new Map<string, typeof gefiltert>();
+    for (const a of gefiltert) {
       const liste = map.get(a.grund) ?? [];
       liste.push(a);
       map.set(a.grund, liste);
@@ -110,21 +134,24 @@ function AblehnungenPage() {
         };
       })
       .sort((a, b) => b.eintraege.length - a.eintraege.length);
-  }, [data]);
+  }, [gefiltert]);
 
   const [offenerGrund, setOffenerGrund] = useState<string | null>(null);
 
   const exportiereCsv = () => {
-    if (data.length === 0) {
+    if (gefiltert.length === 0) {
       toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
       return;
     }
-    const rows = data.map((a) => ({
+    const rows = gefiltert.map((a) => ({
       Zeitpunkt: formatZeit(a.zeitpunkt),
       Zeitraum: `Letzte ${tage} Tage`,
       Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
       Patient: a.patient ?? "",
       Grund: a.grund,
+      Fahrer: a.suchfelder?.fahrer ?? "",
+      Abrechnungskunde: a.suchfelder?.kunde ?? "",
+      "Träger / Einrichtung": a.suchfelder?.traeger ?? "",
       "Ziel-ID": a.zielId ?? "",
       Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
     }));
@@ -134,11 +161,11 @@ function AblehnungenPage() {
   };
 
   const exportierePdf = () => {
-    if (data.length === 0) {
+    if (gefiltert.length === 0) {
       toast.info("Keine Daten für den gewählten Zeitraum vorhanden.");
       return;
     }
-    const doc = generateAblehnungenPdf(data, { tage: Number(tage) });
+    const doc = generateAblehnungenPdf(gefiltert, { tage: Number(tage) });
     doc.save(`dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.pdf`);
     toast.success("PDF-Export wurde heruntergeladen.");
   };
@@ -180,8 +207,97 @@ function AblehnungenPage() {
           PDF-Export
         </Button>
 
-        <Badge variant="secondary">{data.length} Einträge</Badge>
+        <Badge variant="secondary">
+          {filterAktiv ? `${gefiltert.length} / ${data.length}` : gefiltert.length} Einträge
+        </Badge>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Erweiterte Suche & Facetten</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={suche}
+              onChange={(e) => setSuche(e.target.value)}
+              className="pl-9"
+              placeholder="Suche nach Fahrer, Abrechnungskunde, Krankenhausträger, Patient, Grund oder Feld …"
+              aria-label="Ablehnungen durchsuchen"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Aktionstyp</p>
+            {aktionFacetten.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Keine Aktionen im Zeitraum.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {aktionFacetten.map((f) => {
+                  const aktiv = aktionen.includes(f.wert);
+                  return (
+                    <Button
+                      key={f.wert}
+                      type="button"
+                      size="sm"
+                      variant={aktiv ? "default" : "outline"}
+                      aria-pressed={aktiv}
+                      onClick={() => setAktionen((v) => toggleWert(v, f.wert))}
+                    >
+                      {f.label} · {f.anzahl}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Feldpfad</p>
+            {pfadFacetten.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Keine Feldfehler im Zeitraum.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {pfadFacetten.map((f) => {
+                  const aktiv = feldpfade.includes(f.wert);
+                  return (
+                    <Button
+                      key={f.wert}
+                      type="button"
+                      size="sm"
+                      variant={aktiv ? "default" : "outline"}
+                      aria-pressed={aktiv}
+                      onClick={() => setFeldpfade((v) => toggleWert(v, f.wert))}
+                    >
+                      {f.label} ({f.wert}) · {f.anzahl}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {filterAktiv && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSuche("");
+                setAktionen([]);
+                setFeldpfade([]);
+              }}
+            >
+              <X className="size-4" />
+              Filter zurücksetzen
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
       {topFelder.length > 0 && (
         <Card>
@@ -288,13 +404,15 @@ function AblehnungenPage() {
             <p className="text-sm text-destructive">
               Protokoll konnte nicht geladen werden: {(error as Error)?.message}
             </p>
-          ) : data.length === 0 ? (
+          ) : gefiltert.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Keine abgelehnten Dauerauftragsversuche im gewählten Zeitraum.
+              {filterAktiv
+                ? "Keine Treffer für die aktuelle Suche bzw. Filterauswahl."
+                : "Keine abgelehnten Dauerauftragsversuche im gewählten Zeitraum."}
             </p>
           ) : (
             <ul className="space-y-3">
-              {data.map((a) => (
+              {gefiltert.map((a) => (
                 <li key={a.id} className="rounded-lg border p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
@@ -307,6 +425,19 @@ function AblehnungenPage() {
                     </span>
                   </div>
                   <p className="pt-2 text-sm text-muted-foreground">{a.grund}</p>
+                  {(a.suchfelder?.fahrer || a.suchfelder?.kunde || a.suchfelder?.traeger) && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {a.suchfelder?.fahrer && (
+                        <Badge variant="outline">Fahrer: {a.suchfelder.fahrer}</Badge>
+                      )}
+                      {a.suchfelder?.kunde && (
+                        <Badge variant="outline">Kunde: {a.suchfelder.kunde}</Badge>
+                      )}
+                      {a.suchfelder?.traeger && (
+                        <Badge variant="outline">Träger: {a.suchfelder.traeger}</Badge>
+                      )}
+                    </div>
+                  )}
                   {a.felder.length > 0 && (
                     <ul className="pt-2 space-y-0.5 text-xs">
                       {a.felder.map((f) => (
