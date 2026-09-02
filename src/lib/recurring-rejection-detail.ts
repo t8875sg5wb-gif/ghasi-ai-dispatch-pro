@@ -111,3 +111,32 @@ export function regelErklaerung(path: string): string {
     "Der Wert entsprach nicht dem hinterlegten Schema (Typ, Format, erlaubte Werte oder Länge)."
   );
 }
+
+/** Aus den bereinigten Eingaben abgeleitete Suchfelder für den Admin-Bericht. */
+export type AblehnungSuchfelder = {
+  /** Bevorzugter Fahrer (Freitext bzw. Altbestand). */
+  fahrer: string | null;
+  /** Abrechnungskunde / Kostenträger. */
+  kunde: string | null;
+  /** Krankenhausträger bzw. Einrichtung (Abhol-/Zielort). */
+  traeger: string | null;
+};
+
+function text(wert: unknown): string | null {
+  return typeof wert === "string" && wert.trim() ? wert.trim() : null;
+}
+
+/**
+ * Leitet Fahrer, Abrechnungskunde und Krankenhausträger aus den bereinigten
+ * Eingabewerten ab, damit der Admin-Bericht danach suchen kann.
+ */
+export function ableiteSuchfelder(eingaben: Record<string, unknown>): AblehnungSuchfelder {
+  const traegerTeile = [text(eingaben["abholort"]), text(eingaben["zielort"])].filter(
+    (t): t is string => t !== null,
+  );
+  return {
+    fahrer: text(eingaben["bevorzugterFahrer"]),
+    kunde: text(eingaben["kostentraeger"]) ?? text(eingaben["krankenkasse"]),
+    traeger: traegerTeile.length > 0 ? traegerTeile.join(" → ") : null,
+  };
+}
