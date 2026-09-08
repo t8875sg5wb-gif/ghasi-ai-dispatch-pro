@@ -171,15 +171,7 @@ function Verbindungen() {
     onError: (f: Error) => toast.error(f.message),
   });
 
-  const [mcpFilter, setMcpFilter] = useState({
-    suche: "",
-    tool: "alle",
-    rolle: "alle",
-    scope: "alle",
-    status: "alle",
-    von: "",
-    bis: "",
-  });
+  const [mcpFilter, setMcpFilter] = useState<McpFilter>({ ...MCP_FILTER_LEER });
   // Load-more: Fenstergröße der geladenen Audit-Einträge (Filterwechsel setzt zurück).
   const MCP_SCHRITT = 100;
   const [mcpLimit, setMcpLimit] = useState(MCP_SCHRITT);
@@ -187,11 +179,23 @@ function Verbindungen() {
     setMcpLimit(MCP_SCHRITT);
     setMcpFilter((f) => ({ ...f, [feld]: wert }));
   };
-  const filterAktiv =
-    mcpFilter.suche !== "" ||
-    mcpFilter.von !== "" ||
-    mcpFilter.bis !== "" ||
-    [mcpFilter.tool, mcpFilter.rolle, mcpFilter.scope, mcpFilter.status].some((v) => v !== "alle");
+  const filterAktiv = !istFilterLeer(mcpFilter);
+
+  // Eigene Presets liegen lokal im Browser (kein Serverbedarf, keine sensiblen Daten).
+  const [presets, setPresets] = useState<McpPreset[]>([]);
+  const [presetName, setPresetName] = useState("");
+  useEffect(() => {
+    setPresets(ladePresets(typeof window === "undefined" ? null : window.localStorage));
+  }, []);
+  const aktualisierePresets = (liste: McpPreset[]) => {
+    setPresets(liste);
+    speicherePresets(typeof window === "undefined" ? null : window.localStorage, liste);
+  };
+  const wendeFilterAn = (filter: McpFilter) => {
+    setMcpLimit(MCP_SCHRITT);
+    setMcpFilter(filter);
+  };
+
 
   // Nur Admins erhalten Daten; für alle anderen bleibt das Widget verborgen.
   const { data: mcp, isFetching: mcpLaedt } = useQuery({
