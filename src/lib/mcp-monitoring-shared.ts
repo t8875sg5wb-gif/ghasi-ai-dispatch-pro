@@ -12,6 +12,8 @@ export interface McpAufruf {
   dauerMs: number | null;
   rolle: string | null;
   clientId: string | null;
+  /** Request-/Correlation-ID der Ausführung (bei Altdaten leer/undefiniert). */
+  requestId?: string | null;
 }
 
 export interface McpFilter {
@@ -123,7 +125,16 @@ export function fasseZusammen(
   };
 }
 
-const CSV_SPALTEN = ["Zeitpunkt", "Tool", "Scope", "Rolle", "Status", "Dauer (ms)", "Client"];
+const CSV_SPALTEN = [
+  "Zeitpunkt",
+  "Tool",
+  "Scope",
+  "Rolle",
+  "Status",
+  "Dauer (ms)",
+  "Client",
+  "Request-ID",
+];
 
 /** Zeilen für den CSV-Export (deutsche Spaltennamen, lokalisierter Zeitpunkt). */
 export function csvZeilen(aufrufe: McpAufruf[]): Record<string, string>[] {
@@ -138,6 +149,7 @@ export function csvZeilen(aufrufe: McpAufruf[]): Record<string, string>[] {
     Status: MCP_STATUS_LABEL[a.status] ?? a.status,
     "Dauer (ms)": a.dauerMs === null ? "" : String(a.dauerMs),
     Client: a.clientId ?? "",
+    "Request-ID": a.requestId ?? "",
   }));
 }
 
