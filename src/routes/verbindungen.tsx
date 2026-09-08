@@ -180,8 +180,13 @@ function Verbindungen() {
     von: "",
     bis: "",
   });
-  const setzeFilter = (feld: keyof typeof mcpFilter, wert: string) =>
+  // Load-more: Fenstergröße der geladenen Audit-Einträge (Filterwechsel setzt zurück).
+  const MCP_SCHRITT = 100;
+  const [mcpLimit, setMcpLimit] = useState(MCP_SCHRITT);
+  const setzeFilter = (feld: keyof typeof mcpFilter, wert: string) => {
+    setMcpLimit(MCP_SCHRITT);
     setMcpFilter((f) => ({ ...f, [feld]: wert }));
+  };
   const filterAktiv =
     mcpFilter.suche !== "" ||
     mcpFilter.von !== "" ||
@@ -189,12 +194,12 @@ function Verbindungen() {
     [mcpFilter.tool, mcpFilter.rolle, mcpFilter.scope, mcpFilter.status].some((v) => v !== "alle");
 
   // Nur Admins erhalten Daten; für alle anderen bleibt das Widget verborgen.
-  const { data: mcp } = useQuery({
-    queryKey: ["mcp", "monitoring", mcpFilter],
+  const { data: mcp, isFetching: mcpLaedt } = useQuery({
+    queryKey: ["mcp", "monitoring", mcpFilter, mcpLimit],
     queryFn: () =>
       ladeMcp({
         data: {
-          limit: 200,
+          limit: mcpLimit,
           suche: mcpFilter.suche || undefined,
           tool: mcpFilter.tool,
           rolle: mcpFilter.rolle,
@@ -486,6 +491,7 @@ function Verbindungen() {
                     : "Noch keine Werkzeug-Ausführungen protokolliert."}
                 </p>
               ) : (
+                <>
                 <ul className="divide-y divide-border/60">
                   {mcp.aufrufe.map((a) => (
                     <li
@@ -519,6 +525,26 @@ function Verbindungen() {
                     </li>
                   ))}
                 </ul>
+                {(mcp.weitereVorhanden || mcpLimit > MCP_SCHRITT) && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-4 py-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filterAktiv
+                        ? "Filter sind aktiv – Anzeige bezieht sich auf das geladene Fenster."
+                        : `${mcpLimit} neueste Einträge geladen.`}
+                    </span>
+                    {mcp.weitereVorhanden && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setMcpLimit((l) => l + MCP_SCHRITT)}
+                        disabled={mcpLaedt}
+                      >
+                        {mcpLaedt ? "Lade …" : `Weitere ${MCP_SCHRITT} laden`}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                </>
               )}
             </CardContent>
           </Card>
