@@ -392,7 +392,83 @@ function Verbindungen() {
                   </div>
                 </div>
               )}
+              <div className="space-y-2 px-4">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Schnellfilter:</span>
+                  {MCP_STANDARD_PRESETS.map((p) => (
+                    <Button
+                      key={p.id}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => wendeFilterAn(p.bauen(new Date()))}
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
+                  {presets.map((p) => (
+                    <span
+                      key={p.id}
+                      className="inline-flex items-center overflow-hidden rounded-md border border-border"
+                    >
+                      <button
+                        type="button"
+                        className="px-2 py-1 text-xs hover:bg-muted"
+                        onClick={() => wendeFilterAn(p.filter)}
+                      >
+                        {p.name}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Preset ${p.name} löschen`}
+                        className="border-l border-border px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-destructive"
+                        onClick={() => aktualisierePresets(presetEntfernen(presets, p.id))}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {filterAktiv && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => wendeFilterAn({ ...MCP_FILTER_LEER })}
+                    >
+                      Filter zurücksetzen
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    className="h-8 w-48 text-xs"
+                    placeholder="Aktuelle Filter speichern als …"
+                    aria-label="Name für neues Filter-Preset"
+                    value={presetName}
+                    onChange={(e) => setPresetName(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="h-8 text-xs"
+                    disabled={presetName.trim() === "" || !filterAktiv}
+                    onClick={() => {
+                      aktualisierePresets(
+                        presetHinzufuegen(presets, presetName, mcpFilter, crypto.randomUUID()),
+                      );
+                      setPresetName("");
+                      toast.success("Filter gespeichert.");
+                    }}
+                  >
+                    Speichern
+                  </Button>
+                </div>
+              </div>
               <div className="grid gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3">
+
                 <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
                   <Label htmlFor="mcp-suche" className="text-xs">
                     Suche
