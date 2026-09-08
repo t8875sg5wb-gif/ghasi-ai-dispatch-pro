@@ -72,6 +72,7 @@ export async function ladeMcpAufrufe(
       dauerMs: z.dauer_ms ?? null,
       rolle: z.rolle ?? null,
       clientId: q.client_id ?? null,
+      requestId: q.request_id ?? null,
     };
   });
 }
