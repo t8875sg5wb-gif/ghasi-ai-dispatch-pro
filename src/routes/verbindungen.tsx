@@ -180,8 +180,13 @@ function Verbindungen() {
     von: "",
     bis: "",
   });
-  const setzeFilter = (feld: keyof typeof mcpFilter, wert: string) =>
+  // Load-more: Fenstergröße der geladenen Audit-Einträge (Filterwechsel setzt zurück).
+  const MCP_SCHRITT = 100;
+  const [mcpLimit, setMcpLimit] = useState(MCP_SCHRITT);
+  const setzeFilter = (feld: keyof typeof mcpFilter, wert: string) => {
+    setMcpLimit(MCP_SCHRITT);
     setMcpFilter((f) => ({ ...f, [feld]: wert }));
+  };
   const filterAktiv =
     mcpFilter.suche !== "" ||
     mcpFilter.von !== "" ||
@@ -189,12 +194,12 @@ function Verbindungen() {
     [mcpFilter.tool, mcpFilter.rolle, mcpFilter.scope, mcpFilter.status].some((v) => v !== "alle");
 
   // Nur Admins erhalten Daten; für alle anderen bleibt das Widget verborgen.
-  const { data: mcp } = useQuery({
-    queryKey: ["mcp", "monitoring", mcpFilter],
+  const { data: mcp, isFetching: mcpLaedt } = useQuery({
+    queryKey: ["mcp", "monitoring", mcpFilter, mcpLimit],
     queryFn: () =>
       ladeMcp({
         data: {
-          limit: 200,
+          limit: mcpLimit,
           suche: mcpFilter.suche || undefined,
           tool: mcpFilter.tool,
           rolle: mcpFilter.rolle,
