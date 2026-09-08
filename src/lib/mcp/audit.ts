@@ -20,6 +20,8 @@ interface AuditEintrag {
   userId: string | undefined;
   rolle: string | null;
   clientId: string | undefined;
+  /** Zufällige Request-/Correlation-ID pro Werkzeug-Ausführung (keine Nutzdaten). */
+  requestId: string;
   fehlerArt?: string;
 }
 
