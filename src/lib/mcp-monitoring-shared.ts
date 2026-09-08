@@ -12,8 +12,8 @@ export interface McpAufruf {
   dauerMs: number | null;
   rolle: string | null;
   clientId: string | null;
-  /** Request-/Correlation-ID der Ausführung (bei Altdaten leer). */
-  requestId: string | null;
+  /** Request-/Correlation-ID der Ausführung (bei Altdaten leer/undefiniert). */
+  requestId?: string | null;
 }
 
 export interface McpFilter {

@@ -35,6 +35,7 @@ interface QuellenMeta {
   scope?: string;
   status?: string;
   client_id?: string | null;
+  request_id?: string | null;
 }
 
 /** Fail-closed Admin-Prüfung über den Client des Aufrufers (RLS gilt). */
@@ -150,6 +151,7 @@ export async function ladeMcpArchiv(
       dauerMs: z.dauer_ms ?? null,
       rolle: z.rolle ?? null,
       clientId: q.client_id ?? null,
+      requestId: q.request_id ?? null,
       archiviertAm: z.archiviert_am,
       fristMonate: z.archiv_frist_monate,
     };
