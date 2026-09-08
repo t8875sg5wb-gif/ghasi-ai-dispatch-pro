@@ -87,4 +87,11 @@ describe("csvZeilen", () => {
     expect(zeile.Status).toBe("Erfolg");
     expect(zeile["Dauer (ms)"]).toBe("100");
   });
+
+  it("exportiert die Request-ID (leer bei Altdaten)", () => {
+    const mitId = csvZeilen([{ ...aufrufe[0], requestId: "req-123" }])[0];
+    expect(mitId["Request-ID"]).toBe("req-123");
+    const ohneId = csvZeilen([aufrufe[0]])[0];
+    expect(ohneId["Request-ID"]).toBe("");
+  });
 });
