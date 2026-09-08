@@ -29,6 +29,8 @@ export interface McpFilter {
 
 export interface McpMonitoring {
   aufrufe: McpAufruf[];
+  /** true, wenn nach dem geladenen Fenster weitere Einträge existieren. */
+  weitereVorhanden: boolean;
   gesamt: number;
   erfolge: number;
   fehler: number;

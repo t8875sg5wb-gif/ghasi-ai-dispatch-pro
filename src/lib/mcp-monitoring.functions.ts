@@ -15,9 +15,12 @@ export const getMcpMonitoring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(mcpFilterSchema)
   .handler(async ({ data, context }): Promise<McpMonitoring> => {
-    const alle = await ladeMcpAufrufe(context.supabase, context.userId, data.limit);
+    // Einen Eintrag mehr laden als angezeigt: Erkennung, ob nachgeladen werden kann.
+    const geladen = await ladeMcpAufrufe(context.supabase, context.userId, data.limit + 1);
+    const weitereVorhanden = geladen.length > data.limit;
+    const alle = weitereVorhanden ? geladen.slice(0, data.limit) : geladen;
     const gefiltert = filterAufrufe(alle, data);
-    return { aufrufe: gefiltert, ...fasseZusammen(gefiltert, alle) };
+    return { aufrufe: gefiltert, weitereVorhanden, ...fasseZusammen(gefiltert, alle) };
   });
 
 const archivSchema = z.object({ limit: z.number().int().min(1).max(500).default(100) }).strict();

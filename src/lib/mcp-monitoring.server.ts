@@ -16,7 +16,7 @@ const isoTag = z
 
 const filterSchema = z
   .object({
-    limit: z.number().int().min(1).max(500).default(100),
+    limit: z.number().int().min(1).max(2000).default(100),
     suche: z.string().max(120).optional(),
     tool: z.string().max(80).optional(),
     rolle: z.string().max(40).optional(),
