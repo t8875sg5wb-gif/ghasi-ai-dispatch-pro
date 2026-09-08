@@ -43,6 +43,7 @@ async function schreibeAudit(e: AuditEintrag): Promise<void> {
         scope: e.scope,
         status: e.status,
         client_id: e.clientId ?? null,
+        request_id: e.requestId,
         ...(e.fehlerArt ? { fehler_art: e.fehlerArt } : {}),
       } as never,
       vorbereitete_aktionen: null,
@@ -65,6 +66,7 @@ export function mitAudit<I>(
 ): (input: I, ctx: ToolContext) => Promise<ToolErgebnis> {
   return async (input, ctx) => {
     const start = Date.now();
+    const requestId = crypto.randomUUID();
     const basis = () => ({
       tool,
       scope,
@@ -72,6 +74,7 @@ export function mitAudit<I>(
       userId: ctx.getUserId(),
       rolle: entscheidungAusKontext(ctx)?.role ?? null,
       clientId: ctx.getClientId(),
+      requestId,
     });
     try {
       const ergebnis = await handler(input, ctx);
