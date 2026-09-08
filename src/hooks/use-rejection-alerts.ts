@@ -21,13 +21,27 @@ export function useRejectionAlerts() {
     queryKey: ["recurring_rejections", "alarm"],
     queryFn: () => laden({ data: { tage: 2, limit: 100 } }),
     enabled: istAdmin,
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
     retry: false,
   });
 
+  // Beim ersten Laden nur stumm nachziehen – Kurzhinweise erscheinen nur für
+  // Ablehnungen, die während der laufenden Sitzung neu dazukommen.
+  const ersterLauf = useRef(true);
+
   useEffect(() => {
     if (!data) return;
-    for (const n of ablehnungsBenachrichtigungen(data)) pushNotification(n);
+    const neue = ablehnungsBenachrichtigungen(data).filter((n) => pushNotification(n));
+    if (ersterLauf.current) {
+      ersterLauf.current = false;
+      return;
+    }
+    for (const n of neue.slice(0, 3)) {
+      toast.warning(n.titel, {
+        description: n.text,
+        action: { label: "Bericht öffnen", onClick: () => window.location.assign(n.to) },
+      });
+    }
   }, [data]);
 }
