@@ -47,6 +47,18 @@ import {
 import { downloadCsv, toCsv } from "@/lib/export-utils";
 import { bewerteMcpAlarm, mcpAlarmId } from "@/lib/mcp-alerting";
 import { pushNotification } from "@/lib/notifications";
+import {
+  MCP_FILTER_LEER,
+  MCP_STANDARD_PRESETS,
+  istFilterLeer,
+  ladePresets,
+  presetEntfernen,
+  presetHinzufuegen,
+  speicherePresets,
+  type McpFilter,
+  type McpPreset,
+} from "@/lib/mcp-filter-presets";
+
 
 export const Route = createFileRoute("/verbindungen")({
   head: () => ({
