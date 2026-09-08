@@ -546,40 +546,6 @@ function Verbindungen() {
                 )}
                 </>
               )}
-                <ul className="divide-y divide-border/60">
-                  {mcp.aufrufe.map((a) => (
-                    <li
-                      key={a.id}
-                      className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span
-                          aria-hidden
-                          className={`h-2 w-2 rounded-full ${
-                            a.status === "erfolg"
-                              ? "bg-success"
-                              : a.status === "abgelehnt"
-                                ? "bg-warning"
-                                : "bg-destructive"
-                          }`}
-                        />
-                        <span className="font-medium">{a.tool}</span>
-                        <span className="text-xs text-muted-foreground">{a.scope ?? "–"}</span>
-                      </span>
-                      <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>{a.rolle ?? "ohne Rolle"}</span>
-                        <span>{a.dauerMs ?? 0} ms</span>
-                        <span>
-                          {new Date(a.zeitpunkt).toLocaleString("de-DE", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </CardContent>
           </Card>
         </section>
