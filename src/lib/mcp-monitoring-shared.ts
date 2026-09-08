@@ -106,7 +106,7 @@ export function filterAufrufe(aufrufe: McpAufruf[], filter: McpFilter): McpAufru
 export function fasseZusammen(
   gefiltert: McpAufruf[],
   alle: McpAufruf[],
-): Omit<McpMonitoring, "aufrufe"> {
+): Omit<McpMonitoring, "aufrufe" | "weitereVorhanden"> {
   const dauern = gefiltert.map((a) => a.dauerMs ?? 0).filter((d) => d > 0);
   const einzigartig = (werte: (string | null)[]) =>
     [...new Set(werte.filter((w): w is string => !!w))].sort((a, b) => a.localeCompare(b, "de"));
