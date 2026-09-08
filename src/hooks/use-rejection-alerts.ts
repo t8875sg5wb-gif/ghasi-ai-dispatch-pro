@@ -2,9 +2,10 @@
 //
 // Läuft nur für Administratoren, weil das Ablehnungsprotokoll per RLS
 // ausschließlich für Admins lesbar ist.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
 import { pushNotification } from "@/lib/notifications";
@@ -20,13 +21,27 @@ export function useRejectionAlerts() {
     queryKey: ["recurring_rejections", "alarm"],
     queryFn: () => laden({ data: { tage: 2, limit: 100 } }),
     enabled: istAdmin,
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
     retry: false,
   });
 
+  // Beim ersten Laden nur stumm nachziehen – Kurzhinweise erscheinen nur für
+  // Ablehnungen, die während der laufenden Sitzung neu dazukommen.
+  const ersterLauf = useRef(true);
+
   useEffect(() => {
     if (!data) return;
-    for (const n of ablehnungsBenachrichtigungen(data)) pushNotification(n);
+    const neue = ablehnungsBenachrichtigungen(data).filter((n) => pushNotification(n));
+    if (ersterLauf.current) {
+      ersterLauf.current = false;
+      return;
+    }
+    for (const n of neue.slice(0, 3)) {
+      toast.warning(n.titel, {
+        description: n.text,
+        action: { label: "Bericht öffnen", onClick: () => window.location.assign(n.to) },
+      });
+    }
   }, [data]);
 }
