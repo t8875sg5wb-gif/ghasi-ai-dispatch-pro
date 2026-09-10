@@ -892,6 +892,10 @@ function DauerauftragForm({
     ...offeneServerFehler.filter((s) => !sichtbareLiveFehler.some((l) => l.path === s.path)),
   ];
   const fehlerMap = useMemo(() => feldFehlerMap(fehler), [fehler]);
+  // Dirty-Status: weicht das Formular vom letzten gesicherten Stand ab?
+  const ungespeicherteAenderungen = entwurfGespeichertAm
+    ? entwurfWeichtAb(f, gesichertRef.current)
+    : entwurfWeichtAb(f, basisRef.current);
   const FeldFehlerText = ({ path }: { path: string }) =>
     fehlerMap[path] ? (
       <p id={`fehler-${path}`} className="pt-1 text-xs font-medium text-destructive">
