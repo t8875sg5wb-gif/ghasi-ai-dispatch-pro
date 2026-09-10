@@ -39,13 +39,12 @@ import { TerminVorschau } from "@/components/dauerauftraege/termin-vorschau";
 import { MOBILITAET_META, MOBILITAET_OPTIONEN, type Mobilitaet } from "@/lib/auftraege";
 import { recurringFieldsSchema } from "@/lib/recurring.functions";
 import {
-  dekodiereFeldFehler,
   feldFehlerMap,
-  lesbarerFehlerText,
   pruefeDauerauftragRegeln,
   zuFeldFehlern,
   type FeldFehler,
 } from "@/lib/recurring-validation";
+import { parseRecurringFehler } from "@/lib/api/dauerauftraege";
 import {
   ENTWURF_DEBOUNCE_MS,
   entwurfSchluessel,
@@ -53,8 +52,9 @@ import {
   formatUhrzeit,
   geaenderteFelder,
   ladeEntwurf,
-  speichereEntwurf,
+  retryVerzoegerung,
   verwerfeEntwurf,
+  versucheEntwurfZuSpeichern,
   type GespeicherterEntwurf,
 } from "@/lib/dauerauftrag-entwurf";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
@@ -197,6 +197,7 @@ function DauerauftraegePage() {
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
   const [neueVorlage, setNeueVorlage] = useState<Dauerauftrag>(() => leereVorlage());
   const [serverFeldFehler, setServerFeldFehler] = useState<FeldFehler[]>([]);
+  const [serverHinweis, setServerHinweis] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
@@ -324,14 +325,18 @@ function DauerauftraegePage() {
 
   const speichern = (werte: Dauerauftrag) => {
     setServerFeldFehler([]);
+    setServerHinweis(null);
     const zeigeFehler = (praefix: string) => (e: unknown) => {
-      const message = (e as Error).message ?? "";
-      const felder = dekodiereFeldFehler(message);
-      setServerFeldFehler(felder);
-      toast.error(`${praefix}: ${lesbarerFehlerText(message)}`, {
-        description:
-          felder.length > 0 ? felder.map((f) => `${f.label}: ${f.message}`).join(" · ") : undefined,
-      });
+      const fehler = parseRecurringFehler(e);
+      if (fehler.art === "feldfehler") {
+        setServerFeldFehler(fehler.fields);
+        toast.error(`${praefix}: ${fehler.text}`, {
+          description: fehler.fields.map((x) => `${x.label}: ${x.message}`).join(" · "),
+        });
+        return;
+      }
+      setServerHinweis(fehler.text);
+      toast.error(`${praefix}: ${fehler.text}`);
     };
     if (editTarget) {
       updateMut.mutate(
@@ -603,6 +608,7 @@ function DauerauftraegePage() {
         onOpenChange={(o) => {
           setFormOpen(o);
           setServerFeldFehler([]);
+          setServerHinweis(null);
           if (!o) setEditTarget(null);
         }}
       >
@@ -612,6 +618,7 @@ function DauerauftraegePage() {
             istEdit={!!editTarget}
             saving={saving}
             serverFehler={serverFeldFehler}
+            serverHinweis={serverHinweis}
             onSubmit={speichern}
             onCancel={() => {
               setFormOpen(false);
@@ -807,6 +814,7 @@ function DauerauftragForm({
   istEdit,
   saving,
   serverFehler = [],
+  serverHinweis = null,
   onSubmit,
   onCancel,
 }: {
@@ -814,6 +822,7 @@ function DauerauftragForm({
   istEdit: boolean;
   saving?: boolean;
   serverFehler?: FeldFehler[];
+  serverHinweis?: string | null;
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
@@ -831,6 +840,12 @@ function DauerauftragForm({
   const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+  const [entwurfFehler, setEntwurfFehler] = useState<{
+    meldung: string;
+    wiederholt: boolean;
+    versuche: number;
+  } | null>(null);
+  const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
 
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
@@ -913,20 +928,52 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
     setEntwurfGespeichertAm(null);
+    setEntwurfFehler(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
     setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
   // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
+  // Schlägt das Speichern fehl, wird die Meldung angezeigt und der Versuch
+  // automatisch mit steigender Wartezeit wiederholt.
   useEffect(() => {
     if (!entwurfWeichtAb(f, basisRef.current)) return;
-    const timer = window.setTimeout(() => {
-      const eintrag = speichereEntwurf(entwurfKey, f);
-      if (eintrag) setEntwurfGespeichertAm(eintrag.gespeichertAm);
-    }, ENTWURF_DEBOUNCE_MS);
+    let versuch = 0;
+    let timer = 0;
+    const lauf = () => {
+      const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
+      if (ergebnis.ok) {
+        setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
+        setEntwurfFehler(null);
+        return;
+      }
+      const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
+      setEntwurfFehler({
+        meldung: ergebnis.meldung,
+        wiederholt: wartezeit !== null,
+        versuche: versuch + 1,
+      });
+      if (wartezeit === null) return;
+      versuch += 1;
+      timer = window.setTimeout(lauf, wartezeit);
+    };
+    timer = window.setTimeout(lauf, ENTWURF_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [f, entwurfKey]);
+  }, [f, entwurfKey, entwurfRetryZaehler]);
+
+  /** Manueller Neuversuch für den Auto-Save. */
+  const entwurfErneutSpeichern = () => {
+    const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
+    if (ergebnis.ok) {
+      setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
+      setEntwurfFehler(null);
+      toast.success("Entwurf zwischengespeichert");
+      return;
+    }
+    setEntwurfFehler({ meldung: ergebnis.meldung, wiederholt: false, versuche: 1 });
+    setEntwurfRetryZaehler((n) => n + 1);
+  };
 
   /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
   const entwurfUebernehmen = () => {
@@ -943,6 +990,7 @@ function DauerauftragForm({
     verwerfeEntwurf(entwurfKey);
     setWiederherstellbar(null);
     setEntwurfGespeichertAm(null);
+    setEntwurfFehler(null);
     setF(basisRef.current);
     setBeruehrt([]);
     setSubmitVersucht(false);
@@ -1015,6 +1063,32 @@ function DauerauftragForm({
           </div>
         )}
 
+        {entwurfFehler && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
+          >
+            <span>
+              <strong>Zwischenspeichern fehlgeschlagen.</strong> {entwurfFehler.meldung}
+              {entwurfFehler.wiederholt
+                ? ` Automatischer Neuversuch läuft (Versuch ${entwurfFehler.versuche}).`
+                : " Automatische Neuversuche sind ausgeschöpft."}
+            </span>
+            <Button size="sm" variant="outline" onClick={entwurfErneutSpeichern}>
+              Jetzt erneut versuchen
+            </Button>
+          </div>
+        )}
+
+        {serverHinweis && (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            <strong>Speichern abgelehnt.</strong> {serverHinweis}
+          </div>
+        )}
+
         {fehler.length > 0 && (
           <div
             role="alert"
@@ -1026,19 +1100,25 @@ function DauerauftragForm({
                 : `${fehler.length} Felder sind ungültig`}
             </p>
             <ul className="mt-1 space-y-0.5 text-destructive">
-              {fehler.map((x) => (
-                <li key={x.path}>
-                  <button
-                    type="button"
-                    onClick={() => springeZuFeld(x.path)}
-                    className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
-                    aria-label={`Zum Feld ${x.label} springen`}
-                  >
-                    <span className="font-medium">{x.label}</span>{" "}
-                    <span className="text-muted-foreground">({x.path})</span>: {x.message}
-                  </button>
-                </li>
-              ))}
+              {fehler.map((x) =>
+                x.path === "formular" ? (
+                  <li key={x.path}>
+                    <span className="font-medium">{x.label}</span>: {x.message}
+                  </li>
+                ) : (
+                  <li key={x.path}>
+                    <button
+                      type="button"
+                      onClick={() => springeZuFeld(x.path)}
+                      className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
+                      aria-label={`Zum Feld ${x.label} springen`}
+                    >
+                      <span className="font-medium">{x.label}</span>{" "}
+                      <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                    </button>
+                  </li>
+                ),
+              )}
             </ul>
           </div>
         )}
@@ -1417,10 +1497,17 @@ function DauerauftragForm({
       </div>
 
       <DialogFooter className="items-center gap-2 sm:justify-between">
-        <span aria-live="polite" className="text-xs text-muted-foreground">
-          {entwurfGespeichertAm
-            ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
-            : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
+        <span
+          aria-live="polite"
+          className={`text-xs ${entwurfFehler ? "font-medium text-warning" : "text-muted-foreground"}`}
+        >
+          {entwurfFehler
+            ? entwurfFehler.wiederholt
+              ? `Zwischenspeichern fehlgeschlagen · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
+              : "Zwischenspeichern fehlgeschlagen · bitte manuell erneut versuchen"
+            : entwurfGespeichertAm
+              ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
+              : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
         </span>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
