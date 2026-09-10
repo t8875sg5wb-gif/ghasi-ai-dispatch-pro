@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { downloadCsv, toCsv } from "@/lib/export-utils";
-import { bewerteMcpAlarm, mcpAlarmId } from "@/lib/mcp-alerting";
+import { bewerteMcpAlarm, bewerteToolAlarme, mcpAlarmId } from "@/lib/mcp-alerting";
 import { pushNotification } from "@/lib/notifications";
 import {
   MCP_FILTER_LEER,
@@ -244,6 +244,7 @@ function Verbindungen() {
     retry: false,
   });
   const alarm = alarmDaten ? bewerteMcpAlarm(alarmDaten.aufrufe) : null;
+  const toolAlarme = alarmDaten ? bewerteToolAlarme(alarmDaten.aufrufe) : [];
 
   // Gehäufte Fehler/Abweisungen zusätzlich ins Benachrichtigungszentrum spiegeln.
   useEffect(() => {
@@ -390,6 +391,43 @@ function Verbindungen() {
                     </p>
                     <p className="text-xs opacity-90">{alarm.text}</p>
                   </div>
+                </div>
+              )}
+              {toolAlarme.length > 0 && (
+                <div className="mx-4 space-y-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Auffällige Werkzeuge (letzte {toolAlarme[0].fensterMinuten} Minuten)
+                  </p>
+                  <ul className="space-y-1.5">
+                    {toolAlarme.map((t) => (
+                      <li
+                        key={t.tool}
+                        role="alert"
+                        className="flex flex-wrap items-center gap-2 text-sm"
+                      >
+                        <AlertTriangle
+                          className={`h-4 w-4 shrink-0 ${
+                            t.stufe === "kritisch" ? "text-destructive" : "text-warning"
+                          }`}
+                        />
+                        <span className="font-medium">{t.tool}</span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            t.stufe === "kritisch"
+                              ? "border-destructive/30 bg-destructive/10 text-destructive"
+                              : "border-warning/30 bg-warning/10 text-warning"
+                          }
+                        >
+                          {t.stufe === "kritisch" ? "Kritisch" : "Warnung"}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {t.fehler} Fehler · {t.abgelehnt} abgelehnt von {t.gesamt} Aufrufen ·{" "}
+                          {Math.round(t.quote * 100)} % auffällig
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
               <div className="space-y-2 px-4">

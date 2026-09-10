@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   bewerteMcpAlarm,
+  bewerteToolAlarme,
   mcpAlarmId,
   MCP_ALARM_SCHWELLE_KRITISCH,
   MCP_ALARM_SCHWELLE_WARNUNG,
@@ -67,5 +68,32 @@ describe("bewerteMcpAlarm", () => {
       NOW,
     );
     expect(mcpAlarmId(a, NOW)).toBe(mcpAlarmId(a, NOW + 60_000));
+  });
+});
+
+describe("bewerteToolAlarme", () => {
+  it("meldet nur Werkzeuge ab der Warnschwelle und sortiert absteigend", () => {
+    const alarme = bewerteToolAlarme(
+      [
+        auf("fehler", 5, "create_order"),
+        auf("abgelehnt", 6, "create_order"),
+        auf("erfolg", 7, "create_order"),
+        auf("fehler", 8, "create_invoice"),
+        auf("fehler", 9, "list_orders"),
+        auf("abgelehnt", 10, "list_orders"),
+        auf("fehler", 11, "list_orders"),
+        auf("fehler", 12, "list_orders"),
+        auf("abgelehnt", 13, "list_orders"),
+      ],
+      NOW,
+    );
+    expect(alarme.map((a) => a.tool)).toEqual(["list_orders", "create_order"]);
+    expect(alarme[0].stufe).toBe("kritisch");
+    expect(alarme[1].stufe).toBe("warnung");
+    expect(alarme[1].gesamt).toBe(3);
+  });
+
+  it("ignoriert Einträge außerhalb des Fensters", () => {
+    expect(bewerteToolAlarme([auf("fehler", 200), auf("fehler", 300)], NOW)).toEqual([]);
   });
 });
