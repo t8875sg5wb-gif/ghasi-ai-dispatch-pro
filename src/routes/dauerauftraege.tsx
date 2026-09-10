@@ -197,6 +197,7 @@ function DauerauftraegePage() {
   const [editTarget, setEditTarget] = useState<Dauerauftrag | null>(null);
   const [neueVorlage, setNeueVorlage] = useState<Dauerauftrag>(() => leereVorlage());
   const [serverFeldFehler, setServerFeldFehler] = useState<FeldFehler[]>([]);
+  const [serverHinweis, setServerHinweis] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     const base: Record<StatusFilter, number> = {
