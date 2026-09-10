@@ -351,6 +351,7 @@ export type Database = {
           id: string
           ik_nummer: string | null
           inhaber: string
+          mcp_alert_stille_zeiten: Json
           mcp_audit_retention_months: number
           rechtsform: string
           singleton: number
@@ -384,6 +385,7 @@ export type Database = {
           id?: string
           ik_nummer?: string | null
           inhaber?: string
+          mcp_alert_stille_zeiten?: Json
           mcp_audit_retention_months?: number
           rechtsform?: string
           singleton?: number
@@ -417,6 +419,7 @@ export type Database = {
           id?: string
           ik_nummer?: string | null
           inhaber?: string
+          mcp_alert_stille_zeiten?: Json
           mcp_audit_retention_months?: number
           rechtsform?: string
           singleton?: number

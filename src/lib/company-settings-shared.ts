@@ -2,6 +2,7 @@
 // Firmenstammdaten. Bewusst OHNE createServerFn, damit sowohl
 // company-settings.functions.ts als auch andere Serverfunktionen
 // (z. B. invoices.functions.ts) dieselbe Mapper-Logik verwenden können.
+import { parseStilleZeiten, type StilleZeit } from "@/lib/mcp-quiet-hours";
 import type { SteuerModus } from "@/lib/steuer";
 import { DEFAULT_STEUER_MODUS } from "@/lib/steuer";
 
@@ -65,6 +66,12 @@ export interface CompanySettings {
    * `ai_audit_log_archive` verschoben – der Prüfpfad bleibt vollständig.
    */
   mcpAuditRetentionMonths: number;
+  /**
+   * Stille-Zeiten (Wartungsfenster) für MCP-Alarme. Unterdrücken bzw. dämpfen
+   * ausschließlich die Warnanzeige/Benachrichtigung – die Audit-Einträge selbst
+   * bleiben vollständig erhalten.
+   */
+  mcpAlertStilleZeiten: StilleZeit[];
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -95,6 +102,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   arbeitstageMonat: 21,
   chatRetentionMonths: 12,
   mcpAuditRetentionMonths: 12,
+  mcpAlertStilleZeiten: [],
 };
 
 export interface CompanyRow {
@@ -125,6 +133,7 @@ export interface CompanyRow {
   betriebskosten_arbeitstage?: number | string;
   chat_retention_months?: number | string;
   mcp_audit_retention_months?: number | string;
+  mcp_alert_stille_zeiten?: unknown;
 }
 
 export function rowToSettings(r: CompanyRow): CompanySettings {
@@ -156,6 +165,7 @@ export function rowToSettings(r: CompanyRow): CompanySettings {
     arbeitstageMonat: Number(r.betriebskosten_arbeitstage ?? 21),
     chatRetentionMonths: Number(r.chat_retention_months ?? 12),
     mcpAuditRetentionMonths: Number(r.mcp_audit_retention_months ?? 12),
+    mcpAlertStilleZeiten: parseStilleZeiten(r.mcp_alert_stille_zeiten),
   };
 }
 
@@ -199,6 +209,8 @@ export function settingsToRow(data: CompanySettings): Record<string, unknown> {
       120,
       Math.max(1, Math.round(Number(data.mcpAuditRetentionMonths) || 12)),
     ),
+    // Nur strukturell gültige Fenster speichern (nie Rohdaten durchreichen).
+    mcp_alert_stille_zeiten: parseStilleZeiten(data.mcpAlertStilleZeiten),
   };
 }
 
