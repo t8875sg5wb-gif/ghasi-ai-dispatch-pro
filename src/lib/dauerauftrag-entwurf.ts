@@ -58,6 +58,64 @@ export function speichereEntwurf(
   }
 }
 
+/* ------------------------- Fehlschlag & Wiederholung ------------------------- */
+
+/** Wartezeiten (ms) für die automatischen Wiederholungen des Auto-Save. */
+export const ENTWURF_RETRY_MS = [1200, 3000, 8000] as const;
+
+export type EntwurfFehlerGrund = "kein_speicher" | "voll" | "fehler";
+
+export type EntwurfSpeicherErgebnis =
+  | { ok: true; eintrag: GespeicherterEntwurf }
+  | { ok: false; grund: EntwurfFehlerGrund; meldung: string };
+
+const FEHLER_MELDUNG: Record<EntwurfFehlerGrund, string> = {
+  kein_speicher:
+    "Dieser Browser erlaubt keinen Zwischenspeicher (z. B. privater Modus). Bitte vor dem Schließen speichern.",
+  voll: "Der Zwischenspeicher des Browsers ist voll. Ältere Entwürfe wurden entfernt – neuer Versuch läuft.",
+  fehler: "Der Entwurf konnte nicht zwischengespeichert werden.",
+};
+
+function istQuotaFehler(e: unknown): boolean {
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    return e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED";
+  }
+  return /quota/i.test(String((e as { name?: string; message?: string })?.name ?? "")) ||
+    /quota/i.test(String((e as { message?: string })?.message ?? ""));
+}
+
+/**
+ * Speichert einen Entwurf und meldet den Fehlschlag mit Grund, damit das
+ * Formular eine verständliche Meldung anzeigen und automatisch erneut
+ * versuchen kann.
+ */
+export function versucheEntwurfZuSpeichern(
+  schluessel: string,
+  werte: Dauerauftrag,
+  jetzt: Date = new Date(),
+  store: Speicher | null = speicher(),
+): EntwurfSpeicherErgebnis {
+  if (!store) return { ok: false, grund: "kein_speicher", meldung: FEHLER_MELDUNG.kein_speicher };
+  const eintrag: GespeicherterEntwurf = { gespeichertAm: jetzt.toISOString(), werte };
+  try {
+    store.setItem(schluessel, JSON.stringify(eintrag));
+    return { ok: true, eintrag };
+  } catch (e) {
+    const grund: EntwurfFehlerGrund = istQuotaFehler(e) ? "voll" : "fehler";
+    return { ok: false, grund, meldung: FEHLER_MELDUNG[grund] };
+  }
+}
+
+/**
+ * Wartezeit bis zur nächsten automatischen Wiederholung.
+ * `versuch` ist 0 für den ersten Fehlschlag. Null = keine Wiederholung mehr.
+ */
+export function retryVerzoegerung(versuch: number, grund: EntwurfFehlerGrund): number | null {
+  // Ohne verfügbaren Speicher hilft keine Wiederholung.
+  if (grund === "kein_speicher") return null;
+  return ENTWURF_RETRY_MS[versuch] ?? null;
+}
+
 export function verwerfeEntwurf(schluessel: string, store: Speicher | null = speicher()): void {
   try {
     store?.removeItem(schluessel);
