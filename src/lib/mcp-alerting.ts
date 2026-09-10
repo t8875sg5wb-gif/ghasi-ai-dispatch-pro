@@ -88,6 +88,69 @@ export function bewerteMcpAlarm(
   };
 }
 
+/** Ab so vielen Fehlern/Abweisungen gilt EIN Werkzeug als auffällig (Warnung). */
+export const MCP_TOOL_ALARM_SCHWELLE_WARNUNG = 2;
+
+/** Ab so vielen Fehlern/Abweisungen ist EIN Werkzeug kritisch. */
+export const MCP_TOOL_ALARM_SCHWELLE_KRITISCH = 5;
+
+export interface McpToolAlarm {
+  tool: string;
+  stufe: Exclude<McpAlarmStufe, "normal">;
+  fehler: number;
+  abgelehnt: number;
+  /** Alle Aufrufe des Werkzeugs im Fenster. */
+  gesamt: number;
+  /** Anteil fehlerhafter/abgewiesener Aufrufe (0–1). */
+  quote: number;
+  fensterMinuten: number;
+}
+
+/**
+ * Bewertet je Werkzeug, ob es im Zeitfenster ungewöhnlich viele Fehler oder
+ * Abweisungen hatte. Ergebnis absteigend nach Auffälligkeit sortiert.
+ */
+export function bewerteToolAlarme(
+  aufrufe: McpAufruf[],
+  now: number = Date.now(),
+  fensterMinuten: number = MCP_ALARM_FENSTER_MINUTEN,
+): McpToolAlarm[] {
+  const grenze = now - fensterMinuten * 60_000;
+  const proTool = new Map<string, { fehler: number; abgelehnt: number; gesamt: number }>();
+
+  for (const a of aufrufe) {
+    const t = new Date(a.zeitpunkt).getTime();
+    if (!Number.isFinite(t) || t < grenze || t > now) continue;
+    const e = proTool.get(a.tool) ?? { fehler: 0, abgelehnt: 0, gesamt: 0 };
+    e.gesamt += 1;
+    if (a.status === "fehler") e.fehler += 1;
+    if (a.status === "abgelehnt") e.abgelehnt += 1;
+    proTool.set(a.tool, e);
+  }
+
+  const ergebnis: McpToolAlarm[] = [];
+  for (const [tool, e] of proTool) {
+    const negativ = e.fehler + e.abgelehnt;
+    if (negativ < MCP_TOOL_ALARM_SCHWELLE_WARNUNG) continue;
+    ergebnis.push({
+      tool,
+      stufe: negativ >= MCP_TOOL_ALARM_SCHWELLE_KRITISCH ? "kritisch" : "warnung",
+      fehler: e.fehler,
+      abgelehnt: e.abgelehnt,
+      gesamt: e.gesamt,
+      quote: e.gesamt > 0 ? negativ / e.gesamt : 0,
+      fensterMinuten,
+    });
+  }
+
+  return ergebnis.sort(
+    (a, b) =>
+      b.fehler + b.abgelehnt - (a.fehler + a.abgelehnt) ||
+      b.quote - a.quote ||
+      a.tool.localeCompare(b.tool, "de"),
+  );
+}
+
 /** Stabile Benachrichtigungs-ID pro Fenster, damit nicht bei jedem Laden gedoppelt wird. */
 export function mcpAlarmId(alarm: McpAlarm, now: number = Date.now()): string {
   const fensterSlot = Math.floor(now / (alarm.fensterMinuten * 60_000));
