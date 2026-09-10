@@ -984,6 +984,7 @@ function DauerauftragForm({
       gesichertRef.current = f;
       setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
       setEntwurfFehler(null);
+      setEntwurfSoebenGespeichert(true);
       toast.success("Entwurf zwischengespeichert");
       return;
     }
