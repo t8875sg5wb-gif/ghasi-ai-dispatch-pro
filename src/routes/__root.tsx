@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "../components/theme-provider";
 import { AppShell } from "../components/layout/app-shell";
 import { Toaster } from "../components/ui/sonner";
+import { TooltipProvider } from "../components/ui/tooltip";
 import { AuthProvider } from "../hooks/use-auth";
 import { AuthGate } from "../components/auth/auth-gate";
 
