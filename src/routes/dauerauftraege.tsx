@@ -881,6 +881,13 @@ function DauerauftragForm({
   // Live-Validierung: bei jeder Änderung neu berechnet.
   const liveFehler = useMemo(() => validiere(f), [f]);
 
+  // Prüfstatus des gesicherten Entwurfs (nach einem Reload noch nicht übernommen).
+  const entwurfFehlerAnzahl = useMemo(
+    () => (wiederherstellbar ? validiere(normalisiere(wiederherstellbar.werte)).length : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wiederherstellbar],
+  );
+
   const istBeruehrt = (path: string) =>
     beruehrt.includes(path) || beruehrt.includes(path.split(".")[0] ?? path);
 
