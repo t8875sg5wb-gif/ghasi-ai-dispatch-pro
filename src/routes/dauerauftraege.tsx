@@ -1609,27 +1609,38 @@ function DauerauftragForm({
               const gueltig = anzahl === 0;
               return (
                 <>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "gap-1 px-2 py-0.5 font-medium",
-                      gueltig
-                        ? "border-success text-success"
-                        : "border-destructive text-destructive",
-                    )}
-                  >
-                    {gueltig ? (
-                      <>
-                        <CheckCircle2 className="size-3" aria-hidden="true" />
-                        Gültig
-                      </>
-                    ) : (
-                      <>
-                        <TriangleAlert className="size-3" aria-hidden="true" />
-                        {anzahl} {anzahl === 1 ? "Feld" : "Felder"} ungültig
-                      </>
-                    )}
-                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "gap-1 px-2 py-0.5 font-medium",
+                          gueltig
+                            ? "border-success text-success"
+                            : "border-destructive text-destructive",
+                        )}
+                      >
+                        {gueltig ? (
+                          <>
+                            <CheckCircle2 className="size-3" aria-hidden="true" />
+                            Gültig
+                          </>
+                        ) : (
+                          <>
+                            <TriangleAlert className="size-3" aria-hidden="true" />
+                            {anzahl} {anzahl === 1 ? "Feld" : "Felder"} ungültig
+                          </>
+                        )}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="start" className="max-w-xs">
+                      {gueltig
+                        ? "Alle Pflichtfelder sind ausgefüllt und alle Plausibilitätsprüfungen bestanden."
+                        : entwurfOffen
+                          ? `Der wiederhergestellte Entwurf enthält ${anzahl} ungültige ${anzahl === 1 ? "Feld" : "Felder"}. Übernehmen Sie den Entwurf, um die Fehler im Formular zu korrigieren.`
+                          : `Mindestens ein Feld verletzt eine Validierungsregel. Klicken Sie auf „Zu den Fehlern“, um zur Übersicht zu springen.`}
+                    </TooltipContent>
+                  </Tooltip>
                   {!gueltig && !entwurfOffen && (
                     <Button
                       type="button"
