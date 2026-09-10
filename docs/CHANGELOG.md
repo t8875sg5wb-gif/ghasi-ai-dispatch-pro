@@ -29,3 +29,9 @@ einem dokumentierten, strukturierten Format statt Freitext:
 ### Doku-Übersicht
 
 Neue kuratierte Einstiegsseite: [docs/README.md](./README.md).
+
+## 2026-09-10 – Generierte Client-Typen für Dauerauftrags-Fehler
+
+- Neu: `bun run gen:api-types` erzeugt `src/lib/api/dauerauftraege-api.gen.ts` aus `docs/openapi-dauerauftraege.yaml`.
+- Neu: `src/lib/api/dauerauftraege.ts` mit typisierten Aliasen (`ApiFeldFehler`, `ApiFeldFehlerListe`, `ApiFeldFehlerAntwort`, `RecurringApiFehler`) und `parseRecurringFehler` / `istFeldFehlerAntwort` / `apiFeldLabel`.
+- Der Fehler-Typ von `createRecurring` und `updateRecurring` ist damit vollständig typisiert (Feldfehler mit `path`/`label`/`message` vs. fachlicher Fehler).

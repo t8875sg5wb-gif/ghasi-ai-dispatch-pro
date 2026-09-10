@@ -140,3 +140,36 @@ Jede abgelehnte Mutation wird serverseitig in `recurring_rejections` mit
 Zeitpunkt, Aktion, Grund und der Feldliste protokolliert (Lesezugriff nur für
 Admins, sichtbar unter `/dauerauftrag-ablehnungen`). Das Protokollieren ist
 „best effort“ und verändert die Fehlermeldung nie.
+
+## Generierte Client-Typen (TypeScript)
+
+Die Typen werden aus `docs/openapi-dauerauftraege.yaml` erzeugt:
+
+```bash
+bun run gen:api-types
+```
+
+Ergebnis: `src/lib/api/dauerauftraege-api.gen.ts` (generiert, nicht manuell
+bearbeiten). Sprechende Aliase und der typisierte Fehler-Parser liegen in
+`src/lib/api/dauerauftraege.ts`:
+
+```ts
+import { parseRecurringFehler } from "@/lib/api/dauerauftraege";
+import type { ApiFeldFehler, RecurringApiFehler } from "@/lib/api/dauerauftraege";
+
+try {
+  await createRecurring({ data: werte });
+} catch (e) {
+  const fehler: RecurringApiFehler = parseRecurringFehler(e);
+  if (fehler.art === "feldfehler") {
+    const meldungen: Record<string, string> = fehler.nachPfad; // path -> message
+    const felder: ApiFeldFehler[] = fehler.fields;
+  } else {
+    // fachlicher Fehler ohne Feldliste
+  }
+}
+```
+
+Ein Compile-Time-Check in `dauerauftraege.ts` stellt sicher, dass der
+generierte `FeldFehler`-Typ mit dem internen Typ aus
+`src/lib/recurring-validation.ts` identisch bleibt.
