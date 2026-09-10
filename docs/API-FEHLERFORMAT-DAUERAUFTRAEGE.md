@@ -4,6 +4,11 @@ Gilt für die Serverfunktionen in `src/lib/recurring.functions.ts`
 (`createRecurring`, `updateRecurring`, zusätzlich `deleteRecurring`).
 Ziel: Client-Entwickler können Feldfehler direkt am Formularfeld anzeigen.
 
+Maschinenlesbare Fassung inkl. Request-/Fehlerschemata und Field-Path-Kodierung:
+[`docs/openapi-dauerauftraege.yaml`](./openapi-dauerauftraege.yaml)
+(Marker als OpenAPI-Erweiterung `x-ghasi-field-error-marker`, Kodierungsdetails
+unter `components.schemas.FeldFehlerKodierung.x-ghasi-field-error-encoding`).
+
 ## 1. Grundprinzip
 
 Validierungsfehler werden **nicht** als freier Text geworfen. Die Serverfunktion
