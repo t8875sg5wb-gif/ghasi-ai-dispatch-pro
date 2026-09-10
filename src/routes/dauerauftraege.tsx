@@ -1014,6 +1014,7 @@ function DauerauftragForm({
     setF(werte);
     merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
     setWiederherstellbar(null);
+    setEntwurfOffen(false);
     gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
     setEntwurfSoebenGespeichert(true);
@@ -1023,6 +1024,7 @@ function DauerauftragForm({
   const entwurfLoeschen = () => {
     verwerfeEntwurf(entwurfKey);
     setWiederherstellbar(null);
+    setEntwurfOffen(false);
     setEntwurfGespeichertAm(null);
     setEntwurfFehler(null);
     gesichertRef.current = basisRef.current;
@@ -1030,6 +1032,7 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
   };
+
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
     merkeBeruehrt(String(k));
