@@ -845,6 +845,7 @@ function DauerauftragForm({
   // Letzter erfolgreich zwischengespeicherter Stand – Basis für den Dirty-Status.
   const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
+  const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   const [entwurfFehler, setEntwurfFehler] = useState<{
     meldung: string;
@@ -939,6 +940,7 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
     setEntwurfGespeichertAm(null);
+    setEntwurfSoebenGespeichert(false);
     setEntwurfFehler(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
     setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
@@ -958,6 +960,7 @@ function DauerauftragForm({
         gesichertRef.current = f;
         setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
         setEntwurfFehler(null);
+        setEntwurfSoebenGespeichert(true);
         return;
       }
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
@@ -974,6 +977,14 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [f, entwurfKey, entwurfRetryZaehler]);
 
+  // „Soeben gespeichert“-Hinweis nach jedem erfolgreichen Auto-Save sofort
+  // anzeigen und nach 3 Sekunden wieder ausblenden.
+  useEffect(() => {
+    if (!entwurfSoebenGespeichert) return;
+    const timer = window.setTimeout(() => setEntwurfSoebenGespeichert(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [entwurfSoebenGespeichert]);
+
   /** Manueller Neuversuch für den Auto-Save. */
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
@@ -981,6 +992,7 @@ function DauerauftragForm({
       gesichertRef.current = f;
       setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
       setEntwurfFehler(null);
+      setEntwurfSoebenGespeichert(true);
       toast.success("Entwurf zwischengespeichert");
       return;
     }
@@ -997,6 +1009,7 @@ function DauerauftragForm({
     setWiederherstellbar(null);
     gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
+    setEntwurfSoebenGespeichert(true);
     toast.success("Entwurf wiederhergestellt");
   };
 
@@ -1545,7 +1558,7 @@ function DauerauftragForm({
           {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns und Prüfstatus. */}
           <span className="text-muted-foreground">
             {entwurfGespeichertAm
-              ? `Zuletzt gespeichert: ${formatZeitmarke(entwurfGespeichertAm)}`
+              ? `Zuletzt gespeichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gespeichert: noch nie"}
             {" · "}
             {liveFehler.length === 0
