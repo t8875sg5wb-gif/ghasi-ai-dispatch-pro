@@ -907,10 +907,48 @@ function DauerauftragForm({
   const { data: kassen = [] } = useInsurers();
 
   useEffect(() => {
-    setF(normalisiere(initial));
+    const basis = normalisiere(initial);
+    basisRef.current = basis;
+    setF(basis);
     setBeruehrt([]);
     setSubmitVersucht(false);
-  }, [initial]);
+    setEntwurfGespeichertAm(null);
+    const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
+    setWiederherstellbar(
+      gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial, istEdit]);
+
+  // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
+  useEffect(() => {
+    if (!entwurfWeichtAb(f, basisRef.current)) return;
+    const timer = window.setTimeout(() => {
+      const eintrag = speichereEntwurf(entwurfKey, f);
+      if (eintrag) setEntwurfGespeichertAm(eintrag.gespeichertAm);
+    }, ENTWURF_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [f, entwurfKey]);
+
+  /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
+  const entwurfUebernehmen = () => {
+    if (!wiederherstellbar) return;
+    const werte = normalisiere(wiederherstellbar.werte);
+    setF(werte);
+    merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
+    setWiederherstellbar(null);
+    setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
+    toast.success("Entwurf wiederhergestellt");
+  };
+
+  const entwurfLoeschen = () => {
+    verwerfeEntwurf(entwurfKey);
+    setWiederherstellbar(null);
+    setEntwurfGespeichertAm(null);
+    setF(basisRef.current);
+    setBeruehrt([]);
+    setSubmitVersucht(false);
+  };
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
     merkeBeruehrt(String(k));
