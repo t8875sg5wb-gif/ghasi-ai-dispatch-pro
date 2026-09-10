@@ -4,7 +4,19 @@ import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Loader2, ShieldAlert, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import {
+  ArrowRight,
+  Download,
+  FileText,
+  Loader2,
+  ShieldAlert,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { toCsv, downloadCsv } from "@/lib/export-utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +28,13 @@ import { bewerteAblehnungen } from "@/lib/recurring-rejection-analytics";
 import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
 
 type Zeitraum = "heute" | "7tage";
+
+const AKTION_LABEL: Record<string, string> = {
+  create: "Neuanlage",
+  update: "Änderung",
+  delete: "Löschung",
+  generate: "Transport-Erzeugung",
+};
 
 interface ZeitraumRange {
   label: string;
@@ -110,7 +129,7 @@ export function AblehnungenWidget() {
     enabled: istAdmin,
   });
 
-  const { aktuell, vorher, trend } = useMemo(() => {
+  const { aktuell, vorher, trend, aktuellRows } = useMemo(() => {
     const rows = ablehnungen.data ?? [];
     const aktuellRows = rows.filter((a) =>
       isInRange(a.zeitpunkt, ranges.aktuell.von, ranges.aktuell.bis),
@@ -127,8 +146,47 @@ export function AblehnungenWidget() {
         : aktuell.abgelehnt > 0
           ? 100
           : 0;
-    return { aktuell, vorher, trend: { diff, prozent } };
+    return { aktuell, vorher, trend: { diff, prozent }, aktuellRows };
   }, [ablehnungen.data, ranges, erfolgeAktuell.data, erfolgeVorher.data]);
+
+  /* ------------------ Schnell-Exporte für den gewählten Zeitraum ------------------ */
+  const exportTage = zeitraum === "heute" ? 1 : 7;
+  const dateiname = (endung: string) =>
+    `dauerauftrag-ablehnungen-${exportTage}t-${new Date().toISOString().slice(0, 10)}.${endung}`;
+
+  const exportiereCsv = () => {
+    if (aktuellRows.length === 0) {
+      toast.info("Keine Ablehnungen im gewählten Zeitraum.");
+      return;
+    }
+    const rows = aktuellRows.map((a) => ({
+      Zeitpunkt: new Date(a.zeitpunkt).toLocaleString("de-DE", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+      Zeitraum: zeitraum === "heute" ? "Heute" : "Letzte 7 Tage",
+      Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
+      Patient: a.patient ?? "",
+      Grund: a.grund,
+      Fahrer: a.suchfelder?.fahrer ?? "",
+      Abrechnungskunde: a.suchfelder?.kunde ?? "",
+      "Träger / Einrichtung": a.suchfelder?.traeger ?? "",
+      "Ziel-ID": a.zielId ?? "",
+      Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
+    }));
+    downloadCsv(dateiname("csv"), toCsv(rows));
+    toast.success("CSV-Export wurde heruntergeladen.");
+  };
+
+  const exportierePdf = async () => {
+    if (aktuellRows.length === 0) {
+      toast.info("Keine Ablehnungen im gewählten Zeitraum.");
+      return;
+    }
+    const { generateAblehnungenPdf } = await import("@/lib/ablehnungen-pdf");
+    generateAblehnungenPdf(aktuellRows, { tage: exportTage }).save(dateiname("pdf"));
+    toast.success("PDF-Export wurde heruntergeladen.");
+  };
 
   const lade = ablehnungen.isLoading || erfolgeAktuell.isLoading || erfolgeVorher.isLoading;
   const fehler = ablehnungen.isError || erfolgeAktuell.isError || erfolgeVorher.isError;
@@ -262,12 +320,32 @@ export function AblehnungenWidget() {
               </div>
             )}
 
-            <Button asChild variant="outline" size="sm">
-              <Link to="/dauerauftrag-ablehnungen">
-                Zur Admin-Tabelle
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/dauerauftrag-ablehnungen">
+                  Zur Admin-Tabelle
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportiereCsv}
+                disabled={aktuellRows.length === 0}
+              >
+                <Download className="size-4" />
+                CSV ({zeitraum === "heute" ? "heute" : "7 Tage"})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportierePdf}
+                disabled={aktuellRows.length === 0}
+              >
+                <FileText className="size-4" />
+                PDF ({zeitraum === "heute" ? "heute" : "7 Tage"})
+              </Button>
+            </div>
           </>
         )}
       </CardContent>
