@@ -345,6 +345,7 @@ function DauerauftraegePage() {
               beschreibung: `Dauerauftrag ${werte.kennung} (${werte.patient}) bearbeitet.`,
               entitaet: werte.kennung,
             });
+            verwerfeEntwurf(entwurfSchluessel(editTarget.id));
             setFormOpen(false);
             setEditTarget(null);
           },
@@ -361,6 +362,7 @@ function DauerauftraegePage() {
             beschreibung: `Neuer Dauerauftrag ${neu.kennung} (${neu.patient}, ${RHYTHMUS_LABEL[neu.rhythmus]}) angelegt.`,
             entitaet: neu.kennung,
           });
+          verwerfeEntwurf(entwurfSchluessel(null));
           setFormOpen(false);
           setEditTarget(null);
         },
