@@ -92,7 +92,8 @@ export function ladeEntwurf(
     return null;
   }
   const kandidat = daten as Partial<GespeicherterEntwurf>;
-  const zeit = typeof kandidat.gespeichertAm === "string" ? Date.parse(kandidat.gespeichertAm) : NaN;
+  const zeit =
+    typeof kandidat.gespeichertAm === "string" ? Date.parse(kandidat.gespeichertAm) : NaN;
   const werte = kandidat.werte;
   if (!Number.isFinite(zeit) || !werte || typeof werte !== "object") {
     verwerfeEntwurf(schluessel, store);

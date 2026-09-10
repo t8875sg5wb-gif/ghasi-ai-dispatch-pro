@@ -914,9 +914,7 @@ function DauerauftragForm({
     setSubmitVersucht(false);
     setEntwurfGespeichertAm(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
-    setWiederherstellbar(
-      gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null,
-    );
+    setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
@@ -1425,13 +1423,13 @@ function DauerauftragForm({
             : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
         </span>
         <div className="flex gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Abbrechen
-        </Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-          {istEdit ? "Speichern" : "Anlegen"}
-        </Button>
+          <Button variant="outline" onClick={onCancel}>
+            Abbrechen
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+            {istEdit ? "Speichern" : "Anlegen"}
+          </Button>
         </div>
       </DialogFooter>
     </>
