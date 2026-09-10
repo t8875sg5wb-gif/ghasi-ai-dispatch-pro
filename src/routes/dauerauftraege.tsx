@@ -842,6 +842,8 @@ function DauerauftragForm({
   /* ---------------------- Auto-Save (Entwurf) ---------------------- */
   const entwurfKey = entwurfSchluessel(istEdit ? initial.id : null);
   const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
+  // Letzter erfolgreich zwischengespeicherter Stand – Basis für den Dirty-Status.
+  const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   const [entwurfFehler, setEntwurfFehler] = useState<{
