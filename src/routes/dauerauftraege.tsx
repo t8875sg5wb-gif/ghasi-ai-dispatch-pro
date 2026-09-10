@@ -940,6 +940,7 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
     setEntwurfGespeichertAm(null);
+    setEntwurfSoebenGespeichert(false);
     setEntwurfFehler(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
     setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
