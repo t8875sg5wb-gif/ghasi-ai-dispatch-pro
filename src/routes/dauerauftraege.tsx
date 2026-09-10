@@ -1117,6 +1117,7 @@ function DauerauftragForm({
 
         {entwurfFehler && (
           <div
+            id="entwurf-fehler-hinweis"
             role="alert"
             className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
           >
