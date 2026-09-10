@@ -1605,6 +1605,46 @@ function DauerauftragForm({
               : "Zuletzt gesichert: noch nie"}
           </span>
 
+          {/* Fehlgeschlagener Speicherversuch – mit Verknüpfung zum Retry-Flow. */}
+          {entwurfFehler && (
+            <span
+              role="alert"
+              className="flex flex-wrap items-center gap-2 font-medium text-warning"
+            >
+              <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                Letzter Speicherversuch fehlgeschlagen ({formatZeitmarke(entwurfFehler.zeitpunkt)}) ·{" "}
+                {entwurfFehler.wiederholt
+                  ? `Neuversuch ${entwurfFehler.versuche} läuft automatisch`
+                  : "kein automatischer Neuversuch mehr"}
+              </span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs text-warning"
+                onClick={entwurfErneutSpeichern}
+              >
+                Jetzt erneut speichern
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs text-muted-foreground"
+                onClick={() => {
+                  document
+                    .getElementById("entwurf-fehler-hinweis")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+              >
+                Details
+              </Button>
+            </span>
+          )}
+
+
+
           {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
           <span className="flex items-center gap-2 text-xs">
             {(() => {
