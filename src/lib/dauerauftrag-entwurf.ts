@@ -80,8 +80,10 @@ function istQuotaFehler(e: unknown): boolean {
   if (typeof DOMException !== "undefined" && e instanceof DOMException) {
     return e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED";
   }
-  return /quota/i.test(String((e as { name?: string; message?: string })?.name ?? "")) ||
-    /quota/i.test(String((e as { message?: string })?.message ?? ""));
+  return (
+    /quota/i.test(String((e as { name?: string; message?: string })?.name ?? "")) ||
+    /quota/i.test(String((e as { message?: string })?.message ?? ""))
+  );
 }
 
 /**
