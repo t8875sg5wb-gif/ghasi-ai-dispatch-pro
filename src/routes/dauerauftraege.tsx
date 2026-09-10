@@ -847,6 +847,8 @@ function DauerauftragForm({
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+  // Entwurf aus einer früheren Ansicht (z. B. nach einem Reload) – noch nicht übernommen.
+  const [entwurfOffen, setEntwurfOffen] = useState(false);
   const [entwurfFehler, setEntwurfFehler] = useState<{
     meldung: string;
     wiederholt: boolean;
@@ -878,6 +880,13 @@ function DauerauftragForm({
 
   // Live-Validierung: bei jeder Änderung neu berechnet.
   const liveFehler = useMemo(() => validiere(f), [f]);
+
+  // Prüfstatus des gesicherten Entwurfs (nach einem Reload noch nicht übernommen).
+  const entwurfFehlerAnzahl = useMemo(
+    () => (wiederherstellbar ? validiere(normalisiere(wiederherstellbar.werte)).length : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wiederherstellbar],
+  );
 
   const istBeruehrt = (path: string) =>
     beruehrt.includes(path) || beruehrt.includes(path.split(".")[0] ?? path);
@@ -943,7 +952,11 @@ function DauerauftragForm({
     setEntwurfSoebenGespeichert(false);
     setEntwurfFehler(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
-    setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
+    const offen = gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null;
+    setWiederherstellbar(offen);
+    // Nach einem Reload den letzten Speicherstand weiterhin anzeigen.
+    setEntwurfOffen(offen !== null);
+    if (offen) setEntwurfGespeichertAm(offen.gespeichertAm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
@@ -961,6 +974,7 @@ function DauerauftragForm({
         setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
         setEntwurfFehler(null);
         setEntwurfSoebenGespeichert(true);
+        setEntwurfOffen(false);
         return;
       }
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
@@ -1007,6 +1021,7 @@ function DauerauftragForm({
     setF(werte);
     merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
     setWiederherstellbar(null);
+    setEntwurfOffen(false);
     gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
     setEntwurfSoebenGespeichert(true);
@@ -1016,6 +1031,7 @@ function DauerauftragForm({
   const entwurfLoeschen = () => {
     verwerfeEntwurf(entwurfKey);
     setWiederherstellbar(null);
+    setEntwurfOffen(false);
     setEntwurfGespeichertAm(null);
     setEntwurfFehler(null);
     gesichertRef.current = basisRef.current;
@@ -1023,6 +1039,7 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
   };
+
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
     merkeBeruehrt(String(k));
@@ -1531,7 +1548,7 @@ function DauerauftragForm({
             className={`inline-flex items-center gap-1.5 font-medium ${
               entwurfFehler
                 ? "text-warning"
-                : ungespeicherteAenderungen
+                : entwurfOffen || ungespeicherteAenderungen
                   ? "text-muted-foreground"
                   : "text-success"
             }`}
@@ -1542,6 +1559,11 @@ function DauerauftragForm({
                 {entwurfFehler.wiederholt
                   ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
                   : "Nicht gesichert · bitte manuell erneut versuchen"}
+              </>
+            ) : entwurfOffen ? (
+              <>
+                <PencilLine className="size-3.5" aria-hidden="true" />
+                Gesicherter Entwurf vorhanden · noch nicht übernommen
               </>
             ) : ungespeicherteAenderungen ? (
               <>
@@ -1561,11 +1583,13 @@ function DauerauftragForm({
               ? `Zuletzt gespeichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gespeichert: noch nie"}
             {" · "}
-            {liveFehler.length === 0
-              ? "Prüfung: alle Felder gültig"
-              : liveFehler.length === 1
-                ? "Prüfung: 1 Feld ungültig"
-                : `Prüfung: ${liveFehler.length} Felder ungültig`}
+            {(() => {
+              const anzahl = entwurfOffen ? entwurfFehlerAnzahl : liveFehler.length;
+              const vorsatz = entwurfOffen ? "Prüfung (Entwurf)" : "Prüfung";
+              if (anzahl === 0) return `${vorsatz}: alle Felder gültig`;
+              if (anzahl === 1) return `${vorsatz}: 1 Feld ungültig`;
+              return `${vorsatz}: ${anzahl} Felder ungültig`;
+            })()}
           </span>
         </div>
         <div className="flex gap-2">
