@@ -1000,6 +1000,23 @@ function DauerauftragForm({
       </DialogHeader>
 
       <div className="space-y-4">
+        {wiederherstellbar && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+            <span>
+              Es gibt einen nicht gespeicherten Entwurf von{" "}
+              <strong>{formatUhrzeit(wiederherstellbar.gespeichertAm)} Uhr</strong>.
+            </span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={entwurfLoeschen}>
+                Verwerfen
+              </Button>
+              <Button size="sm" onClick={entwurfUebernehmen}>
+                Entwurf übernehmen
+              </Button>
+            </div>
+          </div>
+        )}
+
         {fehler.length > 0 && (
           <div
             role="alert"
