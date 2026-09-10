@@ -1497,18 +1497,49 @@ function DauerauftragForm({
       </div>
 
       <DialogFooter className="items-center gap-2 sm:justify-between">
-        <span
-          aria-live="polite"
-          className={`text-xs ${entwurfFehler ? "font-medium text-warning" : "text-muted-foreground"}`}
-        >
-          {entwurfFehler
-            ? entwurfFehler.wiederholt
-              ? `Zwischenspeichern fehlgeschlagen · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
-              : "Zwischenspeichern fehlgeschlagen · bitte manuell erneut versuchen"
-            : entwurfGespeichertAm
-              ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
-              : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
-        </span>
+        <div aria-live="polite" className="flex flex-col gap-1 text-xs">
+          {/* Zeile 1: eindeutiger Zustand – gespeichert, offen oder fehlgeschlagen. */}
+          <span
+            className={`inline-flex items-center gap-1.5 font-medium ${
+              entwurfFehler
+                ? "text-warning"
+                : ungespeicherteAenderungen
+                  ? "text-muted-foreground"
+                  : "text-success"
+            }`}
+          >
+            {entwurfFehler ? (
+              <>
+                <TriangleAlert className="size-3.5" aria-hidden="true" />
+                {entwurfFehler.wiederholt
+                  ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
+                  : "Nicht gesichert · bitte manuell erneut versuchen"}
+              </>
+            ) : ungespeicherteAenderungen ? (
+              <>
+                <PencilLine className="size-3.5" aria-hidden="true" />
+                Ungespeicherte Änderungen
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                {entwurfGespeichertAm ? "Alle Änderungen gesichert" : "Keine Änderungen"}
+              </>
+            )}
+          </span>
+          {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns und Prüfstatus. */}
+          <span className="text-muted-foreground">
+            {entwurfGespeichertAm
+              ? `Zuletzt gespeichert: ${formatZeitmarke(entwurfGespeichertAm)}`
+              : "Zuletzt gespeichert: noch nie"}
+            {" · "}
+            {liveFehler.length === 0
+              ? "Prüfung: alle Felder gültig"
+              : liveFehler.length === 1
+                ? "Prüfung: 1 Feld ungültig"
+                : `Prüfung: ${liveFehler.length} Felder ungültig`}
+          </span>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
             Abbrechen
