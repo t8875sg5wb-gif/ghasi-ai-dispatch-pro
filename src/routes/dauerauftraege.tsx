@@ -324,14 +324,18 @@ function DauerauftraegePage() {
 
   const speichern = (werte: Dauerauftrag) => {
     setServerFeldFehler([]);
+    setServerHinweis(null);
     const zeigeFehler = (praefix: string) => (e: unknown) => {
-      const message = (e as Error).message ?? "";
-      const felder = dekodiereFeldFehler(message);
-      setServerFeldFehler(felder);
-      toast.error(`${praefix}: ${lesbarerFehlerText(message)}`, {
-        description:
-          felder.length > 0 ? felder.map((f) => `${f.label}: ${f.message}`).join(" · ") : undefined,
-      });
+      const fehler = parseRecurringFehler(e);
+      if (fehler.art === "feldfehler") {
+        setServerFeldFehler(fehler.fields);
+        toast.error(`${praefix}: ${fehler.text}`, {
+          description: fehler.fields.map((x) => `${x.label}: ${x.message}`).join(" · "),
+        });
+        return;
+      }
+      setServerHinweis(fehler.text);
+      toast.error(`${praefix}: ${fehler.text}`);
     };
     if (editTarget) {
       updateMut.mutate(
