@@ -826,6 +826,12 @@ function DauerauftragForm({
   const [beruehrt, setBeruehrt] = useState<string[]>([]);
   const [submitVersucht, setSubmitVersucht] = useState(false);
 
+  /* ---------------------- Auto-Save (Entwurf) ---------------------- */
+  const entwurfKey = entwurfSchluessel(istEdit ? initial.id : null);
+  const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
+  const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
+  const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
       const neu = paths.filter((p) => !prev.includes(p));
