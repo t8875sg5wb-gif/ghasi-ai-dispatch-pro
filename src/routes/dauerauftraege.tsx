@@ -39,13 +39,12 @@ import { TerminVorschau } from "@/components/dauerauftraege/termin-vorschau";
 import { MOBILITAET_META, MOBILITAET_OPTIONEN, type Mobilitaet } from "@/lib/auftraege";
 import { recurringFieldsSchema } from "@/lib/recurring.functions";
 import {
-  dekodiereFeldFehler,
   feldFehlerMap,
-  lesbarerFehlerText,
   pruefeDauerauftragRegeln,
   zuFeldFehlern,
   type FeldFehler,
 } from "@/lib/recurring-validation";
+import { parseRecurringFehler } from "@/lib/api/dauerauftraege";
 import {
   ENTWURF_DEBOUNCE_MS,
   entwurfSchluessel,
@@ -53,8 +52,9 @@ import {
   formatUhrzeit,
   geaenderteFelder,
   ladeEntwurf,
-  speichereEntwurf,
+  retryVerzoegerung,
   verwerfeEntwurf,
+  versucheEntwurfZuSpeichern,
   type GespeicherterEntwurf,
 } from "@/lib/dauerauftrag-entwurf";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
