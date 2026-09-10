@@ -72,6 +72,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -1544,39 +1545,52 @@ function DauerauftragForm({
       <DialogFooter className="items-center gap-2 sm:justify-between">
         <div aria-live="polite" className="flex flex-col gap-1 text-xs">
           {/* Zeile 1: eindeutiger Zustand – gespeichert, offen oder fehlgeschlagen. */}
-          <span
-            className={`inline-flex items-center gap-1.5 font-medium ${
-              entwurfFehler
-                ? "text-warning"
-                : entwurfOffen || ungespeicherteAenderungen
-                  ? "text-muted-foreground"
-                  : "text-success"
-            }`}
-          >
-            {entwurfFehler ? (
-              <>
-                <TriangleAlert className="size-3.5" aria-hidden="true" />
-                {entwurfFehler.wiederholt
-                  ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
-                  : "Nicht gesichert · bitte manuell erneut versuchen"}
-              </>
-            ) : entwurfOffen ? (
-              <>
-                <PencilLine className="size-3.5" aria-hidden="true" />
-                Gesicherter Entwurf vorhanden · noch nicht übernommen
-              </>
-            ) : ungespeicherteAenderungen ? (
-              <>
-                <PencilLine className="size-3.5" aria-hidden="true" />
-                Ungespeicherte Änderungen
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                {entwurfGespeichertAm ? "Alle Änderungen gesichert" : "Keine Änderungen"}
-              </>
-            )}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={`inline-flex items-center gap-1.5 font-medium ${
+                  entwurfFehler
+                    ? "text-warning"
+                    : entwurfOffen || ungespeicherteAenderungen
+                      ? "text-muted-foreground"
+                      : "text-success"
+                }`}
+              >
+                {entwurfFehler ? (
+                  <>
+                    <TriangleAlert className="size-3.5" aria-hidden="true" />
+                    {entwurfFehler.wiederholt
+                      ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
+                      : "Nicht gesichert · bitte manuell erneut versuchen"}
+                  </>
+                ) : entwurfOffen ? (
+                  <>
+                    <PencilLine className="size-3.5" aria-hidden="true" />
+                    Gesicherter Entwurf vorhanden · noch nicht übernommen
+                  </>
+                ) : ungespeicherteAenderungen ? (
+                  <>
+                    <PencilLine className="size-3.5" aria-hidden="true" />
+                    Ungespeicherte Änderungen
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                    {entwurfGespeichertAm ? "Alle Änderungen gesichert" : "Keine Änderungen"}
+                  </>
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="start" className="max-w-xs">
+              {entwurfFehler
+                ? "Der letzte Auto-Save-Versuch ist fehlgeschlagen. Ihre Änderungen wurden noch nicht gesichert; der Versuch wird automatisch wiederholt oder kann manuell neu gestartet werden."
+                : entwurfOffen
+                  ? "Ein gesicherter Entwurf aus einer früheren Sitzung liegt vor. Er wurde noch nicht in das aktuelle Formular übernommen."
+                  : ungespeicherteAenderungen
+                    ? "Sie haben Änderungen vorgenommen, die noch nicht automatisch zwischengespeichert wurden."
+                    : "Der aktuelle Stand ist mit dem letzten Auto-Save identisch."}
+            </TooltipContent>
+          </Tooltip>
           {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns. */}
           <span className="text-muted-foreground">
             {entwurfGespeichertAm
@@ -1591,27 +1605,38 @@ function DauerauftragForm({
               const gueltig = anzahl === 0;
               return (
                 <>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "gap-1 px-2 py-0.5 font-medium",
-                      gueltig
-                        ? "border-success text-success"
-                        : "border-destructive text-destructive",
-                    )}
-                  >
-                    {gueltig ? (
-                      <>
-                        <CheckCircle2 className="size-3" aria-hidden="true" />
-                        Gültig
-                      </>
-                    ) : (
-                      <>
-                        <TriangleAlert className="size-3" aria-hidden="true" />
-                        {anzahl} {anzahl === 1 ? "Feld" : "Felder"} ungültig
-                      </>
-                    )}
-                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "gap-1 px-2 py-0.5 font-medium",
+                          gueltig
+                            ? "border-success text-success"
+                            : "border-destructive text-destructive",
+                        )}
+                      >
+                        {gueltig ? (
+                          <>
+                            <CheckCircle2 className="size-3" aria-hidden="true" />
+                            Gültig
+                          </>
+                        ) : (
+                          <>
+                            <TriangleAlert className="size-3" aria-hidden="true" />
+                            {anzahl} {anzahl === 1 ? "Feld" : "Felder"} ungültig
+                          </>
+                        )}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="start" className="max-w-xs">
+                      {gueltig
+                        ? "Alle Pflichtfelder sind ausgefüllt und alle Plausibilitätsprüfungen bestanden."
+                        : entwurfOffen
+                          ? `Der wiederhergestellte Entwurf enthält ${anzahl} ungültige ${anzahl === 1 ? "Feld" : "Felder"}. Übernehmen Sie den Entwurf, um die Fehler im Formular zu korrigieren.`
+                          : `Mindestens ein Feld verletzt eine Validierungsregel. Klicken Sie auf „Zu den Fehlern“, um zur Übersicht zu springen.`}
+                    </TooltipContent>
+                  </Tooltip>
                   {!gueltig && !entwurfOffen && (
                     <Button
                       type="button"
