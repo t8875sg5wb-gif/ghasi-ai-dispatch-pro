@@ -928,6 +928,7 @@ function DauerauftragForm({
     setBeruehrt([]);
     setSubmitVersucht(false);
     setEntwurfGespeichertAm(null);
+    setEntwurfFehler(null);
     const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
     setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
