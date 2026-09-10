@@ -854,6 +854,7 @@ function DauerauftragForm({
     meldung: string;
     wiederholt: boolean;
     versuche: number;
+    zeitpunkt: string;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
 
