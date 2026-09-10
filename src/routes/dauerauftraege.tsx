@@ -1614,7 +1614,8 @@ function DauerauftragForm({
             >
               <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
               <span>
-                Letzter Speicherversuch fehlgeschlagen ({formatZeitmarke(entwurfFehler.zeitpunkt)}) ·{" "}
+                Letzter Speicherversuch fehlgeschlagen ({formatZeitmarke(entwurfFehler.zeitpunkt)})
+                ·{" "}
                 {entwurfFehler.wiederholt
                   ? `Neuversuch ${entwurfFehler.versuche} läuft automatisch`
                   : "kein automatischer Neuversuch mehr"}
@@ -1643,8 +1644,6 @@ function DauerauftragForm({
               </Button>
             </span>
           )}
-
-
 
           {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
           <span className="flex items-center gap-2 text-xs">
