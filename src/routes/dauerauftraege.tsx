@@ -1558,7 +1558,7 @@ function DauerauftragForm({
           {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns und Prüfstatus. */}
           <span className="text-muted-foreground">
             {entwurfGespeichertAm
-              ? `Zuletzt gespeichert: ${formatZeitmarke(entwurfGespeichertAm)}`
+              ? `Zuletzt gespeichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gespeichert: noch nie"}
             {" · "}
             {liveFehler.length === 0
