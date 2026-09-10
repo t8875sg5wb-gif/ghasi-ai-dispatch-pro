@@ -1,10 +1,7 @@
 // Tests für den Schwellenwert-Alarm der Ablehnungsquote.
 import { describe, expect, it } from "bun:test";
 
-import {
-  ablehnungsquotenAlarm,
-  bewerteAblehnungen,
-} from "@/lib/recurring-rejection-analytics";
+import { ablehnungsquotenAlarm, bewerteAblehnungen } from "@/lib/recurring-rejection-analytics";
 import type { DauerauftragAblehnung } from "@/lib/recurring-rejections.functions";
 
 function ablehnung(i: number, grund = "Ungültige Felder"): DauerauftragAblehnung {
@@ -28,7 +25,10 @@ const OPT = {
 
 describe("ablehnungsquotenAlarm", () => {
   it("warnt, wenn die Quote den Schwellenwert überschreitet", () => {
-    const k = bewerteAblehnungen([1, 2, 3, 4].map((i) => ablehnung(i)), 6); // 40 %
+    const k = bewerteAblehnungen(
+      [1, 2, 3, 4].map((i) => ablehnung(i)),
+      6,
+    ); // 40 %
     const alarm = ablehnungsquotenAlarm(k, OPT);
     expect(alarm).not.toBeNull();
     expect(alarm!.titel).toContain("40 %");
@@ -37,7 +37,10 @@ describe("ablehnungsquotenAlarm", () => {
   });
 
   it("warnt nicht, wenn die Quote den Schwellenwert nur erreicht", () => {
-    const k = bewerteAblehnungen([1, 2].map((i) => ablehnung(i)), 6); // 25 %
+    const k = bewerteAblehnungen(
+      [1, 2].map((i) => ablehnung(i)),
+      6,
+    ); // 25 %
     expect(ablehnungsquotenAlarm(k, OPT)).toBeNull();
   });
 
@@ -47,7 +50,10 @@ describe("ablehnungsquotenAlarm", () => {
   });
 
   it("liefert eine stabile ID pro Zeitraum und Quote", () => {
-    const k = bewerteAblehnungen([1, 2, 3, 4].map((i) => ablehnung(i)), 6);
+    const k = bewerteAblehnungen(
+      [1, 2, 3, 4].map((i) => ablehnung(i)),
+      6,
+    );
     const a = ablehnungsquotenAlarm(k, OPT);
     const b = ablehnungsquotenAlarm(k, OPT);
     expect(a!.id).toBe(b!.id);
@@ -55,7 +61,11 @@ describe("ablehnungsquotenAlarm", () => {
   });
 
   it("nennt die häufigsten Gründe", () => {
-    const rows = [ablehnung(1, "Fehlende Wochentage"), ablehnung(2, "Fehlende Wochentage"), ablehnung(3)];
+    const rows = [
+      ablehnung(1, "Fehlende Wochentage"),
+      ablehnung(2, "Fehlende Wochentage"),
+      ablehnung(3),
+    ];
     const k = bewerteAblehnungen(rows, 1); // 75 %, 4 Versuche
     const alarm = ablehnungsquotenAlarm(k, { ...OPT, minVersuche: 1 });
     expect(alarm!.text).toContain("Fehlende Wochentage (2×)");
