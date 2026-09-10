@@ -977,6 +977,14 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [f, entwurfKey, entwurfRetryZaehler]);
 
+  // „Soeben gespeichert“-Hinweis nach jedem erfolgreichen Auto-Save sofort
+  // anzeigen und nach 3 Sekunden wieder ausblenden.
+  useEffect(() => {
+    if (!entwurfSoebenGespeichert) return;
+    const timer = window.setTimeout(() => setEntwurfSoebenGespeichert(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [entwurfSoebenGespeichert]);
+
   /** Manueller Neuversuch für den Auto-Save. */
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
