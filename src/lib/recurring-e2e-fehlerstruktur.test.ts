@@ -129,7 +129,10 @@ describe("E2E-Fehlerstruktur createRecurring", () => {
 
   it("greift auch bei fachlichen Querregeln (Wochentage fehlen)", async () => {
     const { felder } = await createAufruf({ ...GUELTIG, wochentage: [] });
-    expect(felder.map((f) => f.path)).toContain("wochentage");
+    // Querregel ohne eigenen Zod-Pfad -> dokumentierter Fallback-Pfad "formular".
+    expect(felder).toHaveLength(1);
+    expect(felder[0].path).toBe("formular");
+    expect(felder[0].message).toMatch(/Wochentag/i);
   });
 });
 
@@ -166,7 +169,8 @@ describe("E2E-Fehlerstruktur updateRecurring", () => {
     expect(protokoll).toHaveLength(1);
     expect(protokoll[0].aktion).toBe("update");
     expect(protokoll[0].felder).toEqual(felder);
-    expect(felder.map((f) => f.path)).toContain("wochentage");
+    // Array-Elementfehler behalten ihren Index im Feldpfad.
+    expect(felder.map((f) => f.path)).toContain("wochentage.0");
   });
 
   it("lässt gültige Teiländerungen unverändert durch", async () => {
