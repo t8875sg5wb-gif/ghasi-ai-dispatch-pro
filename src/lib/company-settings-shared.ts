@@ -72,6 +72,17 @@ export interface CompanySettings {
    * bleiben vollständig erhalten.
    */
   mcpAlertStilleZeiten: StilleZeit[];
+  /**
+   * Schwellenwert in Prozent (1–100): Übersteigt die Ablehnungsquote der
+   * Dauerauftragsversuche in einem Zeitraum diesen Wert, werden Admins
+   * benachrichtigt.
+   */
+  ablehnungsquoteSchwelleProzent: number;
+  /**
+   * Mindestanzahl an Versuchen im Zeitraum, ab der die Quote überhaupt
+   * bewertet wird (verhindert Fehlalarme bei sehr wenigen Vorgängen).
+   */
+  ablehnungsquoteMinVersuche: number;
 }
 
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -103,6 +114,8 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   chatRetentionMonths: 12,
   mcpAuditRetentionMonths: 12,
   mcpAlertStilleZeiten: [],
+  ablehnungsquoteSchwelleProzent: 25,
+  ablehnungsquoteMinVersuche: 5,
 };
 
 export interface CompanyRow {
@@ -134,6 +147,8 @@ export interface CompanyRow {
   chat_retention_months?: number | string;
   mcp_audit_retention_months?: number | string;
   mcp_alert_stille_zeiten?: unknown;
+  ablehnungsquote_schwelle_prozent?: number | string;
+  ablehnungsquote_min_versuche?: number | string;
 }
 
 export function rowToSettings(r: CompanyRow): CompanySettings {
@@ -166,6 +181,8 @@ export function rowToSettings(r: CompanyRow): CompanySettings {
     chatRetentionMonths: Number(r.chat_retention_months ?? 12),
     mcpAuditRetentionMonths: Number(r.mcp_audit_retention_months ?? 12),
     mcpAlertStilleZeiten: parseStilleZeiten(r.mcp_alert_stille_zeiten),
+    ablehnungsquoteSchwelleProzent: Number(r.ablehnungsquote_schwelle_prozent ?? 25),
+    ablehnungsquoteMinVersuche: Number(r.ablehnungsquote_min_versuche ?? 5),
   };
 }
 
@@ -211,6 +228,14 @@ export function settingsToRow(data: CompanySettings): Record<string, unknown> {
     ),
     // Nur strukturell gültige Fenster speichern (nie Rohdaten durchreichen).
     mcp_alert_stille_zeiten: parseStilleZeiten(data.mcpAlertStilleZeiten),
+    ablehnungsquote_schwelle_prozent: Math.min(
+      100,
+      Math.max(1, Math.round(Number(data.ablehnungsquoteSchwelleProzent) || 25)),
+    ),
+    ablehnungsquote_min_versuche: Math.min(
+      1000,
+      Math.max(1, Math.round(Number(data.ablehnungsquoteMinVersuche) || 5)),
+    ),
   };
 }
 
