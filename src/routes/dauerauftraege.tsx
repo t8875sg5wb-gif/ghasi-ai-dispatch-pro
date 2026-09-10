@@ -1497,10 +1497,17 @@ function DauerauftragForm({
       </div>
 
       <DialogFooter className="items-center gap-2 sm:justify-between">
-        <span aria-live="polite" className="text-xs text-muted-foreground">
-          {entwurfGespeichertAm
-            ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
-            : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
+        <span
+          aria-live="polite"
+          className={`text-xs ${entwurfFehler ? "font-medium text-warning" : "text-muted-foreground"}`}
+        >
+          {entwurfFehler
+            ? entwurfFehler.wiederholt
+              ? `Zwischenspeichern fehlgeschlagen · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
+              : "Zwischenspeichern fehlgeschlagen · bitte manuell erneut versuchen"
+            : entwurfGespeichertAm
+              ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
+              : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
         </span>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
