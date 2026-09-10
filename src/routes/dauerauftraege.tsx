@@ -1040,7 +1040,6 @@ function DauerauftragForm({
     setSubmitVersucht(false);
   };
 
-
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
     merkeBeruehrt(String(k));
     setF((prev) => ({ ...prev, [k]: v }));
