@@ -131,3 +131,55 @@ export function bewerteAblehnungen(
         : null,
   };
 }
+
+/* ------------------------- Quoten-Alarm (Schwellenwert) ------------------------- */
+
+export interface QuotenAlarmOptionen {
+  /** Schwellenwert in Prozent (1–100). */
+  schwelleProzent: number;
+  /** Mindestanzahl Versuche, ab der die Quote bewertet wird. */
+  minVersuche: number;
+  /** Anzeigename des Zeitraums, z. B. "heute". */
+  zeitraumLabel: string;
+  /** Stabiler Schlüssel des Zeitraums (z. B. "2026-09-10") für die Alarm-ID. */
+  zeitraumKey: string;
+}
+
+/**
+ * Prüft, ob die Ablehnungsquote (Anteil abgelehnter Versuche) den
+ * konfigurierten Schwellenwert überschreitet. Gibt genau eine
+ * Benachrichtigung mit stabiler ID zurück (idempotent pro Zeitraum) oder null.
+ */
+export function ablehnungsquotenAlarm(
+  kennzahlen: AblehnungsKennzahlen,
+  optionen: QuotenAlarmOptionen,
+  now: number = Date.now(),
+): AblehnungsBenachrichtigung | null {
+  const schwelle = Math.min(100, Math.max(1, Math.round(optionen.schwelleProzent)));
+  const minVersuche = Math.max(1, Math.round(optionen.minVersuche));
+  if (kennzahlen.versuche < minVersuche) return null;
+  if (kennzahlen.versuche === 0) return null;
+
+  const quote = Math.round((kennzahlen.abgelehnt / kennzahlen.versuche) * 100);
+  if (quote <= schwelle) return null;
+
+  const gruende = kennzahlen.topGruende
+    .slice(0, 2)
+    .map((g) => `${g.grund} (${g.anzahl}×)`)
+    .join(", ");
+
+  return {
+    // Stabile ID pro Zeitraum und überschrittener Schwelle: erneutes Prüfen
+    // erzeugt keine Dubletten, eine Verschlechterung aber einen neuen Hinweis.
+    id: `dauerauftrag-ablehnungsquote:${optionen.zeitraumKey}:${quote}`,
+    stufe: "warnung",
+    titel: `Hohe Ablehnungsquote ${optionen.zeitraumLabel}: ${quote} %`,
+    text:
+      `${kennzahlen.abgelehnt} von ${kennzahlen.versuche} Dauerauftragsversuchen ${optionen.zeitraumLabel} ` +
+      `abgelehnt (Schwellenwert ${schwelle} %).` +
+      (gruende ? ` Häufigste Gründe: ${gruende}.` : ""),
+    to: "/dauerauftrag-ablehnungen",
+    quelle: "dauerauftrag-ablehnungsquote",
+    createdAt: now,
+  };
+}
