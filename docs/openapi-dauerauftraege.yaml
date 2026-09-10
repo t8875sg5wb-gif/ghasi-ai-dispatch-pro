@@ -1,0 +1,274 @@
+openapi: 3.1.0
+info:
+  title: GHASI AI – Daueraufträge (createRecurring / updateRecurring)
+  version: "1.0.0"
+  description: |
+    Beschreibung der beiden Dauerauftrags-Mutationen und – im Fokus dieses
+    Dokuments – des **strukturierten Fehlerformats mit Field-Path-Kodierung**.
+
+    Transport: TanStack-Start-Serverfunktionen (RPC). Der Aufruf erfolgt aus dem
+    Client über `createRecurring({ data })` bzw.
+    `updateRecurring({ data: { id, values } })`. Über den RPC-Transport überlebt
+    nur `error.message`; die Feldfehlerliste ist deshalb **in die Message
+    kodiert** (siehe `FeldFehlerKodierung` und `x-ghasi-field-error-marker`).
+
+    Prosa-Fassung inkl. Client-Snippets: `docs/API-FEHLERFORMAT-DAUERAUFTRAEGE.md`.
+x-ghasi-field-error-marker: "__GHASI_FELDFEHLER__"
+servers:
+  - url: /
+    description: Gleiche Origin wie die App (RPC-Endpunkte der Serverfunktionen)
+security:
+  - supabaseBearer: []
+tags:
+  - name: Daueraufträge
+paths:
+  /_serverFn/createRecurring:
+    post:
+      tags: [Daueraufträge]
+      operationId: createRecurring
+      summary: Neuen Dauerauftrag anlegen
+      description: |
+        Erfordert eine angemeldete Sitzung (`requireSupabaseAuth`); Rollenrechte
+        werden zusätzlich per RLS erzwungen.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRecurringRequest"
+      responses:
+        "200":
+          description: Dauerauftrag angelegt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dauerauftrag"
+        "400":
+          $ref: "#/components/responses/FeldfehlerAntwort"
+        "401":
+          $ref: "#/components/responses/NichtAngemeldet"
+        "500":
+          $ref: "#/components/responses/Serverfehler"
+  /_serverFn/updateRecurring:
+    post:
+      tags: [Daueraufträge]
+      operationId: updateRecurring
+      summary: Bestehenden Dauerauftrag ändern
+      description: |
+        Teil-Update. Pflichtfeldprüfungen laufen nur für Felder, die im Patch
+        enthalten sind. Field-Paths werden **ohne** `values.`-Präfix gemeldet
+        (aus `values.patient` wird `patient`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRecurringRequest"
+      responses:
+        "200":
+          description: Dauerauftrag geändert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dauerauftrag"
+        "400":
+          $ref: "#/components/responses/FeldfehlerAntwort"
+        "401":
+          $ref: "#/components/responses/NichtAngemeldet"
+        "500":
+          $ref: "#/components/responses/Serverfehler"
+components:
+  securitySchemes:
+    supabaseBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase-Access-Token der angemeldeten Sitzung.
+  responses:
+    FeldfehlerAntwort:
+      description: |
+        Validierungsfehler. `message` enthält den lesbaren Text, den Marker
+        `__GHASI_FELDFEHLER__` und danach das JSON `{"fields":[...]}`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FeldFehlerKodierung"
+          examples:
+            fehlenderPatientUndWochentage:
+              value:
+                message: >-
+                  Ungültige Dauerauftragsdaten. Patientenname: Bitte den Namen des
+                  Patienten angeben. | Wochentage: Bei wöchentlichem Rhythmus
+                  mindestens einen Wochentag
+                  wählen.__GHASI_FELDFEHLER__{"fields":[{"path":"patient","label":"Patientenname","message":"Bitte den Namen des Patienten angeben."},{"path":"wochentage","label":"Wochentage","message":"Bei wöchentlichem Rhythmus mindestens einen Wochentag wählen."}]}
+    NichtAngemeldet:
+      description: Keine gültige Sitzung.
+      content:
+        text/plain:
+          schema:
+            type: string
+            examples: ["Unauthorized"]
+    Serverfehler:
+      description: |
+        Fachlicher oder technischer Fehler **ohne** Feldliste, z. B. wenn
+        `patientId`, `insurerId`, `bevorzugterFahrerId` oder
+        `bevorzugtesFahrzeugId` nicht existieren, oder bei Datenbankfehlern.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message:
+                type: string
+                examples: ["Patient nicht gefunden."]
+  schemas:
+    FeldFehler:
+      type: object
+      description: Ein einzelner Feldfehler.
+      required: [path, label, message]
+      additionalProperties: false
+      properties:
+        path:
+          type: string
+          description: |
+            Punkt-Pfad des Feldes, immer ohne `values.`-Präfix. Ist kein Pfad
+            ermittelbar, lautet der Wert `formular`. Pro Pfad erscheint
+            höchstens ein Eintrag (erster Fehler gewinnt).
+          examples: ["patient", "pickup.postalCode", "wochentage", "formular"]
+        label:
+          type: string
+          description: |
+            Deutsches Anzeige-Label aus `DAUERAUFTRAG_FELD_LABEL`
+            (`src/lib/recurring-validation.ts`), Fallback ist `path`.
+          examples: ["Pickup – PLZ"]
+        message:
+          type: string
+          description: Endnutzer-taugliche Meldung.
+          examples: ["Bitte den Namen des Patienten angeben."]
+    FeldFehlerListe:
+      type: object
+      description: JSON-Teil hinter dem Marker.
+      required: [fields]
+      additionalProperties: false
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeldFehler"
+    FeldFehlerKodierung:
+      type: object
+      description: |
+        Fehlerobjekt des RPC-Transports. Aufbau der `message`:
+        `<lesbarer Text><MARKER><JSON>` mit
+        `<MARKER>` = `__GHASI_FELDFEHLER__` und `<JSON>` gemäß `FeldFehlerListe`.
+        Dekodieren mit `dekodiereFeldFehler`, `feldFehlerMap` und
+        `lesbarerFehlerText` aus `@/lib/recurring-validation`.
+      required: [message]
+      additionalProperties: true
+      properties:
+        message:
+          type: string
+          pattern: "__GHASI_FELDFEHLER__"
+      x-ghasi-field-error-encoding:
+        marker: "__GHASI_FELDFEHLER__"
+        readableTextBeforeMarker: true
+        jsonAfterMarker:
+          $ref: "#/components/schemas/FeldFehlerListe"
+    Adresse:
+      type: object
+      additionalProperties: false
+      properties:
+        street: { type: string }
+        houseNumber: { type: string }
+        postalCode: { type: string }
+        city: { type: string }
+        country: { type: string }
+        additionalInfo: { type: string }
+    RecurringFields:
+      type: object
+      description: |
+        Strenges Schema (`.strict()`) – unbekannte Felder werden abgelehnt und
+        als Feldfehler gemeldet.
+      additionalProperties: false
+      required: [patient, terminzeit]
+      properties:
+        kennung: { type: string, maxLength: 50 }
+        patient: { type: string, minLength: 1, maxLength: 200 }
+        patientId: { type: [string, "null"], format: uuid }
+        insurerId: { type: [string, "null"], format: uuid }
+        abholort: { type: string, maxLength: 300 }
+        zielort: { type: string, maxLength: 300 }
+        pickup: { $ref: "#/components/schemas/Adresse" }
+        destination: { $ref: "#/components/schemas/Adresse" }
+        terminzeit: { type: string, pattern: "^\\d{2}:\\d{2}$" }
+        rueckfahrt: { type: boolean }
+        rueckfahrtzeit: { type: [string, "null"], pattern: "^\\d{2}:\\d{2}$" }
+        mobilitaet:
+          type: string
+          enum: [gehfaehig, rollstuhl, tragestuhl, liegend]
+        begleitperson: { type: boolean }
+        verordnungErforderlich: { type: boolean }
+        kostentraeger: { type: string, maxLength: 200 }
+        krankenkasse: { type: string, maxLength: 200 }
+        bevorzugterFahrer: { type: [string, "null"], maxLength: 200 }
+        bevorzugtesFahrzeug: { type: [string, "null"], maxLength: 200 }
+        bevorzugterFahrerId: { type: [string, "null"], format: uuid }
+        bevorzugtesFahrzeugId: { type: [string, "null"], format: uuid }
+        notiz: { type: string, maxLength: 2000 }
+        medizinischeNotiz: { type: string, maxLength: 2000 }
+        kategorie:
+          type: string
+          enum: [dialyse, pflegeheim, krankenhaus, sonstige]
+        rhythmus:
+          type: string
+          enum: [taeglich, woechentlich]
+        wochentage:
+          type: array
+          description: 0 = Sonntag … 6 = Samstag (wie `Date.getDay()`).
+          items: { type: integer, minimum: 0, maximum: 6 }
+        startDatum: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        endDatum: { type: [string, "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        pauseVon: { type: [string, "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        pauseBis: { type: [string, "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        pausiert: { type: boolean }
+        feiertageUeberspringen: { type: boolean }
+        uebersprungeneTermine:
+          type: array
+          items: { type: string }
+        generierteTermine:
+          type: array
+          items: { type: string }
+    CreateRecurringRequest:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/RecurringFields" }
+    UpdateRecurringRequest:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [id, values]
+          properties:
+            id: { type: string, format: uuid }
+            values:
+              allOf:
+                - $ref: "#/components/schemas/RecurringFields"
+              description: |
+                Teilmenge der Felder; mindestens ein Feld ist erforderlich,
+                sonst Feldfehler auf `values`
+                („Keine Änderungen übergeben.“).
+              required: []
+    Dauerauftrag:
+      type: object
+      description: |
+        Gespeicherter Dauerauftrag (`Dauerauftrag` aus `@/lib/dauerauftraege`).
+        Enthält alle Felder aus `RecurringFields` plus Systemfelder.
+      additionalProperties: true
+      properties:
+        id: { type: string, format: uuid }
