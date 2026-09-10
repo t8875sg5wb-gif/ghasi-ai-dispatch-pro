@@ -320,12 +320,32 @@ export function AblehnungenWidget() {
               </div>
             )}
 
-            <Button asChild variant="outline" size="sm">
-              <Link to="/dauerauftrag-ablehnungen">
-                Zur Admin-Tabelle
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/dauerauftrag-ablehnungen">
+                  Zur Admin-Tabelle
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportiereCsv}
+                disabled={aktuellRows.length === 0}
+              >
+                <Download className="size-4" />
+                CSV ({zeitraum === "heute" ? "heute" : "7 Tage"})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportierePdf}
+                disabled={aktuellRows.length === 0}
+              >
+                <FileText className="size-4" />
+                PDF ({zeitraum === "heute" ? "heute" : "7 Tage"})
+              </Button>
+            </div>
           </>
         )}
       </CardContent>
