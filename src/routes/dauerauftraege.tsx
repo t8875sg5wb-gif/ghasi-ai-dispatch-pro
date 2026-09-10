@@ -1013,7 +1013,12 @@ function DauerauftragForm({
       toast.success("Entwurf zwischengespeichert");
       return;
     }
-    setEntwurfFehler({ meldung: ergebnis.meldung, wiederholt: false, versuche: 1 });
+    setEntwurfFehler({
+      meldung: ergebnis.meldung,
+      wiederholt: false,
+      versuche: 1,
+      zeitpunkt: new Date().toISOString(),
+    });
     setEntwurfRetryZaehler((n) => n + 1);
   };
 
