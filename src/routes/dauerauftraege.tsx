@@ -1418,7 +1418,13 @@ function DauerauftragForm({
         </div>
       </div>
 
-      <DialogFooter>
+      <DialogFooter className="items-center gap-2 sm:justify-between">
+        <span aria-live="polite" className="text-xs text-muted-foreground">
+          {entwurfGespeichertAm
+            ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
+            : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
+        </span>
+        <div className="flex gap-2">
         <Button variant="outline" onClick={onCancel}>
           Abbrechen
         </Button>
