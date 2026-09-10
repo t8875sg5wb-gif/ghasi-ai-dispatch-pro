@@ -955,6 +955,7 @@ function DauerauftragForm({
     const lauf = () => {
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
+        gesichertRef.current = f;
         setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
         setEntwurfFehler(null);
         return;
@@ -977,6 +978,7 @@ function DauerauftragForm({
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
+      gesichertRef.current = f;
       setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
       setEntwurfFehler(null);
       toast.success("Entwurf zwischengespeichert");
@@ -993,6 +995,7 @@ function DauerauftragForm({
     setF(werte);
     merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
     setWiederherstellbar(null);
+    gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
     toast.success("Entwurf wiederhergestellt");
   };
@@ -1002,6 +1005,7 @@ function DauerauftragForm({
     setWiederherstellbar(null);
     setEntwurfGespeichertAm(null);
     setEntwurfFehler(null);
+    gesichertRef.current = basisRef.current;
     setF(basisRef.current);
     setBeruehrt([]);
     setSubmitVersucht(false);
