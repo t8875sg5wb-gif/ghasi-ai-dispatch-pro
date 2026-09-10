@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "test": "bun test src",
     "test:sql-runtime": "bun test --timeout 180000 tests/sql; code=$?; if [ $code -eq 99 ]; then exit 0; else exit $code; fi",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "gen:api-types": "openapi-typescript docs/openapi-dauerauftraege.yaml -o src/lib/api/dauerauftraege-api.gen.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.51",
@@ -94,7 +95,8 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
-    "prettier": "^3.7.3",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16"

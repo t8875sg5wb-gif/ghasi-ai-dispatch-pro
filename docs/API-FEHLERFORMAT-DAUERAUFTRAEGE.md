@@ -29,8 +29,8 @@ Grund für die Kodierung: über den TanStack-Start-RPC-Transport überlebt nur
 
 ```ts
 type FeldFehler = {
-  path: string;    // Punkt-Pfad, z. B. "pickup.postalCode", "wochentage"
-  label: string;   // deutsches Anzeige-Label, z. B. "Pickup – PLZ"
+  path: string; // Punkt-Pfad, z. B. "pickup.postalCode", "wochentage"
+  label: string; // deutsches Anzeige-Label, z. B. "Pickup – PLZ"
   message: string; // verständliche Meldung für Endnutzer
 };
 ```
@@ -65,8 +65,16 @@ Dekodierter JSON-Teil:
 ```json
 {
   "fields": [
-    { "path": "patient", "label": "Patientenname", "message": "Bitte den Namen des Patienten angeben." },
-    { "path": "wochentage", "label": "Wochentage", "message": "Bei wöchentlichem Rhythmus mindestens einen Wochentag wählen." }
+    {
+      "path": "patient",
+      "label": "Patientenname",
+      "message": "Bitte den Namen des Patienten angeben."
+    },
+    {
+      "path": "wochentage",
+      "label": "Wochentage",
+      "message": "Bei wöchentlichem Rhythmus mindestens einen Wochentag wählen."
+    }
   ]
 }
 ```
@@ -74,19 +82,15 @@ Dekodierter JSON-Teil:
 ## 4. Client-Auswertung (empfohlenes Muster)
 
 ```ts
-import {
-  dekodiereFeldFehler,
-  feldFehlerMap,
-  lesbarerFehlerText,
-} from "@/lib/recurring-validation";
+import { dekodiereFeldFehler, feldFehlerMap, lesbarerFehlerText } from "@/lib/recurring-validation";
 
 try {
   await createRecurring({ data: werte });
 } catch (e) {
   const msg = e instanceof Error ? e.message : String(e);
-  const fields = dekodiereFeldFehler(msg);        // FeldFehler[]
-  setFeldFehler(feldFehlerMap(fields));           // { [path]: message }
-  toast.error(lesbarerFehlerText(msg));           // Text ohne Marker
+  const fields = dekodiereFeldFehler(msg); // FeldFehler[]
+  setFeldFehler(feldFehlerMap(fields)); // { [path]: message }
+  toast.error(lesbarerFehlerText(msg)); // Text ohne Marker
 }
 ```
 
@@ -103,22 +107,22 @@ Diese Helfer sind client-sicher (keine Serverimporte) und werden bereits in
 Die vollständige Pfad→Label-Tabelle steht in
 `DAUERAUFTRAG_FELD_LABEL` (`src/lib/recurring-validation.ts`). Häufige Pfade:
 
-| Pfad | Label |
-| --- | --- |
-| `patient` | Patientenname |
-| `patientId` | Patient (Stammdaten) |
-| `insurerId` | Krankenkasse (Verknüpfung) |
-| `pickup` / `pickup.street` / `pickup.postalCode` / `pickup.city` | Pickup-Adresse und Teilfelder |
-| `destination` / `destination.street` / `destination.postalCode` / `destination.city` | Destination-Adresse und Teilfelder |
-| `terminzeit` | Uhrzeit Hinfahrt |
-| `rueckfahrtzeit` | Uhrzeit Rückfahrt |
-| `mobilitaet` | Mobilität |
-| `rhythmus` | Rhythmus |
-| `wochentage` | Wochentage |
-| `startDatum` / `endDatum` | Startdatum / Enddatum |
-| `pauseVon` / `pauseBis` | Pause von / Pause bis |
-| `id` | Datensatz-ID |
-| `values` | Änderungen (z. B. „Keine Änderungen übergeben.“) |
+| Pfad                                                                                 | Label                                            |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `patient`                                                                            | Patientenname                                    |
+| `patientId`                                                                          | Patient (Stammdaten)                             |
+| `insurerId`                                                                          | Krankenkasse (Verknüpfung)                       |
+| `pickup` / `pickup.street` / `pickup.postalCode` / `pickup.city`                     | Pickup-Adresse und Teilfelder                    |
+| `destination` / `destination.street` / `destination.postalCode` / `destination.city` | Destination-Adresse und Teilfelder               |
+| `terminzeit`                                                                         | Uhrzeit Hinfahrt                                 |
+| `rueckfahrtzeit`                                                                     | Uhrzeit Rückfahrt                                |
+| `mobilitaet`                                                                         | Mobilität                                        |
+| `rhythmus`                                                                           | Rhythmus                                         |
+| `wochentage`                                                                         | Wochentage                                       |
+| `startDatum` / `endDatum`                                                            | Startdatum / Enddatum                            |
+| `pauseVon` / `pauseBis`                                                              | Pause von / Pause bis                            |
+| `id`                                                                                 | Datensatz-ID                                     |
+| `values`                                                                             | Änderungen (z. B. „Keine Änderungen übergeben.“) |
 
 ## 6. Fehlerquellen
 
@@ -140,3 +144,36 @@ Jede abgelehnte Mutation wird serverseitig in `recurring_rejections` mit
 Zeitpunkt, Aktion, Grund und der Feldliste protokolliert (Lesezugriff nur für
 Admins, sichtbar unter `/dauerauftrag-ablehnungen`). Das Protokollieren ist
 „best effort“ und verändert die Fehlermeldung nie.
+
+## Generierte Client-Typen (TypeScript)
+
+Die Typen werden aus `docs/openapi-dauerauftraege.yaml` erzeugt:
+
+```bash
+bun run gen:api-types
+```
+
+Ergebnis: `src/lib/api/dauerauftraege-api.gen.ts` (generiert, nicht manuell
+bearbeiten). Sprechende Aliase und der typisierte Fehler-Parser liegen in
+`src/lib/api/dauerauftraege.ts`:
+
+```ts
+import { parseRecurringFehler } from "@/lib/api/dauerauftraege";
+import type { ApiFeldFehler, RecurringApiFehler } from "@/lib/api/dauerauftraege";
+
+try {
+  await createRecurring({ data: werte });
+} catch (e) {
+  const fehler: RecurringApiFehler = parseRecurringFehler(e);
+  if (fehler.art === "feldfehler") {
+    const meldungen: Record<string, string> = fehler.nachPfad; // path -> message
+    const felder: ApiFeldFehler[] = fehler.fields;
+  } else {
+    // fachlicher Fehler ohne Feldliste
+  }
+}
+```
+
+Ein Compile-Time-Check in `dauerauftraege.ts` stellt sicher, dass der
+generierte `FeldFehler`-Typ mit dem internen Typ aus
+`src/lib/recurring-validation.ts` identisch bleibt.
