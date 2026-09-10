@@ -3,8 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   CalendarPlus,
+  CheckCircle2,
   Database,
   Loader2,
+  PencilLine,
   PauseCircle,
   PlayCircle,
   Plus,
