@@ -814,6 +814,7 @@ function DauerauftragForm({
   istEdit,
   saving,
   serverFehler = [],
+  serverHinweis = null,
   onSubmit,
   onCancel,
 }: {
@@ -821,6 +822,7 @@ function DauerauftragForm({
   istEdit: boolean;
   saving?: boolean;
   serverFehler?: FeldFehler[];
+  serverHinweis?: string | null;
   onSubmit: (d: Dauerauftrag) => void;
   onCancel: () => void;
 }) {
