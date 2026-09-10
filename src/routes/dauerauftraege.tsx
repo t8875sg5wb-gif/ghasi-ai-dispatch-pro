@@ -1001,6 +1001,7 @@ function DauerauftragForm({
     setWiederherstellbar(null);
     gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
+    setEntwurfSoebenGespeichert(true);
     toast.success("Entwurf wiederhergestellt");
   };
 
