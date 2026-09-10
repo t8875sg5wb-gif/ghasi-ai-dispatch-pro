@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -46,6 +46,17 @@ import {
   zuFeldFehlern,
   type FeldFehler,
 } from "@/lib/recurring-validation";
+import {
+  ENTWURF_DEBOUNCE_MS,
+  entwurfSchluessel,
+  entwurfWeichtAb,
+  formatUhrzeit,
+  geaenderteFelder,
+  ladeEntwurf,
+  speichereEntwurf,
+  verwerfeEntwurf,
+  type GespeicherterEntwurf,
+} from "@/lib/dauerauftrag-entwurf";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
 import { usePatients } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
@@ -334,6 +345,7 @@ function DauerauftraegePage() {
               beschreibung: `Dauerauftrag ${werte.kennung} (${werte.patient}) bearbeitet.`,
               entitaet: werte.kennung,
             });
+            verwerfeEntwurf(entwurfSchluessel(editTarget.id));
             setFormOpen(false);
             setEditTarget(null);
           },
@@ -350,6 +362,7 @@ function DauerauftraegePage() {
             beschreibung: `Neuer Dauerauftrag ${neu.kennung} (${neu.patient}, ${RHYTHMUS_LABEL[neu.rhythmus]}) angelegt.`,
             entitaet: neu.kennung,
           });
+          verwerfeEntwurf(entwurfSchluessel(null));
           setFormOpen(false);
           setEditTarget(null);
         },
@@ -813,6 +826,12 @@ function DauerauftragForm({
   const [beruehrt, setBeruehrt] = useState<string[]>([]);
   const [submitVersucht, setSubmitVersucht] = useState(false);
 
+  /* ---------------------- Auto-Save (Entwurf) ---------------------- */
+  const entwurfKey = entwurfSchluessel(istEdit ? initial.id : null);
+  const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
+  const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
+  const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
       const neu = paths.filter((p) => !prev.includes(p));
@@ -888,10 +907,46 @@ function DauerauftragForm({
   const { data: kassen = [] } = useInsurers();
 
   useEffect(() => {
-    setF(normalisiere(initial));
+    const basis = normalisiere(initial);
+    basisRef.current = basis;
+    setF(basis);
     setBeruehrt([]);
     setSubmitVersucht(false);
-  }, [initial]);
+    setEntwurfGespeichertAm(null);
+    const gefunden = ladeEntwurf(entwurfSchluessel(istEdit ? initial.id : null));
+    setWiederherstellbar(gefunden && entwurfWeichtAb(gefunden.werte, basis) ? gefunden : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial, istEdit]);
+
+  // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
+  useEffect(() => {
+    if (!entwurfWeichtAb(f, basisRef.current)) return;
+    const timer = window.setTimeout(() => {
+      const eintrag = speichereEntwurf(entwurfKey, f);
+      if (eintrag) setEntwurfGespeichertAm(eintrag.gespeichertAm);
+    }, ENTWURF_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [f, entwurfKey]);
+
+  /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
+  const entwurfUebernehmen = () => {
+    if (!wiederherstellbar) return;
+    const werte = normalisiere(wiederherstellbar.werte);
+    setF(werte);
+    merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
+    setWiederherstellbar(null);
+    setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
+    toast.success("Entwurf wiederhergestellt");
+  };
+
+  const entwurfLoeschen = () => {
+    verwerfeEntwurf(entwurfKey);
+    setWiederherstellbar(null);
+    setEntwurfGespeichertAm(null);
+    setF(basisRef.current);
+    setBeruehrt([]);
+    setSubmitVersucht(false);
+  };
 
   const set = <K extends keyof Dauerauftrag>(k: K, v: Dauerauftrag[K]) => {
     merkeBeruehrt(String(k));
@@ -943,6 +998,23 @@ function DauerauftragForm({
       </DialogHeader>
 
       <div className="space-y-4">
+        {wiederherstellbar && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+            <span>
+              Es gibt einen nicht gespeicherten Entwurf von{" "}
+              <strong>{formatUhrzeit(wiederherstellbar.gespeichertAm)} Uhr</strong>.
+            </span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={entwurfLoeschen}>
+                Verwerfen
+              </Button>
+              <Button size="sm" onClick={entwurfUebernehmen}>
+                Entwurf übernehmen
+              </Button>
+            </div>
+          </div>
+        )}
+
         {fehler.length > 0 && (
           <div
             role="alert"
@@ -1344,14 +1416,21 @@ function DauerauftragForm({
         </div>
       </div>
 
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          Abbrechen
-        </Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-          {istEdit ? "Speichern" : "Anlegen"}
-        </Button>
+      <DialogFooter className="items-center gap-2 sm:justify-between">
+        <span aria-live="polite" className="text-xs text-muted-foreground">
+          {entwurfGespeichertAm
+            ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
+            : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
+        </span>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel}>
+            Abbrechen
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+            {istEdit ? "Speichern" : "Anlegen"}
+          </Button>
+        </div>
       </DialogFooter>
     </>
   );
