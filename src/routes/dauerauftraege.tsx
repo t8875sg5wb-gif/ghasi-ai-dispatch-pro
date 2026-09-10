@@ -1100,19 +1100,25 @@ function DauerauftragForm({
                 : `${fehler.length} Felder sind ungültig`}
             </p>
             <ul className="mt-1 space-y-0.5 text-destructive">
-              {fehler.map((x) => (
-                <li key={x.path}>
-                  <button
-                    type="button"
-                    onClick={() => springeZuFeld(x.path)}
-                    className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
-                    aria-label={`Zum Feld ${x.label} springen`}
-                  >
-                    <span className="font-medium">{x.label}</span>{" "}
-                    <span className="text-muted-foreground">({x.path})</span>: {x.message}
-                  </button>
-                </li>
-              ))}
+              {fehler.map((x) =>
+                x.path === "formular" ? (
+                  <li key={x.path}>
+                    <span className="font-medium">{x.label}</span>: {x.message}
+                  </li>
+                ) : (
+                  <li key={x.path}>
+                    <button
+                      type="button"
+                      onClick={() => springeZuFeld(x.path)}
+                      className="text-left underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
+                      aria-label={`Zum Feld ${x.label} springen`}
+                    >
+                      <span className="font-medium">{x.label}</span>{" "}
+                      <span className="text-muted-foreground">({x.path})</span>: {x.message}
+                    </button>
+                  </li>
+                ),
+              )}
             </ul>
           </div>
         )}
