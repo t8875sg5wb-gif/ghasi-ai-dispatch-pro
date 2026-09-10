@@ -130,6 +130,45 @@ export function AblehnungenWidget() {
     return { aktuell, vorher, trend: { diff, prozent }, aktuellRows };
   }, [ablehnungen.data, ranges, erfolgeAktuell.data, erfolgeVorher.data]);
 
+  /* ------------------ Schnell-Exporte für den gewählten Zeitraum ------------------ */
+  const exportTage = zeitraum === "heute" ? 1 : 7;
+  const dateiname = (endung: string) =>
+    `dauerauftrag-ablehnungen-${exportTage}t-${new Date().toISOString().slice(0, 10)}.${endung}`;
+
+  const exportiereCsv = () => {
+    if (aktuellRows.length === 0) {
+      toast.info("Keine Ablehnungen im gewählten Zeitraum.");
+      return;
+    }
+    const rows = aktuellRows.map((a) => ({
+      Zeitpunkt: new Date(a.zeitpunkt).toLocaleString("de-DE", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+      Zeitraum: zeitraum === "heute" ? "Heute" : "Letzte 7 Tage",
+      Aktion: AKTION_LABEL[a.aktion] ?? a.aktion,
+      Patient: a.patient ?? "",
+      Grund: a.grund,
+      Fahrer: a.suchfelder?.fahrer ?? "",
+      Abrechnungskunde: a.suchfelder?.kunde ?? "",
+      "Träger / Einrichtung": a.suchfelder?.traeger ?? "",
+      "Ziel-ID": a.zielId ?? "",
+      Felder: a.felder.map((f) => `${f.label} (${f.path}): ${f.message}`).join(" | "),
+    }));
+    downloadCsv(dateiname("csv"), toCsv(rows));
+    toast.success("CSV-Export wurde heruntergeladen.");
+  };
+
+  const exportierePdf = async () => {
+    if (aktuellRows.length === 0) {
+      toast.info("Keine Ablehnungen im gewählten Zeitraum.");
+      return;
+    }
+    const { generateAblehnungenPdf } = await import("@/lib/ablehnungen-pdf");
+    generateAblehnungenPdf(aktuellRows, { tage: exportTage }).save(dateiname("pdf"));
+    toast.success("PDF-Export wurde heruntergeladen.");
+  };
+
   const lade = ablehnungen.isLoading || erfolgeAktuell.isLoading || erfolgeVorher.isLoading;
   const fehler = ablehnungen.isError || erfolgeAktuell.isError || erfolgeVorher.isError;
 
