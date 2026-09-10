@@ -854,6 +854,7 @@ function DauerauftragForm({
     meldung: string;
     wiederholt: boolean;
     versuche: number;
+    zeitpunkt: string;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
 
@@ -983,6 +984,7 @@ function DauerauftragForm({
         meldung: ergebnis.meldung,
         wiederholt: wartezeit !== null,
         versuche: versuch + 1,
+        zeitpunkt: new Date().toISOString(),
       });
       if (wartezeit === null) return;
       versuch += 1;
@@ -1011,7 +1013,12 @@ function DauerauftragForm({
       toast.success("Entwurf zwischengespeichert");
       return;
     }
-    setEntwurfFehler({ meldung: ergebnis.meldung, wiederholt: false, versuche: 1 });
+    setEntwurfFehler({
+      meldung: ergebnis.meldung,
+      wiederholt: false,
+      versuche: 1,
+      zeitpunkt: new Date().toISOString(),
+    });
     setEntwurfRetryZaehler((n) => n + 1);
   };
 
@@ -1110,6 +1117,7 @@ function DauerauftragForm({
 
         {entwurfFehler && (
           <div
+            id="entwurf-fehler-hinweis"
             role="alert"
             className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
           >
@@ -1597,6 +1605,45 @@ function DauerauftragForm({
               ? `Zuletzt gesichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gesichert: noch nie"}
           </span>
+
+          {/* Fehlgeschlagener Speicherversuch – mit Verknüpfung zum Retry-Flow. */}
+          {entwurfFehler && (
+            <span
+              role="alert"
+              className="flex flex-wrap items-center gap-2 font-medium text-warning"
+            >
+              <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                Letzter Speicherversuch fehlgeschlagen ({formatZeitmarke(entwurfFehler.zeitpunkt)})
+                ·{" "}
+                {entwurfFehler.wiederholt
+                  ? `Neuversuch ${entwurfFehler.versuche} läuft automatisch`
+                  : "kein automatischer Neuversuch mehr"}
+              </span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs text-warning"
+                onClick={entwurfErneutSpeichern}
+              >
+                Jetzt erneut speichern
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs text-muted-foreground"
+                onClick={() => {
+                  document
+                    .getElementById("entwurf-fehler-hinweis")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+              >
+                Details
+              </Button>
+            </span>
+          )}
 
           {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
           <span className="flex items-center gap-2 text-xs">
