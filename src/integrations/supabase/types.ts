@@ -330,6 +330,8 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          ablehnungsquote_min_versuche: number
+          ablehnungsquote_schwelle_prozent: number
           adresse: string
           adresse_hausnummer: string
           adresse_land: string
@@ -364,6 +366,8 @@ export type Database = {
           xrechnung_daten_bestaetigt: boolean
         }
         Insert: {
+          ablehnungsquote_min_versuche?: number
+          ablehnungsquote_schwelle_prozent?: number
           adresse?: string
           adresse_hausnummer?: string
           adresse_land?: string
@@ -398,6 +402,8 @@ export type Database = {
           xrechnung_daten_bestaetigt?: boolean
         }
         Update: {
+          ablehnungsquote_min_versuche?: number
+          ablehnungsquote_schwelle_prozent?: number
           adresse?: string
           adresse_hausnummer?: string
           adresse_land?: string

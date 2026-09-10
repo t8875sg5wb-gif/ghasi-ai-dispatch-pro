@@ -505,6 +505,38 @@ function EinstellungenSeite() {
                 </p>
               </Feld>
 
+              <Feld label="Warnschwelle Ablehnungsquote Daueraufträge (%)">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={100}
+                  value={company.ablehnungsquoteSchwelleProzent}
+                  onChange={(e) =>
+                    setC("ablehnungsquoteSchwelleProzent", Number(e.target.value) || 0)
+                  }
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Übersteigt der Anteil abgelehnter Dauerauftragsversuche heute diesen Wert,
+                  erhalten Administratoren eine Benachrichtigung.
+                </p>
+              </Feld>
+
+              <Feld label="Mindestanzahl Versuche für die Quotenwarnung">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={1000}
+                  value={company.ablehnungsquoteMinVersuche}
+                  onChange={(e) => setC("ablehnungsquoteMinVersuche", Number(e.target.value) || 0)}
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Verhindert Fehlalarme: Bei weniger Versuchen als hier eingestellt wird die Quote
+                  nicht bewertet.
+                </p>
+              </Feld>
+
               <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                 <p className="mb-1 text-sm font-medium">Alten Chatverlauf jetzt löschen</p>
                 <p className="mb-3 text-xs text-muted-foreground">
