@@ -1136,6 +1136,7 @@ function DauerauftragForm({
 
         {fehler.length > 0 && (
           <div
+            id="fehler-zusammenfassung"
             role="alert"
             className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"
           >
