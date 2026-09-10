@@ -3,15 +3,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   CalendarPlus,
+  CheckCircle2,
   Database,
   Loader2,
   PauseCircle,
+  PencilLine,
   PlayCircle,
   Plus,
   Repeat,
   Search,
   SkipForward,
   Sparkles,
+  TriangleAlert,
   XCircle,
 } from "lucide-react";
 
@@ -50,6 +53,7 @@ import {
   entwurfSchluessel,
   entwurfWeichtAb,
   formatUhrzeit,
+  formatZeitmarke,
   geaenderteFelder,
   ladeEntwurf,
   retryVerzoegerung,
@@ -838,6 +842,8 @@ function DauerauftragForm({
   /* ---------------------- Auto-Save (Entwurf) ---------------------- */
   const entwurfKey = entwurfSchluessel(istEdit ? initial.id : null);
   const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
+  // Letzter erfolgreich zwischengespeicherter Stand – Basis für den Dirty-Status.
+  const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   const [entwurfFehler, setEntwurfFehler] = useState<{
@@ -888,6 +894,10 @@ function DauerauftragForm({
     ...offeneServerFehler.filter((s) => !sichtbareLiveFehler.some((l) => l.path === s.path)),
   ];
   const fehlerMap = useMemo(() => feldFehlerMap(fehler), [fehler]);
+  // Dirty-Status: weicht das Formular vom letzten gesicherten Stand ab?
+  const ungespeicherteAenderungen = entwurfGespeichertAm
+    ? entwurfWeichtAb(f, gesichertRef.current)
+    : entwurfWeichtAb(f, basisRef.current);
   const FeldFehlerText = ({ path }: { path: string }) =>
     fehlerMap[path] ? (
       <p id={`fehler-${path}`} className="pt-1 text-xs font-medium text-destructive">
@@ -924,6 +934,7 @@ function DauerauftragForm({
   useEffect(() => {
     const basis = normalisiere(initial);
     basisRef.current = basis;
+    gesichertRef.current = basis;
     setF(basis);
     setBeruehrt([]);
     setSubmitVersucht(false);
@@ -944,6 +955,7 @@ function DauerauftragForm({
     const lauf = () => {
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
+        gesichertRef.current = f;
         setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
         setEntwurfFehler(null);
         return;
@@ -966,6 +978,7 @@ function DauerauftragForm({
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
+      gesichertRef.current = f;
       setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
       setEntwurfFehler(null);
       toast.success("Entwurf zwischengespeichert");
@@ -982,6 +995,7 @@ function DauerauftragForm({
     setF(werte);
     merkeBeruehrt(...geaenderteFelder(werte, basisRef.current));
     setWiederherstellbar(null);
+    gesichertRef.current = werte;
     setEntwurfGespeichertAm(wiederherstellbar.gespeichertAm);
     toast.success("Entwurf wiederhergestellt");
   };
@@ -991,6 +1005,7 @@ function DauerauftragForm({
     setWiederherstellbar(null);
     setEntwurfGespeichertAm(null);
     setEntwurfFehler(null);
+    gesichertRef.current = basisRef.current;
     setF(basisRef.current);
     setBeruehrt([]);
     setSubmitVersucht(false);
@@ -1497,18 +1512,49 @@ function DauerauftragForm({
       </div>
 
       <DialogFooter className="items-center gap-2 sm:justify-between">
-        <span
-          aria-live="polite"
-          className={`text-xs ${entwurfFehler ? "font-medium text-warning" : "text-muted-foreground"}`}
-        >
-          {entwurfFehler
-            ? entwurfFehler.wiederholt
-              ? `Zwischenspeichern fehlgeschlagen · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
-              : "Zwischenspeichern fehlgeschlagen · bitte manuell erneut versuchen"
-            : entwurfGespeichertAm
-              ? `Entwurf automatisch gespeichert · ${formatUhrzeit(entwurfGespeichertAm)} Uhr`
-              : "Entwurf wird nach einer kurzen Tipp-Pause automatisch gesichert"}
-        </span>
+        <div aria-live="polite" className="flex flex-col gap-1 text-xs">
+          {/* Zeile 1: eindeutiger Zustand – gespeichert, offen oder fehlgeschlagen. */}
+          <span
+            className={`inline-flex items-center gap-1.5 font-medium ${
+              entwurfFehler
+                ? "text-warning"
+                : ungespeicherteAenderungen
+                  ? "text-muted-foreground"
+                  : "text-success"
+            }`}
+          >
+            {entwurfFehler ? (
+              <>
+                <TriangleAlert className="size-3.5" aria-hidden="true" />
+                {entwurfFehler.wiederholt
+                  ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
+                  : "Nicht gesichert · bitte manuell erneut versuchen"}
+              </>
+            ) : ungespeicherteAenderungen ? (
+              <>
+                <PencilLine className="size-3.5" aria-hidden="true" />
+                Ungespeicherte Änderungen
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                {entwurfGespeichertAm ? "Alle Änderungen gesichert" : "Keine Änderungen"}
+              </>
+            )}
+          </span>
+          {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns und Prüfstatus. */}
+          <span className="text-muted-foreground">
+            {entwurfGespeichertAm
+              ? `Zuletzt gespeichert: ${formatZeitmarke(entwurfGespeichertAm)}`
+              : "Zuletzt gespeichert: noch nie"}
+            {" · "}
+            {liveFehler.length === 0
+              ? "Prüfung: alle Felder gültig"
+              : liveFehler.length === 1
+                ? "Prüfung: 1 Feld ungültig"
+                : `Prüfung: ${liveFehler.length} Felder ungültig`}
+          </span>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
             Abbrechen
