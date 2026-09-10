@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { AKTION_LABEL } from "@/lib/ablehnungen-pdf";
 import { toCsv, downloadCsv } from "@/lib/export-utils";
 
 import { Badge } from "@/components/ui/badge";
