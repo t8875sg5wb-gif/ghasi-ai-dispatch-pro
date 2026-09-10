@@ -127,7 +127,7 @@ export function AblehnungenWidget() {
         : aktuell.abgelehnt > 0
           ? 100
           : 0;
-    return { aktuell, vorher, trend: { diff, prozent } };
+    return { aktuell, vorher, trend: { diff, prozent }, aktuellRows };
   }, [ablehnungen.data, ranges, erfolgeAktuell.data, erfolgeVorher.data]);
 
   const lade = ablehnungen.isLoading || erfolgeAktuell.isLoading || erfolgeVorher.isLoading;
