@@ -2,7 +2,7 @@
 // Sie durchlaufen exakt dieselbe Serverpipeline wie die Serverfunktionen:
 // die echten Schemas aus recurring.functions.ts + pruefeDauerauftragRegeln +
 // parseOrLog (inkl. Ablehnungsprotokollierung und Marker-Kodierung).
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { parseOrLog } from "@/lib/recurring-reject.server";
 import {
