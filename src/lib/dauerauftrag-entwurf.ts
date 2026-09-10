@@ -193,3 +193,20 @@ export function formatUhrzeit(iso: string): string {
   if (Number.isNaN(d.getTime())) return "";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
+
+/**
+ * Vollständige Zeitmarke für die Fußzeile: "heute 14:32 Uhr" bzw.
+ * "09.09.2026 14:32 Uhr", wenn der Entwurf an einem anderen Tag entstand.
+ */
+export function formatZeitmarke(iso: string, jetzt: Date = new Date()): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const uhrzeit = `${formatUhrzeit(iso)} Uhr`;
+  const gleicherTag =
+    d.getFullYear() === jetzt.getFullYear() &&
+    d.getMonth() === jetzt.getMonth() &&
+    d.getDate() === jetzt.getDate();
+  if (gleicherTag) return `heute ${uhrzeit}`;
+  const datum = `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+  return `${datum} ${uhrzeit}`;
+}
