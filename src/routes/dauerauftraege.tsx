@@ -919,14 +919,45 @@ function DauerauftragForm({
   }, [initial, istEdit]);
 
   // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
+  // Schlägt das Speichern fehl, wird die Meldung angezeigt und der Versuch
+  // automatisch mit steigender Wartezeit wiederholt.
   useEffect(() => {
     if (!entwurfWeichtAb(f, basisRef.current)) return;
-    const timer = window.setTimeout(() => {
-      const eintrag = speichereEntwurf(entwurfKey, f);
-      if (eintrag) setEntwurfGespeichertAm(eintrag.gespeichertAm);
-    }, ENTWURF_DEBOUNCE_MS);
+    let versuch = 0;
+    let timer = 0;
+    const lauf = () => {
+      const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
+      if (ergebnis.ok) {
+        setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
+        setEntwurfFehler(null);
+        return;
+      }
+      const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
+      setEntwurfFehler({
+        meldung: ergebnis.meldung,
+        wiederholt: wartezeit !== null,
+        versuche: versuch + 1,
+      });
+      if (wartezeit === null) return;
+      versuch += 1;
+      timer = window.setTimeout(lauf, wartezeit);
+    };
+    timer = window.setTimeout(lauf, ENTWURF_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [f, entwurfKey]);
+  }, [f, entwurfKey, entwurfRetryZaehler]);
+
+  /** Manueller Neuversuch für den Auto-Save. */
+  const entwurfErneutSpeichern = () => {
+    const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
+    if (ergebnis.ok) {
+      setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
+      setEntwurfFehler(null);
+      toast.success("Entwurf zwischengespeichert");
+      return;
+    }
+    setEntwurfFehler({ meldung: ergebnis.meldung, wiederholt: false, versuche: 1 });
+    setEntwurfRetryZaehler((n) => n + 1);
+  };
 
   /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
   const entwurfUebernehmen = () => {
