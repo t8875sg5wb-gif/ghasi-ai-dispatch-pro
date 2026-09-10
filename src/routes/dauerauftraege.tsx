@@ -990,6 +990,7 @@ function DauerauftragForm({
     verwerfeEntwurf(entwurfKey);
     setWiederherstellbar(null);
     setEntwurfGespeichertAm(null);
+    setEntwurfFehler(null);
     setF(basisRef.current);
     setBeruehrt([]);
     setSubmitVersucht(false);
