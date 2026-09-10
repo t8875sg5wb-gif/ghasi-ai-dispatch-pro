@@ -70,9 +70,10 @@ export const recurringFieldsSchema = z
   })
   .strict();
 
-const createRecurringSchema = recurringFieldsSchema;
+/** Exportiert, damit E2E-Tests exakt dieselben Schemas prüfen wie der Handler. */
+export const createRecurringSchema = recurringFieldsSchema;
 
-const updateRecurringSchema = z
+export const updateRecurringSchema = z
   .object({
     id: z.string().uuid(),
     values: recurringFieldsSchema.partial().strict(),
@@ -83,7 +84,7 @@ const updateRecurringSchema = z
     path: ["values"],
   });
 
-const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
+export const deleteRecurringSchema = z.object({ id: z.string().uuid() }).strict();
 
 export const listRecurring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
