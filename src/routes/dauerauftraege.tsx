@@ -608,6 +608,7 @@ function DauerauftraegePage() {
         onOpenChange={(o) => {
           setFormOpen(o);
           setServerFeldFehler([]);
+          setServerHinweis(null);
           if (!o) setEditTarget(null);
         }}
       >
@@ -617,6 +618,7 @@ function DauerauftraegePage() {
             istEdit={!!editTarget}
             saving={saving}
             serverFehler={serverFeldFehler}
+            serverHinweis={serverHinweis}
             onSubmit={speichern}
             onCancel={() => {
               setFormOpen(false);
