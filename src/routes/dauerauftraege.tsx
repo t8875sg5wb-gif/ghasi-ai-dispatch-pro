@@ -1578,18 +1578,61 @@ function DauerauftragForm({
               </>
             )}
           </span>
-          {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns und Prüfstatus. */}
+          {/* Zeile 2: Zeitmarke des letzten Zwischenspeicherns. */}
           <span className="text-muted-foreground">
             {entwurfGespeichertAm
-              ? `Zuletzt gespeichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
-              : "Zuletzt gespeichert: noch nie"}
-            {" · "}
+              ? `Zuletzt gesichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
+              : "Zuletzt gesichert: noch nie"}
+          </span>
+
+          {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
+          <span className="flex items-center gap-2 text-xs">
             {(() => {
               const anzahl = entwurfOffen ? entwurfFehlerAnzahl : liveFehler.length;
-              const vorsatz = entwurfOffen ? "Prüfung (Entwurf)" : "Prüfung";
-              if (anzahl === 0) return `${vorsatz}: alle Felder gültig`;
-              if (anzahl === 1) return `${vorsatz}: 1 Feld ungültig`;
-              return `${vorsatz}: ${anzahl} Felder ungültig`;
+              const gueltig = anzahl === 0;
+              return (
+                <>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "gap-1 px-2 py-0.5 font-medium",
+                      gueltig
+                        ? "border-success text-success"
+                        : "border-destructive text-destructive",
+                    )}
+                  >
+                    {gueltig ? (
+                      <>
+                        <CheckCircle2 className="size-3" aria-hidden="true" />
+                        Gültig
+                      </>
+                    ) : (
+                      <>
+                        <TriangleAlert className="size-3" aria-hidden="true" />
+                        {anzahl} {anzahl === 1 ? "Feld" : "Felder"} ungültig
+                      </>
+                    )}
+                  </Badge>
+                  {!gueltig && !entwurfOffen && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-destructive"
+                      onClick={() => {
+                        const summary = document.getElementById("fehler-zusammenfassung");
+                        if (summary) {
+                          summary.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                        const first = fehler[0]?.path;
+                        if (first) springeZuFeld(first);
+                      }}
+                    >
+                      Zu den Fehlern
+                    </Button>
+                  )}
+                </>
+              );
             })()}
           </span>
         </div>
