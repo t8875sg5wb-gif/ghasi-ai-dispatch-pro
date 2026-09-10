@@ -29,6 +29,13 @@ import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
 
 type Zeitraum = "heute" | "7tage";
 
+const AKTION_LABEL: Record<string, string> = {
+  create: "Neuanlage",
+  update: "Änderung",
+  delete: "Löschung",
+  generate: "Transport-Erzeugung",
+};
+
 interface ZeitraumRange {
   label: string;
   aktuell: { von: Date; bis: Date };
