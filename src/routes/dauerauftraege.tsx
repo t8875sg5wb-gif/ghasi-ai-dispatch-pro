@@ -847,6 +847,8 @@ function DauerauftragForm({
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+  // Entwurf aus einer früheren Ansicht (z. B. nach einem Reload) – noch nicht übernommen.
+  const [entwurfOffen, setEntwurfOffen] = useState(false);
   const [entwurfFehler, setEntwurfFehler] = useState<{
     meldung: string;
     wiederholt: boolean;
