@@ -1548,7 +1548,7 @@ function DauerauftragForm({
             className={`inline-flex items-center gap-1.5 font-medium ${
               entwurfFehler
                 ? "text-warning"
-                : ungespeicherteAenderungen
+                : entwurfOffen || ungespeicherteAenderungen
                   ? "text-muted-foreground"
                   : "text-success"
             }`}
@@ -1559,6 +1559,11 @@ function DauerauftragForm({
                 {entwurfFehler.wiederholt
                   ? `Nicht gesichert · Neuversuch läuft (Versuch ${entwurfFehler.versuche})`
                   : "Nicht gesichert · bitte manuell erneut versuchen"}
+              </>
+            ) : entwurfOffen ? (
+              <>
+                <PencilLine className="size-3.5" aria-hidden="true" />
+                Gesicherter Entwurf vorhanden · noch nicht übernommen
               </>
             ) : ungespeicherteAenderungen ? (
               <>
@@ -1578,11 +1583,13 @@ function DauerauftragForm({
               ? `Zuletzt gespeichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gespeichert: noch nie"}
             {" · "}
-            {liveFehler.length === 0
-              ? "Prüfung: alle Felder gültig"
-              : liveFehler.length === 1
-                ? "Prüfung: 1 Feld ungültig"
-                : `Prüfung: ${liveFehler.length} Felder ungültig`}
+            {(() => {
+              const anzahl = entwurfOffen ? entwurfFehlerAnzahl : liveFehler.length;
+              const vorsatz = entwurfOffen ? "Prüfung (Entwurf)" : "Prüfung";
+              if (anzahl === 0) return `${vorsatz}: alle Felder gültig`;
+              if (anzahl === 1) return `${vorsatz}: 1 Feld ungültig`;
+              return `${vorsatz}: ${anzahl} Felder ungültig`;
+            })()}
           </span>
         </div>
         <div className="flex gap-2">
