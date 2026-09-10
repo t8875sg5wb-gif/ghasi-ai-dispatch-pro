@@ -1432,6 +1432,7 @@ function DauerauftragForm({
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
           {istEdit ? "Speichern" : "Anlegen"}
         </Button>
+        </div>
       </DialogFooter>
     </>
   );
