@@ -934,6 +934,7 @@ function DauerauftragForm({
   useEffect(() => {
     const basis = normalisiere(initial);
     basisRef.current = basis;
+    gesichertRef.current = basis;
     setF(basis);
     setBeruehrt([]);
     setSubmitVersucht(false);
