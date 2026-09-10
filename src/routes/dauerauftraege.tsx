@@ -831,6 +831,12 @@ function DauerauftragForm({
   const basisRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
+  const [entwurfFehler, setEntwurfFehler] = useState<{
+    meldung: string;
+    wiederholt: boolean;
+    versuche: number;
+  } | null>(null);
+  const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
 
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
