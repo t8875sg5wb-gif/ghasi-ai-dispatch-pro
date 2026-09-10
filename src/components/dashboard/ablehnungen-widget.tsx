@@ -110,7 +110,7 @@ export function AblehnungenWidget() {
     enabled: istAdmin,
   });
 
-  const { aktuell, vorher, trend } = useMemo(() => {
+  const { aktuell, vorher, trend, aktuellRows } = useMemo(() => {
     const rows = ablehnungen.data ?? [];
     const aktuellRows = rows.filter((a) =>
       isInRange(a.zeitpunkt, ranges.aktuell.von, ranges.aktuell.bis),
