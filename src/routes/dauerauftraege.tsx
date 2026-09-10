@@ -845,6 +845,7 @@ function DauerauftragForm({
   // Letzter erfolgreich zwischengespeicherter Stand – Basis für den Dirty-Status.
   const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
+  const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   const [entwurfFehler, setEntwurfFehler] = useState<{
     meldung: string;
