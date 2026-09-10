@@ -1063,6 +1063,32 @@ function DauerauftragForm({
           </div>
         )}
 
+        {entwurfFehler && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
+          >
+            <span>
+              <strong>Zwischenspeichern fehlgeschlagen.</strong> {entwurfFehler.meldung}
+              {entwurfFehler.wiederholt
+                ? ` Automatischer Neuversuch läuft (Versuch ${entwurfFehler.versuche}).`
+                : " Automatische Neuversuche sind ausgeschöpft."}
+            </span>
+            <Button size="sm" variant="outline" onClick={entwurfErneutSpeichern}>
+              Jetzt erneut versuchen
+            </Button>
+          </div>
+        )}
+
+        {serverHinweis && (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            <strong>Speichern abgelehnt.</strong> {serverHinweis}
+          </div>
+        )}
+
         {fehler.length > 0 && (
           <div
             role="alert"
