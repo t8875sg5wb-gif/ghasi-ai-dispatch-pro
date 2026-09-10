@@ -3,6 +3,7 @@ import { describe, expect, it } from "bun:test";
 
 import {
   ENTWURF_RETRY_MS,
+  formatZeitmarke,
   retryVerzoegerung,
   versucheEntwurfZuSpeichern,
 } from "@/lib/dauerauftrag-entwurf";
@@ -69,5 +70,23 @@ describe("Auto-Save: Fehler und Wiederholung", () => {
     for (let i = 1; i < ENTWURF_RETRY_MS.length; i++) {
       expect(ENTWURF_RETRY_MS[i]!).toBeGreaterThan(ENTWURF_RETRY_MS[i - 1]!);
     }
+  });
+});
+
+describe("Zeitmarke für die Fußzeile", () => {
+  it("zeigt Uhrzeit mit 'heute' für den aktuellen Tag", () => {
+    const jetzt = new Date(2026, 8, 10, 18, 0, 0);
+    const iso = new Date(2026, 8, 10, 15, 27, 0).toISOString();
+    expect(formatZeitmarke(iso, jetzt)).toBe("heute 15:27 Uhr");
+  });
+
+  it("zeigt das Datum, wenn der Entwurf von einem anderen Tag ist", () => {
+    const jetzt = new Date(2026, 8, 10, 8, 0, 0);
+    const iso = new Date(2026, 8, 9, 7, 5, 0).toISOString();
+    expect(formatZeitmarke(iso, jetzt)).toBe("09.09.2026 07:05 Uhr");
+  });
+
+  it("liefert leeren Text bei ungültiger Zeitangabe", () => {
+    expect(formatZeitmarke("keine-zeit")).toBe("");
   });
 });
