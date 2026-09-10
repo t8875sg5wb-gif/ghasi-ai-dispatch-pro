@@ -967,6 +967,7 @@ function DauerauftragForm({
         setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
         setEntwurfFehler(null);
         setEntwurfSoebenGespeichert(true);
+        setEntwurfOffen(false);
         return;
       }
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
