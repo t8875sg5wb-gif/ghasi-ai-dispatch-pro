@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "test": "bun test src",
     "test:sql-runtime": "bun test --timeout 180000 tests/sql; code=$?; if [ $code -eq 99 ]; then exit 0; else exit $code; fi",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "gen:api-types": "openapi-typescript docs/openapi-dauerauftraege.yaml -o src/lib/api/dauerauftraege-api.gen.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.51",
