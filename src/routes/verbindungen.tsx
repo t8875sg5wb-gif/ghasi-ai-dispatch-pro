@@ -244,6 +244,7 @@ function Verbindungen() {
     retry: false,
   });
   const alarm = alarmDaten ? bewerteMcpAlarm(alarmDaten.aufrufe) : null;
+  const toolAlarme = alarmDaten ? bewerteToolAlarme(alarmDaten.aufrufe) : [];
 
   // Gehäufte Fehler/Abweisungen zusätzlich ins Benachrichtigungszentrum spiegeln.
   useEffect(() => {
