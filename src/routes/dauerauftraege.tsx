@@ -6,14 +6,15 @@ import {
   CheckCircle2,
   Database,
   Loader2,
-  PencilLine,
   PauseCircle,
+  PencilLine,
   PlayCircle,
   Plus,
   Repeat,
   Search,
   SkipForward,
   Sparkles,
+  TriangleAlert,
   XCircle,
 } from "lucide-react";
 
