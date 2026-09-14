@@ -991,6 +991,8 @@ function DauerauftragForm({
         wiederholt: wartezeit !== null,
         versuche: versuch + 1,
         zeitpunkt: new Date().toISOString(),
+        grund: ergebnis.grund,
+        technik: ergebnis.technik,
       });
       if (wartezeit === null) return;
       versuch += 1;
