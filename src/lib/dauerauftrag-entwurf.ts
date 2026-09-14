@@ -65,9 +65,28 @@ export const ENTWURF_RETRY_MS = [1200, 3000, 8000] as const;
 
 export type EntwurfFehlerGrund = "kein_speicher" | "voll" | "fehler";
 
+/** Technische Details des Fehlschlags – für die Detailausgabe im Formular. */
+export type EntwurfTechnikInfo = {
+  /** Fehlerklasse bzw. `name` der Ausnahme. */
+  name: string;
+  /** Originale technische Fehlermeldung. */
+  message: string;
+  /** Aufrufkette, falls der Browser sie liefert. */
+  stack?: string;
+  /** Größe der Nutzlast in Bytes (JSON), soweit ermittelbar. */
+  nutzlastBytes?: number;
+  /** Verwendeter Speicherschlüssel. */
+  schluessel: string;
+};
+
 export type EntwurfSpeicherErgebnis =
   | { ok: true; eintrag: GespeicherterEntwurf }
-  | { ok: false; grund: EntwurfFehlerGrund; meldung: string };
+  | {
+      ok: false;
+      grund: EntwurfFehlerGrund;
+      meldung: string;
+      technik: EntwurfTechnikInfo;
+    };
 
 const FEHLER_MELDUNG: Record<EntwurfFehlerGrund, string> = {
   kein_speicher:
