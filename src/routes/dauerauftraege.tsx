@@ -1163,9 +1163,19 @@ function DauerauftragForm({
                 ? ` Automatischer Neuversuch läuft (Versuch ${entwurfFehler.versuche}).`
                 : " Automatische Neuversuche sind ausgeschöpft."}
             </span>
-            <Button size="sm" variant="outline" onClick={entwurfErneutSpeichern}>
-              Jetzt erneut versuchen
-            </Button>
+            <span className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => setFehlerDetailsOffen(true)}
+              >
+                Details
+              </Button>
+              <Button size="sm" variant="outline" type="button" onClick={entwurfErneutSpeichern}>
+                Jetzt erneut versuchen
+              </Button>
+            </span>
           </div>
         )}
 
