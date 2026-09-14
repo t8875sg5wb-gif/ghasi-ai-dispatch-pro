@@ -116,15 +116,89 @@ export function versucheEntwurfZuSpeichern(
   jetzt: Date = new Date(),
   store: Speicher | null = speicher(),
 ): EntwurfSpeicherErgebnis {
-  if (!store) return { ok: false, grund: "kein_speicher", meldung: FEHLER_MELDUNG.kein_speicher };
+  if (!store)
+    return {
+      ok: false,
+      grund: "kein_speicher",
+      meldung: FEHLER_MELDUNG.kein_speicher,
+      technik: {
+        name: "SpeicherNichtVerfuegbar",
+        message: "window.sessionStorage ist nicht verfügbar oder blockiert.",
+        schluessel,
+      },
+    };
   const eintrag: GespeicherterEntwurf = { gespeichertAm: jetzt.toISOString(), werte };
+  let nutzlast = "";
   try {
-    store.setItem(schluessel, JSON.stringify(eintrag));
+    nutzlast = JSON.stringify(eintrag);
+    store.setItem(schluessel, nutzlast);
     return { ok: true, eintrag };
   } catch (e) {
     const grund: EntwurfFehlerGrund = istQuotaFehler(e) ? "voll" : "fehler";
-    return { ok: false, grund, meldung: FEHLER_MELDUNG[grund] };
+    const fehler = e as { name?: string; message?: string; stack?: string } | null;
+    return {
+      ok: false,
+      grund,
+      meldung: FEHLER_MELDUNG[grund],
+      technik: {
+        name: fehler?.name ?? "Error",
+        message: fehler?.message ?? String(e),
+        ...(fehler?.stack ? { stack: fehler.stack } : {}),
+        nutzlastBytes: nutzlast.length,
+        schluessel,
+      },
+    };
   }
+}
+
+/* ----------------------------- Fehlerbericht ----------------------------- */
+
+/** Eingaben für den kopierbaren Fehlerbericht („Details“ im Footer). */
+export type EntwurfFehlerBerichtEingabe = {
+  zeitpunkt: string;
+  grund: EntwurfFehlerGrund;
+  meldung: string;
+  versuche: number;
+  wiederholt: boolean;
+  technik: EntwurfTechnikInfo;
+  /** Kontext der Bearbeitung: neuer Datensatz oder Serien-ID. */
+  datensatz: string;
+  /** Browserkennung, Adresse etc. – optional, damit es serverseitig testbar bleibt. */
+  umgebung?: { userAgent?: string; url?: string };
+};
+
+const GRUND_TEXT: Record<EntwurfFehlerGrund, string> = {
+  kein_speicher: "Zwischenspeicher nicht verfügbar",
+  voll: "Zwischenspeicher voll (Quota)",
+  fehler: "Unerwarteter Speicherfehler",
+};
+
+/**
+ * Erzeugt einen vollständigen, kopierbaren Fehlerbericht mit Zeitpunkt,
+ * Ursache, Request-/Kontextangaben und Aufrufkette (Stack).
+ */
+export function entwurfFehlerBericht(e: EntwurfFehlerBerichtEingabe): string {
+  const zeilen = [
+    "GHASI – Fehlerbericht Auto-Save Dauerauftrag",
+    `Zeitpunkt: ${e.zeitpunkt}`,
+    `Ursache: ${GRUND_TEXT[e.grund]} (${e.grund})`,
+    `Meldung: ${e.meldung}`,
+    `Versuche: ${e.versuche}${e.wiederholt ? " (automatischer Neuversuch läuft)" : " (kein automatischer Neuversuch mehr)"}`,
+    "",
+    "Request-/Kontextinformationen",
+    `Datensatz: ${e.datensatz}`,
+    `Speicherschlüssel: ${e.technik.schluessel}`,
+    `Nutzlast: ${e.technik.nutzlastBytes !== undefined ? `${e.technik.nutzlastBytes} Zeichen` : "unbekannt"}`,
+    `Adresse: ${e.umgebung?.url ?? "unbekannt"}`,
+    `Browser: ${e.umgebung?.userAgent ?? "unbekannt"}`,
+    "",
+    "Technische Details",
+    `Fehlerklasse: ${e.technik.name}`,
+    `Fehlertext: ${e.technik.message}`,
+    "Aufrufkette:",
+    e.technik.stack ?? "(keine Aufrufkette verfügbar)",
+  ];
+  return zeilen.join("\n");
 }
 
 /**
