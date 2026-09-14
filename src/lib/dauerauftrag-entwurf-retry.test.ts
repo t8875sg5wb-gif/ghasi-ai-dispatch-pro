@@ -90,3 +90,45 @@ describe("Zeitmarke für die Fußzeile", () => {
     expect(formatZeitmarke("keine-zeit")).toBe("");
   });
 });
+
+describe("entwurfFehlerBericht", () => {
+  it("enthält Zeitpunkt, Ursache, Kontext und Aufrufkette", () => {
+    const bericht = entwurfFehlerBericht({
+      zeitpunkt: "2026-09-14T10:00:00.000Z",
+      grund: "voll",
+      meldung: "Der Zwischenspeicher des Browsers ist voll.",
+      versuche: 2,
+      wiederholt: true,
+      technik: {
+        name: "QuotaExceededError",
+        message: "quota exceeded",
+        stack: "at setItem (storage)",
+        nutzlastBytes: 4242,
+        schluessel: "ghasi:dauerauftrag-entwurf:neu",
+      },
+      datensatz: "Neuanlage",
+      umgebung: { userAgent: "TestAgent", url: "https://example.test/dauerauftraege" },
+    });
+    expect(bericht).toContain("2026-09-14T10:00:00.000Z");
+    expect(bericht).toContain("Zwischenspeicher voll (Quota)");
+    expect(bericht).toContain("QuotaExceededError");
+    expect(bericht).toContain("4242 Zeichen");
+    expect(bericht).toContain("ghasi:dauerauftrag-entwurf:neu");
+    expect(bericht).toContain("TestAgent");
+    expect(bericht).toContain("at setItem (storage)");
+  });
+
+  it("meldet fehlende Aufrufkette verständlich", () => {
+    const bericht = entwurfFehlerBericht({
+      zeitpunkt: "2026-09-14T10:00:00.000Z",
+      grund: "kein_speicher",
+      meldung: "kein Speicher",
+      versuche: 1,
+      wiederholt: false,
+      technik: { name: "SpeicherNichtVerfuegbar", message: "blockiert", schluessel: "k" },
+      datensatz: "Neuanlage",
+    });
+    expect(bericht).toContain("(keine Aufrufkette verfügbar)");
+    expect(bericht).toContain("kein automatischer Neuversuch mehr");
+  });
+});
