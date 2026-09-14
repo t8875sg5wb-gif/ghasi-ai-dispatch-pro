@@ -1670,16 +1670,50 @@ function DauerauftragForm({
                 variant="link"
                 size="sm"
                 className="h-auto p-0 text-xs text-muted-foreground"
-                onClick={() => {
-                  document
-                    .getElementById("entwurf-fehler-hinweis")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }}
+                onClick={() => setFehlerDetailsOffen(true)}
               >
                 Details
               </Button>
             </span>
           )}
+
+          {/* Vollständige Fehlerausgabe mit Stack-/Kontextangaben und Kopier-Button. */}
+          <Dialog open={fehlerDetailsOffen} onOpenChange={setFehlerDetailsOffen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Details zum fehlgeschlagenen Zwischenspeichern</DialogTitle>
+                <DialogDescription>
+                  Vollständige technische Ausgabe inklusive Kontext- und Aufrufkette. Bitte beim
+                  Melden eines Problems mitkopieren.
+                </DialogDescription>
+              </DialogHeader>
+              <pre
+                data-testid="entwurf-fehlerbericht"
+                className="max-h-80 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap"
+              >
+                {fehlerBericht || "Derzeit liegt kein Fehler vor."}
+              </pre>
+              <DialogFooter className="gap-2 sm:justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={entwurfErneutSpeichern}
+                  disabled={!entwurfFehler}
+                >
+                  Jetzt erneut speichern
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={berichtKopieren}
+                  disabled={!fehlerBericht}
+                >
+                  Fehlerbericht kopieren
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
           <span className="flex items-center gap-2 text-xs">
