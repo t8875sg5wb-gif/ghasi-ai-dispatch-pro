@@ -1016,6 +1016,7 @@ function DauerauftragForm({
     };
     timer = window.setTimeout(lauf, ENTWURF_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- verarbeiteSpeicherErfolg liest den jeweils aktuellen Formularstand über f
   }, [f, entwurfKey, entwurfRetryZaehler]);
 
   // „Soeben gespeichert“-Hinweis nach jedem erfolgreichen Auto-Save sofort
