@@ -1713,12 +1713,7 @@ function DauerauftragForm({
                 >
                   Jetzt erneut speichern
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={berichtKopieren}
-                  disabled={!fehlerBericht}
-                >
+                <Button type="button" size="sm" onClick={berichtKopieren} disabled={!fehlerBericht}>
                   Fehlerbericht kopieren
                 </Button>
               </DialogFooter>
