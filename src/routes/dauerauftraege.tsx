@@ -850,6 +850,9 @@ function DauerauftragForm({
   const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
+  // Bestätigung, wenn ein Speichern nach vorherigem Fehler (Retry) gelingt.
+  const [retryErfolgAm, setRetryErfolgAm] = useState<string | null>(null);
+  const letzterSpeicherFehlerRef = useRef(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   // Entwurf aus einer früheren Ansicht (z. B. nach einem Reload) – noch nicht übernommen.
   const [entwurfOffen, setEntwurfOffen] = useState(false);
