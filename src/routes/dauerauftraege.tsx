@@ -1027,17 +1027,21 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [entwurfSoebenGespeichert]);
 
+  // Retry-Erfolgsbestätigung im Footer nach 5 Sekunden wieder ausblenden.
+  useEffect(() => {
+    if (!retryErfolgAm) return;
+    const timer = window.setTimeout(() => setRetryErfolgAm(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [retryErfolgAm]);
+
   /** Manueller Neuversuch für den Auto-Save. */
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
-      gesichertRef.current = f;
-      setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
-      setEntwurfFehler(null);
-      setEntwurfSoebenGespeichert(true);
-      toast.success("Entwurf zwischengespeichert");
+      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
       return;
     }
+    letzterSpeicherFehlerRef.current = true;
     setEntwurfFehler({
       meldung: ergebnis.meldung,
       wiederholt: false,
