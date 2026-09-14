@@ -59,6 +59,9 @@ import {
   retryVerzoegerung,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
+  entwurfFehlerBericht,
+  type EntwurfFehlerGrund,
+  type EntwurfTechnikInfo,
   type GespeicherterEntwurf,
 } from "@/lib/dauerauftrag-entwurf";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
