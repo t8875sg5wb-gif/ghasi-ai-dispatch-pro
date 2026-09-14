@@ -971,6 +971,22 @@ function DauerauftragForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
+  /** Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch. */
+  const verarbeiteSpeicherErfolg = (gespeichertAm: string) => {
+    gesichertRef.current = f;
+    setEntwurfGespeichertAm(gespeichertAm);
+    setEntwurfFehler(null);
+    setEntwurfSoebenGespeichert(true);
+    setEntwurfOffen(false);
+    if (letzterSpeicherFehlerRef.current) {
+      letzterSpeicherFehlerRef.current = false;
+      setRetryErfolgAm(gespeichertAm);
+      toast.success("Wiederholung erfolgreich – Entwurf gesichert", {
+        description: `Speicherzeitpunkt: ${formatZeitmarke(gespeichertAm)}`,
+      });
+    }
+  };
+
   // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
   // Schlägt das Speichern fehl, wird die Meldung angezeigt und der Versuch
   // automatisch mit steigender Wartezeit wiederholt.
@@ -981,14 +997,11 @@ function DauerauftragForm({
     const lauf = () => {
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
-        gesichertRef.current = f;
-        setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
-        setEntwurfFehler(null);
-        setEntwurfSoebenGespeichert(true);
-        setEntwurfOffen(false);
+        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
         return;
       }
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
+      letzterSpeicherFehlerRef.current = true;
       setEntwurfFehler({
         meldung: ergebnis.meldung,
         wiederholt: wartezeit !== null,
