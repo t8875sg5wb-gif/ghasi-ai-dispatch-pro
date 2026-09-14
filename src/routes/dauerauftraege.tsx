@@ -850,6 +850,9 @@ function DauerauftragForm({
   const gesichertRef = useRef<Dauerauftrag>(normalisiere(initial));
   const [entwurfGespeichertAm, setEntwurfGespeichertAm] = useState<string | null>(null);
   const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
+  // Bestätigung, wenn ein Speichern nach vorherigem Fehler (Retry) gelingt.
+  const [retryErfolgAm, setRetryErfolgAm] = useState<string | null>(null);
+  const letzterSpeicherFehlerRef = useRef(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   // Entwurf aus einer früheren Ansicht (z. B. nach einem Reload) – noch nicht übernommen.
   const [entwurfOffen, setEntwurfOffen] = useState(false);
@@ -968,6 +971,22 @@ function DauerauftragForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
+  /** Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch. */
+  const verarbeiteSpeicherErfolg = (gespeichertAm: string) => {
+    gesichertRef.current = f;
+    setEntwurfGespeichertAm(gespeichertAm);
+    setEntwurfFehler(null);
+    setEntwurfSoebenGespeichert(true);
+    setEntwurfOffen(false);
+    if (letzterSpeicherFehlerRef.current) {
+      letzterSpeicherFehlerRef.current = false;
+      setRetryErfolgAm(gespeichertAm);
+      toast.success("Wiederholung erfolgreich – Entwurf gesichert", {
+        description: `Speicherzeitpunkt: ${formatZeitmarke(gespeichertAm)}`,
+      });
+    }
+  };
+
   // Auto-Save: speichert den Entwurf nach einer kurzen Tipp-Pause.
   // Schlägt das Speichern fehl, wird die Meldung angezeigt und der Versuch
   // automatisch mit steigender Wartezeit wiederholt.
@@ -978,14 +997,11 @@ function DauerauftragForm({
     const lauf = () => {
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
-        gesichertRef.current = f;
-        setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
-        setEntwurfFehler(null);
-        setEntwurfSoebenGespeichert(true);
-        setEntwurfOffen(false);
+        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
         return;
       }
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
+      letzterSpeicherFehlerRef.current = true;
       setEntwurfFehler({
         meldung: ergebnis.meldung,
         wiederholt: wartezeit !== null,
@@ -1000,6 +1016,7 @@ function DauerauftragForm({
     };
     timer = window.setTimeout(lauf, ENTWURF_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- verarbeiteSpeicherErfolg liest den jeweils aktuellen Formularstand über f
   }, [f, entwurfKey, entwurfRetryZaehler]);
 
   // „Soeben gespeichert“-Hinweis nach jedem erfolgreichen Auto-Save sofort
@@ -1010,17 +1027,21 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [entwurfSoebenGespeichert]);
 
+  // Retry-Erfolgsbestätigung im Footer nach 5 Sekunden wieder ausblenden.
+  useEffect(() => {
+    if (!retryErfolgAm) return;
+    const timer = window.setTimeout(() => setRetryErfolgAm(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [retryErfolgAm]);
+
   /** Manueller Neuversuch für den Auto-Save. */
   const entwurfErneutSpeichern = () => {
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
-      gesichertRef.current = f;
-      setEntwurfGespeichertAm(ergebnis.eintrag.gespeichertAm);
-      setEntwurfFehler(null);
-      setEntwurfSoebenGespeichert(true);
-      toast.success("Entwurf zwischengespeichert");
+      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
       return;
     }
+    letzterSpeicherFehlerRef.current = true;
     setEntwurfFehler({
       meldung: ergebnis.meldung,
       wiederholt: false,
@@ -1651,6 +1672,17 @@ function DauerauftragForm({
               ? `Zuletzt gesichert: ${entwurfSoebenGespeichert ? "gerade eben · " : ""}${formatZeitmarke(entwurfGespeichertAm)}`
               : "Zuletzt gesichert: noch nie"}
           </span>
+
+          {/* Kurze Bestätigung, wenn ein Neuversuch (Retry) erfolgreich war. */}
+          {retryErfolgAm && (
+            <span
+              role="status"
+              className="flex items-center gap-1.5 font-medium text-success"
+            >
+              <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+              Neuversuch erfolgreich – gespeichert um {formatZeitmarke(retryErfolgAm)}
+            </span>
+          )}
 
           {/* Fehlgeschlagener Speicherversuch – mit Verknüpfung zum Retry-Flow. */}
           {entwurfFehler && (
