@@ -1026,8 +1026,36 @@ function DauerauftragForm({
       wiederholt: false,
       versuche: 1,
       zeitpunkt: new Date().toISOString(),
+      grund: ergebnis.grund,
+      technik: ergebnis.technik,
     });
     setEntwurfRetryZaehler((n) => n + 1);
+  };
+
+  /** Vollständiger, kopierbarer Fehlerbericht zum letzten Speicherversuch. */
+  const fehlerBericht = entwurfFehler
+    ? entwurfFehlerBericht({
+        zeitpunkt: entwurfFehler.zeitpunkt,
+        grund: entwurfFehler.grund,
+        meldung: entwurfFehler.meldung,
+        versuche: entwurfFehler.versuche,
+        wiederholt: entwurfFehler.wiederholt,
+        technik: entwurfFehler.technik,
+        datensatz: istEdit ? `Serie ${initial.id}` : "Neuanlage",
+        umgebung:
+          typeof window === "undefined"
+            ? {}
+            : { userAgent: window.navigator.userAgent, url: window.location.href },
+      })
+    : "";
+
+  const berichtKopieren = async () => {
+    try {
+      await navigator.clipboard.writeText(fehlerBericht);
+      toast.success("Fehlerbericht in die Zwischenablage kopiert");
+    } catch {
+      toast.error("Kopieren nicht möglich – Text bitte manuell markieren.");
+    }
   };
 
   /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
