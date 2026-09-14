@@ -59,6 +59,9 @@ import {
   retryVerzoegerung,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
+  entwurfFehlerBericht,
+  type EntwurfFehlerGrund,
+  type EntwurfTechnikInfo,
   type GespeicherterEntwurf,
 } from "@/lib/dauerauftrag-entwurf";
 import { KRANKENKASSEN } from "@/lib/stammdaten";
@@ -855,8 +858,11 @@ function DauerauftragForm({
     wiederholt: boolean;
     versuche: number;
     zeitpunkt: string;
+    grund: EntwurfFehlerGrund;
+    technik: EntwurfTechnikInfo;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
+  const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
@@ -985,6 +991,8 @@ function DauerauftragForm({
         wiederholt: wartezeit !== null,
         versuche: versuch + 1,
         zeitpunkt: new Date().toISOString(),
+        grund: ergebnis.grund,
+        technik: ergebnis.technik,
       });
       if (wartezeit === null) return;
       versuch += 1;
@@ -1018,8 +1026,36 @@ function DauerauftragForm({
       wiederholt: false,
       versuche: 1,
       zeitpunkt: new Date().toISOString(),
+      grund: ergebnis.grund,
+      technik: ergebnis.technik,
     });
     setEntwurfRetryZaehler((n) => n + 1);
+  };
+
+  /** Vollständiger, kopierbarer Fehlerbericht zum letzten Speicherversuch. */
+  const fehlerBericht = entwurfFehler
+    ? entwurfFehlerBericht({
+        zeitpunkt: entwurfFehler.zeitpunkt,
+        grund: entwurfFehler.grund,
+        meldung: entwurfFehler.meldung,
+        versuche: entwurfFehler.versuche,
+        wiederholt: entwurfFehler.wiederholt,
+        technik: entwurfFehler.technik,
+        datensatz: istEdit ? `Serie ${initial.id}` : "Neuanlage",
+        umgebung:
+          typeof window === "undefined"
+            ? {}
+            : { userAgent: window.navigator.userAgent, url: window.location.href },
+      })
+    : "";
+
+  const berichtKopieren = async () => {
+    try {
+      await navigator.clipboard.writeText(fehlerBericht);
+      toast.success("Fehlerbericht in die Zwischenablage kopiert");
+    } catch {
+      toast.error("Kopieren nicht möglich – Text bitte manuell markieren.");
+    }
   };
 
   /** Entwurf übernehmen – Live-Validierung zeigt danach genau die geänderten Felder. */
@@ -1127,9 +1163,19 @@ function DauerauftragForm({
                 ? ` Automatischer Neuversuch läuft (Versuch ${entwurfFehler.versuche}).`
                 : " Automatische Neuversuche sind ausgeschöpft."}
             </span>
-            <Button size="sm" variant="outline" onClick={entwurfErneutSpeichern}>
-              Jetzt erneut versuchen
-            </Button>
+            <span className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => setFehlerDetailsOffen(true)}
+              >
+                Details
+              </Button>
+              <Button size="sm" variant="outline" type="button" onClick={entwurfErneutSpeichern}>
+                Jetzt erneut versuchen
+              </Button>
+            </span>
           </div>
         )}
 
@@ -1634,16 +1680,45 @@ function DauerauftragForm({
                 variant="link"
                 size="sm"
                 className="h-auto p-0 text-xs text-muted-foreground"
-                onClick={() => {
-                  document
-                    .getElementById("entwurf-fehler-hinweis")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }}
+                onClick={() => setFehlerDetailsOffen(true)}
               >
                 Details
               </Button>
             </span>
           )}
+
+          {/* Vollständige Fehlerausgabe mit Stack-/Kontextangaben und Kopier-Button. */}
+          <Dialog open={fehlerDetailsOffen} onOpenChange={setFehlerDetailsOffen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Details zum fehlgeschlagenen Zwischenspeichern</DialogTitle>
+                <DialogDescription>
+                  Vollständige technische Ausgabe inklusive Kontext- und Aufrufkette. Bitte beim
+                  Melden eines Problems mitkopieren.
+                </DialogDescription>
+              </DialogHeader>
+              <pre
+                data-testid="entwurf-fehlerbericht"
+                className="max-h-80 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap"
+              >
+                {fehlerBericht || "Derzeit liegt kein Fehler vor."}
+              </pre>
+              <DialogFooter className="gap-2 sm:justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={entwurfErneutSpeichern}
+                  disabled={!entwurfFehler}
+                >
+                  Jetzt erneut speichern
+                </Button>
+                <Button type="button" size="sm" onClick={berichtKopieren} disabled={!fehlerBericht}>
+                  Fehlerbericht kopieren
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Zeile 3: eindeutiger Validierungsstatus mit Fehleranzahl. */}
           <span className="flex items-center gap-2 text-xs">
