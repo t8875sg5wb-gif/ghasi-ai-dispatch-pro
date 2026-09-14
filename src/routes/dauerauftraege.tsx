@@ -858,8 +858,11 @@ function DauerauftragForm({
     wiederholt: boolean;
     versuche: number;
     zeitpunkt: string;
+    grund: EntwurfFehlerGrund;
+    technik: EntwurfTechnikInfo;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
+  const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
     setBeruehrt((prev) => {
