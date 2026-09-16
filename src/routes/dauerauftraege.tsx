@@ -976,8 +976,13 @@ function DauerauftragForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
-  /** Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch. */
-  const verarbeiteSpeicherErfolg = (gespeichertAm: string) => {
+  /**
+   * Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch.
+   * `versuchId` identifiziert den Versuch: nur das Ergebnis des jüngsten
+   * Versuchs darf Bestätigung und Zeitmarke setzen.
+   */
+  const verarbeiteSpeicherErfolg = (gespeichertAm: string, versuchId: number) => {
+    if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
     setEntwurfRetryAktiv(false);
     gesichertRef.current = f;
     setEntwurfGespeichertAm(gespeichertAm);
