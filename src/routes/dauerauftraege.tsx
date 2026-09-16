@@ -1856,9 +1856,13 @@ function DauerauftragForm({
                   variant="outline"
                   size="sm"
                   onClick={entwurfErneutSpeichern}
-                  disabled={!entwurfFehler || entwurfRetryAktiv}
+                  disabled={!entwurfFehler || !retryMoeglich}
                 >
-                  {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
+                  {entwurfRetryAktiv
+                    ? "Neuversuch läuft …"
+                    : retryMoeglich
+                      ? "Jetzt erneut speichern"
+                      : "Neuversuch gesperrt"}
                 </Button>
                 <Button type="button" size="sm" onClick={berichtKopieren} disabled={!fehlerBericht}>
                   Fehlerbericht kopieren
