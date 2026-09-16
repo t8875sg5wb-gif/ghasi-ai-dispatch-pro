@@ -3,7 +3,10 @@ import { describe, expect, it } from "bun:test";
 
 import {
   ENTWURF_RETRY_MS,
+  RETRY_BESTAETIGUNG_MS,
   formatZeitmarke,
+  retryBestaetigungSichtbar,
+  retryBestaetigungText,
   retryVerzoegerung,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
@@ -131,5 +134,41 @@ describe("entwurfFehlerBericht", () => {
     });
     expect(bericht).toContain("(keine Aufrufkette verfügbar)");
     expect(bericht).toContain("kein automatischer Neuversuch mehr");
+  });
+});
+
+describe("Footer-Bestätigung nach erfolgreichem Retry", () => {
+  const erfolgIso = new Date(2026, 8, 16, 14, 5, 0).toISOString();
+  const jetzt = new Date(2026, 8, 16, 14, 6, 0);
+
+  it("zeigt die Bestätigung mit dem aktualisierten Speicherzeitpunkt", () => {
+    const text = retryBestaetigungText(erfolgIso, jetzt);
+    expect(text).toContain("Neuversuch erfolgreich");
+    // Der neue Speicherzeitpunkt erscheint sofort im Text.
+    expect(text).toContain(formatZeitmarke(erfolgIso, jetzt));
+    expect(text).toContain("heute 14:05 Uhr");
+  });
+
+  it("ist direkt nach dem erfolgreichen Retry sichtbar", () => {
+    expect(retryBestaetigungSichtbar(erfolgIso, new Date(erfolgIso))).toBe(true);
+    // Auch kurz vor Ablauf der Anzeigedauer noch sichtbar.
+    const knappVorEnde = new Date(Date.parse(erfolgIso) + RETRY_BESTAETIGUNG_MS - 1);
+    expect(retryBestaetigungSichtbar(erfolgIso, knappVorEnde)).toBe(true);
+  });
+
+  it("verschwindet nach 5 Sekunden wieder", () => {
+    expect(RETRY_BESTAETIGUNG_MS).toBe(5000);
+    const nachAblauf = new Date(Date.parse(erfolgIso) + RETRY_BESTAETIGUNG_MS);
+    expect(retryBestaetigungSichtbar(erfolgIso, nachAblauf)).toBe(false);
+    const spaeter = new Date(Date.parse(erfolgIso) + 60_000);
+    expect(retryBestaetigungSichtbar(erfolgIso, spaeter)).toBe(false);
+  });
+
+  it("zeigt nichts ohne Speicherzeitpunkt oder bei ungültiger Zeitangabe", () => {
+    expect(retryBestaetigungSichtbar(null, jetzt)).toBe(false);
+    expect(retryBestaetigungSichtbar("keine-zeit", jetzt)).toBe(false);
+    // Zeitpunkt in der Zukunft (Uhrenfehler) gilt nicht als sichtbar.
+    const vorher = new Date(Date.parse(erfolgIso) - 1000);
+    expect(retryBestaetigungSichtbar(erfolgIso, vorher)).toBe(false);
   });
 });

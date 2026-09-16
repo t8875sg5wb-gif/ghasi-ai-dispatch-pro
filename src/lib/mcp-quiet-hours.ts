@@ -141,9 +141,7 @@ export function stilleZeitStatus(zeiten: StilleZeit[], at: Date = new Date()): S
 /** Kurzer, deutscher Anzeigetext für ein Fenster. */
 export function beschreibeStilleZeit(z: StilleZeit): string {
   const tage =
-    z.wochentage.length === 0
-      ? "täglich"
-      : z.wochentage.map((t) => WOCHENTAG_LABEL[t]).join(", ");
+    z.wochentage.length === 0 ? "täglich" : z.wochentage.map((t) => WOCHENTAG_LABEL[t]).join(", ");
   const ueberNacht = (zuMinuten(z.vonZeit) ?? 0) > (zuMinuten(z.bisZeit) ?? 0);
   return `${tage} ${z.vonZeit}–${z.bisZeit}${ueberNacht ? " (über Mitternacht)" : ""}`;
 }

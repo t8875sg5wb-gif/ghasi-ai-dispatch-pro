@@ -211,6 +211,31 @@ export function retryVerzoegerung(versuch: number, grund: EntwurfFehlerGrund): n
   return ENTWURF_RETRY_MS[versuch] ?? null;
 }
 
+/* --------------------- Retry-Erfolgsbestätigung im Footer --------------------- */
+
+/** Anzeigedauer der grünen Bestätigung nach einem erfolgreichen Neuversuch. */
+export const RETRY_BESTAETIGUNG_MS = 5000;
+
+/** Text der Footer-Bestätigung inkl. aktualisiertem Speicherzeitpunkt. */
+export function retryBestaetigungText(gespeichertAmIso: string, jetzt: Date = new Date()): string {
+  return `Neuversuch erfolgreich – gespeichert um ${formatZeitmarke(gespeichertAmIso, jetzt)}`;
+}
+
+/**
+ * Sichtbarkeit der Bestätigung: sie gilt ab dem (neuen) Speicherzeitpunkt und
+ * verschwindet nach RETRY_BESTAETIGUNG_MS wieder.
+ */
+export function retryBestaetigungSichtbar(
+  gespeichertAmIso: string | null,
+  jetzt: Date = new Date(),
+): boolean {
+  if (!gespeichertAmIso) return false;
+  const t = Date.parse(gespeichertAmIso);
+  if (!Number.isFinite(t)) return false;
+  const vergangen = jetzt.getTime() - t;
+  return vergangen >= 0 && vergangen < RETRY_BESTAETIGUNG_MS;
+}
+
 export function verwerfeEntwurf(schluessel: string, store: Speicher | null = speicher()): void {
   try {
     store?.removeItem(schluessel);
