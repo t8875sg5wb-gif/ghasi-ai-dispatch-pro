@@ -211,6 +211,47 @@ export function retryVerzoegerung(versuch: number, grund: EntwurfFehlerGrund): n
   return ENTWURF_RETRY_MS[versuch] ?? null;
 }
 
+/* --------------------- Endgültig fehlgeschlagene Neuversuche --------------------- */
+
+/**
+ * Endgültig fehlgeschlagen: es läuft kein automatischer Neuversuch mehr –
+ * entweder weil kein Speicher verfügbar ist oder alle Stufen verbraucht sind.
+ */
+export function istEndgueltigFehlgeschlagen(e: {
+  wiederholt: boolean;
+  grund: EntwurfFehlerGrund;
+  versuche: number;
+}): boolean {
+  if (e.wiederholt) return false;
+  return e.grund === "kein_speicher" || e.versuche >= 1;
+}
+
+/** Klartext-Hinweis, was der Nutzer nach dem endgültigen Fehlschlag tun kann. */
+export function endgueltigFehlerHinweis(grund: EntwurfFehlerGrund): string {
+  switch (grund) {
+    case "kein_speicher":
+      return "Der Zwischenspeicher dieses Browsers ist nicht verfügbar (z. B. privater Modus oder gesperrte Website-Daten). Automatische Neuversuche sind deshalb ausgesetzt. Speichern Sie den Dauerauftrag jetzt regulär ab oder notieren Sie die Eingaben.";
+    case "voll":
+      return "Der Zwischenspeicher ist voll. Alle automatischen Neuversuche sind verbraucht. Schließen Sie andere Entwürfe oder Browser-Tabs dieser Anwendung und starten Sie den Neuversuch anschließend selbst.";
+    default:
+      return "Alle automatischen Neuversuche sind verbraucht. Prüfen Sie die technischen Details und starten Sie den Neuversuch bei Bedarf selbst.";
+  }
+}
+
+/**
+ * Nach einem endgültigen Fehlschlag ist ein weiterer Neuversuch erst nach einer
+ * erneuten Aktion möglich: entweder eine Formularänderung oder das ausdrückliche
+ * Freischalten im Dialog.
+ */
+export function retryWiederholbar(e: {
+  endgueltig: boolean;
+  freigegeben: boolean;
+  laeuft: boolean;
+}): boolean {
+  if (e.laeuft) return false;
+  return e.endgueltig ? e.freigegeben : true;
+}
+
 /* --------------------- Retry-Erfolgsbestätigung im Footer --------------------- */
 
 /** Anzeigedauer der grünen Bestätigung nach einem erfolgreichen Neuversuch. */
