@@ -1058,9 +1058,12 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [retryErfolgAm]);
 
-  /** Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft. */
+  /**
+   * Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft und
+   * nach einem endgültigen Fehlschlag, bis er erneut freigeschaltet wurde.
+   */
   const entwurfErneutSpeichern = () => {
-    if (entwurfRetryAktiv) return;
+    if (!retryMoeglich) return;
     versuchIdRef.current += 1;
     const versuchId = versuchIdRef.current;
     setEntwurfRetryAktiv(true);
