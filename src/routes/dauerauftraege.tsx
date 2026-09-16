@@ -854,6 +854,9 @@ function DauerauftragForm({
   const [entwurfSoebenGespeichert, setEntwurfSoebenGespeichert] = useState(false);
   // Bestätigung, wenn ein Speichern nach vorherigem Fehler (Retry) gelingt.
   const [retryErfolgAm, setRetryErfolgAm] = useState<string | null>(null);
+  // True, solange ein Neuversuch läuft oder auf seine nächste Wiederholung
+  // wartet – sperrt in dieser Zeit alle Retry-Buttons gegen Doppelstarts.
+  const [entwurfRetryAktiv, setEntwurfRetryAktiv] = useState(false);
   const letzterSpeicherFehlerRef = useRef(false);
   const [wiederherstellbar, setWiederherstellbar] = useState<GespeicherterEntwurf | null>(null);
   // Entwurf aus einer früheren Ansicht (z. B. nach einem Reload) – noch nicht übernommen.
@@ -997,8 +1000,10 @@ function DauerauftragForm({
     let versuch = 0;
     let timer = 0;
     const lauf = () => {
+      setEntwurfRetryAktiv(true);
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
+        setEntwurfRetryAktiv(false);
         verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
         return;
       }
@@ -1012,7 +1017,10 @@ function DauerauftragForm({
         grund: ergebnis.grund,
         technik: ergebnis.technik,
       });
-      if (wartezeit === null) return;
+      if (wartezeit === null) {
+        setEntwurfRetryAktiv(false);
+        return;
+      }
       versuch += 1;
       timer = window.setTimeout(lauf, wartezeit);
     };
