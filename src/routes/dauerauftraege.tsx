@@ -1797,12 +1797,53 @@ function DauerauftragForm({
           <Dialog open={fehlerDetailsOffen} onOpenChange={setFehlerDetailsOffen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Details zum fehlgeschlagenen Zwischenspeichern</DialogTitle>
+                <DialogTitle>
+                  {retryEndgueltig
+                    ? "Zwischenspeichern endgültig fehlgeschlagen"
+                    : "Details zum fehlgeschlagenen Zwischenspeichern"}
+                </DialogTitle>
                 <DialogDescription>
                   Vollständige technische Ausgabe inklusive Kontext- und Aufrufkette. Bitte beim
                   Melden eines Problems mitkopieren.
                 </DialogDescription>
               </DialogHeader>
+
+              {/* Eigene Ansicht für endgültig fehlgeschlagene Neuversuche. */}
+              {retryEndgueltig && entwurfFehler && (
+                <div
+                  role="alert"
+                  data-testid="entwurf-endgueltig-fehler"
+                  className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
+                >
+                  <p className="flex items-center gap-2 font-semibold text-destructive">
+                    <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+                    Alle automatischen Neuversuche sind beendet
+                  </p>
+                  <p className="text-muted-foreground">
+                    {endgueltigFehlerHinweis(entwurfFehler.grund)}
+                  </p>
+                  <ul className="list-inside list-disc text-xs text-muted-foreground">
+                    <li>Fehlgeschlagene Versuche: {entwurfFehler.versuche}</li>
+                    <li>Letzter Versuch: {formatZeitmarke(entwurfFehler.zeitpunkt)}</li>
+                    <li>
+                      {retryMoeglich
+                        ? "Ein weiterer Neuversuch ist jetzt freigeschaltet."
+                        : "Ein weiterer Neuversuch ist erst nach einer erneuten Aktion möglich: Formular ändern oder unten freischalten."}
+                    </li>
+                  </ul>
+                  {!retryMoeglich && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={retryFreischalten}
+                      disabled={entwurfRetryAktiv}
+                    >
+                      Neuversuch freischalten
+                    </Button>
+                  )}
+                </div>
+              )}
               <pre
                 data-testid="entwurf-fehlerbericht"
                 className="max-h-80 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap"
