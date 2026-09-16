@@ -978,6 +978,7 @@ function DauerauftragForm({
 
   /** Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch. */
   const verarbeiteSpeicherErfolg = (gespeichertAm: string) => {
+    setEntwurfRetryAktiv(false);
     gesichertRef.current = f;
     setEntwurfGespeichertAm(gespeichertAm);
     setEntwurfFehler(null);
@@ -1044,10 +1045,13 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [retryErfolgAm]);
 
-  /** Manueller Neuversuch für den Auto-Save. */
+  /** Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft. */
   const entwurfErneutSpeichern = () => {
+    if (entwurfRetryAktiv) return;
+    setEntwurfRetryAktiv(true);
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
+      setEntwurfRetryAktiv(false);
       verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
       return;
     }
