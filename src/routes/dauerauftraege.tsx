@@ -1031,6 +1031,8 @@ function DauerauftragForm({
       });
       if (wartezeit === null) {
         setEntwurfRetryAktiv(false);
+        // Endgültig fehlgeschlagen: weiterer Neuversuch erst nach erneuter Aktion.
+        setRetryFreigegeben(false);
         return;
       }
       versuch += 1;
