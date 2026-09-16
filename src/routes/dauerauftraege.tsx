@@ -1056,13 +1056,15 @@ function DauerauftragForm({
   /** Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft. */
   const entwurfErneutSpeichern = () => {
     if (entwurfRetryAktiv) return;
+    versuchIdRef.current += 1;
+    const versuchId = versuchIdRef.current;
     setEntwurfRetryAktiv(true);
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
-      setEntwurfRetryAktiv(false);
-      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
+      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm, versuchId);
       return;
     }
+    if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
     letzterSpeicherFehlerRef.current = true;
     setEntwurfFehler({
       meldung: ergebnis.meldung,
