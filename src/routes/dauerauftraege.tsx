@@ -1677,10 +1677,7 @@ function DauerauftragForm({
 
           {/* Kurze Bestätigung, wenn ein Neuversuch (Retry) erfolgreich war. */}
           {retryErfolgAm && (
-            <span
-              role="status"
-              className="flex items-center gap-1.5 font-medium text-success"
-            >
+            <span role="status" className="flex items-center gap-1.5 font-medium text-success">
               <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
               {retryBestaetigungText(retryErfolgAm)}
             </span>
