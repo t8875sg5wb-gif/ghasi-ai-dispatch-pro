@@ -1751,7 +1751,10 @@ function DauerauftragForm({
           {entwurfFehler && (
             <span
               role="alert"
-              className="flex flex-wrap items-center gap-2 font-medium text-warning"
+              className={cn(
+                "flex flex-wrap items-center gap-2 font-medium",
+                retryEndgueltig ? "text-destructive" : "text-warning",
+              )}
             >
               <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
               <span>
@@ -1759,17 +1762,24 @@ function DauerauftragForm({
                 ·{" "}
                 {entwurfFehler.wiederholt
                   ? `Neuversuch ${entwurfFehler.versuche} läuft automatisch`
-                  : "kein automatischer Neuversuch mehr"}
+                  : `endgültig fehlgeschlagen nach ${entwurfFehler.versuche} ${entwurfFehler.versuche === 1 ? "Versuch" : "Versuchen"}`}
               </span>
               <Button
                 type="button"
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-xs text-warning"
-                onClick={entwurfErneutSpeichern}
+                className={cn(
+                  "h-auto p-0 text-xs",
+                  retryEndgueltig ? "text-destructive" : "text-warning",
+                )}
+                onClick={retryMoeglich ? entwurfErneutSpeichern : retryFreischalten}
                 disabled={entwurfRetryAktiv}
               >
-                {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
+                {entwurfRetryAktiv
+                  ? "Neuversuch läuft …"
+                  : retryMoeglich
+                    ? "Jetzt erneut speichern"
+                    : "Neuversuch freischalten"}
               </Button>
               <Button
                 type="button"
