@@ -1695,6 +1695,17 @@ function DauerauftragForm({
             </span>
           )}
 
+          {/* Ladezustand: sichtbar, solange ein Neuversuch aktiv ist. */}
+          {entwurfRetryAktiv && (
+            <span
+              role="status"
+              className="flex items-center gap-1.5 font-medium text-muted-foreground"
+            >
+              <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden="true" />
+              Neuversuch läuft …
+            </span>
+          )}
+
           {/* Fehlgeschlagener Speicherversuch – mit Verknüpfung zum Retry-Flow. */}
           {entwurfFehler && (
             <span
@@ -1715,8 +1726,9 @@ function DauerauftragForm({
                 size="sm"
                 className="h-auto p-0 text-xs text-warning"
                 onClick={entwurfErneutSpeichern}
+                disabled={entwurfRetryAktiv}
               >
-                Jetzt erneut speichern
+                {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
               </Button>
               <Button
                 type="button"
@@ -1752,9 +1764,9 @@ function DauerauftragForm({
                   variant="outline"
                   size="sm"
                   onClick={entwurfErneutSpeichern}
-                  disabled={!entwurfFehler}
+                  disabled={!entwurfFehler || entwurfRetryAktiv}
                 >
-                  Jetzt erneut speichern
+                  {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
                 </Button>
                 <Button type="button" size="sm" onClick={berichtKopieren} disabled={!fehlerBericht}>
                   Fehlerbericht kopieren
