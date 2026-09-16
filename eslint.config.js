@@ -12,6 +12,7 @@ export default tseslint.config(
       ".output",
       ".vinxi",
       "src/integrations/supabase/types.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
       "src/lib/api/dauerauftraege-api.gen.ts",
     ],
   },
