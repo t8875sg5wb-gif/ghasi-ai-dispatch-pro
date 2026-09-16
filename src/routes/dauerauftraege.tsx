@@ -1006,13 +1006,16 @@ function DauerauftragForm({
     let versuch = 0;
     let timer = 0;
     const lauf = () => {
+      // Jeder Versuch erhält eine eigene Kennung; ältere Ergebnisse verfallen.
+      versuchIdRef.current += 1;
+      const versuchId = versuchIdRef.current;
       setEntwurfRetryAktiv(true);
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
-        setEntwurfRetryAktiv(false);
-        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
+        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm, versuchId);
         return;
       }
+      if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
       letzterSpeicherFehlerRef.current = true;
       setEntwurfFehler({
