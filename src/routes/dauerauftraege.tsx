@@ -870,6 +870,8 @@ function DauerauftragForm({
     technik: EntwurfTechnikInfo;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
+  // Laufende Nummer des aktuellen Speicherversuchs – nur dessen Ergebnis zählt.
+  const versuchIdRef = useRef(0);
   const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
