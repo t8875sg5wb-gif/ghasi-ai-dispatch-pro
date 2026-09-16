@@ -873,6 +873,8 @@ function DauerauftragForm({
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
   // Laufende Nummer des aktuellen Speicherversuchs – nur dessen Ergebnis zählt.
   const versuchIdRef = useRef(0);
+  // Nach einem endgültigen Fehlschlag erst nach erneuter Aktion wieder erlaubt.
+  const [retryFreigegeben, setRetryFreigegeben] = useState(true);
   const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
