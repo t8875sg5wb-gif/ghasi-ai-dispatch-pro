@@ -56,6 +56,8 @@ import {
   formatZeitmarke,
   geaenderteFelder,
   ladeEntwurf,
+  retryBestaetigungText,
+  RETRY_BESTAETIGUNG_MS,
   retryVerzoegerung,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
