@@ -26,6 +26,8 @@ import { computeKpis, computeBusinessHealth, EUR, type HealthStufe } from "@/lib
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STUFE_TEXT: Record<HealthStufe, string> = {
   exzellent: "Exzellent",
@@ -74,26 +76,72 @@ function HealthGauge({ score, stufe }: { score: number; stufe: HealthStufe }) {
 }
 
 export function ControlCenter() {
-  useOrders();
-  useDrivers();
-  useInvoices();
-  const k = computeKpis();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  // computeKpis() liest die modulweiten Legacy-Spiegel (INITIAL_FAHRZEUGE etc.),
+  // die per Definition mit einem festen Demo-Fuhrpark vorbelegt sind, bis die
+  // Hydration hier einmal durchgelaufen ist. Ohne diese Sperre rendert die
+  // allererste Sekunde reale, aber falsche Werte (z. B. einen "3/100 Kritisch"-
+  // Health-Score aus Demo-Daten), bevor echte Daten sie überschreiben.
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
+
+  const k = computeKpis({
+    auftraege: ordersQ.data ?? [],
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
   const health = computeBusinessHealth(k);
+  const tagesBasisSuffix =
+    k.tagesumsatzBasis === "schaetzung"
+      ? " (Schätzung)"
+      : k.tagesumsatzBasis === "gemischt"
+        ? " (gemischt)"
+        : "";
+  const tagesMarge = k.margeHeuteProzent === null ? "–" : `${k.margeHeuteProzent} %`;
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          icon={Gauge}
+          badge="Echtzeit"
+          title="Executive Control Center"
+          description="Die zentrale Kommandozentrale: Live-Kennzahlen, Geschäftsgesundheit und KI-Lageanalyse auf einen Blick."
+        />
+        <section className="grid gap-4 lg:grid-cols-3">
+          <Skeleton className="h-64 lg:col-span-1" />
+          <Skeleton className="h-64 lg:col-span-2" />
+        </section>
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+      </div>
+    );
+  }
 
   const stats = [
     {
-      label: "Umsatz heute",
+      label: `Umsatz heute${tagesBasisSuffix}`,
       value: EUR(k.umsatzHeute),
       icon: Euro,
       tone: "primary" as const,
-      hint: `Monat ${EUR(k.umsatzMonat)}`,
+      hint: `Monat ${EUR(k.umsatzMonat)} · Rechnungsbasis`,
     },
     {
-      label: "Gewinn heute",
+      label: `Gewinn heute${tagesBasisSuffix}`,
       value: EUR(k.gewinnHeute),
       icon: TrendingUp,
       tone: "success" as const,
-      hint: `Marge ${k.margeProzent} %`,
+      hint: `Tagesmarge ${tagesMarge}`,
     },
     {
       label: "Laufende Transporte",

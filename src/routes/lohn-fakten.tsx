@@ -302,15 +302,16 @@ function LohnFaktenPage() {
                   variant="ghost"
                   className="text-destructive"
                   disabled={deleteMut.isPending}
-                  onClick={() =>
+                  onClick={() => {
+                    if (!window.confirm("Diesen Lohn-Fakt wirklich dauerhaft löschen?")) return;
                     deleteMut.mutate(f.id, {
                       onSuccess: () => toast.success("Gelöscht"),
                       onError: (e) =>
                         toast.error("Löschen fehlgeschlagen", {
                           description: String(e?.message ?? e),
                         }),
-                    })
-                  }
+                    });
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -342,7 +343,7 @@ function LohnFaktenPage() {
               <p className="mt-1 text-muted-foreground">
                 {a.fahrerId ? nameVon(a.fahrerId) : "Unbekannter Fahrer"}
                 {a.bezeichner ? ` · ${a.bezeichner}` : ""} · Akteur{" "}
-                {a.akteurUserId ? a.akteurUserId.slice(0, 8) : "System"}
+                {a.akteurName ?? (a.akteurUserId ? "Unbekannt" : "System")}
               </p>
             </div>
           ))}

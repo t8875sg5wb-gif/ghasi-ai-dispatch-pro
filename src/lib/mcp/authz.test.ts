@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ALLE_SCOPES, ROLLEN_SCOPES, rolleHatScope, tokenHatScope } from "./authz";
+import {
+  ALLE_SCOPES,
+  BINDENDE_MCP_SCOPES,
+  ROLLEN_SCOPES,
+  istBindenderMcpScope,
+  rolleHatScope,
+  tokenHatScope,
+} from "./authz";
 
 describe("MCP-Autorisierung", () => {
   it("Admin besitzt alle Scopes", () => {
@@ -40,5 +47,15 @@ describe("MCP-Autorisierung", () => {
   it("Token mit ghasi-Scopes verengt auf die erteilten Scopes", () => {
     expect(tokenHatScope(["ghasi:orders.read"], "ghasi:orders.read")).toBe(true);
     expect(tokenHatScope(["ghasi:orders.read"], "ghasi:invoices.write")).toBe(false);
+  });
+
+  it("alle bindenden Schreib- und Status-Scopes sind fail-closed markiert", () => {
+    const mutierendeScopes = ALLE_SCOPES.filter(
+      (scope) => scope.endsWith(".write") || scope.endsWith(".status"),
+    );
+    expect(BINDENDE_MCP_SCOPES).toEqual(mutierendeScopes);
+    for (const scope of mutierendeScopes) expect(istBindenderMcpScope(scope)).toBe(true);
+    expect(istBindenderMcpScope("ghasi:orders.read")).toBe(false);
+    expect(istBindenderMcpScope("ghasi:invoices.read")).toBe(false);
   });
 });

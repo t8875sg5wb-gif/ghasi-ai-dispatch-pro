@@ -3,8 +3,11 @@
 // 2) Pagination führt mehr als 1000 Zeilen korrekt zusammen.
 // 3) Ein Fehler auf einer späteren Seite macht die GANZE Tabelle fehlerhaft.
 import { describe, expect, it } from "bun:test";
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
+  assertBackupComplete,
   BACKUP_PAGE_SIZE,
   BACKUP_TABLES,
   collectBackupData,
@@ -12,53 +15,41 @@ import {
 } from "@/lib/backup-tables";
 
 /**
- * Stand der Live-Abfrage gegen information_schema.tables (Schema public,
- * BASE TABLE) am 2026-08-21. Kommt eine neue Tabelle hinzu, muss sie hier UND
- * in BACKUP_TABLES ergänzt werden – der Test schlägt sonst auf.
+ * Leitet den aktuellen public-Tabellenstand direkt aus allen Migrationen ab.
+ * CREATE, DROP und RENAME werden in Migrationsreihenfolge angewendet.
  */
-const BEKANNTE_TABELLEN = [
-  "activity_log",
-  "ai_audit_log",
-  "automation_states",
-  "calls",
-  "chat_messages",
-  "chat_threads",
-  "communication_drafts",
-  "company_settings",
-  "conversations",
-  "customers",
-  "document_cleanup_jobs",
-  "documents",
-  "driver_shifts",
-  "drivers",
-  "employment_audit_log",
-  "employment_relationships",
-  "expenses",
-  "facilities",
-  "ghasi_memory",
-  "insurance_policies",
-  "insurer_contracts",
-  "insurers",
-  "invoice_audit_snapshots",
-  "invoice_changes",
-  "invoices",
-  "leasing_contracts",
-  "orders",
-  "patients",
-  "payroll_fact_audit_log",
-  "payroll_facts",
-  "payroll_rule_audit_log",
-  "payroll_rules",
-  "payroll_run_audit_log",
-  "payroll_run_items",
-  "payroll_runs",
-  "profiles",
-  "recurring_orders",
-  "user_roles",
-  "vehicle_trips",
-  "vehicles",
-  "verordnungen",
-] as const;
+function tabellenAusMigrationen(): string[] {
+  const migrationsDir = fileURLToPath(new URL("../../supabase/migrations/", import.meta.url));
+  const tabellen = new Set<string>();
+  const dateien = readdirSync(migrationsDir)
+    .filter((name) => name.endsWith(".sql"))
+    .sort();
+
+  for (const datei of dateien) {
+    const sql = readFileSync(`${migrationsDir}/${datei}`, "utf8")
+      .replace(/--.*$/gm, "")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const statement of sql.split(";")) {
+      const create = statement.match(
+        /\bCREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?["']?([A-Za-z_][A-Za-z0-9_]*)/i,
+      );
+      if (create?.[1]) tabellen.add(create[1]);
+
+      const drop = statement.match(
+        /\bDROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:public\.)?["']?([A-Za-z_][A-Za-z0-9_]*)/i,
+      );
+      if (drop?.[1]) tabellen.delete(drop[1]);
+
+      const rename = statement.match(
+        /\bALTER\s+TABLE\s+(?:ONLY\s+)?(?:public\.)?["']?([A-Za-z_][A-Za-z0-9_]*)["']?\s+RENAME\s+TO\s+["']?([A-Za-z_][A-Za-z0-9_]*)/i,
+      );
+      if (rename?.[1] && rename[2] && tabellen.delete(rename[1])) tabellen.add(rename[2]);
+    }
+  }
+  return [...tabellen].sort();
+}
+
+const BEKANNTE_TABELLEN = tabellenAusMigrationen();
 
 /** Fake-Client: liefert je Tabelle vorgegebene Seiten bzw. Fehler. */
 function fakeClient(
@@ -104,9 +95,20 @@ describe("BACKUP_TABLES Vollständigkeit", () => {
     expect(new Set(BACKUP_TABLES).size).toBe(BACKUP_TABLES.length);
   });
 
-  it("deckt mindestens die aktuell bekannte Tabellenzahl ab", () => {
-    expect(BACKUP_TABLES.length).toBeGreaterThanOrEqual(BEKANNTE_TABELLEN.length);
-    expect(BACKUP_TABLES.length).toBe(41);
+  it("entspricht exakt der aktuell bekannten Tabellenzahl", () => {
+    expect(BACKUP_TABLES.length).toBe(BEKANNTE_TABELLEN.length);
+  });
+});
+
+describe("Vollst?ndigkeits-Gate", () => {
+  it("l?sst einen vollst?ndigen Export passieren", () => {
+    expect(() => assertBackupComplete([])).not.toThrow();
+  });
+
+  it("bricht einen Teil-Export mit den betroffenen Tabellen ab", () => {
+    expect(() => assertBackupComplete(["documents", "invoices"])).toThrow(
+      "Backup abgebrochen: documents, invoices konnte(n) nicht vollstaendig gesichert werden.",
+    );
   });
 });
 

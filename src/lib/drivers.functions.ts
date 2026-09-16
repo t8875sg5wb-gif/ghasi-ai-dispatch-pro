@@ -50,7 +50,6 @@ export const driverFieldsSchema = z
     umsatzHeute: z.number().min(0),
     // Bewusst ohne `.min(0)`: ein Tagesverlust ist betriebswirtschaftlich real.
     gewinnHeute: z.number(),
-    pScheinGueltigBis: isoDatum.nullable().optional(),
     fuehrungszeugnisDatum: isoDatum.nullable().optional(),
     svAusweisVorhanden: z.boolean().optional(),
     steuerId: z.string().trim().max(50).optional(),

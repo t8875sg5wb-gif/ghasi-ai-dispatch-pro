@@ -17,6 +17,7 @@ import {
   Download,
   Search,
   AlertTriangle,
+  ArrowRightLeft,
   type LucideIcon,
 } from "lucide-react";
 
@@ -79,7 +80,7 @@ export const Route = createFileRoute("/verbindungen")({
   component: Verbindungen,
 });
 
-type Status = "aktiv" | "geplant";
+type Status = "aktiv" | "teilweise" | "geplant" | "blockiert";
 
 interface Verbindung {
   id: string;
@@ -139,6 +140,14 @@ const verbindungen: Verbindung[] = [
     name: "Buchhaltungssoftware",
     beschreibung: "Rechnungen, Belege und Auswertungen automatisch abgleichen.",
     status: "geplant",
+  },
+  {
+    id: "dmrz",
+    icon: ArrowRightLeft,
+    name: "DMRZ",
+    beschreibung:
+      "DTA-/CSV-/CON-Übergabe vorbereiten. Echte Übertragung bleibt gesperrt, bis die vollständige offizielle technische DMRZ-Spezifikation verifiziert ist und der Unternehmer ausdrücklich freigibt.",
+    status: "blockiert",
   },
 ];
 
@@ -245,29 +254,37 @@ function Verbindungen() {
   const toolAlarme = alarmDaten ? bewerteToolAlarme(alarmDaten.aufrufe) : [];
 
   // Gehäufte Fehler/Abweisungen zusätzlich ins Benachrichtigungszentrum spiegeln.
+  const alarmStufe = alarm?.stufe;
+  const alarmText = alarm?.text;
+  const alarmBenachrichtigungsId = alarm ? mcpAlarmId(alarm) : null;
   useEffect(() => {
-    if (!alarm || alarm.stufe === "normal") return;
+    if (!alarmStufe || alarmStufe === "normal" || !alarmText || !alarmBenachrichtigungsId) return;
     pushNotification({
-      id: mcpAlarmId(alarm),
-      stufe: alarm.stufe === "kritisch" ? "kritisch" : "warnung",
+      id: alarmBenachrichtigungsId,
+      stufe: alarmStufe === "kritisch" ? "kritisch" : "warnung",
       titel: "Gehäufte Agenten-Fehler (MCP)",
-      text: alarm.text,
+      text: alarmText,
       to: "/verbindungen",
       quelle: "mcp-alerting",
     });
-  }, [alarm?.stufe, alarm?.text]);
+  }, [alarmStufe, alarmText, alarmBenachrichtigungsId]);
 
   const konfiguriert = (id: string): boolean =>
     health?.dienste.find((d) => d.id === id)?.konfiguriert ?? false;
 
   // Nur geprüfte Dienste werden dynamisch: bis die echte Antwort da ist bleibt
   // es neutral ("Geplant"), nie optimistisch "Aktiv".
-  const eintraege: Verbindung[] = verbindungen.map((v) =>
-    konfiguriert(v.id) ? { ...v, status: "aktiv" } : v,
-  );
+  const eintraege: Verbindung[] = verbindungen.map((v) => {
+    if (v.status === "blockiert") return v;
+    if (!konfiguriert(v.id)) return v;
+    if (v.id === "karten") return { ...v, status: "teilweise" };
+    return { ...v, status: "aktiv" };
+  });
 
   const healthZeilen = [
-    ...verbindungen.map((v) => ({ id: v.id, name: v.name })),
+    ...verbindungen
+      .filter((v) => v.status !== "blockiert")
+      .map((v) => ({ id: v.id, name: v.name })),
     ...INTERNE_DIENSTE,
   ];
 
@@ -304,6 +321,14 @@ function Verbindungen() {
               {v.status === "aktiv" ? (
                 <Badge className="gap-1 bg-success/15 text-success hover:bg-success/15">
                   <CheckCircle2 className="h-3 w-3" /> Aktiv
+                </Badge>
+              ) : v.status === "teilweise" ? (
+                <Badge variant="outline" className="gap-1 border-info/40 text-info">
+                  <AlertTriangle className="h-3 w-3" /> Teilweise konfiguriert
+                </Badge>
+              ) : v.status === "blockiert" ? (
+                <Badge variant="outline" className="gap-1 border-warning/40 text-warning">
+                  <AlertTriangle className="h-3 w-3" /> Spezifikation fehlt
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
@@ -342,7 +367,11 @@ function Verbindungen() {
                     {z.name}
                   </span>
                   <span className={`text-xs ${ok ? "text-success" : "text-muted-foreground"}`}>
-                    {ok ? "Konfiguriert" : "Nicht konfiguriert"}
+                    {z.id === "karten" && ok
+                      ? "Server-Connector vorhanden · Browser-Referrer separat prüfen"
+                      : ok
+                        ? "Konfiguriert"
+                        : "Nicht konfiguriert"}
                   </span>
                 </div>
               );

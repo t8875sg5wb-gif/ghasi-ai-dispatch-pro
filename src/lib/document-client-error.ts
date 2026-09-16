@@ -22,7 +22,7 @@ import { z } from "zod";
 import { DOKUMENT_KATEGORIEN, DOKUMENT_BEZUG_TYPEN, type DokumentFormat } from "@/lib/documents";
 import type { DokumentRecord } from "@/lib/documents-shared";
 
-export type DocumentErrorStatus = 400 | 401 | 403 | 404 | 500;
+export type DocumentErrorStatus = 400 | 401 | 403 | 404 | 500 | 503;
 
 const SAFE_MESSAGES: Record<DocumentErrorStatus, string> = {
   400: "Ungültige Anfrage.",
@@ -30,9 +30,10 @@ const SAFE_MESSAGES: Record<DocumentErrorStatus, string> = {
   403: "Keine Berechtigung für dieses Dokument.",
   404: "Dokument nicht verfügbar.",
   500: "Dokumentdienst momentan nicht verfügbar. Bitte erneut versuchen.",
+  503: "Dokumentdienst ist in dieser Umgebung serverseitig noch nicht konfiguriert.",
 };
 
-const ERHALTENE_STATUS: readonly DocumentErrorStatus[] = [400, 401, 403, 404, 500];
+const ERHALTENE_STATUS: readonly DocumentErrorStatus[] = [400, 401, 403, 404, 500, 503];
 
 /**
  * Typed, safe, document-scoped client error.

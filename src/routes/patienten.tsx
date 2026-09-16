@@ -24,6 +24,7 @@ import {
   useUpdatePatient,
 } from "@/lib/patients-store";
 import { useInsurers } from "@/lib/insurers-store";
+import { useOrders } from "@/lib/orders-store";
 import { useDocuments } from "@/lib/documents-store";
 import { VerordnungScanDialog } from "@/components/dokumente/verordnung-scan-dialog";
 import { fristStatus, FRIST_BADGE, formatDatumDE } from "@/lib/compliance-dates";
@@ -31,7 +32,7 @@ import type { PatientWrite } from "@/lib/patients-shared";
 import { transporteFuerPatient } from "@/lib/patienten-transporte";
 import { Button } from "@/components/ui/button";
 import {
-  INITIAL_AUFTRAEGE,
+  type Auftrag,
   MOBILITAET_META,
   VERORDNUNG_META,
   STATUS_META,
@@ -101,6 +102,7 @@ function PatientenSeite() {
   const { name: akteur } = useAuth();
   const { id: initialId } = Route.useSearch();
   const { data: patienten = [] } = usePatients();
+  const { data: auftraege = [] } = useOrders();
   const seedMut = useSeedPatients();
   const createMut = useCreatePatient();
   const updateMut = useUpdatePatient();
@@ -236,6 +238,7 @@ function PatientenSeite() {
         {patient && (
           <PatientProfil
             patient={patient}
+            auftraege={auftraege}
             onEdit={() => {
               setEditTarget(patient);
               setFormOpen(true);
@@ -263,9 +266,17 @@ function PatientenSeite() {
   );
 }
 
-function PatientProfil({ patient, onEdit }: { patient: Patient; onEdit: () => void }) {
+function PatientProfil({
+  patient,
+  auftraege,
+  onEdit,
+}: {
+  patient: Patient;
+  auftraege: Auftrag[];
+  onEdit: () => void;
+}) {
   const mob = MOBILITAET_META[mobilitaetTyp(patient)];
-  const transporte = transporteFuerPatient(patient, INITIAL_AUFTRAEGE);
+  const transporte = transporteFuerPatient(patient, auftraege);
   const zuzahlung = fristStatus(patient.zuzahlungsbefreitBis ?? null);
   const genehmigung = fristStatus(patient.genehmigungBis ?? null);
 

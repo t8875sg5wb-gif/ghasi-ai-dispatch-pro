@@ -24,7 +24,9 @@ export default defineMcp({
     "an einen feingranularen Scope und die Rolle des Benutzers gebunden: " +
     "Administrator = alle Scopes; Disposition = Aufträge (lesen/schreiben/Status), Fahrer, Fahrzeuge; " +
     "Finanzen = Rechnungen (lesen/schreiben) und Aufträge lesen; Fahrer = eigene Aufträge lesen, " +
-    "Auftragsstatus ändern, Fahrzeuge lesen. Nicht erlaubte Tools antworten mit einem Berechtigungsfehler.",
+    "Auftragsstatus ändern, Fahrzeuge lesen. Nicht erlaubte Tools antworten mit einem Berechtigungsfehler. " +
+    "Bindende MCP-Schreibaktionen sind fail-closed gesperrt, bis eine verifizierte menschliche " +
+    "Freigabe aus der GHASI-Oberflaeche technisch angebunden ist. Tool-Input oder Modelltext gelten nie als Freigabe.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

@@ -18,6 +18,7 @@ export const BACKUP_TABLES = [
   // --- Aufträge & Disposition ---
   "orders",
   "recurring_orders",
+  "recurring_rejections",
   "driver_shifts",
   "vehicle_trips",
   // --- Payroll / Personal ---
@@ -51,6 +52,7 @@ export const BACKUP_TABLES = [
   // --- Audit-Logs ---
   "activity_log",
   "ai_audit_log",
+  "ai_audit_log_archive",
   "employment_audit_log",
   "invoice_audit_snapshots",
   "invoice_changes",
@@ -60,6 +62,14 @@ export const BACKUP_TABLES = [
 ] as const;
 
 export type BackupData = Record<string, Record<string, unknown>[]>;
+
+/** Verhindert, dass ein Teil-Export als gueltiges Backup ausgegeben wird. */
+export function assertBackupComplete(failedTables: readonly string[]): void {
+  if (failedTables.length === 0) return;
+  throw new Error(
+    `Backup abgebrochen: ${failedTables.join(", ")} konnte(n) nicht vollstaendig gesichert werden.`,
+  );
+}
 
 /** PostgREST liefert ohne `.range()` maximal 1000 Zeilen pro Anfrage. */
 export const BACKUP_PAGE_SIZE = 1000;

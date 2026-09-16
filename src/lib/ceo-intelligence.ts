@@ -20,12 +20,14 @@
 // ============================================================
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, reparaturkostenGesamt, type Fahrzeug } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE, type Auftrag, type Transportart } from "@/lib/auftraege";
+import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import { KUNDEN } from "@/lib/stammdaten";
 import {
+  computeAuftragFinanzwerte,
+  computeFahrerFinanzwerte,
+  computeFahrzeugFinanzwerte,
   computeFinanzKpis,
   computeKostenaufstellung,
-  netto,
   INITIAL_RECHNUNGEN,
   type Rechnung,
 } from "@/lib/finance";
@@ -34,24 +36,6 @@ import { computeKpis, computeBusinessHealth, EUR, type BrainKpis } from "@/lib/a
 const round = (n: number, d = 0) => {
   const f = 10 ** d;
   return Math.round(n * f) / f;
-};
-
-/** Deterministic pseudo distance (km) for an order from its id — stable across renders. */
-function seedKm(id: string, avg: number): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 1000;
-  return round(avg * (0.6 + (h / 1000) * 0.9), 1); // 60 %–150 % of the average
-}
-
-/** Average blended cost per driven km (fuel + running + wear), used for order margins. */
-const KOSTEN_PRO_KM = 0.85;
-
-/** Tariff model per transport type (base fare + per-km + typical distance). */
-const TARIF: Record<Transportart, { grund: number; proKm: number; avgKm: number }> = {
-  Liegendtransport: { grund: 60, proKm: 2.4, avgKm: 18 },
-  Sitzendtransport: { grund: 25, proKm: 1.3, avgKm: 12 },
-  Rollstuhl: { grund: 35, proKm: 1.6, avgKm: 14 },
-  Dialysefahrt: { grund: 30, proKm: 1.4, avgKm: 16 },
 };
 
 const AKTIVE_STATUS: Auftrag["status"][] = ["neu", "disponiert", "unterwegs"];
@@ -69,10 +53,12 @@ export interface HorizonForecast {
   cashflow: number;
 }
 
-export function computeCashflowForecast(kpis: BrainKpis = computeKpis()): HorizonForecast[] {
-  const fin = computeFinanzKpis();
-  const tagesUmsatz = kpis.umsatzHeute || round(fin.umsatzMonat / 22) || 8000;
-  const tagesAusgaben = round((fin.ausgabenMonat || tagesUmsatz * 0.72) / 30);
+export function computeCashflowForecast(
+  kpis: BrainKpis = computeKpis(),
+  fin = computeFinanzKpis(),
+): HorizonForecast[] {
+  const tagesUmsatz = kpis.umsatzHeute > 0 ? kpis.umsatzHeute : round(fin.umsatzMonat / 22);
+  const tagesAusgaben = fin.ausgabenMonat > 0 ? round(fin.ausgabenMonat / 30) : 0;
   // Slight seasonal growth for NEMT (winter/dialysis-driven demand).
   const wachstum = 0.015; // ~1.5 % per 30-day block
 
@@ -115,27 +101,7 @@ export function profitProAuftrag(
   auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
   rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
 ): AuftragProfit[] {
-  // Index der Netto-Umsätze je verknüpftem Auftrag (echte Rechnungen).
-  const rechnungUmsatz = new Map<string, number>();
-  for (const r of rechnungen) {
-    if (r.typ !== "rechnung" || !r.bezugAuftrag) continue;
-    rechnungUmsatz.set(r.bezugAuftrag, (rechnungUmsatz.get(r.bezugAuftrag) ?? 0) + netto(r));
-  }
-
-  return auftraege
-    .filter((a) => a.status !== "storniert")
-    .map((a) => {
-      const t = TARIF[a.transportart] ?? TARIF.Sitzendtransport;
-      const km = seedKm(a.id, t.avgKm);
-      const echterUmsatz = rechnungUmsatz.get(a.nummer);
-      const istSchaetzung = echterUmsatz === undefined;
-      const umsatz = istSchaetzung ? round(t.grund + km * t.proKm) : round(echterUmsatz);
-      const kosten = round(km * KOSTEN_PRO_KM + t.grund * 0.25);
-      const gewinn = round(umsatz - kosten);
-      const marge = umsatz > 0 ? round((gewinn / umsatz) * 100) : 0;
-      return { auftrag: a, km, umsatz, kosten, gewinn, marge, istSchaetzung };
-    })
-    .sort((a, b) => b.gewinn - a.gewinn);
+  return computeAuftragFinanzwerte(auftraege, rechnungen).sort((a, b) => b.gewinn - a.gewinn);
 }
 
 export interface FahrerProfit {
@@ -147,25 +113,40 @@ export interface FahrerProfit {
   effizienz: number; // 0–100 composite score
 }
 
-export function profitProFahrer(fahrer: Fahrer[] = INITIAL_FAHRER): FahrerProfit[] {
-  const maxGpk = Math.max(1, ...fahrer.map((f) => (f.kmHeute > 0 ? f.gewinnHeute / f.kmHeute : 0)));
-  return fahrer
+export function profitProFahrer(
+  fahrer: Fahrer[] = INITIAL_FAHRER,
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+  jetzt: Date = new Date(),
+): FahrerProfit[] {
+  const finanzwerte = new Map(
+    computeFahrerFinanzwerte(fahrer, auftraege, rechnungen, jetzt).map((w) => [
+      w.fahrerId,
+      w.heute,
+    ]),
+  );
+
+  const basis = fahrer
     .map((f) => {
-      const gewinnProKm = f.kmHeute > 0 ? round(f.gewinnHeute / f.kmHeute, 2) : 0;
+      const heute = finanzwerte.get(f.id);
+      const umsatz = heute?.umsatz ?? 0;
+      const gewinn = heute?.gewinn ?? 0;
+      const km = heute?.km ?? 0;
+      const gewinnProKm = km > 0 ? round(gewinn / km, 2) : 0;
+      return { fahrer: f, umsatz, gewinn, km, gewinnProKm };
+    })
+    .filter((f) => f.km > 0 || f.umsatz !== 0 || f.gewinn !== 0);
+
+  const maxGpk = Math.max(1, ...basis.map((f) => f.gewinnProKm));
+  return basis
+    .map((f) => {
       const effizienz = round(
-        0.4 * (gewinnProKm / maxGpk) * 100 +
-          0.35 * f.puenktlichkeit +
-          0.25 * (f.bewertung / 5) * 100 -
-          Math.min(15, f.ueberstunden * 0.3),
+        0.4 * (f.gewinnProKm / maxGpk) * 100 +
+          0.35 * f.fahrer.puenktlichkeit +
+          0.25 * (f.fahrer.bewertung / 5) * 100 -
+          Math.min(15, f.fahrer.ueberstunden * 0.3),
       );
-      return {
-        fahrer: f,
-        umsatz: f.umsatzHeute,
-        gewinn: f.gewinnHeute,
-        km: f.kmHeute,
-        gewinnProKm,
-        effizienz: Math.max(0, Math.min(100, effizienz)),
-      };
+      return { ...f, effizienz: Math.max(0, Math.min(100, effizienz)) };
     })
     .sort((a, b) => b.effizienz - a.effizienz);
 }
@@ -179,17 +160,33 @@ export interface FahrzeugProfit {
   wirtschaftlich: boolean;
 }
 
-export function profitProFahrzeug(fahrzeuge: Fahrzeug[] = INITIAL_FAHRZEUGE): FahrzeugProfit[] {
+export function profitProFahrzeug(
+  fahrzeuge: Fahrzeug[] = INITIAL_FAHRZEUGE,
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+  jetzt: Date = new Date(),
+): FahrzeugProfit[] {
+  const finanzwerte = new Map(
+    computeFahrzeugFinanzwerte(fahrzeuge, auftraege, rechnungen, jetzt).map((w) => [
+      w.fahrzeugId,
+      w.monat,
+    ]),
+  );
+
   return fahrzeuge
     .map((v) => {
-      const marge = v.monatsumsatz > 0 ? round((v.monatsgewinn / v.monatsumsatz) * 100) : 0;
+      const monat = finanzwerte.get(v.id);
+      const umsatz = monat?.umsatz ?? 0;
+      const gewinn = monat?.gewinn ?? 0;
+      const marge = umsatz > 0 ? round((gewinn / umsatz) * 100) : 0;
       const reparaturkosten = reparaturkostenGesamt(v);
       // Uneconomic when repairs eat >25 % of monthly profit or margin is very thin.
-      const wirtschaftlich = marge >= 10 && reparaturkosten < Math.max(600, v.monatsgewinn * 0.25);
+      const wirtschaftlich =
+        umsatz > 0 && marge >= 10 && reparaturkosten < Math.max(600, Math.max(0, gewinn) * 0.25);
       return {
         fahrzeug: v,
-        umsatz: v.monatsumsatz,
-        gewinn: v.monatsgewinn,
+        umsatz,
+        gewinn,
         marge,
         reparaturkosten,
         wirtschaftlich,
@@ -262,6 +259,9 @@ export function suggestOrderCombinations(
   auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
 ): Kombivorschlag[] {
   const aktiv = auftraege.filter((a) => AKTIVE_STATUS.includes(a.status));
+  const finanzwerte = new Map(
+    computeAuftragFinanzwerte(auftraege, []).map((w) => [w.auftrag.id, w]),
+  );
   const vorschlaege: Kombivorschlag[] = [];
   for (let i = 0; i < aktiv.length; i++) {
     for (let j = i + 1; j < aktiv.length; j++) {
@@ -273,9 +273,11 @@ export function suggestOrderCombinations(
       const nahAmTermin =
         Math.abs(new Date(a.termin).getTime() - new Date(b.termin).getTime()) <= 90 * 60_000;
       if ((gleicherOrt || (gleicheKasse && gleicheArt)) && nahAmTermin) {
-        const t = TARIF[a.transportart] ?? TARIF.Sitzendtransport;
-        const kmGespart = round(seedKm(b.id, t.avgKm) * 0.55, 1);
-        const ersparnis = round(kmGespart * (KOSTEN_PRO_KM + 0.35));
+        const basis = finanzwerte.get(b.id);
+        const basisKm = basis?.km ?? 0;
+        const kostenProKm = basisKm > 0 ? (basis?.kosten ?? 0) / basisKm : 0;
+        const kmGespart = round(basisKm * 0.55, 1);
+        const ersparnis = round(kmGespart * kostenProKm);
         vorschlaege.push({
           a,
           b,
@@ -334,11 +336,14 @@ export interface CeoRecommendation {
 
 export function computeCeoRecommendations(
   auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  fahrzeuge: readonly Fahrzeug[] = INITIAL_FAHRZEUGE,
+  fahrer: readonly Fahrer[] = INITIAL_FAHRER,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
 ): CeoRecommendation[] {
-  const kpis = computeKpis();
+  const kpis = computeKpis({ auftraege, fahrzeuge, fahrer, rechnungen });
   const recs: CeoRecommendation[] = [];
 
-  const empty = computeEmptyMileage();
+  const empty = computeEmptyMileage([...fahrer]);
   if (empty.leerKm > 40) {
     recs.push({
       id: "leerkm",
@@ -376,7 +381,12 @@ export function computeCeoRecommendations(
     });
   }
 
-  const fin = computeFinanzKpis();
+  const fin = computeFinanzKpis(rechnungen, {
+    fahrer,
+    fahrzeuge,
+    auftraege,
+    rechnungen,
+  });
   if (fin.ueberfaelligeSumme > 0) {
     recs.push({
       id: "mahnung",
@@ -388,7 +398,7 @@ export function computeCeoRecommendations(
     });
   }
 
-  const teuerstes = [...INITIAL_FAHRZEUGE].sort(
+  const teuerstes = [...fahrzeuge].sort(
     (a, b) => reparaturkostenGesamt(b) - reparaturkostenGesamt(a),
   )[0];
   if (teuerstes && reparaturkostenGesamt(teuerstes) > 800) {
@@ -402,7 +412,7 @@ export function computeCeoRecommendations(
     });
   }
 
-  const ueberlastet = INITIAL_FAHRER.filter((f) => f.ueberstunden >= 25);
+  const ueberlastet = fahrer.filter((f) => f.ueberstunden >= 25);
   if (ueberlastet.length > 0) {
     recs.push({
       id: "ueberstunden",
@@ -429,9 +439,10 @@ export interface RisikoAlert {
   to: string;
 }
 
-export function computeRiskAlerts(): RisikoAlert[] {
-  const kpis = computeKpis();
-  const fin = computeFinanzKpis();
+export function computeRiskAlerts(
+  kpis: BrainKpis = computeKpis(),
+  fin = computeFinanzKpis(),
+): RisikoAlert[] {
   const alerts: RisikoAlert[] = [];
 
   if (fin.margeProzent < 12) {
@@ -486,18 +497,29 @@ export function computeRiskAlerts(): RisikoAlert[] {
  * Narrative CEO briefings (morning + evening)
  * ------------------------------------------------------------------ */
 
-export function buildCeoBriefing(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): string[] {
-  const kpis = computeKpis();
+export function buildCeoBriefing(
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  fahrzeuge: readonly Fahrzeug[] = INITIAL_FAHRZEUGE,
+  fahrer: readonly Fahrer[] = INITIAL_FAHRER,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+): string[] {
+  const kpis = computeKpis({ auftraege, fahrzeuge, fahrer, rechnungen });
   const cap = computeCapacity(kpis);
-  const empty = computeEmptyMileage();
+  const empty = computeEmptyMileage([...fahrer]);
   const combos = suggestOrderCombinations(auftraege);
-  const recs = computeCeoRecommendations(auftraege);
+  const recs = computeCeoRecommendations(auftraege, fahrzeuge, fahrer, rechnungen);
   const health = computeBusinessHealth(kpis);
+  const basisText =
+    kpis.tagesumsatzBasis === "schaetzung"
+      ? " (Schätzung)"
+      : kpis.tagesumsatzBasis === "gemischt"
+        ? " (teils Rechnung, teils Schätzung)"
+        : "";
 
   const zeilen: string[] = [];
   zeilen.push(
     `Guten Morgen. Der Business Health Score liegt bei ${health.score}/100 (${health.stufe}). ` +
-      `Für heute erwarte ich rund ${EUR(kpis.umsatzHeute)} Umsatz und ${EUR(kpis.gewinnHeute)} Gewinn.`,
+      `Bisher heute: ${EUR(kpis.umsatzHeute)} Umsatz und ${EUR(kpis.gewinnHeute)} Gewinn${basisText}.`,
   );
   if (cap.zusaetzlicheAuftraege > 0) {
     zeilen.push(
@@ -520,17 +542,34 @@ export function buildCeoBriefing(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): stri
   return zeilen;
 }
 
-export function buildEveningSummary(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): string[] {
-  const kpis = computeKpis();
-  const fin = computeFinanzKpis();
-  const topFahrer = profitProFahrer()[0];
-  const empty = computeEmptyMileage();
+export function buildEveningSummary(
+  auftraege: Auftrag[] = INITIAL_AUFTRAEGE,
+  fahrzeuge: readonly Fahrzeug[] = INITIAL_FAHRZEUGE,
+  fahrer: readonly Fahrer[] = INITIAL_FAHRER,
+  rechnungen: Rechnung[] = INITIAL_RECHNUNGEN,
+): string[] {
+  const kpis = computeKpis({ auftraege, fahrzeuge, fahrer, rechnungen });
+  const fin = computeFinanzKpis(rechnungen, {
+    fahrer,
+    fahrzeuge,
+    auftraege,
+    rechnungen,
+  });
+  const topFahrer = profitProFahrer([...fahrer], auftraege, rechnungen)[0];
+  const empty = computeEmptyMileage([...fahrer]);
   const abgeschlossen = auftraege.filter((a) => a.status === "abgeschlossen").length;
 
+  const basisText =
+    kpis.tagesumsatzBasis === "schaetzung"
+      ? " · Schätzung"
+      : kpis.tagesumsatzBasis === "gemischt"
+        ? " · teils Rechnung/Schätzung"
+        : "";
+  const tagesMarge = kpis.margeHeuteProzent === null ? "–" : `${kpis.margeHeuteProzent} %`;
   const zeilen: string[] = [];
   zeilen.push(
     `Tagesabschluss: ${abgeschlossen} Transporte abgeschlossen, ` +
-      `Umsatz ${EUR(kpis.umsatzHeute)}, Gewinn ${EUR(kpis.gewinnHeute)} (Marge ${fin.margeProzent} %).`,
+      `Umsatz ${EUR(kpis.umsatzHeute)}, Gewinn ${EUR(kpis.gewinnHeute)} (Tagesmarge ${tagesMarge}${basisText}).`,
   );
   if (topFahrer) {
     zeilen.push(
@@ -552,13 +591,31 @@ export function buildEveningSummary(auftraege: Auftrag[] = INITIAL_AUFTRAEGE): s
  * Compact CEO snapshot for the AI assistant context
  * ------------------------------------------------------------------ */
 
-export function buildCeoSnapshot(): string {
-  const cashflow = computeCashflowForecast();
-  const cap = computeCapacity();
-  const empty = computeEmptyMileage();
-  const recs = computeCeoRecommendations();
-  const risks = computeRiskAlerts();
-  const topFahrer = profitProFahrer().slice(0, 3);
+export function buildCeoSnapshot(
+  daten: {
+    auftraege?: Auftrag[];
+    fahrzeuge?: readonly Fahrzeug[];
+    fahrer?: readonly Fahrer[];
+    rechnungen?: Rechnung[];
+  } = {},
+): string {
+  const auftraege = daten.auftraege ?? [];
+  const fahrzeuge = daten.fahrzeuge ?? [];
+  const fahrer = daten.fahrer ?? [];
+  const rechnungen = daten.rechnungen ?? [];
+  const kpis = computeKpis({ auftraege, fahrzeuge, fahrer, rechnungen });
+  const fin = computeFinanzKpis(rechnungen, {
+    fahrer,
+    fahrzeuge,
+    auftraege,
+    rechnungen,
+  });
+  const cashflow = computeCashflowForecast(kpis, fin);
+  const cap = computeCapacity(kpis);
+  const empty = computeEmptyMileage([...fahrer]);
+  const recs = computeCeoRecommendations(auftraege, fahrzeuge, fahrer, rechnungen);
+  const risks = computeRiskAlerts(kpis, fin);
+  const topFahrer = profitProFahrer([...fahrer], auftraege, rechnungen).slice(0, 3);
 
   const lines: string[] = [];
   lines.push("# Digital-CEO Intelligenz");

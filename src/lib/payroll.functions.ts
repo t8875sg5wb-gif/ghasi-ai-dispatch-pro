@@ -14,6 +14,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertFinanzRolle } from "@/lib/employment-security.server";
 import { assertDriverExists } from "@/lib/identity-checks.server";
+import { resolveActorNames } from "@/lib/ghasi-security.server";
 import {
   createFaktSchema,
   createRegelSchema,
@@ -35,6 +36,17 @@ import {
   type PayrollFactRow,
   type PayrollRuleRow,
 } from "@/lib/payroll-shared";
+
+/** Ergänzt Audit-Zeilen um den aufgelösten Akteur-Anzeigenamen (ein Batch-Query statt pro Zeile). */
+async function withAkteurNamen<T extends { akteurUserId: string | null }>(rows: T[]): Promise<T[]> {
+  const names = await resolveActorNames(
+    rows.map((r) => r.akteurUserId).filter((id): id is string => !!id),
+  );
+  return rows.map((r) => ({
+    ...r,
+    akteurName: r.akteurUserId ? (names.get(r.akteurUserId) ?? null) : null,
+  }));
+}
 
 function parseOrThrow<T>(
   schema: { safeParse: (d: unknown) => { success: boolean; data?: unknown; error?: unknown } },
@@ -74,7 +86,9 @@ export const listPayrollFactAudit = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(mapPayrollDbError(error.message));
-    return (data ?? []).map((r) => rowToPayrollAudit(r as unknown as PayrollAuditRow));
+    return withAkteurNamen(
+      (data ?? []).map((r) => rowToPayrollAudit(r as unknown as PayrollAuditRow)),
+    );
   });
 
 export const createPayrollFact = createServerFn({ method: "POST" })
@@ -216,7 +230,9 @@ export const listPayrollRuleAudit = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(mapPayrollDbError(error.message));
-    return (data ?? []).map((r) => rowToPayrollAudit(r as unknown as PayrollAuditRow));
+    return withAkteurNamen(
+      (data ?? []).map((r) => rowToPayrollAudit(r as unknown as PayrollAuditRow)),
+    );
   });
 
 export const createPayrollRule = createServerFn({ method: "POST" })

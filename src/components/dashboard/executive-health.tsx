@@ -5,9 +5,14 @@ import { HeartPulse, Wallet, Activity, Truck, Users, Wrench, ArrowRight } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { computeKpis, computeBusinessHealth } from "@/lib/ai-brain";
 import { computeFinanzKpis, EUR } from "@/lib/finance";
+import { useOrders } from "@/lib/orders-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
 
 interface HealthMetric {
   label: string;
@@ -28,9 +33,33 @@ export function ExecutiveHealth() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const kpis = computeKpis();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  // Dieses Widget rief bisher keinen Hydrations-Hook auf und las computeKpis()
+  // damit sofort aus den Legacy-Spiegeln, die bis zur ersten Hydration mit
+  // festen Demo-Fuhrpark-Daten vorbelegt sind – daher konnte hier kurz ein
+  // erfundener "Kritisch"-Score statt des echten Health Scores aufblitzen.
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
+
+  const kpis = computeKpis({
+    auftraege: ordersQ.data ?? [],
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
   const health = computeBusinessHealth(kpis);
-  const finanz = computeFinanzKpis();
+  const finanz = computeFinanzKpis(invoicesQ.data ?? [], {
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    auftraege: ordersQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
 
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
@@ -69,6 +98,25 @@ export function ExecutiveHealth() {
       to: "/wartung",
     },
   ];
+
+  if (!bereit) {
+    return (
+      <Card className="border-border/70 shadow-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <HeartPulse className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Business Health</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-5 lg:grid-cols-3">
+          <Skeleton className="h-40 lg:col-span-1" />
+          <Skeleton className="h-40 lg:col-span-2" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-border/70 shadow-card">

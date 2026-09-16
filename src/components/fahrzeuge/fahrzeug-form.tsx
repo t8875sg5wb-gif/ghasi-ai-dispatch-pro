@@ -51,7 +51,7 @@ function emptyValues(): FahrzeugFormValues {
     status: "frei",
     fahrer: null,
     standort: "Betriebshof",
-    gps: { lat: 52.52, lng: 13.405 },
+    gps: { lat: 52.29, lng: 8.9 },
     kilometerstand: 0,
     tankstand: 100,
     kraftstoff: "Diesel",
@@ -110,7 +110,7 @@ export function FahrzeugForm({ initial, onSubmit, onCancel, submitLabel }: Fahrz
             id="kennzeichen"
             value={values.kennzeichen}
             onChange={(e) => set("kennzeichen", e.target.value)}
-            placeholder="z. B. B-KT 142"
+            placeholder="z. B. MI-KT 142"
             required
           />
         </div>
@@ -327,47 +327,10 @@ export function FahrzeugForm({ initial, onSubmit, onCancel, submitLabel }: Fahrz
         </div>
       </div>
 
-      {/* Revenue & profit */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="tu">Tagesumsatz (€)</Label>
-          <Input
-            id="tu"
-            type="number"
-            min={0}
-            value={values.tagesumsatz}
-            onChange={(e) => set("tagesumsatz", Number(e.target.value))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="tg">Tagesgewinn (€)</Label>
-          <Input
-            id="tg"
-            type="number"
-            value={values.tagesgewinn}
-            onChange={(e) => set("tagesgewinn", Number(e.target.value))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="mu">Monatsumsatz (€)</Label>
-          <Input
-            id="mu"
-            type="number"
-            min={0}
-            value={values.monatsumsatz}
-            onChange={(e) => set("monatsumsatz", Number(e.target.value))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="mg">Monatsgewinn (€)</Label>
-          <Input
-            id="mg"
-            type="number"
-            value={values.monatsgewinn}
-            onChange={(e) => set("monatsgewinn", Number(e.target.value))}
-          />
-        </div>
-      </div>
+      {/* Umsatz/Gewinn sind abgeleitete Werte und werden nie manuell gepflegt. */}
+      <p className="rounded-lg border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+        Umsatz und Gewinn werden automatisch aus abgeschlossenen Aufträgen und Rechnungen berechnet.
+      </p>
 
       {/* Maintenance */}
       <div className="grid gap-4 sm:grid-cols-2">

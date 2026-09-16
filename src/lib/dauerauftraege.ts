@@ -31,6 +31,7 @@ import {
   nextAuftragId,
 } from "@/lib/auftraege";
 import { type AdresseStruktur, adresseAusStrukturOderLegacy, formatAdresse } from "@/lib/address";
+import { localInputToIso } from "@/lib/local-datetime";
 
 /* ------------------------------------------------------------------ *
  * Typen
@@ -179,12 +180,46 @@ export const RHYTHMEN: Rhythmus[] = ["taeglich", "woechentlich"];
  * Datums-Helfer (lokale Kalenderlogik, deterministisch)
  * ------------------------------------------------------------------ */
 
-export const heuteISO = () => new Date().toISOString().slice(0, 10);
+/**
+ * Formatiert ein Date-Objekt als lokales YYYY-MM-DD (bewusst über lokale
+ * Getter, NICHT `toISOString()` — das serialisiert in UTC und weicht in
+ * Zeitzonen mit positivem Offset, z. B. Deutschland UTC+1/+2, systematisch
+ * vom lokalen Kalendertag ab).
+ */
+function localeISO(d: Date): string {
+  const jahr = d.getFullYear();
+  const monat = String(d.getMonth() + 1).padStart(2, "0");
+  const tag = String(d.getDate()).padStart(2, "0");
+  return `${jahr}-${monat}-${tag}`;
+}
 
+export const heuteISO = () => localeISO(new Date());
+
+/**
+ * WICHTIG: Diese Funktion nutzte früher `toISOString()` zur Serialisierung,
+ * obwohl der Tageswechsel über die LOKALEN Setter (`setDate`) erfolgte. In
+ * Zeitzonen mit positivem UTC-Offset (Deutschland: UTC+1 im Winter, UTC+2 im
+ * Sommer) führte dieser Mix aus lokalem Setzen + UTC-Serialisieren dazu, dass
+ * `isoPlusTage(iso, 1)` faktisch dasselbe Datum zurückgab statt des
+ * Folgetags — die lokale Mitternacht des Folgetags liegt in UTC noch am
+ * selben UTC-Kalendertag wie die lokale Mitternacht des Ausgangstages.
+ * Konkret beobachtet: `naechsteTermine()`s Schleife nutzt genau diese
+ * Funktion zum Weiterzählen des Cursors — der Cursor blieb dadurch für IMMER
+ * auf dem Starttag stehen. Für aktive Serien, deren Starttag zufällig auf
+ * einen Wochentag der Regel fiel (z. B. DA-001, heute=Montag=Teil der
+ * Regel), erschien derselbe Tag mehrfach hintereinander in "Nächste
+ * Termine" (live bestätigt: 8× "Mo., 14.09.2026" statt 8 verschiedener
+ * Termine, inkl. React-Key-Kollisionswarnung). Für Serien, deren Starttag
+ * NICHT auf einen Regel-Wochentag fiel (z. B. DA-002, heute=Montag, Regel=
+ * Di/Do/Sa), fand die Schleife nie einen Treffer und brach nach der
+ * Sicherheitsgrenze ab → "keine künftigen Termine", obwohl die Serie aktiv
+ * und korrekt konfiguriert ist. Fix: konsequent im lokalen Format bleiben
+ * (siehe `localeISO()`), keine UTC-Serialisierung mehr.
+ */
 export function isoPlusTage(iso: string, tage: number): string {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + tage);
-  return d.toISOString().slice(0, 10);
+  return localeISO(d);
 }
 
 export function wochentagVon(iso: string): number {
@@ -346,7 +381,7 @@ function baueAuftrag(d: Dauerauftrag, iso: string, richtung: "hin" | "rueck"): A
     destination,
     abholort: formatAdresse(pickup),
     zielort: formatAdresse(destination),
-    termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
+    termin: localInputToIso(`${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`),
     fahrer: d.bevorzugterFahrer,
     fahrzeug: d.bevorzugtesFahrzeug,
     kostentraeger: d.kostentraeger,
@@ -440,7 +475,7 @@ export function transportWritesFuer(
       destination,
       abholort: "",
       zielort: "",
-      termin: `${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`,
+      termin: localInputToIso(`${iso}T${hin ? d.terminzeit : d.rueckfahrtzeit || d.terminzeit}`),
       // Fahrer: Kein Namens-Matching – der bevorzugte Fahrer eines Dauerauftrags
       // ist nur ein Anzeigewert. Generierte Aufträge starten bewusst unzugeordnet
       // und werden über die Disposition (stabile Fahrer-ID) zugewiesen.

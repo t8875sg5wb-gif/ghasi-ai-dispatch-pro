@@ -4,7 +4,7 @@
 // (Kliniken, Apotheken, Tankstellen …) und optional einen Radius als
 // Service-Gebiet. Client-only, imperativ über den Google-Loader.
 // ============================================================
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { DARK_MAP_STYLES, loadGoogleMaps, type GoogleMapStil } from "@/lib/google-maps";
 
@@ -52,10 +52,12 @@ export function PoiMap({
   const markersRef = useRef<google.maps.Marker[]>([]);
   const centerMarkerRef = useRef<google.maps.Marker | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
 
   // Init
   useEffect(() => {
     let cancelled = false;
+    setLadefehler(null);
     loadGoogleMaps()
       .then((maps) => {
         if (cancelled || !boxRef.current) return;
@@ -69,7 +71,12 @@ export function PoiMap({
           fullscreenControl: true,
         });
       })
-      .catch((e) => console.error("PoiMap Ladefehler", e));
+      .catch((e) => {
+        console.error("PoiMap Ladefehler", e);
+        setLadefehler(
+          "Google Maps ist im Browser noch nicht vollstÃ¤ndig freigeschaltet. Browser-Key und erlaubten Referrer prÃ¼fen.",
+        );
+      });
     return () => {
       cancelled = true;
     };
@@ -152,5 +159,17 @@ export function PoiMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marker, selectedId]);
 
-  return <div ref={boxRef} className={className} />;
+  return (
+    <div className={`relative ${className ?? ""}`}>
+      <div ref={boxRef} className="h-full w-full" />
+      {ladefehler && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90 p-5 text-center backdrop-blur-sm">
+          <div className="max-w-sm rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+            <p className="font-semibold">Karte nicht verfÃ¼gbar</p>
+            <p className="mt-1 text-xs leading-relaxed">{ladefehler}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

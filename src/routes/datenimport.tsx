@@ -77,7 +77,11 @@ function DatenimportPage() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<{ ok: number; failed: number } | null>(null);
+  const [result, setResult] = useState<{
+    ok: number;
+    failed: number;
+    failures: { row: number; message: string }[];
+  } | null>(null);
 
   const createDriver = useCreateDriver();
   const createVehicle = useCreateVehicle();
@@ -147,18 +151,19 @@ function DatenimportPage() {
     if (valid.length === 0) return;
     setImporting(true);
     let ok = 0;
-    let failed = 0;
+    const failures: { row: number; message: string }[] = [];
     const create = creators[entity];
     for (const r of valid) {
       try {
         await create(r.record as Record<string, unknown>);
         ok++;
-      } catch {
-        failed++;
+      } catch (e) {
+        failures.push({ row: r.index + 1, message: e instanceof Error ? e.message : String(e) });
       }
     }
+    const failed = failures.length;
     setImporting(false);
-    setResult({ ok, failed });
+    setResult({ ok, failed, failures });
     setStep("done");
     logActivity({
       bereich: "Datenimport",
@@ -394,7 +399,12 @@ function DatenimportPage() {
       {step === "done" && result && (
         <Card className="border-border/70 shadow-card">
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-success/15 text-success">
+            <div
+              className={cn(
+                "flex h-14 w-14 items-center justify-center rounded-3xl",
+                result.failed > 0 ? "bg-warning/15 text-warning" : "bg-success/15 text-success",
+              )}
+            >
               <CheckCircle2 className="h-7 w-7" />
             </div>
             <p className="text-lg font-semibold">Import abgeschlossen</p>
@@ -402,6 +412,21 @@ function DatenimportPage() {
               {result.ok} {cfg.label} erfolgreich angelegt
               {result.failed > 0 && `, ${result.failed} fehlgeschlagen`}.
             </p>
+            {result.failures.length > 0 && (
+              <div className="mt-2 w-full max-w-lg space-y-1.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-left">
+                <p className="text-xs font-medium text-destructive">
+                  Fehlgeschlagene Zeilen (Datensatz war gültig, Server hat abgelehnt):
+                </p>
+                <ul className="max-h-48 space-y-1 overflow-auto text-xs text-muted-foreground">
+                  {result.failures.map((f) => (
+                    <li key={f.row} className="flex gap-2">
+                      <span className="shrink-0 font-mono text-destructive">Zeile {f.row}:</span>
+                      <span>{f.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <Button onClick={resetAll} className="mt-2">
               Weiteren Import starten
             </Button>

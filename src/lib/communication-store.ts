@@ -23,6 +23,7 @@ import {
   type KommEntwurf,
   type KommNachricht,
   type KommKanal,
+  type EntwurfQuellen,
 } from "@/lib/communication";
 import { entwurfToRow } from "@/lib/communication-shared";
 import {
@@ -70,13 +71,13 @@ function patchEntwuerfe(fn: (list: KommEntwurf[]) => KommEntwurf[]) {
  * ------------------------------------------------------------------ */
 
 /** Seeds the AI drafts (client-relative) once when the table is empty. */
-export function ladeEntwuerfe() {
+export function ladeEntwuerfe(quellen: EntwurfQuellen) {
   const qc = qcRef;
   if (!qc) return;
   const existing = qc.getQueryData<KommEntwurf[]>(DRAFTS_QUERY_KEY);
   if (existing === undefined) return; // query not loaded yet
   if (existing.length > 0 || draftSeedInFlight) return;
-  const drafts = generateEntwuerfe();
+  const drafts = generateEntwuerfe(quellen);
   if (drafts.length === 0) return;
   draftSeedInFlight = true;
   upsertDrafts({ data: { drafts: drafts.map(entwurfToRow) } })

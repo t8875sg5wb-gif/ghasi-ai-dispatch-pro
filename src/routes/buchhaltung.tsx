@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -24,15 +25,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { computeFinanzKpis, offenePostenJeKunde, INITIAL_RECHNUNGEN, EUR } from "@/lib/finance";
+import { computeFinanzKpis, offenePostenJeKunde, EUR } from "@/lib/finance";
 import { useInvoices } from "@/lib/invoices-store";
 import { useExpenses } from "@/lib/expenses-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useOrders } from "@/lib/orders-store";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { SchaetzungBadge, EchtBadge } from "@/components/ui/schaetzung-badge";
 import { buildDatevBuchungsstapel, datevRechnungen } from "@/lib/datev-export";
 import { downloadText } from "@/lib/export-utils";
 import { toISODate } from "@/lib/shifts-shared";
 import { logActivity } from "@/lib/protokoll";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/buchhaltung")({
   head: () => ({
@@ -69,13 +75,25 @@ const KOSTEN_LABEL = {
 } as const;
 
 function BuchhaltungPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: invoiceData } = useInvoices();
   const { data: company } = useCompanySettings();
   const { data: expenseData } = useExpenses();
-  const alleRechnungen = invoiceData ?? INITIAL_RECHNUNGEN;
+  const driversQ = useDrivers();
+  const vehiclesQ = useVehicles();
+  const ordersQ = useOrders();
+  const alleRechnungen = useMemo(() => invoiceData ?? [], [invoiceData]);
+  const datenBereit =
+    invoiceData !== undefined &&
+    expenseData !== undefined &&
+    driversQ.data !== undefined &&
+    vehiclesQ.data !== undefined &&
+    ordersQ.data !== undefined;
 
   // Echte Kraftstoffkosten des laufenden Monats aus dem Ausgaben-Modul.
   const echteKraftstoffkostenMonat = useMemo(() => {
+    if (expenseData === undefined) return undefined;
     const jetzt = new Date();
     const monat = jetzt.getMonth();
     const jahr = jetzt.getFullYear();
@@ -93,8 +111,20 @@ function BuchhaltungPage() {
       dieselpreis: company?.dieselpreis,
       arbeitstageMonat: company?.arbeitstageMonat,
       echteKraftstoffkostenMonat,
+      fahrer: driversQ.data,
+      fahrzeuge: vehiclesQ.data,
+      auftraege: ordersQ.data,
+      rechnungen: invoiceData ?? [],
     }),
-    [company?.dieselpreis, company?.arbeitstageMonat, echteKraftstoffkostenMonat],
+    [
+      company?.dieselpreis,
+      company?.arbeitstageMonat,
+      echteKraftstoffkostenMonat,
+      driversQ.data,
+      vehiclesQ.data,
+      ordersQ.data,
+      invoiceData,
+    ],
   );
 
   const kpis = useMemo(
@@ -175,6 +205,37 @@ function BuchhaltungPage() {
       );
     }
     return null;
+  }
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Buchhaltung"
+        description="Einnahmen, Ausgaben und betriebswirtschaftliche Auswertung – ausschließlich für Administration und Finanzen."
+        icon={Calculator}
+        badge="Finanzen"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
+  }
+
+  if (!datenBereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          title="Buchhaltung"
+          description="Einnahmen, Ausgaben und Kostenstellen auf Basis geladener Unternehmensdaten."
+          icon={Calculator}
+          badge="Finanzen"
+        />
+        <Card>
+          <CardContent className="py-8 text-sm text-muted-foreground">
+            Finanz-, Fahrer- und Fahrzeugdaten werden geladen. Bis die Datenbasis vollst?ndig ist,
+            zeigt GHASI keine Kosten- oder Gewinnwerte an.
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

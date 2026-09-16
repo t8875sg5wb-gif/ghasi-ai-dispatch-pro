@@ -9,16 +9,18 @@
 // powers the on-screen table and every export format. Existing
 // modules stay untouched.
 // ============================================================
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE, reparaturkostenGesamt, fahrzeugWarnungen } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE, STATUS_META } from "@/lib/auftraege";
-import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { type Fahrer } from "@/lib/fahrer";
+import { reparaturkostenGesamt, fahrzeugWarnungen, type Fahrzeug } from "@/lib/fahrzeuge";
+import { STATUS_META, type Auftrag } from "@/lib/auftraege";
+import { type Kunde, type Patient } from "@/lib/stammdaten";
 import {
-  INITIAL_RECHNUNGEN,
   computeFinanzKpis,
   computeKostenaufstellung,
+  computeFahrerFinanzwerte,
+  computeFahrzeugFinanzwerte,
   EUR,
   netto,
+  type Rechnung,
 } from "@/lib/finance";
 
 export type BerichtTyp =
@@ -40,6 +42,95 @@ export interface Bericht {
   zeilen: (string | number)[][];
   /** optional summary line rendered below the table */
   summe?: (string | number)[];
+}
+
+export interface BerichtGrundlage {
+  vorhanden: boolean;
+  hinweis: string;
+}
+
+export interface BerichtDatenzaehler {
+  rechnungen: number;
+  fahrzeuge: number;
+  fahrer: number;
+  kunden: number;
+  patienten: number;
+  auftraege: number;
+}
+
+export interface BerichtDaten {
+  rechnungen: readonly Rechnung[];
+  fahrzeuge: readonly Fahrzeug[];
+  fahrer: readonly Fahrer[];
+  kunden: readonly Kunde[];
+  patienten: readonly Patient[];
+  auftraege: readonly Auftrag[];
+}
+
+export function bewerteBerichtGrundlage(
+  typ: BerichtTyp,
+  daten: BerichtDatenzaehler,
+): BerichtGrundlage {
+  switch (typ) {
+    case "umsatz":
+      return daten.rechnungen > 0
+        ? { vorhanden: true, hinweis: "Rechnungsdaten vorhanden." }
+        : {
+            vorhanden: false,
+            hinweis: "Keine Rechnungsdaten vorhanden – Umsatz ist nicht als 0 € belegt.",
+          };
+    case "gewinn": {
+      const fehlt = [
+        daten.rechnungen === 0 ? "Rechnungen" : null,
+        daten.fahrzeuge === 0 ? "Fahrzeuge" : null,
+        daten.fahrer === 0 ? "Fahrer" : null,
+      ].filter(Boolean);
+      return fehlt.length === 0
+        ? { vorhanden: true, hinweis: "Rechnungs-, Fahrzeug- und Fahrerdaten vorhanden." }
+        : {
+            vorhanden: false,
+            hinweis: `Datenbasis fehlt: ${fehlt.join(", ")}. Gewinn wird nicht als 0 ausgewiesen.`,
+          };
+    }
+    case "fahrzeugauslastung":
+    case "kraftstoff":
+    case "wartung":
+      return daten.fahrzeuge > 0
+        ? { vorhanden: true, hinweis: "Fahrzeugdaten vorhanden." }
+        : { vorhanden: false, hinweis: "Keine Fahrzeugdaten vorhanden." };
+    case "fahrerleistung":
+      return daten.fahrer > 0
+        ? { vorhanden: true, hinweis: "Fahrerdaten vorhanden." }
+        : { vorhanden: false, hinweis: "Keine Fahrerdaten vorhanden." };
+    case "kunden":
+      if (daten.kunden === 0) return { vorhanden: false, hinweis: "Keine Kundendaten vorhanden." };
+      if (daten.rechnungen === 0)
+        return {
+          vorhanden: false,
+          hinweis:
+            "Kunden sind vorhanden, aber Rechnungsdaten fehlen – Umsatz wird nicht als 0 € ausgegeben.",
+        };
+      return { vorhanden: true, hinweis: "Kunden- und Rechnungsdaten vorhanden." };
+    case "patienten":
+      return daten.patienten > 0
+        ? { vorhanden: true, hinweis: "Patientendaten vorhanden." }
+        : { vorhanden: false, hinweis: "Keine Patientendaten vorhanden." };
+    case "transporte":
+      return daten.auftraege > 0
+        ? { vorhanden: true, hinweis: "Auftragsdaten vorhanden." }
+        : { vorhanden: false, hinweis: "Keine Auftragsdaten vorhanden." };
+  }
+}
+
+export function berichtGrundlage(typ: BerichtTyp, daten: BerichtDaten): BerichtGrundlage {
+  return bewerteBerichtGrundlage(typ, {
+    rechnungen: daten.rechnungen.length,
+    fahrzeuge: daten.fahrzeuge.length,
+    fahrer: daten.fahrer.length,
+    kunden: daten.kunden.length,
+    patienten: daten.patienten.length,
+    auftraege: daten.auftraege.length,
+  });
 }
 
 const round = (n: number, d = 0) => {
@@ -83,17 +174,19 @@ export const BERICHT_LISTE: { typ: BerichtTyp; titel: string; beschreibung: stri
   },
 ];
 
-export function buildBericht(typ: BerichtTyp): Bericht {
+export function buildBericht(typ: BerichtTyp, daten: BerichtDaten): Bericht {
   switch (typ) {
     case "umsatz": {
-      const zeilen = INITIAL_RECHNUNGEN.filter((r) => r.typ === "rechnung").map((r) => [
-        r.nummer,
-        r.kunde,
-        r.abrechnungsart,
-        round(netto(r)),
-        round(r.betrag - netto(r)),
-        r.betrag,
-      ]);
+      const zeilen = daten.rechnungen
+        .filter((r) => r.typ === "rechnung")
+        .map((r) => [
+          r.nummer,
+          r.kunde,
+          r.abrechnungsart,
+          round(netto(r)),
+          round(r.betrag - netto(r)),
+          r.betrag,
+        ]);
       const gesamt = zeilen.reduce((s, z) => s + Number(z[5]), 0);
       return {
         typ,
@@ -105,15 +198,31 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "gewinn": {
-      const k = computeFinanzKpis();
-      const zeilen = INITIAL_FAHRZEUGE.map((v) => [
-        v.kennzeichen,
-        `${v.marke} ${v.modell}`,
-        v.monatsumsatz,
-        v.monatsumsatz - v.monatsgewinn,
-        v.monatsgewinn,
-        `${round((v.monatsgewinn / Math.max(1, v.monatsumsatz)) * 100)} %`,
-      ]);
+      const k = computeFinanzKpis([...daten.rechnungen], {
+        fahrer: daten.fahrer,
+        fahrzeuge: daten.fahrzeuge,
+        auftraege: daten.auftraege,
+        rechnungen: daten.rechnungen,
+      });
+      const fzgFinanz = new Map(
+        computeFahrzeugFinanzwerte(daten.fahrzeuge, daten.auftraege, daten.rechnungen).map((w) => [
+          w.fahrzeugId,
+          w.monat,
+        ]),
+      );
+      const zeilen = daten.fahrzeuge.map((v) => {
+        const monat = fzgFinanz.get(v.id);
+        const umsatz = monat?.umsatz ?? 0;
+        const gewinn = monat?.gewinn ?? 0;
+        return [
+          v.kennzeichen,
+          `${v.marke} ${v.modell}`,
+          umsatz,
+          umsatz - gewinn,
+          gewinn,
+          `${round((gewinn / Math.max(1, umsatz)) * 100)} %`,
+        ];
+      });
       return {
         typ,
         titel: "Gewinnbericht",
@@ -131,13 +240,19 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "fahrzeugauslastung": {
-      const zeilen = INITIAL_FAHRZEUGE.map((v) => [
+      const fzgFinanz = new Map(
+        computeFahrzeugFinanzwerte(daten.fahrzeuge, daten.auftraege, daten.rechnungen).map((w) => [
+          w.fahrzeugId,
+          w.monat,
+        ]),
+      );
+      const zeilen = daten.fahrzeuge.map((v) => [
         v.kennzeichen,
         v.typ,
         v.status,
         v.kilometerstand,
-        v.monatsumsatz,
-        v.monatsgewinn,
+        fzgFinanz.get(v.id)?.umsatz ?? 0,
+        fzgFinanz.get(v.id)?.gewinn ?? 0,
       ]);
       return {
         typ,
@@ -148,13 +263,19 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "fahrerleistung": {
-      const zeilen = INITIAL_FAHRER.map((f) => [
+      const fahrerFinanz = new Map(
+        computeFahrerFinanzwerte(daten.fahrer, daten.auftraege, daten.rechnungen).map((w) => [
+          w.fahrerId,
+          w.heute,
+        ]),
+      );
+      const zeilen = daten.fahrer.map((f) => [
         f.name,
         f.nummer,
         `${f.puenktlichkeit} %`,
         `${f.bewertung}/5`,
         f.ueberstunden,
-        f.umsatzHeute,
+        fahrerFinanz.get(f.id)?.umsatz ?? 0,
       ]);
       return {
         typ,
@@ -172,10 +293,10 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "kunden": {
-      const zeilen = KUNDEN.map((c) => {
-        const umsatz = INITIAL_RECHNUNGEN.filter(
-          (r) => r.kundeId === c.id && r.typ === "rechnung",
-        ).reduce((s, r) => s + r.betrag, 0);
+      const zeilen = daten.kunden.map((c) => {
+        const umsatz = daten.rechnungen
+          .filter((r) => r.kundeId === c.id && r.typ === "rechnung")
+          .reduce((s, r) => s + r.betrag, 0);
         return [c.name, c.typ, umsatz, c.offeneRechnungen];
       });
       return {
@@ -187,7 +308,7 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "patienten": {
-      const zeilen = PATIENTEN.map((p) => [p.name, p.mobilitaet, p.kostentraeger, p.hinweis]);
+      const zeilen = daten.patienten.map((p) => [p.name, p.mobilitaet, p.kostentraeger, p.hinweis]);
       return {
         typ,
         titel: "Patientenstatistik",
@@ -197,7 +318,7 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "transporte": {
-      const zeilen = INITIAL_AUFTRAEGE.map((a) => [
+      const zeilen = daten.auftraege.map((a) => [
         a.nummer,
         a.patient,
         a.transportart,
@@ -214,14 +335,19 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "kraftstoff": {
-      const zeilen = INITIAL_FAHRZEUGE.map((v) => [
+      const zeilen = daten.fahrzeuge.map((v) => [
         v.kennzeichen,
         v.kraftstoff,
         `${v.verbrauch} ${v.kraftstoff === "Elektro" ? "kWh" : "l"}/100km`,
         `${v.tankstand} %`,
         `${v.reichweite} km`,
       ]);
-      const k = computeKostenaufstellung();
+      const k = computeKostenaufstellung({
+        fahrer: daten.fahrer,
+        fahrzeuge: daten.fahrzeuge,
+        auftraege: daten.auftraege,
+        rechnungen: daten.rechnungen,
+      });
       return {
         typ,
         titel: "Kraftstoffbericht",
@@ -232,7 +358,7 @@ export function buildBericht(typ: BerichtTyp): Bericht {
       };
     }
     case "wartung": {
-      const zeilen = INITIAL_FAHRZEUGE.map((v) => {
+      const zeilen = daten.fahrzeuge.map((v) => {
         const w = fahrzeugWarnungen(v);
         return [
           v.kennzeichen,
@@ -265,7 +391,10 @@ export function buildBericht(typ: BerichtTyp): Bericht {
  * Export helpers (client-only)
  * ------------------------------------------------------------------ */
 
-export function berichtZuCSV(bericht: Bericht): string {
+export function berichtZuCSV(bericht: Bericht, grundlage: BerichtGrundlage): string {
+  if (!grundlage.vorhanden) {
+    throw new Error(`Bericht nicht exportierbar: ${grundlage.hinweis}`);
+  }
   const escape = (val: string | number) => {
     const s = String(val);
     return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -277,9 +406,11 @@ export function berichtZuCSV(bericht: Bericht): string {
 }
 
 /** Triggers a CSV download (Excel opens it natively via UTF-8 BOM). */
-export function downloadCSV(bericht: Bericht): void {
-  if (typeof document === "undefined") return;
-  const blob = new Blob(["\uFEFF" + berichtZuCSV(bericht)], { type: "text/csv;charset=utf-8;" });
+export function downloadCSV(bericht: Bericht, grundlage: BerichtGrundlage): void {
+  if (!grundlage.vorhanden || typeof document === "undefined") return;
+  const blob = new Blob(["\uFEFF" + berichtZuCSV(bericht, grundlage)], {
+    type: "text/csv;charset=utf-8;",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -291,8 +422,8 @@ export function downloadCSV(bericht: Bericht): void {
 }
 
 /** Opens the browser print dialog scoped to a single report (PDF export). */
-export function druckeBericht(bericht: Bericht): void {
-  if (typeof window === "undefined") return;
+export function druckeBericht(bericht: Bericht, grundlage: BerichtGrundlage): void {
+  if (!grundlage.vorhanden || typeof window === "undefined") return;
   const w = window.open("", "_blank", "width=900,height=700");
   if (!w) return;
   const head = bericht.spalten.map((s) => `<th>${s}</th>`).join("");

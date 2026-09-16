@@ -37,20 +37,32 @@ export const Route = createFileRoute("/warnungen")({
 const PRIOS: AlarmPrioritaet[] = ["Kritisch", "Hoch", "Mittel", "Niedrig"];
 
 function AlertCenter() {
-  // Subscribe to the live stores so alerts recompute on every fresh fetch.
-  useOrders();
-  useDrivers();
-  useVehicles();
-  useInvoices();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const vehiclesQ = useVehicles();
+  const invoicesQ = useInvoices();
   useRecurring();
   useCustomers();
   const [filter, setFilter] = useState<AlarmPrioritaet | "alle">("alle");
 
   // Alerts are time-relative → gate behind mount to avoid an SSR mismatch,
-  // then recompute unmemoized on each render (fresh store data included).
+  // then compute only from explicitly loaded live data, never demo mirrors.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const alarme = mounted ? computeAlarme() : [];
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    vehiclesQ.data !== undefined &&
+    invoicesQ.data !== undefined;
+  const alarme =
+    mounted && bereit
+      ? computeAlarme({
+          auftraege: ordersQ.data ?? [],
+          fahrer: driversQ.data ?? [],
+          fahrzeuge: vehiclesQ.data ?? [],
+          rechnungen: invoicesQ.data ?? [],
+        })
+      : [];
 
   const counts: Record<AlarmPrioritaet, number> = {
     Kritisch: 0,

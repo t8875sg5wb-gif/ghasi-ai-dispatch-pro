@@ -216,6 +216,7 @@ function BeschaeftigungPage() {
   };
 
   const loeschen = (v: Beschaeftigungsverhaeltnis) => {
+    if (!window.confirm("Dieses Beschäftigungsverhältnis wirklich dauerhaft löschen?")) return;
     deleteMut.mutate(v.id, {
       onSuccess: () => toast.success("Gelöscht"),
       onError: (e) =>
@@ -356,7 +357,7 @@ function BeschaeftigungPage() {
               </div>
               <p className="mt-1 text-muted-foreground">
                 {a.fahrerId ? nameVon(a.fahrerId) : "Unbekannter Fahrer"} · Akteur{" "}
-                {a.akteurUserId ? a.akteurUserId.slice(0, 8) : "System"}
+                {a.akteurName ?? (a.akteurUserId ? "Unbekannt" : "System")}
               </p>
             </div>
           ))}

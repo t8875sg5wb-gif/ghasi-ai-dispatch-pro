@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Crown, Gauge, Lightbulb, LineChart, PieChart, BarChart3 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { CeoCockpit } from "@/components/analytics/ceo-cockpit-view";
 import { ControlCenter } from "@/components/analytics/control-center-view";
 import { InsightsPage } from "@/components/analytics/insights-view";
@@ -20,6 +21,8 @@ const TABS = [
 
 export type AnalyseTab = (typeof TABS)[number]["id"];
 const TAB_IDS = TABS.map((t) => t.id) as readonly string[];
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/ceo-cockpit")({
   validateSearch: (search: Record<string, unknown>): { tab: AnalyseTab } => {
@@ -47,8 +50,22 @@ export const Route = createFileRoute("/ceo-cockpit")({
 });
 
 function AnalyseHub() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "disposition" || role === "finanz";
   const { tab } = Route.useSearch();
   const navigate = useNavigate();
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Analyse-Hub"
+        description="Unternehmensanalysen – ausschließlich für Administration, Disposition und Finanzen."
+        icon={Crown}
+        badge="Analyse"
+        message="Diese Auswertungen sind Administration, Disposition und Finanzen vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

@@ -12,6 +12,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertDriverExists } from "@/lib/identity-checks.server";
 import { assertFinanzRolle } from "@/lib/employment-security.server";
+import { resolveActorNames } from "@/lib/ghasi-security.server";
 import {
   beschaeftigungToRow,
   createEmploymentSchema,
@@ -49,7 +50,14 @@ export const listEmploymentAudit = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(mapEmploymentDbError(error.message));
-    return (data ?? []).map((r) => rowToAudit(r as unknown as EmploymentAuditRow));
+    const rows = (data ?? []).map((r) => rowToAudit(r as unknown as EmploymentAuditRow));
+    const names = await resolveActorNames(
+      rows.map((r) => r.akteurUserId).filter((id): id is string => !!id),
+    );
+    return rows.map((r) => ({
+      ...r,
+      akteurName: r.akteurUserId ? (names.get(r.akteurUserId) ?? null) : null,
+    }));
   });
 
 export const createEmployment = createServerFn({ method: "POST" })

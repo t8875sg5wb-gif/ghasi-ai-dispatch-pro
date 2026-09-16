@@ -2,6 +2,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createOrderSchema, orderFieldsSchema, updateOrderSchema } from "@/lib/orders.functions";
+import { writeToRow } from "@/lib/orders-shared";
 
 const UUID_A = "33333333-3333-4333-8333-333333333333";
 
@@ -32,8 +33,25 @@ describe("orderFieldsSchema — Enums (CP13)", () => {
 });
 
 describe("orderFieldsSchema — termin", () => {
-  test("akzeptiert ISO-Datum/Zeit", () => {
-    expect(orderFieldsSchema.safeParse({ termin: "2026-03-10T08:00" }).success).toBe(true);
+  test("akzeptiert ISO-Zeitpunkt mit Zeitzone (UTC)", () => {
+    expect(orderFieldsSchema.safeParse({ termin: "2026-03-10T08:00:00.000Z" }).success).toBe(true);
+  });
+
+  test("akzeptiert ISO-Zeitpunkt mit Offset", () => {
+    expect(orderFieldsSchema.safeParse({ termin: "2026-03-10T08:00:00+01:00" }).success).toBe(true);
+  });
+
+  // Regressionstest für den Termin-Zeitzonen-Bug (2026-09-15): eine
+  // zeitzonen-lose Wanduhrzeit-Zeichenkette (wie sie roh aus einem
+  // `datetime-local`-Input kommt) wurde bisher unverändert an die
+  // `timestamptz`-Spalte `orders.termin` durchgereicht. Postgres
+  // interpretierte sie dort (Session-Zeitzone UTC) fälschlich als UTC statt
+  // als deutsche Ortszeit — ein Versatz von 1-2 Stunden bei jedem Auftrag.
+  // Das Schema verlangt jetzt zwingend eine Zeitzone, damit ein Aufrufer
+  // diese Konvertierung nicht mehr vergessen kann (siehe `localInputToIso()`
+  // in `@/lib/local-datetime`, die genau das im Client erledigt).
+  test("lehnt zeitzonen-lose Wanduhrzeit ab (Termin-Zeitzonen-Bug, 2026-09-15)", () => {
+    expect(orderFieldsSchema.safeParse({ termin: "2026-03-10T08:00" }).success).toBe(false);
   });
 
   test("lehnt deutsches Datumsformat ab", () => {
@@ -63,5 +81,11 @@ describe("updateOrderSchema", () => {
     expect(
       updateOrderSchema.safeParse({ id: UUID_A, values: { status: "unterwegs" } }).success,
     ).toBe(true);
+  });
+
+  test("akzeptiert und mappt Telefonnummer unverändert in die DB-Spalte", () => {
+    const telefon = "0571 9998877";
+    expect(updateOrderSchema.safeParse({ id: UUID_A, values: { telefon } }).success).toBe(true);
+    expect(writeToRow({ telefon })).toEqual({ telefon });
   });
 });

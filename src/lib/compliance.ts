@@ -8,8 +8,8 @@
 import { fristStatus, type FristInfo } from "@/lib/compliance-dates";
 import type { Fahrer } from "@/lib/fahrer";
 import type { Fahrzeug } from "@/lib/fahrzeuge";
-import type { Versicherung } from "@/lib/versicherungen";
-import type { Leasingvertrag } from "@/lib/leasing";
+import { abgeleiteterStatus as versicherungsStatus, type Versicherung } from "@/lib/versicherungen";
+import { abgeleiteterLeasingStatus, type Leasingvertrag } from "@/lib/leasing";
 import type { Patient, Krankenkasse } from "@/lib/stammdaten";
 import type { Auftrag } from "@/lib/auftraege";
 import type { Rechnung } from "@/lib/finance";
@@ -227,10 +227,10 @@ export function computeZahlungsUebersicht(
   loehneMonat: number,
 ): ZahlungsUebersicht {
   const versSumme = input.versicherungen
-    .filter((p) => p.status !== "gekuendigt")
+    .filter((p) => versicherungsStatus(p) !== "gekuendigt")
     .reduce((s, p) => s + p.beitragMonat, 0);
   const leasingSumme = input.leasing
-    .filter((l) => l.status === "aktiv")
+    .filter((l) => abgeleiteterLeasingStatus(l) !== "beendet")
     .reduce((s, l) => s + l.rateMonat, 0);
 
   const ausgehend: ZahlungsPosten[] = [

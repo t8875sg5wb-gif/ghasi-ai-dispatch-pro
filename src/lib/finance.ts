@@ -13,10 +13,11 @@
 // ============================================================
 import { Receipt, FileMinus, type LucideIcon } from "lucide-react";
 
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE, reparaturkostenGesamt } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
+import type { Fahrer } from "@/lib/fahrer";
+import type { Fahrzeug } from "@/lib/fahrzeuge";
+import { INITIAL_AUFTRAEGE, type Auftrag, type Transportart } from "@/lib/auftraege";
 import { KUNDEN } from "@/lib/stammdaten";
+import { businessDateKey } from "@/lib/local-datetime";
 
 export const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
@@ -36,6 +37,213 @@ const round = (n: number, d = 0) => {
   const f = 10 ** d;
   return Math.round(n * f) / f;
 };
+
+/** Deterministische operative Kostenschätzung für noch nicht abgerechnete Fahrten. */
+const TAGES_TARIF: Record<Transportart, { grund: number; proKm: number; avgKm: number }> = {
+  Liegendtransport: { grund: 60, proKm: 2.4, avgKm: 18 },
+  Sitzendtransport: { grund: 25, proKm: 1.3, avgKm: 12 },
+  Rollstuhl: { grund: 35, proKm: 1.6, avgKm: 14 },
+  Dialysefahrt: { grund: 30, proKm: 1.4, avgKm: 16 },
+};
+const TAGES_KOSTEN_PRO_KM = 0.85;
+
+function geschaetzteKm(id: string, avg: number): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 1000;
+  return round(avg * (0.6 + (h / 1000) * 0.9), 1);
+}
+
+export interface AuftragFinanzwert {
+  auftrag: Auftrag;
+  km: number;
+  umsatz: number;
+  kosten: number;
+  gewinn: number;
+  marge: number;
+  istSchaetzung: boolean;
+}
+
+/**
+ * Einheitliche Erlös-/Kostenbasis je Auftrag: echte verknüpfte Rechnung zuerst,
+ * sonst eine klar markierte operative Schätzung. Stornierte Aufträge zählen nie.
+ */
+export function computeAuftragFinanzwerte(
+  auftraege: readonly Auftrag[],
+  rechnungen: readonly Rechnung[],
+): AuftragFinanzwert[] {
+  const rechnungUmsatz = new Map<string, number>();
+  for (const r of rechnungen) {
+    if (r.status === "storniert" || r.status === "entwurf" || !r.bezugAuftrag) continue;
+    rechnungUmsatz.set(r.bezugAuftrag, (rechnungUmsatz.get(r.bezugAuftrag) ?? 0) + brutto(r));
+  }
+
+  return auftraege
+    .filter((a) => a.status !== "storniert")
+    .map((a) => {
+      const tarif = TAGES_TARIF[a.transportart] ?? TAGES_TARIF.Sitzendtransport;
+      const km = geschaetzteKm(a.id, tarif.avgKm);
+      const echterUmsatz = rechnungUmsatz.get(a.nummer);
+      const istSchaetzung = echterUmsatz === undefined;
+      const umsatz = istSchaetzung ? round(tarif.grund + km * tarif.proKm) : round(echterUmsatz);
+      const kosten = round(km * TAGES_KOSTEN_PRO_KM + tarif.grund * 0.25);
+      const gewinn = round(umsatz - kosten);
+      const marge = umsatz > 0 ? round((gewinn / umsatz) * 100) : 0;
+      return { auftrag: a, km, umsatz, kosten, gewinn, marge, istSchaetzung };
+    });
+}
+
+export type FinanzBasis = "keine" | "rechnung" | "schaetzung" | "gemischt";
+
+export interface TagesFinanzKpis {
+  umsatz: number;
+  kosten: number;
+  gewinn: number;
+  margeProzent: number | null;
+  auftraege: number;
+  ausRechnung: number;
+  geschaetzt: number;
+  basis: FinanzBasis;
+}
+
+export interface ZugeordneteFinanzperiode {
+  umsatz: number;
+  kosten: number;
+  gewinn: number;
+  km: number;
+  auftraege: number;
+  basis: FinanzBasis;
+}
+
+export interface FahrerFinanzwert {
+  fahrerId: string;
+  heute: ZugeordneteFinanzperiode;
+  monat: ZugeordneteFinanzperiode;
+}
+
+export interface FahrzeugFinanzwert {
+  fahrzeugId: string;
+  heute: ZugeordneteFinanzperiode;
+  monat: ZugeordneteFinanzperiode;
+}
+
+/** Heutige, tatsächlich abgeschlossene Leistungen in Europe/Berlin. */
+export function computeTagesFinanzKpis(
+  auftraege: readonly Auftrag[],
+  rechnungen: readonly Rechnung[],
+  jetzt: Date = new Date(),
+): TagesFinanzKpis {
+  const heute = businessDateKey(jetzt);
+  const werte = computeAuftragFinanzwerte(auftraege, rechnungen).filter(
+    (w) => w.auftrag.status === "abgeschlossen" && businessDateKey(w.auftrag.termin) === heute,
+  );
+  const umsatz = round(werte.reduce((s, w) => s + w.umsatz, 0));
+  const kosten = round(werte.reduce((s, w) => s + w.kosten, 0));
+  const gewinn = round(umsatz - kosten);
+  const ausRechnung = werte.filter((w) => !w.istSchaetzung).length;
+  const geschaetzt = werte.length - ausRechnung;
+  const basis: TagesFinanzKpis["basis"] =
+    werte.length === 0
+      ? "keine"
+      : ausRechnung === werte.length
+        ? "rechnung"
+        : geschaetzt === werte.length
+          ? "schaetzung"
+          : "gemischt";
+  return {
+    umsatz,
+    kosten,
+    gewinn,
+    margeProzent: umsatz > 0 ? round((gewinn / umsatz) * 100) : null,
+    auftraege: werte.length,
+    ausRechnung,
+    geschaetzt,
+    basis,
+  };
+}
+
+function fasseFinanzwerteZusammen(werte: readonly AuftragFinanzwert[]): ZugeordneteFinanzperiode {
+  const ausRechnung = werte.filter((w) => !w.istSchaetzung).length;
+  const geschaetzt = werte.length - ausRechnung;
+  const basis: FinanzBasis =
+    werte.length === 0
+      ? "keine"
+      : ausRechnung === werte.length
+        ? "rechnung"
+        : geschaetzt === werte.length
+          ? "schaetzung"
+          : "gemischt";
+  const umsatz = round(werte.reduce((s, w) => s + w.umsatz, 0));
+  const kosten = round(werte.reduce((s, w) => s + w.kosten, 0));
+  return {
+    umsatz,
+    kosten,
+    gewinn: round(umsatz - kosten),
+    km: round(
+      werte.reduce((s, w) => s + w.km, 0),
+      1,
+    ),
+    auftraege: werte.length,
+    basis,
+  };
+}
+
+/** Live-Finanzwerte je Fahrer aus abgeschlossenen, tatsächlich zugeordneten Aufträgen. */
+export function computeFahrerFinanzwerte(
+  fahrer: readonly Fahrer[],
+  auftraege: readonly Auftrag[],
+  rechnungen: readonly Rechnung[],
+  jetzt: Date = new Date(),
+): FahrerFinanzwert[] {
+  const heute = businessDateKey(jetzt);
+  const monat = heute.slice(0, 7);
+  const abgeschlossen = computeAuftragFinanzwerte(auftraege, rechnungen).filter(
+    (w) => w.auftrag.status === "abgeschlossen",
+  );
+
+  return fahrer.map((f) => {
+    const eigene = abgeschlossen.filter((w) =>
+      w.auftrag.fahrerId ? w.auftrag.fahrerId === f.id : w.auftrag.fahrer === f.name,
+    );
+    return {
+      fahrerId: f.id,
+      heute: fasseFinanzwerteZusammen(
+        eigene.filter((w) => businessDateKey(w.auftrag.termin) === heute),
+      ),
+      monat: fasseFinanzwerteZusammen(
+        eigene.filter((w) => businessDateKey(w.auftrag.termin).slice(0, 7) === monat),
+      ),
+    };
+  });
+}
+
+/** Live-Finanzwerte je Fahrzeug aus abgeschlossenen, tatsächlich zugeordneten Aufträgen. */
+export function computeFahrzeugFinanzwerte(
+  fahrzeuge: readonly Fahrzeug[],
+  auftraege: readonly Auftrag[],
+  rechnungen: readonly Rechnung[],
+  jetzt: Date = new Date(),
+): FahrzeugFinanzwert[] {
+  const heute = businessDateKey(jetzt);
+  const monat = heute.slice(0, 7);
+  const abgeschlossen = computeAuftragFinanzwerte(auftraege, rechnungen).filter(
+    (w) => w.auftrag.status === "abgeschlossen",
+  );
+
+  return fahrzeuge.map((v) => {
+    const eigene = abgeschlossen.filter((w) =>
+      w.auftrag.fahrzeugId ? w.auftrag.fahrzeugId === v.id : w.auftrag.fahrzeug === v.kennzeichen,
+    );
+    return {
+      fahrzeugId: v.id,
+      heute: fasseFinanzwerteZusammen(
+        eigene.filter((w) => businessDateKey(w.auftrag.termin) === heute),
+      ),
+      monat: fasseFinanzwerteZusammen(
+        eigene.filter((w) => businessDateKey(w.auftrag.termin).slice(0, 7) === monat),
+      ),
+    };
+  });
+}
 
 /* ------------------------------------------------------------------ *
  * Domain types
@@ -462,63 +670,76 @@ export interface Kostenaufstellung {
   fahrerkosten: number;
   leasingkosten: number;
   gesamt: number;
-  /** Woher der Kraftstoffwert stammt: echte Belege (Ausgaben) oder Schätzung. */
+  /** Woher der Kraftstoffwert stammt: echte Belege oder Schaetzung. */
   kraftstoffQuelle: "echte-belege" | "schaetzung";
+  /** true nur wenn Fahrzeug- und Auftragsquelle explizit geladen übergeben wurden. */
+  datenbasisVorhanden: boolean;
 }
 
 /** Standard-Annahmen, falls keine Firmeneinstellungen vorliegen. */
-export const DEFAULT_DIESELPREIS = 1.75; // €/l
+export const DEFAULT_DIESELPREIS = 1.75;
 export const DEFAULT_ARBEITSTAGE_MONAT = 21;
 
 export interface KostenConfig {
-  /** Angenommener Kraftstoffpreis €/l (aus Firmeneinstellungen). */
   dieselpreis?: number;
-  /** Durchschnittliche Arbeitstage pro Monat (aus Firmeneinstellungen). */
+  /** Legacy-Konfiguration; bleibt für API-Kompatibilität bestehen. */
   arbeitstageMonat?: number;
-  /**
-   * Tatsächliche Kraftstoffkosten des Monats aus echten Belegen (Ausgaben-Modul).
-   * Wenn > 0 gesetzt, wird dieser Wert der Schätzung vorgezogen.
-   */
+  /** Auch 0 ist ein echter geladener Belegwert; undefined bedeutet: nicht geliefert. */
   echteKraftstoffkostenMonat?: number;
+  /** undefined = Datenbasis fehlt; [] = geladen, aber keine Fahrer. */
+  fahrer?: readonly Fahrer[];
+  /** undefined = Datenbasis fehlt; [] = geladen, aber keine Fahrzeuge. */
+  fahrzeuge?: readonly Fahrzeug[];
+  /** Abgeschlossene Aufträge sind die operative Quelle für km und variable Kosten. */
+  auftraege?: readonly Auftrag[];
+  /** Verknüpfte Rechnungen ersetzen geschätzte Auftragserlöse, sofern vorhanden. */
+  rechnungen?: readonly Rechnung[];
+  jetzt?: Date;
 }
 
 export function computeKostenaufstellung(config: KostenConfig = {}): Kostenaufstellung {
   const dieselpreis = config.dieselpreis ?? DEFAULT_DIESELPREIS;
-  const arbeitstageMonat = config.arbeitstageMonat ?? DEFAULT_ARBEITSTAGE_MONAT;
+  const fahrzeuge = config.fahrzeuge ?? [];
+  const datenbasisVorhanden = config.fahrzeuge !== undefined && config.auftraege !== undefined;
+  const monat = businessDateKey(config.jetzt ?? new Date()).slice(0, 7);
+  const monatsWerte =
+    config.auftraege === undefined
+      ? []
+      : computeAuftragFinanzwerte(config.auftraege, config.rechnungen ?? []).filter(
+          (w) =>
+            w.auftrag.status === "abgeschlossen" &&
+            businessDateKey(w.auftrag.termin).slice(0, 7) === monat,
+        );
 
-  // Fuel: prefer real receipts from the Ausgaben module; otherwise estimate.
-  const kmMonat = INITIAL_FAHRER.reduce((s, f) => s + f.kmHeute, 0) * arbeitstageMonat;
+  // Kein Legacy-/Demo-Fallback: km und variable Kosten stammen nur aus Live-Aufträgen.
+  const kmMonat = monatsWerte.reduce((s, w) => s + w.km, 0);
+  const verbrenner = fahrzeuge.filter((v) => v.kraftstoff !== "Elektro");
   const avgVerbrauch =
-    INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").reduce(
-      (s, v) => s + v.verbrauch,
-      0,
-    ) / Math.max(1, INITIAL_FAHRZEUGE.filter((v) => v.kraftstoff !== "Elektro").length);
+    verbrenner.length > 0 ? verbrenner.reduce((s, v) => s + v.verbrauch, 0) / verbrenner.length : 0;
   const geschaetzt = round((kmMonat / 100) * avgVerbrauch * dieselpreis);
-  const hatEchte = (config.echteKraftstoffkostenMonat ?? 0) > 0;
+  const hatEchte = config.echteKraftstoffkostenMonat !== undefined;
   const kraftstoffkosten = hatEchte ? round(config.echteKraftstoffkostenMonat!) : geschaetzt;
   const kraftstoffQuelle: Kostenaufstellung["kraftstoffQuelle"] = hatEchte
     ? "echte-belege"
     : "schaetzung";
 
-  // Maintenance: accumulated repairs across the fleet.
-  const wartungskosten = INITIAL_FAHRZEUGE.reduce((s, v) => s + reparaturkostenGesamt(v), 0);
-
-  // Leasing: sum of monthly leasing rates.
-  const leasingkosten = INITIAL_FAHRZEUGE.reduce((s, v) => s + v.leasingrate, 0);
-
-  // Vehicle running cost (per-km cost × monthly distance), excl. fuel/leasing.
-  const fahrzeugkosten = round(
-    (INITIAL_FAHRZEUGE.reduce((s, v) => s + v.kostenProKm, 0) / INITIAL_FAHRZEUGE.length) *
-      kmMonat *
-      0.4,
+  const wartungskosten = round(
+    fahrzeuge.reduce(
+      (summe, v) =>
+        summe +
+        v.reparaturen
+          .filter((r) => r.datum.slice(0, 7) === monat)
+          .reduce((s, r) => s + r.kosten, 0),
+      0,
+    ),
   );
-
-  // Driver cost: profit-vs-revenue gap as a proxy for personnel + overheads.
-  const fahrerkosten = round(
-    INITIAL_FAHRER.reduce((s, f) => s + (f.umsatzHeute - f.gewinnHeute), 0) *
-      arbeitstageMonat *
-      0.55,
-  );
+  const leasingkosten = fahrzeuge.reduce((s, v) => s + v.leasingrate, 0);
+  const durchschnittKostenProKm =
+    fahrzeuge.length > 0 ? fahrzeuge.reduce((s, v) => s + v.kostenProKm, 0) / fahrzeuge.length : 0;
+  const fahrzeugkosten = round(durchschnittKostenProKm * kmMonat * 0.4);
+  // Näherung des Fahreranteils aus der zentralen Auftragskostenbasis – niemals aus
+  // gespeicherten Fahrer-Umsatz-/Gewinnfeldern, die veralten können.
+  const fahrerkosten = round(monatsWerte.reduce((s, w) => s + w.kosten, 0) * 0.55);
 
   const gesamt = fahrzeugkosten + kraftstoffkosten + wartungskosten + fahrerkosten + leasingkosten;
   return {
@@ -529,6 +750,7 @@ export function computeKostenaufstellung(config: KostenConfig = {}): Kostenaufst
     leasingkosten,
     gesamt,
     kraftstoffQuelle,
+    datenbasisVorhanden,
   };
 }
 
@@ -570,11 +792,14 @@ export function computeFinanzKpis(
   const gutschriftenSumme = gutschriften.reduce((s, r) => s + Math.abs(brutto(r)), 0);
 
   const kosten = computeKostenaufstellung(config);
-  // Single source of truth for company-wide monthly revenue: the real invoice
-  // data (gross incl. VAT). Drafts are excluded (not yet issued), credit notes
-  // carry negative amounts and therefore reduce revenue automatically.
+  // Single source of truth for company-wide monthly revenue: invoices issued in
+  // the current business month (gross incl. VAT). Drafts are excluded; credit
+  // notes carry negative amounts and reduce the month automatically.
+  const monat = businessDateKey(config.jetzt ?? new Date()).slice(0, 7);
   const umsatzMonat = round(
-    aktiv.filter((r) => r.status !== "entwurf").reduce((s, r) => s + brutto(r), 0),
+    aktiv
+      .filter((r) => r.status !== "entwurf" && r.datum.slice(0, 7) === monat)
+      .reduce((s, r) => s + brutto(r), 0),
   );
   const ausgabenMonat = kosten.gesamt;
   const gewinnMonat = round(umsatzMonat - ausgabenMonat);

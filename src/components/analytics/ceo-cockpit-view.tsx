@@ -25,12 +25,15 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { computeGewerbesteuer, computeGewinnNachSteuern, STEUER_DISCLAIMER } from "@/lib/steuer";
 import { computeKpis, computeBusinessHealth, EUR } from "@/lib/ai-brain";
+import { computeFinanzKpis } from "@/lib/finance";
 import {
   computeCashflowForecast,
   computeCapacity,
@@ -59,43 +62,98 @@ const RISIKO_BADGE: Record<RisikoStufe, string> = {
 export function CeoCockpit() {
   // Trigger live hydration of the shared mirrors (orders/drivers/invoices) so
   // all deterministic CEO computations run on the persisted business data.
-  useOrders();
-  useDrivers();
-  useInvoices();
+  const ordersQ = useOrders();
+  const auftraege = ordersQ.data;
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  const fahrzeuge = vehiclesQ.data;
+  const fahrer = driversQ.data;
+  const rechnungen = invoicesQ.data;
 
   const { data: firma } = useCompanySettings();
-  const kpis = computeKpis();
+  // Vor der ersten Hydration stehen in den Legacy-Spiegeln Demo-Fuhrpark-Daten
+  // statt echter Werte. Ohne diese Sperre zeigt das Morgen-Briefing für einen
+  // kurzen Moment einen erfundenen "3/100 kritisch"-Score mit einem fiktiven
+  // Fahrzeugkennzeichen und Millionen-Prognosen statt echter Zahlen.
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
+
+  const kpis = computeKpis({
+    auftraege: auftraege ?? [],
+    fahrer: fahrer ?? [],
+    fahrzeuge: fahrzeuge ?? [],
+    rechnungen: rechnungen ?? [],
+  });
+  const finanz = computeFinanzKpis(rechnungen ?? [], {
+    fahrer: fahrer ?? [],
+    fahrzeuge: fahrzeuge ?? [],
+    auftraege: auftraege ?? [],
+    rechnungen: rechnungen ?? [],
+  });
   const health = computeBusinessHealth(kpis);
-  const cashflow = computeCashflowForecast(kpis);
+  const cashflow = computeCashflowForecast(kpis, finanz);
   const cap = computeCapacity(kpis);
-  const empty = computeEmptyMileage();
-  const recs = computeCeoRecommendations();
-  const risks = computeRiskAlerts();
-  const topFahrer = profitProFahrer().slice(0, 4);
-  const topAuftraege = profitProAuftrag().slice(0, 6);
-  const briefing = buildCeoBriefing();
-  const abend = buildEveningSummary();
+  const empty = computeEmptyMileage([...(fahrer ?? [])]);
+  const recs = computeCeoRecommendations(
+    auftraege ?? [],
+    fahrzeuge ?? [],
+    fahrer ?? [],
+    rechnungen ?? [],
+  );
+  const risks = computeRiskAlerts(kpis, finanz);
+  const topFahrer = profitProFahrer(
+    [...(fahrer ?? [])],
+    [...(auftraege ?? [])],
+    [...(rechnungen ?? [])],
+  ).slice(0, 4);
+  const topAuftraege = profitProAuftrag([...(auftraege ?? [])], [...(rechnungen ?? [])]).slice(
+    0,
+    6,
+  );
+  const briefing = buildCeoBriefing(
+    auftraege ?? [],
+    fahrzeuge ?? [],
+    fahrer ?? [],
+    rechnungen ?? [],
+  );
+  const abend = buildEveningSummary(
+    auftraege ?? [],
+    fahrzeuge ?? [],
+    fahrer ?? [],
+    rechnungen ?? [],
+  );
 
   // Gewinn nach Steuern (Schätzung) auf Basis des Jahresgewinns (365-Tage-Prognose)
   // und des Gewerbesteuer-Hebesatzes aus den Unternehmenseinstellungen.
   const jahresGewinn = cashflow.find((c) => c.tage === 365)?.gewinn ?? 0;
   const gewerbesteuer = computeGewerbesteuer(jahresGewinn, firma.gewerbesteuerHebesatz);
   const gewinnNachSteuern = computeGewinnNachSteuern(jahresGewinn, firma.gewerbesteuerHebesatz);
+  const tagesBasisSuffix =
+    kpis.tagesumsatzBasis === "schaetzung"
+      ? " (Schätzung)"
+      : kpis.tagesumsatzBasis === "gemischt"
+        ? " (gemischt)"
+        : "";
+  const tagesMarge = kpis.margeHeuteProzent === null ? "–" : `${kpis.margeHeuteProzent} %`;
 
   const stats = [
     {
-      label: "Umsatz heute",
+      label: `Umsatz heute${tagesBasisSuffix}`,
       value: EUR(kpis.umsatzHeute),
       icon: Euro,
       tone: "primary" as const,
-      hint: `Monat ${EUR(kpis.umsatzMonat)}`,
+      hint: `Monat ${EUR(kpis.umsatzMonat)} · Rechnungsbasis`,
     },
     {
-      label: "Erwarteter Gewinn",
+      label: `Gewinn heute${tagesBasisSuffix}`,
       value: EUR(kpis.gewinnHeute),
       icon: TrendingUp,
       tone: "success" as const,
-      hint: `Marge ${kpis.margeProzent} %`,
+      hint: `Tagesmarge ${tagesMarge}`,
     },
     {
       label: "Geplante Fahrten",
@@ -140,6 +198,28 @@ export function CeoCockpit() {
       hint: health.stufe,
     },
   ];
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          icon={Crown}
+          badge="Digitaler Geschäftsführer"
+          title="CEO Cockpit"
+          description="GHASI AI führt Ihr Unternehmen mit: Prognosen, Cashflow, Kapazität, Leerkilometer, Empfehlungen und Risiken – jede Empfehlung mit Begründung und finanzieller Wirkung."
+          right={
+            <Badge className="border-0 bg-white/15 text-primary-foreground">Nur Empfehlungen</Badge>
+          }
+        />
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+        <Skeleton className="h-40" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

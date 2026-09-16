@@ -29,6 +29,9 @@ import {
   useUpdateVehicle,
   useSeedVehicles,
 } from "@/lib/vehicles-store";
+import { useOrders } from "@/lib/orders-store";
+import { useInvoices } from "@/lib/invoices-store";
+import { computeFahrzeugFinanzwerte } from "@/lib/finance";
 import { FahrzeugForm, type FahrzeugFormValues } from "@/components/fahrzeuge/fahrzeug-form";
 import { FahrzeugDetail } from "@/components/fahrzeuge/fahrzeug-detail";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +77,20 @@ type StatusFilter = FahrzeugStatus | "alle";
 function FahrzeugePage() {
   const { kennzeichen: deepKennzeichen, id: deepId } = Route.useSearch();
   const { data: fahrzeuge = [] } = useVehicles();
+  const ordersQ = useOrders();
+  const invoicesQ = useInvoices();
   const createMut = useCreateVehicle();
   const updateMut = useUpdateVehicle();
   const seedMut = useSeedVehicles();
+  const auftraege = useMemo(() => ordersQ.data ?? [], [ordersQ.data]);
+  const rechnungen = useMemo(() => invoicesQ.data ?? [], [invoicesQ.data]);
+  const fahrzeugFinanz = useMemo(
+    () =>
+      new Map(
+        computeFahrzeugFinanzwerte(fahrzeuge, auftraege, rechnungen).map((w) => [w.fahrzeugId, w]),
+      ),
+    [fahrzeuge, auftraege, rechnungen],
+  );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
 
@@ -391,6 +405,7 @@ function FahrzeugePage() {
           {filtered.map((f) => {
             const sm = FAHRZEUG_STATUS_META[f.status];
             const warn = fahrzeugWarnungen(f);
+            const heute = fahrzeugFinanz.get(f.id)?.heute;
             return (
               <Card
                 key={f.id}
@@ -450,9 +465,9 @@ function FahrzeugePage() {
                   <div>
                     <p className="flex items-center justify-center gap-0.5 text-sm font-bold tabular-nums">
                       <Euro className="h-3 w-3" />
-                      {formatEUR(f.tagesgewinn)}
+                      {formatEUR(heute?.gewinn ?? 0)}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">Gewinn</p>
+                    <p className="text-[11px] text-muted-foreground">Gewinn (Sch.)</p>
                   </div>
                 </div>
               </Card>
@@ -464,6 +479,8 @@ function FahrzeugePage() {
       {/* Detail */}
       <FahrzeugDetail
         fahrzeug={detailFahrzeug}
+        finanzHeute={detailFahrzeug ? fahrzeugFinanz.get(detailFahrzeug.id)?.heute : undefined}
+        finanzMonat={detailFahrzeug ? fahrzeugFinanz.get(detailFahrzeug.id)?.monat : undefined}
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}

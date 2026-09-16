@@ -68,16 +68,10 @@ describe("driverFieldsSchema", () => {
     );
   });
 
-  test("lehnt deutsches Datumsformat bei pScheinGueltigBis ab", () => {
-    expect(
-      driverFieldsSchema.safeParse(fahrerFelder({ pScheinGueltigBis: "31.01.2028" })).success,
-    ).toBe(false);
-  });
-
-  test("akzeptiert ISO-Datum bei pScheinGueltigBis", () => {
+  test("lehnt das alte flache pScheinGueltigBis-Feld ab", () => {
     expect(
       driverFieldsSchema.safeParse(fahrerFelder({ pScheinGueltigBis: "2028-01-31" })).success,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test("lehnt gps.lat = 95 ab", () => {

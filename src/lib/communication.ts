@@ -35,10 +35,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { INITIAL_AUFTRAEGE, formatTermin } from "@/lib/auftraege";
-import { INITIAL_FAHRER } from "@/lib/fahrer";
-import { INITIAL_FAHRZEUGE } from "@/lib/fahrzeuge";
-import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
+import { formatTermin, type Auftrag } from "@/lib/auftraege";
+import type { Fahrer } from "@/lib/fahrer";
+import type { Fahrzeug } from "@/lib/fahrzeuge";
+import type { Kunde, Patient } from "@/lib/stammdaten";
+import type { Rechnung } from "@/lib/finance";
 
 /* ------------------------------------------------------------------ *
  * Core domain types
@@ -328,6 +329,15 @@ export interface KommEntwurf {
 
 const FIRMA = "Ihr Krankentransport-Team";
 
+export interface EntwurfQuellen {
+  auftraege: Auftrag[];
+  fahrer: Fahrer[];
+  fahrzeuge: Fahrzeug[];
+  kunden: Kunde[];
+  patienten: Patient[];
+  rechnungen: Rechnung[];
+}
+
 function minutenBis(iso: string): number {
   return Math.round((new Date(iso).getTime() - Date.now()) / 60000);
 }
@@ -340,13 +350,13 @@ function tageBis(iso: string): number {
  * Time-relative → call on the client only (avoids SSR mismatch),
  * exactly like the Alert-Center pattern.
  */
-export function generateEntwuerfe(): KommEntwurf[] {
+export function generateEntwuerfe(quellen: EntwurfQuellen): KommEntwurf[] {
+  const { auftraege, fahrer: fahrerListe, fahrzeuge, kunden, patienten, rechnungen } = quellen;
   const drafts: KommEntwurf[] = [];
 
   // 1) Late / imminent patient pickup → SMS draft to the patient
-  const baldFaellig = INITIAL_AUFTRAEGE.filter(
-    (a) => (a.status === "neu" || a.status === "disponiert") && minutenBis(a.termin) <= 90,
-  )
+  const baldFaellig = auftraege
+    .filter((a) => (a.status === "neu" || a.status === "disponiert") && minutenBis(a.termin) <= 90)
     .sort((a, b) => minutenBis(a.termin) - minutenBis(b.termin))
     .slice(0, 2);
   for (const a of baldFaellig) {
@@ -383,9 +393,8 @@ export function generateEntwuerfe(): KommEntwurf[] {
   }
 
   // 2) Vehicle maintenance overdue / due soon → E-Mail draft to the workshop
-  const wartungFaellig = INITIAL_FAHRZEUGE.filter(
-    (v) => v.status === "werkstatt" || tageBis(v.naechsteWartung) <= 10,
-  )
+  const wartungFaellig = fahrzeuge
+    .filter((v) => v.status === "werkstatt" || tageBis(v.naechsteWartung) <= 10)
     .sort((a, b) => tageBis(a.naechsteWartung) - tageBis(b.naechsteWartung))
     .slice(0, 2);
   for (const v of wartungFaellig) {
@@ -422,10 +431,20 @@ export function generateEntwuerfe(): KommEntwurf[] {
   }
 
   // 3) Overdue invoices → customer reminder draft (E-Mail)
-  const offeneKunden = KUNDEN.filter((k) => k.offeneRechnungen > 0)
-    .sort((a, b) => b.offeneRechnungen - a.offeneRechnungen)
+  const offeneKunden = kunden
+    .map((kunde) => ({
+      kunde,
+      offene: rechnungen.filter(
+        (r) =>
+          (r.kundeId === kunde.id || r.kunde === kunde.name) &&
+          r.typ === "rechnung" &&
+          !["bezahlt", "storniert", "entwurf"].includes(r.status),
+      ).length,
+    }))
+    .filter((x) => x.offene > 0)
+    .sort((a, b) => b.offene - a.offene)
     .slice(0, 2);
-  for (const k of offeneKunden) {
+  for (const { kunde: k, offene } of offeneKunden) {
     drafts.push({
       id: `entwurf-rechnung-${k.id}`,
       kategorie: "finanzen",
@@ -435,17 +454,17 @@ export function generateEntwuerfe(): KommEntwurf[] {
       betreff: `Freundliche Zahlungserinnerung – offene Rechnungen`,
       nachricht:
         `Sehr geehrte/r ${k.ansprechpartner || "Damen und Herren"},\n\n` +
-        `wir möchten Sie freundlich an ${k.offeneRechnungen} offene Rechnung(en) erinnern. Sollte die Zahlung bereits erfolgt sein, betrachten Sie diese Nachricht bitte als gegenstandslos.\n` +
+        `wir möchten Sie freundlich an ${offene} offene Rechnung(en) erinnern. Sollte die Zahlung bereits erfolgt sein, betrachten Sie diese Nachricht bitte als gegenstandslos.\n` +
         `Für Rückfragen stehen wir Ihnen jederzeit gern zur Verfügung.\n\n` +
         `Mit freundlichen Grüßen\n${FIRMA}`,
       erklaerung:
         "Höflicher Mahnungs-Entwurf, der die Liquidität verbessert, ohne die Kundenbeziehung zu belasten.",
-      grund: `${k.name} hat ${k.offeneRechnungen} offene Rechnung(en).`,
+      grund: `${k.name} hat ${offene} offene Rechnung(en).`,
       quelldaten: [
         { label: "Kunde", wert: k.name },
         { label: "Typ", wert: k.typ },
         { label: "Ansprechpartner", wert: k.ansprechpartner || "—" },
-        { label: "Offene Rechnungen", wert: String(k.offeneRechnungen) },
+        { label: "Offene Rechnungen", wert: String(offene) },
       ],
       bezug: { typ: "kunde", id: k.id, label: k.name, to: "/rechnungen" },
       prioritaet: "normal",
@@ -454,9 +473,9 @@ export function generateEntwuerfe(): KommEntwurf[] {
   }
 
   // 4) Driver delay → customer notification draft (running transports)
-  const laufend = INITIAL_AUFTRAEGE.filter((a) => a.status === "unterwegs").slice(0, 1);
+  const laufend = auftraege.filter((a) => a.status === "unterwegs").slice(0, 1);
   for (const a of laufend) {
-    const fahrer = INITIAL_FAHRER.find((f) => f.name === a.fahrer);
+    const fahrer = fahrerListe.find((f) => f.name === a.fahrer);
     drafts.push({
       id: `entwurf-kunde-${a.id}`,
       kategorie: "kunden",
@@ -488,7 +507,7 @@ export function generateEntwuerfe(): KommEntwurf[] {
   }
 
   // 5) Recurring transport changed → patient confirmation draft (WhatsApp)
-  const dialyse = PATIENTEN.filter((p) => /dialyse|3×|regelm/i.test(p.hinweis)).slice(0, 1);
+  const dialyse = patienten.filter((p) => /dialyse|3×|regelm/i.test(p.hinweis)).slice(0, 1);
   for (const p of dialyse) {
     drafts.push({
       id: `entwurf-serie-${p.id}`,

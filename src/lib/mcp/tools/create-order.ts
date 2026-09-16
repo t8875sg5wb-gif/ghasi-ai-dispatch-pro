@@ -37,10 +37,8 @@ export default defineTool({
     prioritaet: z.enum(["niedrig", "normal", "hoch", "dringend"]).optional(),
     termin: z
       .string()
-      .regex(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/,
-        "Termin muss ISO-Datum/Zeit sein (YYYY-MM-DDTHH:mm).",
-      )
+      .datetime({ offset: true })
+      .describe("Echter ISO-Zeitpunkt mit Zeitzone, z. B. 2026-09-16T08:00:00.000Z.")
       .optional(),
     abholort: z.string().trim().max(300).optional(),
     zielort: z.string().trim().max(300).optional(),

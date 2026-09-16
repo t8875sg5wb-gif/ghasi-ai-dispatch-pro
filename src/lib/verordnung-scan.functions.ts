@@ -1,10 +1,11 @@
-// Server function: AI Verordnungs-Scan (Muster 4 – Verordnung einer
+﻿// Server function: AI Verordnungs-Scan (Muster 4 – Verordnung einer
 // Krankenbeförderung). Takes a photo/scan (base64) and extracts the
 // billing-relevant fields via the Lovable AI gateway. Read-only extraction –
 // nothing is persisted here; the UI confirms every field before saving.
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { externalHealthAiAllowed } from "@/lib/external-health-ai";
 import {
   emptyScan,
   type ScanResult,
@@ -15,6 +16,7 @@ import {
 interface ScanInput {
   imageBase64: string; // raw base64 (no data: prefix) or full data URL
   mimeType: string;
+  externalProcessingApproved?: boolean;
 }
 
 const SYSTEM = `Du bist ein Extraktions-Assistent für deutsche „Verordnung einer Krankenbeförderung" (Muster 4).
@@ -40,6 +42,22 @@ export const scanVerordnung = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data }): Promise<ScanResult> => {
+    // Muster 4 kann Gesundheits- und Identitätsdaten enthalten. Externe Bildanalyse
+    // ist deshalb standardmäßig gesperrt und benötigt zwei unabhängige Freigaben.
+    if (
+      !externalHealthAiAllowed(
+        process.env.GHASI_ALLOW_EXTERNAL_HEALTH_AI,
+        data.externalProcessingApproved,
+      )
+    ) {
+      return {
+        ok: false,
+        data: emptyScan(),
+        fehler:
+          "Externe KI-Verarbeitung von Verordnungen ist aus Datenschutzgründen gesperrt. Bitte manuell erfassen oder die ausdrücklich freigegebene Verarbeitungsstrecke verwenden.",
+      };
+    }
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return { ok: false, data: emptyScan(), fehler: "KI nicht verfügbar (Konfiguration fehlt)." };

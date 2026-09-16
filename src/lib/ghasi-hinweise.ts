@@ -2,9 +2,10 @@
 // und meldet von sich aus, worauf der Unternehmer achten sollte.
 import { INITIAL_FAHRER, type Fahrer } from "@/lib/fahrer";
 import { INITIAL_FAHRZEUGE, type Fahrzeug } from "@/lib/fahrzeuge";
-import { INITIAL_AUFTRAEGE } from "@/lib/auftraege";
+import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
 import {
   INITIAL_RECHNUNGEN,
+  computeTagesFinanzKpis,
   istUeberfaellig,
   tageUeberfaellig,
   type Rechnung,
@@ -63,7 +64,9 @@ export function fahrzeugHinweise(fahrzeuge: readonly Fahrzeug[]): Hinweis[] {
         text:
           wartung === null
             ? `Nächste Wartung: ${FEHLT}.`
-            : `Die nächste Wartung ist in ${wartung} Tag(en) (${v.naechsteWartung}) geplant.`,
+            : wartung < 0
+              ? `Die Wartung ist seit ${-wartung} Tag(en) überfällig (geplant: ${v.naechsteWartung}).`
+              : `Die nächste Wartung ist in ${wartung} Tag(en) (${v.naechsteWartung}) geplant.`,
       });
     }
     const tuev = tageBis(v.tuevBis);
@@ -77,7 +80,9 @@ export function fahrzeugHinweise(fahrzeuge: readonly Fahrzeug[]): Hinweis[] {
         text:
           tuev === null
             ? `TÜV-Datum: ${FEHLT}. Fahrzeug gilt bis zur Klärung als nicht nachgewiesen.`
-            : `Der TÜV ist nur noch ${tuev} Tag(e) gültig (${v.tuevBis}).`,
+            : tuev < 0
+              ? `Der TÜV ist seit ${-tuev} Tag(en) abgelaufen (${v.tuevBis}).`
+              : `Der TÜV ist nur noch ${tuev} Tag(e) gültig (${v.tuevBis}).`,
       });
     }
     const vers = tageBis(v.versicherungBis);
@@ -91,7 +96,9 @@ export function fahrzeugHinweise(fahrzeuge: readonly Fahrzeug[]): Hinweis[] {
         text:
           vers === null
             ? `Versicherungsende: ${FEHLT}.`
-            : `Die Versicherung endet in ${vers} Tag(en) (${v.versicherungBis}).`,
+            : vers < 0
+              ? `Die Versicherung ist seit ${-vers} Tag(en) abgelaufen (${v.versicherungBis}).`
+              : `Die Versicherung endet in ${vers} Tag(en) (${v.versicherungBis}).`,
       });
     }
     const leasing = tageBis(v.leasingEnde);
@@ -201,16 +208,27 @@ export function rechnungHinweise(rechnungen: readonly Rechnung[]): Hinweis[] {
   return h;
 }
 
-export function generateHinweise(): Hinweis[] {
+export interface HinweiseQuellen {
+  fahrzeuge?: readonly Fahrzeug[];
+  fahrer?: readonly Fahrer[];
+  rechnungen?: readonly Rechnung[];
+  auftraege?: readonly Auftrag[];
+}
+
+export function generateHinweise(quellen: HinweiseQuellen = {}): Hinweis[] {
+  const fahrzeuge = quellen.fahrzeuge ?? INITIAL_FAHRZEUGE;
+  const fahrer = quellen.fahrer ?? INITIAL_FAHRER;
+  const rechnungen = quellen.rechnungen ?? INITIAL_RECHNUNGEN;
+  const auftraege = quellen.auftraege ?? INITIAL_AUFTRAEGE;
   const h: Hinweis[] = [
-    ...fahrzeugHinweise(INITIAL_FAHRZEUGE),
-    ...fahrerHinweise(INITIAL_FAHRER),
-    ...rechnungHinweise(INITIAL_RECHNUNGEN),
+    ...fahrzeugHinweise(fahrzeuge),
+    ...fahrerHinweise(fahrer),
+    ...rechnungHinweise(rechnungen),
   ];
 
   // Aufträge: nicht zugewiesene und verspätete Transporte
   const jetzt = Date.now();
-  for (const a of INITIAL_AUFTRAEGE) {
+  for (const a of auftraege) {
     const minBis = (new Date(a.termin).getTime() - jetzt) / 60000;
     const aktiv = a.status === "neu" || a.status === "disponiert" || a.status === "unterwegs";
     const unzugewiesen = aktiv && (!a.fahrer || !a.fahrzeug);
@@ -247,8 +265,8 @@ export function generateHinweise(): Hinweis[] {
     }
   }
 
-  // Aggregat: Leerkilometer & Gewinn
-  const gewinnHeute = INITIAL_FAHRER.reduce((s, f) => s + f.gewinnHeute, 0);
+  // Aggregat: Gewinn aus der zentralen Auftrags-/Rechnungsbasis, nie aus Fahrer-Legacyfeldern.
+  const gewinnHeute = computeTagesFinanzKpis(auftraege, rechnungen).gewinn;
   if (gewinnHeute >= 2000) {
     h.push({
       id: "gewinn-tag",

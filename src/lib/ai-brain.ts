@@ -25,9 +25,19 @@ import {
   reparaturkostenGesamt,
 } from "@/lib/fahrzeuge";
 import { INITIAL_AUFTRAEGE, type Auftrag } from "@/lib/auftraege";
-import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
-import { computeFinanzKpis } from "@/lib/finance";
-import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
+import { PATIENTEN, type Patient } from "@/lib/stammdaten";
+import {
+  computeFahrzeugFinanzwerte,
+  computeFinanzKpis,
+  computeTagesFinanzKpis,
+  type Rechnung,
+} from "@/lib/finance";
+import {
+  generateHinweise,
+  type Hinweis,
+  type HinweisStufe,
+  type HinweiseQuellen,
+} from "@/lib/ghasi-hinweise";
 
 export const EUR = (n: number) =>
   new Intl.NumberFormat("de-DE", {
@@ -45,6 +55,14 @@ const round = (n: number, d = 0) => {
  * Executive KPIs
  * ------------------------------------------------------------------ */
 
+export interface BrainKpiDaten {
+  fahrer?: readonly Fahrer[];
+  fahrzeuge?: readonly Fahrzeug[];
+  auftraege?: readonly Auftrag[];
+  rechnungen?: Rechnung[];
+  jetzt?: Date;
+}
+
 export interface BrainKpis {
   aktiveFahrzeuge: number;
   freieFahrzeuge: number;
@@ -57,7 +75,9 @@ export interface BrainKpis {
   umsatzMonat: number;
   gewinnHeute: number;
   gewinnMonat: number;
+  margeHeuteProzent: number | null;
   margeProzent: number;
+  tagesumsatzBasis: "keine" | "rechnung" | "schaetzung" | "gemischt";
   offeneRechnungen: number;
   flottenauslastung: number; // %
   fahrerauslastung: number; // %
@@ -68,10 +88,10 @@ export interface BrainKpis {
   durchschnittBewertung: number; // 0–5
 }
 
-export function computeKpis(): BrainKpis {
-  const fahrer = INITIAL_FAHRER;
-  const fzg = INITIAL_FAHRZEUGE;
-  const auftraege = INITIAL_AUFTRAEGE;
+export function computeKpis(daten: BrainKpiDaten = {}): BrainKpis {
+  const fahrer = daten.fahrer ?? INITIAL_FAHRER;
+  const fzg = daten.fahrzeuge ?? INITIAL_FAHRZEUGE;
+  const auftraege = daten.auftraege ?? INITIAL_AUFTRAEGE;
 
   const aktiveFahrzeuge = fzg.filter((v) => v.status === "unterwegs").length;
   const freieFahrzeuge = fzg.filter((v) => v.status === "frei").length;
@@ -84,16 +104,23 @@ export function computeKpis(): BrainKpis {
   ).length;
   const patientenUnterwegs = laufendeTransporte;
 
-  const umsatzHeute = fahrer.reduce((s, f) => s + f.umsatzHeute, 0);
-  const gewinnHeute = fahrer.reduce((s, f) => s + f.gewinnHeute, 0);
+  const tagesFin = computeTagesFinanzKpis(auftraege, daten.rechnungen ?? [], daten.jetzt);
+  const umsatzHeute = tagesFin.umsatz;
+  const gewinnHeute = tagesFin.gewinn;
   // Company-wide monthly figures come exclusively from the finance layer
   // (invoice-derived) so Buchhaltung, CEO-Cockpit und Health Score identisch sind.
-  const fin = computeFinanzKpis();
+  const fin = computeFinanzKpis(daten.rechnungen, {
+    fahrer,
+    fahrzeuge: fzg,
+    auftraege,
+    rechnungen: daten.rechnungen ?? [],
+    jetzt: daten.jetzt,
+  });
   const umsatzMonat = fin.umsatzMonat;
   const gewinnMonat = fin.gewinnMonat;
   const margeProzent = fin.margeProzent;
 
-  const offeneRechnungen = KUNDEN.reduce((s, k) => s + k.offeneRechnungen, 0);
+  const offeneRechnungen = fin.anzahlOffen;
 
   const einsetzbareFzg = fzg.filter(
     (v) => v.status !== "werkstatt" && v.status !== "nicht_verfuegbar",
@@ -113,13 +140,10 @@ export function computeKpis(): BrainKpis {
     return w.tuev || w.versicherung || w.wartung;
   }).length;
 
-  const durchschnittPuenktlichkeit = round(
-    fahrer.reduce((s, f) => s + f.puenktlichkeit, 0) / fahrer.length,
-  );
-  const durchschnittBewertung = round(
-    fahrer.reduce((s, f) => s + f.bewertung, 0) / fahrer.length,
-    1,
-  );
+  const durchschnittPuenktlichkeit =
+    fahrer.length > 0 ? round(fahrer.reduce((s, f) => s + f.puenktlichkeit, 0) / fahrer.length) : 0;
+  const durchschnittBewertung =
+    fahrer.length > 0 ? round(fahrer.reduce((s, f) => s + f.bewertung, 0) / fahrer.length, 1) : 0;
 
   // AI efficiency: blend of utilisation balance, punctuality and margin.
   const aiEffizienz = round(
@@ -140,7 +164,9 @@ export function computeKpis(): BrainKpis {
     umsatzMonat,
     gewinnHeute,
     gewinnMonat,
+    margeHeuteProzent: tagesFin.margeProzent,
     margeProzent,
+    tagesumsatzBasis: tagesFin.basis,
     offeneRechnungen,
     flottenauslastung,
     fahrerauslastung,
@@ -249,8 +275,19 @@ const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 // Deterministic weekday demand profile for NEMT (low weekend, dialysis-driven weekdays).
 const TAGESPROFIL = [1.06, 1.12, 1.1, 1.08, 1.0, 0.62, 0.48];
 
-export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
-  const basisUmsatz = kpis.umsatzHeute || 8000;
+export function computePrognosen(
+  kpis: BrainKpis = computeKpis(),
+  daten: Pick<BrainKpiDaten, "fahrer" | "fahrzeuge"> = {},
+): Prognosen {
+  const fahrer = daten.fahrer ?? INITIAL_FAHRER;
+  const fahrzeuge = daten.fahrzeuge ?? INITIAL_FAHRZEUGE;
+  // `umsatzHeute` ist ein echter, immer definierter Wert (auch 0 an einem
+  // Tag ohne bisherige Umsätze) – `|| 8000` würde ein frei erfundenes
+  // Tagesumsatz-Fallback einsetzen, sobald heute noch nichts verbucht ist
+  // (z. B. morgens), statt einer aus echten Monatsdaten abgeleiteten
+  // Schätzung. Basis daher: echter Tagesumsatz, sonst echter Monatsumsatz
+  // auf 22 Arbeitstage umgelegt – nie ein hartkodierter Platzhalter.
+  const basisUmsatz = kpis.umsatzHeute > 0 ? kpis.umsatzHeute : kpis.umsatzMonat / 22;
 
   const umsatzWoche: ForecastPoint[] = WOCHENTAGE.map((label, i) => ({
     label,
@@ -259,7 +296,10 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
   }));
   const umsatzWocheGesamt = umsatzWoche.reduce((s, p) => s + p.prognose, 0);
 
-  const monatsBasis = kpis.umsatzMonat || basisUmsatz * 22;
+  // `umsatzMonat` ist ebenfalls immer ein echter, definierter Wert (auch 0
+  // bei einem brandneuen Unternehmen ohne bisherige Rechnungen) – kein
+  // Fallback auf einen hochgerechneten Platzhalter nötig oder korrekt.
+  const monatsBasis = kpis.umsatzMonat;
   const umsatzMonat: ForecastPoint[] = ["KW 1", "KW 2", "KW 3", "KW 4"].map((label, i) => ({
     label,
     ist: i < 2 ? round((monatsBasis / 4) * (1 + i * 0.04)) : undefined,
@@ -272,9 +312,7 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
   }));
 
   // Drivers needed vs. on duty.
-  const grundFahrer = INITIAL_FAHRER.filter(
-    (f) => f.status !== "urlaub" && f.status !== "krank",
-  ).length;
+  const grundFahrer = fahrer.filter((f) => f.status !== "urlaub" && f.status !== "krank").length;
   const fahrerbedarf: ForecastPoint[] = WOCHENTAGE.map((label, i) => ({
     label,
     ist: grundFahrer,
@@ -296,7 +334,7 @@ export function computePrognosen(kpis: BrainKpis = computeKpis()): Prognosen {
   }));
   const wartungenNaechste30Tage = wartungsbedarf.reduce((s, p) => s + p.prognose, 0);
 
-  const tankBasis = INITIAL_FAHRZEUGE.reduce(
+  const tankBasis = fahrzeuge.reduce(
     (s, v) => s + v.verbrauch * (v.kraftstoff === "Elektro" ? 0 : 1),
     0,
   );
@@ -355,69 +393,104 @@ export interface Insight {
   to: string;
 }
 
-export function computeInsights(): Insight[] {
-  const insights: Insight[] = [];
-  const kpis = computeKpis();
+export interface BrainInsightDaten extends BrainKpiDaten {
+  patienten?: readonly Patient[];
+}
 
-  // Underutilised vehicles: free + below-average monthly revenue.
-  const avgFzgUmsatz =
-    INITIAL_FAHRZEUGE.reduce((s, v) => s + v.monatsumsatz, 0) / INITIAL_FAHRZEUGE.length;
-  const unterausgelastet = INITIAL_FAHRZEUGE.filter(
-    (v) => v.status === "frei" && v.monatsumsatz < avgFzgUmsatz * 0.7,
+/**
+ * Client-Aufrufer ?bergeben die geladenen Live-Daten explizit. Server-Aufrufer
+ * d?rfen nur dann die Legacy-Spiegel verwenden, wenn sie diese vorher bewusst
+ * ?ber server-mirror.server.ts hydratisiert haben.
+ */
+export function computeInsights(daten: BrainInsightDaten = {}): Insight[] {
+  const insights: Insight[] = [];
+  const fahrzeuge = daten.fahrzeuge ?? INITIAL_FAHRZEUGE;
+  const fahrer = daten.fahrer ?? INITIAL_FAHRER;
+  const patienten = daten.patienten ?? PATIENTEN;
+  const kpis = computeKpis(daten);
+
+  // Underutilised vehicles: live monthly order/invoice performance, never legacy vehicle revenue fields.
+  const fahrzeugFinanz = new Map(
+    computeFahrzeugFinanzwerte(
+      fahrzeuge,
+      daten.auftraege ?? INITIAL_AUFTRAEGE,
+      daten.rechnungen ?? [],
+      daten.jetzt,
+    ).map((w) => [w.fahrzeugId, w.monat]),
   );
+  const monatsUmsaetze = fahrzeuge.map((v) => fahrzeugFinanz.get(v.id)?.umsatz ?? 0);
+  const avgFzgUmsatz =
+    monatsUmsaetze.length > 0
+      ? monatsUmsaetze.reduce((s, n) => s + n, 0) / monatsUmsaetze.length
+      : 0;
+  const unterausgelastet =
+    avgFzgUmsatz > 0
+      ? fahrzeuge.filter(
+          (v) =>
+            v.status === "frei" && (fahrzeugFinanz.get(v.id)?.umsatz ?? 0) < avgFzgUmsatz * 0.7,
+        )
+      : [];
   for (const v of unterausgelastet.slice(0, 2)) {
+    const monat = fahrzeugFinanz.get(v.id);
+    const umsatz = monat?.umsatz ?? 0;
+    const basisHinweis =
+      monat?.basis === "schaetzung"
+        ? " (Schätzung)"
+        : monat?.basis === "gemischt"
+          ? " (teils Rechnung, teils Schätzung)"
+          : "";
     insights.push({
       id: `flotte-${v.id}`,
       kategorie: "flotte",
       titel: `${v.kennzeichen} ist unterausgelastet`,
-      erklaerung: `Monatsumsatz ${EUR(v.monatsumsatz)} liegt ${round((1 - v.monatsumsatz / avgFzgUmsatz) * 100)} % unter dem Flottendurchschnitt von ${EUR(avgFzgUmsatz)}.`,
+      erklaerung: `Monatsumsatz${basisHinweis} ${EUR(umsatz)} liegt ${round((1 - umsatz / avgFzgUmsatz) * 100)} % unter dem Flottendurchschnitt von ${EUR(avgFzgUmsatz)}.`,
       empfehlung:
         "Mehr Sitzend-/Dialysefahrten auf dieses Fahrzeug verteilen oder Standzeit reduzieren.",
       wirkung: "mittel",
-      potenzial: `+${EUR(round(avgFzgUmsatz - v.monatsumsatz))}/Monat möglich`,
+      potenzial: `+${EUR(round(avgFzgUmsatz - umsatz))}/Monat möglich`,
       to: "/fahrzeuge",
     });
   }
 
   // Overloaded drivers: high overtime.
-  const ueberlastet = [...INITIAL_FAHRER]
+  const ueberlastet = [...fahrer]
     .filter((f) => f.ueberstunden >= 25)
     .sort((a, b) => b.ueberstunden - a.ueberstunden);
   for (const f of ueberlastet.slice(0, 2)) {
     insights.push({
       id: `fahrer-${f.id}`,
       kategorie: "fahrer",
-      titel: `${f.name} ist überlastet`,
-      erklaerung: `${f.ueberstunden} Überstunden im Monat – Risiko für Ausfälle, Unzufriedenheit und sinkende Pünktlichkeit (${f.puenktlichkeit} %).`,
-      empfehlung: "Touren auf verfügbare Fahrer umverteilen und Ausgleichsschicht einplanen.",
+      titel: `${f.name} ist ?berlastet`,
+      erklaerung: `${f.ueberstunden} ?berstunden im Monat ? Risiko f?r Ausf?lle, Unzufriedenheit und sinkende P?nktlichkeit (${f.puenktlichkeit} %).`,
+      empfehlung: "Touren auf verf?gbare Fahrer umverteilen und Ausgleichsschicht einplanen.",
       wirkung: "hoch",
       to: "/fahrer",
     });
   }
 
   // Empty mileage optimisation.
-  const leerKm = round(INITIAL_FAHRER.reduce((s, f) => s + f.kmHeute, 0) * 0.18);
+  const leerKm = round(fahrer.reduce((s, f) => s + f.kmHeute, 0) * 0.18);
   if (leerKm > 50) {
     insights.push({
       id: "leerkilometer",
       kategorie: "kosten",
       titel: "Leerkilometer senken",
-      erklaerung: `Geschätzt ${leerKm} km Leerfahrt heute. Kompatible Touren lassen sich durch Sammelfahrten bündeln.`,
-      empfehlung: "Dispatch-Center: kompatible Dialyse-Rückfahrten zusammenlegen.",
+      erklaerung: `Gesch?tzt ${leerKm} km Leerfahrt heute. Kompatible Touren lassen sich durch Sammelfahrten b?ndeln.`,
+      empfehlung: "Dispatch-Center: kompatible Dialyse-R?ckfahrten zusammenlegen.",
       wirkung: "hoch",
       potenzial: `+${EUR(round(leerKm * 0.9))}/Tag Ersparnis`,
       to: "/tourenplanung",
     });
   }
 
-  // Open invoices → cash flow.
+  // Open invoices ? cash flow.
   if (kpis.offeneRechnungen > 0) {
     insights.push({
       id: "offene-rechnungen",
       kategorie: "gewinn",
       titel: `${kpis.offeneRechnungen} offene Rechnungen`,
-      erklaerung: "Offene Posten binden Liquidität. Frühzeitige Mahnungen verbessern den Cashflow.",
-      empfehlung: "GHASI AI Mahnungs-Entwürfe vorbereiten lassen (Versand nur nach Freigabe).",
+      erklaerung: "Offene Posten binden Liquidit?t. Fr?hzeitige Mahnungen verbessern den Cashflow.",
+      empfehlung: "GHASI AI Mahnungs-Entw?rfe vorbereiten lassen (Versand nur nach Freigabe).",
       wirkung: "mittel",
       to: "/rechnungen",
     });
@@ -428,8 +501,8 @@ export function computeInsights(): Insight[] {
     insights.push({
       id: "auslastung",
       kategorie: "auslastung",
-      titel: "Freie Kapazität nutzen",
-      erklaerung: `Flottenauslastung ${kpis.flottenauslastung} % bei ${kpis.offeneTransporte} offenen Transporten – freie Fahrzeuge können sofort disponiert werden.`,
+      titel: "Freie Kapazit?t nutzen",
+      erklaerung: `Flottenauslastung ${kpis.flottenauslastung} % bei ${kpis.offeneTransporte} offenen Transporten ? freie Fahrzeuge k?nnen sofort disponiert werden.`,
       empfehlung: "Auto-Dispatch im Dispatch-Center starten.",
       wirkung: "hoch",
       to: "/tourenplanung",
@@ -437,14 +510,14 @@ export function computeInsights(): Insight[] {
   }
 
   // Recurring patients trend.
-  const wiederkehrend = PATIENTEN.filter((p) => /dialyse|3×|regelm/i.test(p.hinweis)).length;
+  const wiederkehrend = patienten.filter((p) => /dialyse|3?|regelm/i.test(p.hinweis)).length;
   if (wiederkehrend > 0) {
     insights.push({
       id: "wiederkehrend",
       kategorie: "trend",
       titel: `${wiederkehrend} wiederkehrende Patienten`,
       erklaerung:
-        "Regelmäßige Dialyse-/Therapiefahrten lassen sich als Serientermine fest einplanen und sichern planbaren Umsatz.",
+        "Regelm??ige Dialyse-/Therapiefahrten lassen sich als Serientermine fest einplanen und sichern planbaren Umsatz.",
       empfehlung: "Serientouren anlegen und feste Fahrer/Fahrzeuge zuordnen.",
       wirkung: "mittel",
       to: "/dialysezentren",
@@ -452,7 +525,7 @@ export function computeInsights(): Insight[] {
   }
 
   // Maintenance cost watch.
-  const teuersteReparatur = [...INITIAL_FAHRZEUGE].sort(
+  const teuersteReparatur = [...fahrzeuge].sort(
     (a, b) => reparaturkostenGesamt(b) - reparaturkostenGesamt(a),
   )[0];
   if (teuersteReparatur && reparaturkostenGesamt(teuersteReparatur) > 800) {
@@ -460,7 +533,7 @@ export function computeInsights(): Insight[] {
       id: `wartungskosten-${teuersteReparatur.id}`,
       kategorie: "kosten",
       titel: `Hohe Reparaturkosten: ${teuersteReparatur.kennzeichen}`,
-      erklaerung: `Reparaturen summieren sich auf ${EUR(reparaturkostenGesamt(teuersteReparatur))}. Bei weiter steigenden Kosten Ersatz prüfen.`,
+      erklaerung: `Reparaturen summieren sich auf ${EUR(reparaturkostenGesamt(teuersteReparatur))}. Bei weiter steigenden Kosten Ersatz pr?fen.`,
       empfehlung: "Wirtschaftlichkeit Reparatur vs. Leasingwechsel bewerten.",
       wirkung: "mittel",
       to: "/wartung",
@@ -515,16 +588,16 @@ export const ALARM_PRIO_META: Record<
 };
 
 /** Reuses the rule engine and re-categorises into 4 priority levels. Client-only (time-relative). */
-export function computeAlarme(): Alarm[] {
-  return generateHinweise().map((h) => ({ ...h, prioritaet: STUFE_PRIO[h.stufe] }));
+export function computeAlarme(quellen: HinweiseQuellen = {}): Alarm[] {
+  return generateHinweise(quellen).map((h) => ({ ...h, prioritaet: STUFE_PRIO[h.stufe] }));
 }
 
 /* ------------------------------------------------------------------ *
  * Compact text snapshot for the AI (server + client safe)
  * ------------------------------------------------------------------ */
 
-export function buildBrainSnapshot(): string {
-  const k = computeKpis();
+export function buildBrainSnapshot(daten: BrainKpiDaten = {}): string {
+  const k = computeKpis(daten);
   const h = computeBusinessHealth(k);
   const lines: string[] = [];
   lines.push("# GHASI AI – Live Unternehmenskontext");

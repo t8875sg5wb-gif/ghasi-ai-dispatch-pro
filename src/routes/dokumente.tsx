@@ -129,6 +129,7 @@ function DokumentePage() {
   }, [dokumente]);
 
   const onDelete = (d: DokumentRecord) => {
+    if (!window.confirm(`Dokument „${d.name}“ wirklich dauerhaft löschen?`)) return;
     deleteMut.mutate(d.id, {
       onSuccess: () => {
         toast.success(`„${d.name}" gelöscht`);

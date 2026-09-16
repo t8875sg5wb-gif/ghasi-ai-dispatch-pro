@@ -69,6 +69,7 @@ import { geocode } from "@/lib/fleet-live";
 import { useOrders, useUpdateOrder } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useVehicles } from "@/lib/vehicles-store";
+import { useInvoices } from "@/lib/invoices-store";
 import { UnassignedAlerts } from "@/components/auftraege/unassigned-alerts";
 import { Loader2 } from "lucide-react";
 
@@ -107,6 +108,7 @@ function DispatchCenter() {
   // Live fleet from the persisted stores so KPIs/conflicts recompute on fresh data.
   const { data: fahrer = [] } = useDrivers();
   const { data: fahrzeuge = [] } = useVehicles();
+  const { data: rechnungen = [] } = useInvoices();
   const [mounted, setMounted] = useState(false);
   const [aktiv, setAktiv] = useState<DispatchTransport | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -123,8 +125,8 @@ function DispatchCenter() {
   }, [orders]);
 
   const kpis = useMemo(
-    () => berechneKpis(transporte, fahrer, fahrzeuge),
-    [transporte, fahrer, fahrzeuge],
+    () => berechneKpis(transporte, fahrer, fahrzeuge, rechnungen),
+    [transporte, fahrer, fahrzeuge, rechnungen],
   );
   const konflikte = useMemo(
     () => (mounted ? erkenneKonflikte(transporte, fahrer, fahrzeuge) : []),
@@ -345,7 +347,7 @@ function DispatchCenter() {
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Kpi label="Aktiv" value={String(kpis.aktiv)} icon={Activity} tone="primary" />
-        <Kpi label="Wartend" value={String(kpis.wartend)} icon={Clock} tone="info" />
+        <Kpi label="Offen" value={String(kpis.wartend)} icon={Clock} tone="info" />
         <Kpi
           label="Verspätet"
           value={String(kpis.verspaetet)}
@@ -358,7 +360,18 @@ function DispatchCenter() {
           icon={CheckCircle2}
           tone="success"
         />
-        <Kpi label="Umsatz heute" value={formatEUR(kpis.umsatzHeute)} icon={Euro} tone="success" />
+        <Kpi
+          label={
+            kpis.umsatzHeuteBasis === "schaetzung"
+              ? "Umsatz heute (Schätzung)"
+              : kpis.umsatzHeuteBasis === "gemischt"
+                ? "Umsatz heute (gemischt)"
+                : "Umsatz heute"
+          }
+          value={formatEUR(kpis.umsatzHeute)}
+          icon={Euro}
+          tone="success"
+        />
         <Kpi label="Effizienz" value={`${kpis.effizienz}%`} icon={Gauge} tone="accent" />
       </div>
 

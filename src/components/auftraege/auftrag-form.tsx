@@ -25,6 +25,7 @@ import {
   KEIN_VERTRAG_HINWEIS,
 } from "@/lib/contract-pricing";
 import { EUR2 } from "@/lib/finance";
+import { isoToLocalInput, localInputToIso } from "@/lib/local-datetime";
 import {
   type AdresseStruktur,
   parseAdresse,
@@ -73,7 +74,7 @@ function emptyValues(): AuftragFormValues {
     zielort: "",
     pickupEinrichtungId: null,
     destinationEinrichtungId: null,
-    termin: new Date().toISOString().slice(0, 16),
+    termin: isoToLocalInput(new Date().toISOString()),
     fahrer: null,
     fahrerId: null,
     fahrzeug: null,
@@ -145,11 +146,21 @@ export function AuftragForm({
   onCancel,
   submitLabel,
 }: AuftragFormProps) {
-  const [values, setValues] = useState<AuftragFormValues>(emptyValues);
+  const [values, setValues] = useState<AuftragFormValues>(() => {
+    if (initial) {
+      const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
+      return { ...rest, termin: isoToLocalInput(rest.termin) };
+    }
+    return { ...emptyValues(), ...prefill };
+  });
   const fahrerOpt = useDriverIdOptions();
   const fahrzeugOpt = useVehicleIdOptions();
-  const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(leereAdresse);
-  const [zielAdr, setZielAdr] = useState<AdresseStruktur>(leereAdresse);
+  const [abholAdr, setAbholAdr] = useState<AdresseStruktur>(() =>
+    initial ? (initial.pickup ?? parseAdresse(initial.abholort)) : leereAdresse(),
+  );
+  const [zielAdr, setZielAdr] = useState<AdresseStruktur>(() =>
+    initial ? (initial.destination ?? parseAdresse(initial.zielort)) : leereAdresse(),
+  );
 
   const { data: patienten = [] } = usePatients();
   const { data: kassen = [] } = useInsurers();
@@ -194,7 +205,7 @@ export function AuftragForm({
   useEffect(() => {
     if (initial) {
       const { id: _id, nummer: _nummer, status: _status, ...rest } = initial;
-      setValues({ ...rest, termin: rest.termin.slice(0, 16) });
+      setValues({ ...rest, termin: isoToLocalInput(rest.termin) });
       setAbholAdr(initial.pickup ?? parseAdresse(initial.abholort));
       setZielAdr(initial.destination ?? parseAdresse(initial.zielort));
     } else {
@@ -225,6 +236,7 @@ export function AuftragForm({
     }
     onSubmit({
       ...values,
+      termin: localInputToIso(values.termin),
       pickup: abholAdr,
       destination: zielAdr,
       abholort: "",
@@ -315,7 +327,7 @@ export function AuftragForm({
             onValueChange={(v) => set("transportart", v as Transportart)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue>{values.transportart}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {TRANSPORTARTEN.map((t) => (
@@ -333,7 +345,9 @@ export function AuftragForm({
             onValueChange={(v) => set("prioritaet", v as AuftragPrioritaet)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue>
+                {PRIORITAET_META[values.prioritaet]?.label ?? values.prioritaet}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {PRIORITAETEN.map((p) => (

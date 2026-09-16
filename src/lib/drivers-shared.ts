@@ -31,7 +31,6 @@ export interface DriverWrite {
   kmHeute: number;
   umsatzHeute: number;
   gewinnHeute: number;
-  pScheinGueltigBis?: string | null;
   fuehrungszeugnisDatum?: string | null;
   svAusweisVorhanden?: boolean;
   steuerId?: string;
@@ -93,6 +92,8 @@ function asGps(value: unknown): { lat: number; lng: number } {
 }
 
 export function rowToFahrer(r: DriverRow): Fahrer {
+  const pSchein = asNachweis(r.p_schein);
+  const pScheinGueltigBis = pSchein.gueltigBis || r.p_schein_gueltig_bis || "";
   return {
     id: r.id,
     nummer: r.nummer,
@@ -102,7 +103,7 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     email: r.email,
     adresse: r.adresse,
     fuehrerschein: asNachweis(r.fuehrerschein),
-    pSchein: asNachweis(r.p_schein),
+    pSchein: { ...pSchein, gueltigBis: pScheinGueltigBis },
     ersteHilfe: asNachweis(r.erste_hilfe),
     vertragsart: r.vertragsart as Vertragsart,
     arbeitszeiten: r.arbeitszeiten,
@@ -121,7 +122,7 @@ export function rowToFahrer(r: DriverRow): Fahrer {
     kmHeute: Number(r.km_heute),
     umsatzHeute: Number(r.umsatz_heute),
     gewinnHeute: Number(r.gewinn_heute),
-    pScheinGueltigBis: r.p_schein_gueltig_bis ?? null,
+    pScheinGueltigBis: pScheinGueltigBis || null,
     fuehrungszeugnisDatum: r.fuehrungszeugnis_datum ?? null,
     svAusweisVorhanden: Boolean(r.sv_ausweis_vorhanden),
     steuerId: r.steuer_id ?? undefined,
@@ -145,6 +146,7 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("adresse", w.adresse);
   set("fuehrerschein", w.fuehrerschein);
   set("p_schein", w.pSchein);
+  if (w.pSchein !== undefined) set("p_schein_gueltig_bis", w.pSchein.gueltigBis || null);
   set("erste_hilfe", w.ersteHilfe);
   set("vertragsart", w.vertragsart);
   set("arbeitszeiten", w.arbeitszeiten);
@@ -163,7 +165,6 @@ export function writeToRow(w: Partial<DriverWrite>): Record<string, unknown> {
   set("km_heute", w.kmHeute);
   set("umsatz_heute", w.umsatzHeute);
   set("gewinn_heute", w.gewinnHeute);
-  set("p_schein_gueltig_bis", w.pScheinGueltigBis);
   set("fuehrungszeugnis_datum", w.fuehrungszeugnisDatum);
   set("sv_ausweis_vorhanden", w.svAusweisVorhanden);
   set("steuer_id", w.steuerId);

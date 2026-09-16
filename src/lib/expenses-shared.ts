@@ -2,6 +2,7 @@
 // Business rule (Schiene A, §4 Nr.17b): in VAT-exempt mode input VAT is NOT
 // recoverable (§15 Abs.2 UStG), so expenses are booked GROSS; the VAT part is
 // shown only as "nicht abziehbare Vorsteuer" information.
+import { idOderNull } from "@/lib/id-helpers";
 
 export const AUSGABE_KATEGORIEN = [
   "Kraftstoff",
@@ -56,8 +57,8 @@ export function rowToAusgabe(r: ExpenseRow): Ausgabe {
     lieferant: r.lieferant ?? "",
     betragBrutto: toNum(r.betrag_brutto),
     ustSatz: toNum(r.ust_satz),
-    fahrzeugId: r.fahrzeug_id ?? null,
-    fahrerId: r.fahrer_id ?? null,
+    fahrzeugId: idOderNull(r.fahrzeug_id),
+    fahrerId: idOderNull(r.fahrer_id),
     notiz: r.notiz ?? null,
     belegDokumentId: r.beleg_dokument_id ?? null,
     createdAt: r.created_at,

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { CheckSquare, CalendarClock, Calculator, Archive, FileText } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ import { useInvoices } from "@/lib/invoices-store";
 import { useExpenses } from "@/lib/expenses-store";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { EUR2 } from "@/lib/finance";
-import { computeEuer, verfuegbareJahre } from "@/lib/euer";
+import { computeEuer, euerDatenbasis, verfuegbareJahre } from "@/lib/euer";
 import {
   computeGewerbesteuer,
   computeEinkommensteuer,
@@ -25,6 +26,8 @@ import {
   STEUER_DISCLAIMER,
   GEWST_FREIBETRAG,
 } from "@/lib/steuer";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/jahresabschluss")({
   head: () => ({
@@ -49,23 +52,30 @@ const AUFBEWAHRUNG = [
 ];
 
 function JahresabschlussPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: invoices } = useInvoices();
   const { data: expenses } = useExpenses();
   const { data: company } = useCompanySettings();
 
-  const rechnungen = invoices ?? [];
-  const ausgaben = expenses ?? [];
+  const rechnungen = useMemo(() => invoices ?? [], [invoices]);
+  const ausgaben = useMemo(() => expenses ?? [], [expenses]);
 
   const jahre = useMemo(() => verfuegbareJahre(rechnungen, ausgaben), [rechnungen, ausgaben]);
   const [jahr, setJahr] = useState(() => new Date().getFullYear() - 1);
 
   const euer = useMemo(() => computeEuer(jahr, rechnungen, ausgaben), [jahr, rechnungen, ausgaben]);
-  const gewinn = euer.gewinn;
+  const datenbasis = useMemo(
+    () => euerDatenbasis(jahr, rechnungen, ausgaben),
+    [jahr, rechnungen, ausgaben],
+  );
+  const gewinn = datenbasis.vorhanden ? euer.gewinn : null;
 
-  const gewst = computeGewerbesteuer(gewinn, company.gewerbesteuerHebesatz);
-  // §35 EStG: Gewerbesteuer wird pauschal (3,8-fache des Messbetrags) auf die ESt angerechnet.
-  const est = computeEinkommensteuer(gewinn);
-  const soli = computeSoli(est);
+  const gewst =
+    gewinn === null ? null : computeGewerbesteuer(gewinn, company.gewerbesteuerHebesatz);
+  // § 35 EStG: Steuerermäßigung grundsätzlich bis zum Vierfachen des Messbetrags; weitere gesetzliche Höchstgrenzen beachten.
+  const est = gewinn === null ? null : computeEinkommensteuer(gewinn);
+  const soli = est === null ? null : computeSoli(est);
 
   const heuteJahr = new Date().getFullYear();
   const estFrist = `31.07.${jahr + 1}`;
@@ -75,23 +85,35 @@ function JahresabschlussPage() {
       titel: "Einkommensteuererklärung inkl. Anlage EÜR",
       frist: `${estFrist} (mit Steuerberater i. d. R. später)`,
       status: heuteJahr > jahr ? "faellig" : "vorbereitung",
-      schritte: [
-        "Öffnen Sie ELSTER → Formular „Anlage EÜR“ und übertragen Sie diese Werte:",
-        `Betriebseinnahmen umsatzsteuerfrei (§4 Nr.17b): ${EUR2(euer.einnahmen.find((z) => z.key === "steuerfrei_4_17b")?.summe ?? 0)}`,
-        `Betriebseinnahmen steuerpflichtig: ${EUR2(euer.einnahmen.find((z) => z.key === "andere")?.summe ?? 0)}`,
-        `Summe Betriebsausgaben: ${EUR2(euer.ausgabenSumme)}`,
-        `Gewinn/Verlust: ${EUR2(gewinn)}`,
-      ],
+      schritte: datenbasis.vorhanden
+        ? [
+            "Öffnen Sie ELSTER → Formular „Anlage EÜR“ und übertragen Sie diese Werte:",
+            `Betriebseinnahmen umsatzsteuerfrei (§4 Nr.17b): ${EUR2(euer.einnahmen.find((z) => z.key === "steuerfrei_4_17b")?.summe ?? 0)}`,
+            `Betriebseinnahmen steuerpflichtig: ${EUR2(euer.einnahmen.find((z) => z.key === "andere")?.summe ?? 0)}`,
+            `Summe Betriebsausgaben: ${EUR2(euer.ausgabenSumme)}`,
+            `Gewinn/Verlust: ${EUR2(gewinn ?? 0)}`,
+          ]
+        : [
+            `Keine belastbare Jahresdatenbasis für ${jahr}.`,
+            datenbasis.hinweis,
+            "GHASI bereitet deshalb keine ELSTER-Zahlen vor.",
+          ],
     },
     {
       titel: "Gewerbesteuererklärung",
       frist: estFrist,
-      status: gewinn > GEWST_FREIBETRAG ? "faellig" : "entfaellt",
-      schritte: [
-        `Gewinn ${EUR2(gewinn)} − Freibetrag ${EUR2(GEWST_FREIBETRAG)} × Messzahl 3,5 % × Hebesatz ${company.gewerbesteuerHebesatz} % (Minden).`,
-        `Geschätzte Gewerbesteuer: ${EUR2(gewst)}.`,
-        "Die Gewerbesteuer wird nach §35 EStG (3,8-facher Messbetrag) auf Ihre Einkommensteuer angerechnet – die tatsächliche Mehrbelastung ist dadurch meist gering.",
-      ],
+      status: gewinn === null ? "hinweis" : gewinn > GEWST_FREIBETRAG ? "faellig" : "entfaellt",
+      schritte:
+        gewinn === null || gewst === null
+          ? [
+              `Keine belastbare Jahresdatenbasis für ${jahr}.`,
+              "GHASI berechnet deshalb keine Gewerbesteuerschätzung.",
+            ]
+          : [
+              `Gewinn ${EUR2(gewinn)} − Freibetrag ${EUR2(GEWST_FREIBETRAG)} × Messzahl 3,5 % × Hebesatz ${company.gewerbesteuerHebesatz} % (Minden).`,
+              `Geschätzte Gewerbesteuer: ${EUR2(gewst)}.`,
+              "§ 35 EStG ermöglicht grundsätzlich eine Steuerermäßigung bis zum Vierfachen des Gewerbesteuer-Messbetrags; begrenzt u. a. durch Ermäßigungshöchstbetrag und tatsächlich zu zahlende Gewerbesteuer.",
+            ],
     },
     {
       titel: "Umsatzsteuer-Jahreserklärung",
@@ -113,6 +135,18 @@ function JahresabschlussPage() {
     entfaellt: { label: "Entfällt", badge: "border-success/30 bg-success/10 text-success" },
     hinweis: { label: "Hinweis", badge: "border-border bg-muted text-muted-foreground" },
   };
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Jahresabschluss-Assistent"
+        description="Steuerschätzung, Fristen und Checkliste – ausschließlich für Administration und Finanzen."
+        icon={CheckSquare}
+        badge="Steuer"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -137,21 +171,38 @@ function JahresabschlussPage() {
         }
       />
 
+      {!datenbasis.vorhanden && (
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+          <span className="font-semibold">Keine belastbare Jahresdatenbasis:</span>{" "}
+          {datenbasis.hinweis} Steuerwerte werden deshalb nicht als 0 € dargestellt.
+        </div>
+      )}
+
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label={`Gewinn ${jahr}`} value={EUR2(gewinn)} icon={Calculator} tone="primary" />
+        <StatCard
+          label={`Gewinn ${jahr}`}
+          value={gewinn === null ? "—" : EUR2(gewinn)}
+          icon={Calculator}
+          tone="primary"
+        />
         <StatCard
           label="Einkommensteuer (Schätzung)"
-          value={EUR2(est)}
+          value={est === null ? "—" : EUR2(est)}
           icon={FileText}
           tone="warning"
         />
         <StatCard
           label="Gewerbesteuer (Schätzung)"
-          value={EUR2(gewst)}
+          value={gewst === null ? "—" : EUR2(gewst)}
           icon={FileText}
           tone="info"
         />
-        <StatCard label="Soli (Schätzung)" value={EUR2(soli)} icon={FileText} tone="accent" />
+        <StatCard
+          label="Soli (Schätzung)"
+          value={soli === null ? "—" : EUR2(soli)}
+          icon={FileText}
+          tone="accent"
+        />
       </section>
 
       <Card className="border-border/70 shadow-card">

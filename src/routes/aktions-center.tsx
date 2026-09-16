@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles, Inbox, ShieldCheck, Plug, CheckCircle2 } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DraftCard } from "@/components/kommunikation/draft-card";
 import { cn } from "@/lib/utils";
 import { INTEGRATIONEN } from "@/lib/communication";
-import { useEntwuerfe, ladeEntwuerfe } from "@/lib/communication-store";
+import { useEntwuerfe } from "@/lib/communication-store";
 
 export const Route = createFileRoute("/aktions-center")({
   head: () => ({
@@ -44,10 +44,6 @@ function AktionsCenter() {
   // Drafts are time-relative → load on the client only (no SSR mismatch).
   const [filter, setFilter] = useState<StatusFilter>("offen");
   const entwuerfe = useEntwuerfe();
-
-  useEffect(() => {
-    ladeEntwuerfe();
-  }, []);
 
   const counts = useMemo(() => {
     const c = { offen: 0, genehmigt: 0, abgelehnt: 0 };

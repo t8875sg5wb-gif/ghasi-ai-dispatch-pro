@@ -1,14 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, tool, stepCountIs, type UIMessage } from "ai";
+import { streamText, tool, stepCountIs, type UIMessage } from "ai";
 import { z } from "zod";
 
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { buildKnowledgeSnapshot } from "@/lib/ghasi-knowledge";
-import { generateHinweise } from "@/lib/ghasi-hinweise";
+import { createAuthenticatedRequestClient } from "@/integrations/supabase/request-client.server";
 import { firecrawlSearch, firecrawlScrape, type WebQuelle } from "@/lib/web-search.server";
 import { buildBusinessTools } from "@/lib/ghasi-tools";
+import {
+  buildExternalAiSnapshot,
+  containsKnownPersonName,
+  containsPotentialSensitiveData,
+  filterExternalAiBusinessTools,
+} from "@/lib/external-ai-boundary";
 import { hydrateServerMirrors } from "@/lib/server-mirror.server";
-import { ROLE_LABELS, ROLE_BESCHREIBUNG, erlaubteBereiche } from "@/lib/roles";
+import { prepareExternalAiTransmission } from "@/lib/external-ai-transmission";
+import { loadAllNamesPaged } from "@/lib/external-ai-names";
+import {
+  ROLE_LABELS,
+  ROLE_BESCHREIBUNG,
+  erlaubteBereiche,
+  hoechsteRolle,
+  type AppRole,
+} from "@/lib/roles";
 
 const SYSTEM_PROMPT = `Du bist GHASI AI – der digitale Geschäftsführer und persönliche Executive-Assistent
 eines Krankentransportunternehmens. Du agierst wie ein erfahrener Operations Director, der jeden
@@ -22,11 +35,10 @@ Du vereinst zwei Rollen in einer:
    und hilfsbereit – Smalltalk, Erklärungen, Übersetzungen, Texte/E-Mails schreiben, Zusammenfassungen.
 
 ECHTE GESCHÄFTSDATEN (Pflicht):
-- Für JEDE Frage zum Unternehmen rufst du die passenden Daten-Werkzeuge auf
-  (transporte_abrufen, fahrer_abrufen, fahrzeuge_abrufen, wartung_abrufen, patienten_abrufen,
-  kunden_abrufen, finanzen_abrufen, kennzahlen_abrufen, insights_abrufen, prognosen_abrufen,
-  alarme_abrufen, unternehmenssuche). Erfinde NIEMALS Zahlen – nutze nur echte Tool-Ergebnisse.
-- Du kannst mehrere Werkzeuge kombinieren, um eine Frage vollständig zu beantworten.
+- Für Unternehmensfragen nutzt du ausschließlich die tatsächlich angebotenen Werkzeuge.
+- Der externe KI-Provider bekommt standardmäßig nur aggregierte Kennzahlen/Prognosen und Entwurfsfunktionen.
+- Personenbezogene Patienten-, Fahrer-, GPS-, Rechnungs- und Dokumentdetails bleiben in internen GHASI-Fachmodulen.
+- Erfinde NIEMALS Zahlen oder Detaildaten. Fehlen Daten, sage das ausdrücklich.
 
 ANTWORTSTRUKTUR bei Geschäftsfragen (immer, niemals nur nackte Zahlen):
 **Zusammenfassung** – die Kernaussage in 1–2 Sätzen.
@@ -135,19 +147,6 @@ function sammleVorbereiteteAktionen(parts: UIMessage["parts"] | undefined) {
   return aktionen;
 }
 
-/** Verifiziert das Bearer-Token serverseitig und gibt die Nutzer-ID zurück. */
-async function verifiziereToken(
-  request: Request,
-  admin: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
-): Promise<string | null> {
-  const header = request.headers.get("authorization") ?? request.headers.get("Authorization");
-  const token = header?.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : null;
-  if (!token) return null;
-  const { data, error } = await admin.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user.id;
-}
-
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
@@ -166,27 +165,91 @@ export const Route = createFileRoute("/api/chat")({
         };
 
         const startZeit = Date.now();
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { resolveActor, threadGehoert, buildDriverSnapshot, istSensibel } =
-          await import("@/lib/ghasi-security.server");
+        const { supabase: userSupabase, userId } = await createAuthenticatedRequestClient(request);
+        const { istSensibel } = await import("@/lib/ghasi-security.server");
 
-        // SICHERHEIT: Token serverseitig verifizieren. Ohne gültige Session kein Zugriff.
-        const userId = await verifiziereToken(request, supabaseAdmin);
-        if (!userId) {
-          return new Response(JSON.stringify({ error: "Nicht angemeldet" }), {
-            status: 401,
+        // Rolle ausschließlich aus der eigenen, per RLS sichtbaren Rollenzuordnung bestimmen.
+        const { data: rollen, error: rollenFehler } = await userSupabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId);
+        if (rollenFehler) {
+          return new Response(JSON.stringify({ error: "Rolle konnte nicht geprüft werden." }), {
+            status: 503,
             headers: { "content-type": "application/json" },
           });
         }
+        const role = hoechsteRolle((rollen ?? []).map((r) => r.role) as AppRole[]);
 
-        // Rolle & Fahrer-Verknüpfung IMMER serverseitig auflösen (nie aus dem Client).
-        const { role, driverId } = await resolveActor(userId);
+        // Externe KI: Der VOLLSTÄNDIGE ursprüngliche Nachrichtenbaum wird geprüft.
+        // Zum Provider geht anschließend nur eine neu aufgebaute Text-Historie; Tool-/Datei-/
+        // strukturierte Parts werden nicht weitergereicht.
+        let transmission;
+        try {
+          transmission = prepareExternalAiTransmission(messages);
+        } catch (error) {
+          return new Response(
+            JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
+            {
+              status: 422,
+              headers: { "content-type": "application/json" },
+            },
+          );
+        }
 
-        // SICHERHEIT: Thread-Besitz serverseitig prüfen. Fremde/nicht existierende
-        // Threads werden mit derselben generischen Meldung abgewiesen (keine Preisgabe).
+        let bekanntePersonen: string[];
+        try {
+          const [patientenNamen, fahrerNamen] = await Promise.all([
+            loadAllNamesPaged(async (from, to) => {
+              const { data, error } = await userSupabase
+                .from("patients")
+                .select("name")
+                .range(from, to);
+              return { data, error: error ? { message: error.message } : null };
+            }),
+            loadAllNamesPaged(async (from, to) => {
+              const { data, error } = await userSupabase
+                .from("drivers")
+                .select("name")
+                .range(from, to);
+              return { data, error: error ? { message: error.message } : null };
+            }),
+          ]);
+          bekanntePersonen = [...patientenNamen, ...fahrerNamen];
+        } catch {
+          return new Response(
+            JSON.stringify({
+              error:
+                "Personendaten konnten nicht vollständig auf Datenschutz geprüft werden. Externe KI wurde blockiert.",
+            }),
+            { status: 503, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        const conversationText = transmission.scanText;
+        if (
+          istSensibel(conversationText) ||
+          containsPotentialSensitiveData(conversationText) ||
+          containsKnownPersonName(conversationText, bekanntePersonen)
+        ) {
+          return new Response(
+            JSON.stringify({
+              error:
+                "Personenbezogene oder sensible Daten werden nicht an den externen KI-Anbieter übertragen. Bitte nutze dafür die internen GHASI-Fachmodule.",
+            }),
+            { status: 422, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        // SICHERHEIT: Thread-Besitz zusätzlich zum RLS-Filter explizit prüfen.
         if (threadId) {
-          const eigen = await threadGehoert(threadId, userId);
-          if (!eigen) {
+          const { data: eigenerThread, error: threadFehler } = await userSupabase
+            .from("chat_threads")
+            .select("id")
+            .eq("id", threadId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (threadFehler || !eigenerThread) {
             return new Response(JSON.stringify({ error: "Kein Zugriff auf diese Unterhaltung." }), {
               status: 403,
               headers: { "content-type": "application/json" },
@@ -194,9 +257,10 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        // Fahrer arbeiten mit einem request-scoped Eigen-Kontext (keine Mirrors).
-        // Alle übrigen Rollen lesen die (unternehmensweit gleichen) Mirror-Daten.
-        if (role !== "fahrer") {
+        // Aggregierte Betriebswerkzeuge benötigen weiterhin den privilegierten,
+        // serverseitigen Datenpfad. Fehlt er, bleibt der Chat nutzbar, aber ohne KPIs.
+        const serviceBusinessDataAvailable = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+        if (role !== "fahrer" && serviceBusinessDataAvailable) {
           await hydrateServerMirrors();
         }
 
@@ -205,7 +269,7 @@ export const Route = createFileRoute("/api/chat")({
           const last = messages[messages.length - 1];
           if (last?.role === "user") {
             const userText = textOf(last.parts);
-            await supabaseAdmin.from("chat_messages").insert({
+            await userSupabase.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "user",
               inhalt: userText,
@@ -213,14 +277,14 @@ export const Route = createFileRoute("/api/chat")({
               user_id: userId,
             });
             // Titel aus erster Nutzer-Nachricht ableiten (nur eigener Thread).
-            const { data: t } = await supabaseAdmin
+            const { data: t } = await userSupabase
               .from("chat_threads")
               .select("titel")
               .eq("id", threadId)
               .eq("user_id", userId)
               .maybeSingle();
             if (t && (t.titel === "Neue Unterhaltung" || !t.titel) && userText.trim()) {
-              await supabaseAdmin
+              await userSupabase
                 .from("chat_threads")
                 .update({ titel: userText.slice(0, 60) })
                 .eq("id", threadId)
@@ -228,30 +292,6 @@ export const Route = createFileRoute("/api/chat")({
             }
           }
         }
-
-        // Gedächtnis: NUR eigene Erinnerungen + admin-freigegebene Unternehmensregeln laden.
-        const { data: memoryRoh } = await supabaseAdmin
-          .from("ghasi_memory")
-          .select("kategorie, inhalt, wichtigkeit, typ, expires_at")
-          .or(`user_id.eq.${userId},and(typ.eq.company_rule,genehmigt.eq.true)`)
-          .order("wichtigkeit", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .limit(40);
-
-        const jetzt = Date.now();
-        const memory = (memoryRoh ?? []).filter(
-          (m) => !m.expires_at || new Date(m.expires_at).getTime() > jetzt,
-        );
-
-        const erinnerungen =
-          memory.length > 0
-            ? memory.map((m) => `- (${m.typ}/${m.kategorie}) ${m.inhalt}`).join("\n")
-            : "Noch keine gespeicherten Erinnerungen.";
-
-        const hinweise = generateHinweise()
-          .slice(0, 12)
-          .map((h) => `- [${h.stufe}] ${h.titel}: ${h.text}`)
-          .join("\n");
 
         const heute = new Date().toLocaleDateString("de-DE", {
           weekday: "long",
@@ -267,10 +307,11 @@ Rolle: ${rollenLabel} – ${role ? ROLE_BESCHREIBUNG[role] : "Keine Rolle zugewi
 Erlaubte Datenbereiche (nur diese Werkzeuge stehen zur Verfügung): ${bereiche}
 Beachte diese Berechtigungen strikt. Stehen für einen Bereich keine Werkzeuge bereit, darf die Rolle ihn nicht einsehen.`;
 
-        const snapshot =
-          role === "fahrer"
-            ? await buildDriverSnapshot(userId, driverId)
-            : buildKnowledgeSnapshot(role);
+        const snapshot = buildExternalAiSnapshot(role, serviceBusinessDataAvailable);
+        const externalBusinessTools = filterExternalAiBusinessTools(
+          buildBusinessTools(role),
+          serviceBusinessDataAvailable,
+        );
 
         const kontext = `${SYSTEM_PROMPT}
 
@@ -279,30 +320,37 @@ ${heute}
 
 ${rollenKontext}
 
-## Langzeitgedächtnis (gemerkte Entscheidungen & Vorlieben)
-${erinnerungen}
-
-## Aktuelle proaktive Hinweise
-${hinweise}
 
 ${snapshot}`;
+
+        const externalTextIsBlocked = (text: string) =>
+          istSensibel(text) ||
+          containsPotentialSensitiveData(text) ||
+          containsKnownPersonName(text, bekanntePersonen);
 
         const provider = createLovableAiGatewayProvider(apiKey);
 
         const result = streamText({
           model: provider("google/gemini-2.5-flash"),
           system: kontext,
-          messages: await convertToModelMessages(messages),
+          messages: transmission.messages,
           stopWhen: stepCountIs(8),
           tools: {
-            ...buildBusinessTools(role),
+            ...externalBusinessTools,
             web_suche: tool({
               description:
                 "Durchsucht das Internet in Echtzeit nach aktuellen Informationen (News, Wetter, Verkehr, Sport, Börse, Kryptokurse, Spritpreise, Feiertage, Adressen, allgemeine Fakten). Liefert Treffer mit Titel, URL und Auszug.",
               inputSchema: z.object({
                 query: z.string().describe("Die Suchanfrage, möglichst konkret formuliert."),
               }),
-              execute: async ({ query }) => firecrawlSearch(query, 5),
+              execute: async ({ query }) => {
+                if (externalTextIsBlocked(query)) {
+                  throw new Error(
+                    "Sensible oder personenbezogene Suchanfragen dürfen GHASI nicht verlassen.",
+                  );
+                }
+                return firecrawlSearch(query, 5);
+              },
             }),
             web_seite_lesen: tool({
               description:
@@ -310,7 +358,20 @@ ${snapshot}`;
               inputSchema: z.object({
                 url: z.string().describe("Die vollständige URL der Seite."),
               }),
-              execute: async ({ url }) => firecrawlScrape(url),
+              execute: async ({ url }) => {
+                let prueftext = url;
+                try {
+                  prueftext = decodeURIComponent(url);
+                } catch {
+                  // Ungültige %-Kodierung bleibt im Original prüfbar.
+                }
+                if (externalTextIsBlocked(prueftext)) {
+                  throw new Error(
+                    "Sensible oder personenbezogene URLs dürfen GHASI nicht verlassen.",
+                  );
+                }
+                return firecrawlScrape(url);
+              },
             }),
             gedaechtnis_vorschlagen: tool({
               description:
@@ -381,25 +442,23 @@ ${snapshot}`;
               ),
             ];
 
-            // AUDIT: nur Metadaten – KEINE Roh-Prompts/Antworten (Constitution Art. 15, P6).
-            await supabaseAdmin.from("ai_audit_log").insert({
-              user_id: userId,
-              rolle: role,
-              modell: "google/gemini-2.5-flash",
-              thread_id: threadId ?? null,
-              werkzeuge: werkzeuge.length > 0 ? werkzeuge : null,
-              dauer_ms: Date.now() - startZeit,
-              erfolg: true,
-              quellen: ([...businessQuellen, ...webQuellen.map((q) => q.url)].length > 0
-                ? { datenquellen: businessQuellen, web: webQuellen.map((q) => q.url) }
-                : null) as never,
-              vorbereitete_aktionen: (vorbereiteteAktionen.length > 0
-                ? vorbereiteteAktionen.map((a) => ({ typ: a.typ, titel: a.titel }))
-                : null) as never,
+            // AUDIT: nur privilegiert serverseitig. Ein Browser darf das
+            // revisionsrelevante Audit nicht selbst über eine authenticated-RPC füllen.
+            const { writeAiAuditMetadata } = await import("@/lib/ai-audit.server");
+            await writeAiAuditMetadata({
+              userId,
+              role,
+              model: "google/gemini-2.5-flash",
+              threadId: threadId ?? null,
+              tools: werkzeuge,
+              durationMs: Date.now() - startZeit,
+              success: true,
+              sources: { business: businessQuellen, web: webQuellen.map((q) => q.url) },
+              preparedActions: vorbereiteteAktionen.map((a) => ({ typ: a.typ, titel: a.titel })),
             });
 
             if (!threadId) return;
-            await supabaseAdmin.from("chat_messages").insert({
+            await userSupabase.from("chat_messages").insert({
               thread_id: threadId,
               rolle: "assistant",
               inhalt: textOf(responseMessage.parts),
@@ -407,7 +466,7 @@ ${snapshot}`;
               quellen: (webQuellen.length > 0 ? webQuellen : null) as never,
               user_id: userId,
             });
-            await supabaseAdmin
+            await userSupabase
               .from("chat_threads")
               .update({ updated_at: new Date().toISOString() })
               .eq("id", threadId)

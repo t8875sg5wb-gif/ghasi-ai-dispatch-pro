@@ -103,7 +103,11 @@ function VersicherungenSeite() {
   }, [items, suche, artFilter]);
 
   const selektiert = items.find((v) => v.id === aktiv) ?? gefiltert[0] ?? null;
-  const monatsbeitrag = items.reduce((s, v) => s + v.beitragMonat, 0);
+  // Nur tatsächlich aktive Policen zählen/summieren – Gekündigte/abgelaufene
+  // (siehe `abgeleiteterStatus`, dieselbe Prüfung wie beim Status-Badge je Zeile)
+  // sollen weder die "Policen aktiv"-Kachel noch den Beitrag aufblähen.
+  const aktivePolicen = items.filter((v) => abgeleiteterStatus(v) !== "gekuendigt");
+  const monatsbeitrag = aktivePolicen.reduce((s, v) => s + v.beitragMonat, 0);
   const { data: vehicles = [] } = useVehicles();
   const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
@@ -179,7 +183,7 @@ function VersicherungenSeite() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Kpi label="Policen aktiv" value={String(items.length)} icon={ShieldCheck} />
+        <Kpi label="Policen aktiv" value={String(aktivePolicen.length)} icon={ShieldCheck} />
         <Kpi label="Beitrag / Monat" value={formatEUR(monatsbeitrag)} icon={Euro} />
         <Kpi label="Beitrag / Jahr" value={formatEUR(monatsbeitrag * 12)} icon={CalendarClock} />
       </div>

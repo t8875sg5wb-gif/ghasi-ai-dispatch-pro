@@ -17,12 +17,14 @@ import {
   istTransportart,
   istVerordnungStatus,
 } from "@/lib/auftraege";
+import { idOderNull } from "@/lib/id-helpers";
 import {
   type AdresseStruktur,
   adresseAusStrukturOderLegacy,
   formatAdresse,
   normalisiereAdresse,
 } from "@/lib/address";
+import { normalizeOrderInstant } from "@/lib/local-datetime";
 
 /** Shape the client sends when creating/updating an order. */
 export interface OrderWrite {
@@ -173,9 +175,9 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     id: r.id,
     nummer: r.nummer ?? "—",
     patient: r.patient ?? "Unbekannter Patient",
-    patientId: r.patient_id ?? null,
-    insurerId: r.insurer_id ?? null,
-    verordnungId: r.verordnung_id ?? null,
+    patientId: idOderNull(r.patient_id),
+    insurerId: idOderNull(r.insurer_id),
+    verordnungId: idOderNull(r.verordnung_id),
     telefon: r.telefon ?? "",
     transportart,
     prioritaet,
@@ -184,13 +186,13 @@ export function rowToAuftrag(r: OrderRow): Auftrag {
     destination,
     abholort,
     zielort,
-    pickupEinrichtungId: r.pickup_facility_id ?? null,
-    destinationEinrichtungId: r.destination_facility_id ?? null,
+    pickupEinrichtungId: idOderNull(r.pickup_facility_id),
+    destinationEinrichtungId: idOderNull(r.destination_facility_id),
     termin: r.termin ?? new Date().toISOString(),
     fahrer: r.fahrer,
-    fahrerId: r.fahrer_id ?? null,
+    fahrerId: idOderNull(r.fahrer_id),
     fahrzeug: r.fahrzeug,
-    fahrzeugId: r.fahrzeug_id ?? null,
+    fahrzeugId: idOderNull(r.fahrzeug_id),
     kostentraeger: r.kostentraeger ?? "",
     notiz: r.notiz ?? "",
     verordnung,
@@ -259,7 +261,7 @@ export function writeToRow(w: Partial<OrderWrite>): Record<string, unknown> {
   }
   set("pickup_facility_id", w.pickupEinrichtungId);
   set("destination_facility_id", w.destinationEinrichtungId);
-  set("termin", w.termin);
+  set("termin", w.termin === undefined ? undefined : normalizeOrderInstant(w.termin));
   // `fahrer` (Anzeigename) wird nie vom Client geschrieben — der DB-Trigger
   // leitet ihn aus `fahrer_id` ab.
   set("fahrer_id", w.fahrerId);

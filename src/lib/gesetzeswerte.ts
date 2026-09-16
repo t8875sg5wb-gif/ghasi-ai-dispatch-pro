@@ -7,11 +7,11 @@
 // KI-Wissensschicht. Alle Werte sind Näherungen und ersetzen KEINE
 // zertifizierte Lohn-/Steuersoftware oder Beratung.
 //
-// Rechtsstand: Juli 2026 (Deutschland).
+// Prüfstand dieser Datei: 14.09.2026 (Deutschland). Je Wert gilt zusätzlich verifiziertAm.
 // ============================================================
 
 /** Menschlich lesbarer Rechtsstand für Anzeige & KI-Zitate. */
-export const RECHTSSTAND = "Stand: Juli 2026";
+export const RECHTSSTAND = "Prüfstand: 14.09.2026";
 
 /**
  * Einordnung eines Wertes:
@@ -50,7 +50,7 @@ export const MINDESTLOHN: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Bundesministerium für Arbeit und Soziales, Pressemitteilung — https://www.bmas.de/DE/Service/Presse/Pressemitteilungen/2025/mindestlohn-steigt-zum-ersten-januar-2026.html",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
   hinweis: "Ab 2027-01-01: 14,60 €/Stunde.",
 };
 
@@ -64,7 +64,7 @@ export const MINIJOB_GRENZE_MONAT: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Minijob-Zentrale, Neue Verdienstgrenze 2026 — https://magazin.minijob-zentrale.de/neue-verdienstgrenze-2026/ (Formel: Mindestlohn × 130 ÷ 3)",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
   hinweis: "Ab 2027-01-01: 633 €/Monat. (2025 galt noch 556 €.)",
 };
 /** Minijob-Grenze pro Jahr. */
@@ -74,7 +74,7 @@ export const MINIJOB_GRENZE_JAHR: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Minijob-Zentrale, Neue Verdienstgrenze 2026 — https://magazin.minijob-zentrale.de/neue-verdienstgrenze-2026/ (Formel: Mindestlohn × 130 ÷ 3)",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 /** Untergrenze Übergangsbereich (Midijob). */
 export const MIDIJOB_UNTERGRENZE: Wert<number> = {
@@ -83,7 +83,7 @@ export const MIDIJOB_UNTERGRENZE: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Deutsche Rentenversicherung, Meldung 23.02.2026 — https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2026/260223-minijob-midijob-verdienstgrenzen-steigen",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 /** Obergrenze Übergangsbereich (Midijob) – seit 2023 unverändert. */
 export const MIDIJOB_OBERGRENZE: Wert<number> = {
@@ -92,7 +92,7 @@ export const MIDIJOB_OBERGRENZE: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Deutsche Rentenversicherung, Meldung 23.02.2026 — https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2026/260223-minijob-midijob-verdienstgrenzen-steigen",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 
 /* ------------------------------------------------------------------ *
@@ -103,7 +103,7 @@ export const SV_SAETZE_2026 = {
   kategorie: "gesetzlich",
   quelle:
     "Deutsche Rentenversicherung Knappschaft-Bahn-See, Sozialversicherungsrechengrößen 2026 — https://www.deutsche-rentenversicherung.de/KnappschaftBahnSee/DE/Aktuelles/Meldungen/2026/2026_01_02_Sozialversicherungsrechengroessen2026",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
   /** KV allgemeiner Beitragssatz */
   kvAllgemein: 14.6,
   /** durchschnittlicher kassenindividueller Zusatzbeitrag 2026 (pro Kasse konfigurierbar) */
@@ -133,7 +133,7 @@ export const MINIJOB_PAUSCHALEN_2026 = {
   kategorie: "gesetzlich",
   quelle:
     "Minijob-Zentrale, Abgaben für gewerbliche Minijobs 2026 — https://www.minijob-zentrale.de/DE/die-minijobs/gewerblich/abgaben/abgaben_node.html",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
   /** pauschale Krankenversicherung */
   kv: 13.0,
   /** pauschale Rentenversicherung */
@@ -166,7 +166,7 @@ export const BBG_KV_PV_MONAT: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Bundesregierung, Beitragsbemessungsgrenzen 2026 — https://www.bundesregierung.de/breg-de/aktuelles/beitragsgemessungsgrenzen-2386514",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 /** Bezugsgröße – seit 2025 bundeseinheitlich (keine Ost/West-Trennung mehr). */
 export const BEZUGSGROESSE_MONAT: Wert<number> = {
@@ -175,7 +175,7 @@ export const BEZUGSGROESSE_MONAT: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Sozialversicherungsrechengrößen-Verordnung 2026, § 1 — https://www.haufe.de/id/norm/sozialversicherungsrechengroessen-verordnung-2026-1-bezugsgroesse-in-der-sozialversicherung-HI17063750_p1.html",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 
 /* ------------------------------------------------------------------ *
@@ -187,7 +187,7 @@ export const GRUNDFREIBETRAG: Wert<number> = {
   kategorie: "gesetzlich",
   quelle:
     "Bundesministerium der Finanzen, Monatsbericht Februar 2026 — https://www.bundesfinanzministerium.de/Monatsberichte/Ausgabe/2026/02/Inhalte/Kapitel-2-Analysen/2-5-wichtigste-steuerliche-aenderungen-2026.html",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
 };
 
 /* ------------------------------------------------------------------ *
@@ -197,9 +197,9 @@ export const ZUZAHLUNG_KRANKENFAHRT = {
   stand: "2004-01-01",
   kategorie: "gesetzlich",
   quelle: "§ 61 SGB V — https://www.gesetze-im-internet.de/sgb_5/__61.html",
-  verifiziertAm: "2026-07-29",
+  verifiziertAm: "2026-09-14",
   hinweis:
-    "Kabinettsbeschluss vom 29.04.2026 (GKV-Beitragssatzstabilisierungsgesetz, Stand heute: noch NICHT von Bundestag/Bundesrat verabschiedet) sieht ab 2027 eine Anhebung der Zuzahlungsgrenzen um 50% vor: mind. 7,50 €, max. 15 € (Prozentsatz unverändert bei 10%). Vor Umsetzung erneut prüfen, ob das Gesetz tatsächlich in Kraft getreten ist.",
+    "Für 2026 gelten weiterhin 10 %, mindestens 5 €, höchstens 10 €. Das GKV-Beitragssatzstabilisierungsgesetz (BGBl. 2026 I Nr. 228) ist verkündet; die neuen Grenzen von mindestens 7,50 € und höchstens 15 € gelten ab 01.01.2027.",
   /** Anteil an den Fahrtkosten */
   prozent: 10,
   /** Mindestbetrag je Fahrt */
@@ -252,7 +252,7 @@ export const NEUERUNGEN_2026: string[] = [
 
 /** Zentrale Steuer-/Vertragsgrundlagen für die KI (Schiene A). */
 export const RECHTSGRUNDLAGEN_KI: string[] = [
-  "Umsatzsteuerbefreiung der Krankenfahrten nach § 4 Nr. 17b UStG.",
+  "Umsatzsteuerbefreiung nach § 4 Nr. 17b UStG nur bei Beförderung kranker oder verletzter Personen mit hierfür besonders eingerichteten Fahrzeugen; die konkrete steuerliche Einordnung darf nicht allein aus dem Fahrtzweck abgeleitet werden.",
   "Abrechnung mit den Krankenkassen nach § 133 SGB V (Fahrkostenvergütung, inkl. IK-Nummer des Leistungserbringers).",
   "Zuzahlung Krankenfahrt nach § 61 SGB V: 10 % der Kosten, mind. 5 €, max. 10 € je Fahrt; zuzahlungsbefreite Patienten zahlen nichts.",
   "BTW-Rahmenvertrag Westfalen-Lippe (gültig seit 06/2023) für sitzende/rollstuhlgebundene Krankenfahrten.",

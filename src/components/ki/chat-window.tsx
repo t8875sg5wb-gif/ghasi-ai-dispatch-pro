@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { useThreadMessages } from "@/hooks/use-threads";
 import { takePending } from "@/lib/chat-pending";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { chatErrorMessage } from "@/lib/chat-errors";
 
 const quickPrompts = [
   "Wie ist die Auslastung heute?",
@@ -40,23 +41,34 @@ function ChatInner({
       }),
     [threadId],
   );
+  const [chatFehler, setChatFehler] = useState<string | null>(null);
+  const sendErrorRef = useRef<Error | null>(null);
   const { messages, sendMessage, status } = useChat({
     id: threadId,
     messages: initialMessages,
     transport,
-    onFinish: () => {
+    onFinish: ({ isError }) => {
+      if (!isError) setChatFehler(null);
       qc.invalidateQueries({ queryKey: ["chat-threads"] });
       qc.invalidateQueries({ queryKey: ["chat-messages", threadId] });
+    },
+    onError: (error) => {
+      const normalized = error instanceof Error ? error : new Error(String(error));
+      sendErrorRef.current = normalized;
+      setChatFehler(chatErrorMessage(normalized));
     },
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
 
-  const send = (text: string, files: Attachment[]) => {
+  const send = async (text: string, files: Attachment[]) => {
+    setChatFehler(null);
+    sendErrorRef.current = null;
     const fileParts = files.length ? files : undefined;
-    if (text) void sendMessage({ text, files: fileParts });
-    else if (fileParts) void sendMessage({ files: fileParts });
+    if (text) await sendMessage({ text, files: fileParts });
+    else if (fileParts) await sendMessage({ files: fileParts });
+    if (sendErrorRef.current) throw new Error(chatErrorMessage(sendErrorRef.current));
   };
 
   // Erste Nachricht von der Startseite übernehmen.
@@ -65,7 +77,7 @@ function ChatInner({
     if (consumed.current) return;
     consumed.current = true;
     const pending = takePending(threadId);
-    if (pending) send(pending.text, pending.files);
+    if (pending) void send(pending.text, pending.files);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
 
@@ -108,9 +120,12 @@ function ChatInner({
         )}
 
         {status === "error" && (
-          <p className="text-center text-sm text-destructive">
-            GHASI AI ist gerade nicht erreichbar. Bitte erneut versuchen.
-          </p>
+          <div className="mx-auto max-w-xl rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <p className="font-medium">Nachricht konnte nicht gesendet werden.</p>
+            <p className="mt-1 text-xs">
+              {chatFehler ?? "Bitte erneut versuchen. Der eingegebene Entwurf bleibt erhalten."}
+            </p>
+          </div>
         )}
       </div>
 

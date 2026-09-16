@@ -71,21 +71,35 @@ describe("XRechnung-Exportentwurf", () => {
     expect(xml).toContain("<cbc:StartDate>2026-07-28</cbc:StartDate>");
     expect(xml).toContain("<cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>");
     expect(xml).toContain("<cbc:BuyerReference>04011000-1234512345-06</cbc:BuyerReference>");
+    expect(xml).toContain(
+      "<cac:PartyIdentification><cbc:ID>123/456/78901</cbc:ID></cac:PartyIdentification>",
+    );
     expect(xml).toContain("<cbc:ID>DE02120300000000202051</cbc:ID>");
     expect(xml).toContain("§ 4 Nr. 17b UStG");
     expect(xml).toContain('<cbc:PayableAmount currencyID="EUR">120.00</cbc:PayableAmount>');
     expect(xml).toContain('<cbc:InvoicedQuantity unitCode="C62">2.00</cbc:InvoicedQuantity>');
   });
 
-  it("meldet fehlende Leitweg-ID ohne erfundenen Platzhalter", () => {
-    const { xml, leitwegFehlt } = generateXRechnung({
-      rechnung,
-      verkaeufer,
-      kaeufer: { ...kaeufer, leitwegId: "" },
-      steuerModus: "befreit_4_17b",
-    });
-    expect(leitwegFehlt).toBe(true);
-    expect(xml).toContain("<cbc:BuyerReference></cbc:BuyerReference>");
+  it("verweigert Export ohne BuyerReference/Leitweg-ID (KoSIT BR-DE-15)", () => {
+    expect(() =>
+      generateXRechnung({
+        rechnung,
+        verkaeufer,
+        kaeufer: { ...kaeufer, leitwegId: "" },
+        steuerModus: "befreit_4_17b",
+      }),
+    ).toThrow(/BuyerReference\/Leitweg-ID/);
+  });
+
+  it("verweigert Export ohne Verkäuferidentifikation", () => {
+    expect(() =>
+      generateXRechnung({
+        rechnung,
+        verkaeufer: { ...verkaeufer, steuernummer: "", ustId: "" },
+        kaeufer,
+        steuerModus: "befreit_4_17b",
+      }),
+    ).toThrow(/Verkäuferidentifikation/);
   });
 
   it("verweigert Export bei unvollständiger Kundenadresse", () => {

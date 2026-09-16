@@ -3,6 +3,7 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "packageManager": "bun@1.4.2",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -10,7 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "bun test src",
-    "test:sql-runtime": "bun test --timeout 180000 tests/sql; code=$?; if [ $code -eq 99 ]; then exit 0; else exit $code; fi",
+    "test:sql-runtime": "bun scripts/test-sql-runtime.mjs",
     "format": "prettier --write .",
     "gen:api-types": "openapi-typescript docs/openapi-dauerauftraege.yaml -o src/lib/api/dauerauftraege-api.gen.ts"
   },
@@ -61,6 +62,7 @@
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
+    "lohnsteuerrechner": "1.0.7",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",
@@ -95,11 +97,11 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
-    "openapi-typescript": "^7.13.0",
-    "prettier": "3.7.3",
+    "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "openapi-typescript": "^7.13.0"
   },
   "overrides": {
     "brace-expansion": "5.0.9",

@@ -145,13 +145,17 @@ test("writeToRow (drivers): partial update touches only the given field", () => 
   }
 });
 
+test("writeToRow (drivers): P-Schein schreibt JSON und Legacy-Spalte synchron", () => {
+  const row = writeToRow({ pSchein: { gueltigBis: "2028-01-31" } });
+  expect(row.p_schein).toEqual({ gueltigBis: "2028-01-31" });
+  expect(row.p_schein_gueltig_bis).toBe("2028-01-31");
+});
+
 test("writeToRow (drivers): explicit null still clears", () => {
   const row = writeToRow({
-    pScheinGueltigBis: null as never,
     fuehrungszeugnisDatum: null as never,
     steuerId: null as never,
   });
-  expect(row.p_schein_gueltig_bis).toBe(null);
   expect(row.fuehrungszeugnis_datum).toBe(null);
   expect(row.steuer_id).toBe(null);
 });

@@ -8,6 +8,7 @@
 // ============================================================
 import type { Beschaeftigungsart } from "@/lib/fahrer";
 import { computeEinkommensteuer } from "@/lib/steuer";
+import { computeMidijobBemessung2026 } from "@/lib/midijob-2026";
 import {
   MINIJOB_GRENZE_MONAT,
   MIDIJOB_OBERGRENZE,
@@ -45,6 +46,8 @@ const AN_PAUSCHBETRAG = 1_230;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export interface LohnErgebnis {
+  /** Nur "ok" darf in Summen/Exporte eingehen. */
+  rechenstatus: "ok" | "pruefung_erforderlich";
   beschaeftigungsart: Beschaeftigungsart;
   brutto: number;
   /** Arbeitnehmer-SV-Anteil */
@@ -81,6 +84,7 @@ export function computeLohn(
   if (beschaeftigungsart === "minijob") {
     const agAbgaben = round2(brutto * MINIJOB_PAUSCHAL_AG);
     return {
+      rechenstatus: "ok",
       beschaeftigungsart,
       brutto,
       svAn: 0,
@@ -98,14 +102,33 @@ export function computeLohn(
   }
 
   if (beschaeftigungsart === "midijob") {
-    // Übergangsbereich: reduzierter AN-Anteil, linear genähert von der
-    // Minijob-Grenze bis zur Midijob-Obergrenze.
-    const spanne = MIDIJOB_GRENZE - MINIJOB_GRENZE_2026;
-    const faktor = Math.min(1, Math.max(0, (brutto - MINIJOB_GRENZE_2026) / spanne));
-    const svAn = round2(brutto * SV_AN * faktor);
+    // Übergangsbereich: amtliche 2026-Bemessungsgrundlage (Faktor F=0,6619).
+    // Die Beitragssätze bleiben hier eine Näherung, weil dieser Legacy-Rechner
+    // keine individuellen KV-/PV-Fakten abfragt.
+    let bemessung;
+    try {
+      bemessung = computeMidijobBemessung2026(brutto);
+    } catch {
+      return {
+        rechenstatus: "pruefung_erforderlich",
+        beschaeftigungsart,
+        brutto,
+        svAn: 0,
+        lohnsteuer: 0,
+        netto: 0,
+        agAbgaben: 0,
+        agGesamt: 0,
+        anSozialversicherung: 0,
+        anFinanzamt: 0,
+        warnung:
+          "Midijob-Stammdaten ungültig: Arbeitsentgelt muss 2026 zwischen 603,01 € und 2.000,00 € liegen. Keine Beträge berechnet.",
+      };
+    }
+    const svAn = round2(bemessung.beitragspflichtigeEinnahmeArbeitnehmer * SV_AN);
     const lohnsteuer = grobeLohnsteuer(brutto, svAn * 12);
     const agAbgaben = round2(brutto * SV_AG);
     return {
+      rechenstatus: "ok",
       beschaeftigungsart,
       brutto,
       svAn,
@@ -127,6 +150,7 @@ export function computeLohn(
   const lohnsteuer = grobeLohnsteuer(brutto, svAn * 12);
   const agAbgaben = round2(brutto * SV_AG);
   return {
+    rechenstatus: "ok",
     beschaeftigungsart,
     brutto,
     svAn,

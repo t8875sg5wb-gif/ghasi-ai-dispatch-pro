@@ -1,9 +1,7 @@
 // Server-Funktionen für den GHASI-AI-Gesprächsverlauf (Threads).
-// Lesen erfolgt clientseitig (RLS: Nutzer sehen nur eigene Threads).
-// Erstellen/Umbenennen/Löschen läuft serverseitig über den Service-Role-Client
-// (RLS-Bypass) – deshalb wird der Besitz hier bei JEDER Mutation serverseitig
-// gegen context.userId geprüft. Fremde/nicht existierende Threads werden mit
-// derselben generischen Meldung abgewiesen (keine Existenz-Preisgabe).
+// Lesen erfolgt clientseitig über RLS: Nutzer sehen nur eigene Threads.
+// Schreiben läuft serverseitig mit der verifizierten Nutzer-Session; RLS plus
+// expliziter user_id-Filter erzwingen Besitz. Kein Service-Role-Key erforderlich.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -15,9 +13,8 @@ export const erstelleThread = createServerFn({ method: "POST" })
     titel: (data?.titel ?? "Neue Unterhaltung").slice(0, 120),
   }))
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // user_id wird IMMER serverseitig gesetzt – nie aus Client-Daten übernommen.
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await context.supabase
       .from("chat_threads")
       .insert({ titel: data.titel, user_id: context.userId })
       .select()
@@ -33,10 +30,9 @@ export const benenneThread = createServerFn({ method: "POST" })
     return { id: data.id, titel: (data.titel ?? "Unterhaltung").slice(0, 120) };
   })
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Besitz-gebundene Aktualisierung: nur der eigene Thread wird getroffen.
     // Affected-row-Check verhindert stilles Gelingen bei fremden Threads.
-    const { data: rows, error } = await supabaseAdmin
+    const { data: rows, error } = await context.supabase
       .from("chat_threads")
       .update({ titel: data.titel })
       .eq("id", data.id)
@@ -54,8 +50,7 @@ export const loescheThread = createServerFn({ method: "POST" })
     return { id: data.id };
   })
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    const { data: rows, error } = await context.supabase
       .from("chat_threads")
       .delete()
       .eq("id", data.id)

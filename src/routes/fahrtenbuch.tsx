@@ -84,6 +84,7 @@ function FahrtenbuchPage() {
   const gesamtKm = useMemo(() => gefiltert.reduce((s, f) => s + fahrtKm(f), 0), [gefiltert]);
 
   const onDelete = (id: string) => {
+    if (!window.confirm("Diesen Fahrtenbuch-Eintrag wirklich dauerhaft löschen?")) return;
     deleteMut.mutate(id, {
       onSuccess: () => toast.success("Fahrt gelöscht"),
       onError: (e) => toast.error("Löschen fehlgeschlagen", { description: String(e) }),

@@ -24,6 +24,7 @@ import {
   INITIAL_RECHNUNGEN,
   RECHNUNG_STATUS_META,
   computeFinanzKpis,
+  computeTagesFinanzKpis,
   EUR as EURf,
 } from "@/lib/finance";
 import { INITIAL_DOKUMENTE, KATEGORIE_META } from "@/lib/documents";
@@ -199,8 +200,9 @@ export function buildKnowledgeSnapshot(role: AppRole | null = "admin"): string {
   const fahrerUnterwegs = INITIAL_FAHRER.filter((f) => f.status === "unterwegs");
   const fzgFrei = INITIAL_FAHRZEUGE.filter((v) => v.status === "frei");
   const fzgUnterwegs = INITIAL_FAHRZEUGE.filter((v) => v.status === "unterwegs");
-  const umsatzHeute = INITIAL_FAHRER.reduce((s, f) => s + f.umsatzHeute, 0);
-  const gewinnHeute = INITIAL_FAHRER.reduce((s, f) => s + f.gewinnHeute, 0);
+  const tagesFinanz = computeTagesFinanzKpis(INITIAL_AUFTRAEGE, INITIAL_RECHNUNGEN);
+  const umsatzHeute = tagesFinanz.umsatz;
+  const gewinnHeute = tagesFinanz.gewinn;
   const offene = INITIAL_AUFTRAEGE.filter((a) => a.status === "neu" || a.status === "disponiert");
 
   const lines: string[] = [];
@@ -263,7 +265,12 @@ export function buildKnowledgeSnapshot(role: AppRole | null = "admin"): string {
   }
 
   if (finanzView) {
-    const fk = computeFinanzKpis();
+    const fk = computeFinanzKpis(INITIAL_RECHNUNGEN, {
+      fahrer: INITIAL_FAHRER,
+      fahrzeuge: INITIAL_FAHRZEUGE,
+      auftraege: INITIAL_AUFTRAEGE,
+      rechnungen: INITIAL_RECHNUNGEN,
+    });
     lines.push(`\n## Finanzen (Monat)`);
     lines.push(
       `Umsatz ${EURf(fk.umsatzMonat)}, Ausgaben ${EURf(fk.ausgabenMonat)}, Gewinn ${EURf(fk.gewinnMonat)} (Marge ${fk.margeProzent} %). ` +

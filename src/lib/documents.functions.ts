@@ -33,6 +33,10 @@ const SIGNED_URL_TTL_SECONDS = 600;
 const NICHT_VERFUEGBAR = "Dokument nicht gefunden oder kein Zugriff.";
 
 async function serverGate(userId: string) {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("[documents] server credentials missing");
+    throw new Response("Dokumentdienst nicht konfiguriert.", { status: 503 });
+  }
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { requireDocumentRole } = await import("@/lib/documents-security.server");
   const role = await requireDocumentRole(userId);
@@ -81,7 +85,7 @@ export const listDocuments = createServerFn({ method: "GET" })
  */
 export const getDocumentSignedUrl = createServerFn({ method: "POST" })
   .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
-  .inputValidator(parseIdInput)
+  .validator(parseIdInput)
 
   .handler(async ({ data, context }): Promise<{ url: string; expiresIn: number }> => {
     const { supabaseAdmin } = await serverGate(context.userId);
@@ -122,7 +126,7 @@ export const getDocumentSignedUrl = createServerFn({ method: "POST" })
  */
 export const deleteDocument = createServerFn({ method: "POST" })
   .middleware([documentAuthStatusMiddleware, requireSupabaseAuth])
-  .inputValidator(parseIdInput)
+  .validator(parseIdInput)
 
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await serverGate(context.userId);

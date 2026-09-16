@@ -80,22 +80,11 @@ function AutomationPage() {
     );
   };
 
-  const freigeben = (a: Automation) => {
-    toast.success("Entwürfe freigegeben", { description: a.vorschlag });
-    logActivity({
-      bereich: "Automatisierung",
-      aktion: "Freigabe",
-      beschreibung: `Entwürfe aus „${a.name}" freigegeben`,
-      entitaet: a.id,
-    });
-    setAutos((prev) => prev.map((x) => (x.id === a.id ? { ...x, offeneFreigaben: 0 } : x)));
-  };
-
   return (
     <div className="animate-fade-in space-y-6">
       <PageHero
         title="Automatisierungs-Center"
-        description="Wiederkehrende Abrechnungen, Wartungen, Patiententransporte, Berichte und Erinnerungen. GHASI AI bereitet alles vor – ausgeführt wird nur nach Ihrer Freigabe."
+        description="Übersicht geplanter wiederkehrender Prüfabläufe. GHASI AI zeigt Zuständigkeit und Zielmodul – es wird nichts automatisch gebucht, versendet oder freigegeben."
         icon={Workflow}
         badge="Automation"
       />
@@ -104,9 +93,9 @@ function AutomationPage() {
         <CardContent className="flex items-center gap-3 py-4">
           <ShieldCheck className="h-5 w-5 shrink-0 text-success" />
           <p className="text-sm">
-            <span className="font-semibold">Sicherheit:</span> Keine Automatisierung versendet oder
-            bucht etwas automatisch. Jeder Lauf erzeugt Entwürfe, die manuell bestätigt werden
-            müssen.
+            <span className="font-semibold">Sicherheit:</span> Diese Seite zeigt nur konfigurierte
+            Prüfabläufe. Sie erzeugt selbst keine Rechnungen, Fahrten, Nachrichten oder Buchungen.
+            Geschäftsvorgänge werden im jeweiligen Zielmodul geprüft und ausdrücklich ausgelöst.
           </p>
         </CardContent>
       </Card>
@@ -170,9 +159,7 @@ function AutomationPage() {
                 </div>
 
                 <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Vorbereiteter Vorschlag
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Geplanter Ablauf</p>
                   <p className="mt-0.5 text-sm">{a.vorschlag}</p>
                 </div>
 
@@ -204,11 +191,6 @@ function AutomationPage() {
                         Öffnen <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>
-                    {a.offeneFreigaben > 0 && (
-                      <Button size="sm" className="rounded-full" onClick={() => freigeben(a)}>
-                        Freigeben
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardContent>

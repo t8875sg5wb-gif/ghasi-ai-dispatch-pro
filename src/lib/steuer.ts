@@ -1,8 +1,9 @@
 // ============================================================
 // GHASI AI — Steuer-/USt-Modul (Krankentransport)
 // ------------------------------------------------------------
-// Krankenfahrten/-transporte sind nach § 4 Nr. 17b UStG von der
-// Umsatzsteuer befreit. Dieses Modul kapselt die korrekte
+// Eine Umsatzsteuerbefreiung nach § 4 Nr. 17b UStG gilt nur, wenn die
+// gesetzlichen Voraussetzungen im konkreten Betrieb/Fall erfuellt sind, insbesondere
+// die Befoerderung mit einem hierfuer besonders eingerichteten Fahrzeug. Dieses Modul kapselt die
 // Netto/USt/Brutto-Berechnung, gesetzliche Hinweistexte und den
 // gewählten Steuermodus des Unternehmens.
 //
@@ -24,7 +25,7 @@ export const STEUER_MODUS_LABEL: Record<SteuerModus, string> = {
 /** Rechtlicher Hinweistext für die Rechnung je Steuermodus. */
 export const STEUER_HINWEIS: Record<SteuerModus, string> = {
   befreit_4_17b:
-    "Umsatzsteuerfrei gemäß § 4 Nr. 17b UStG (Beförderung von kranken und verletzten Personen).",
+    "Umsatzsteuerfrei gemäß § 4 Nr. 17b UStG (Beförderung kranker oder verletzter Personen mit einem hierfür besonders eingerichteten Fahrzeug).",
   kleinunternehmer_19:
     "Gemäß § 19 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet.",
   regulaer_19: "Im ausgewiesenen Betrag sind 19 % Umsatzsteuer enthalten.",
@@ -32,14 +33,13 @@ export const STEUER_HINWEIS: Record<SteuerModus, string> = {
 
 export const STEUER_DISCLAIMER = "Diese Angaben ersetzen keine steuerliche Beratung.";
 
-/** Der unternehmensweite Standardmodus für Krankentransporte. */
+/** Vorauswahl im Formular. Sie ist KEINE rechtliche Einstufung und bleibt bis zur Admin-Bestätigung gesperrt. */
 export const DEFAULT_STEUER_MODUS: SteuerModus = "befreit_4_17b";
 
 /**
- * Optionale Überschreibungen je Transportart. Standardmäßig sind alle
- * medizinischen Krankenfahrten umsatzsteuerbefreit. Einzelne Arten können hier
- * abweichend geregelt werden (z. B. wenn ein Fahrttyp nicht unter § 4 Nr. 17b
- * fällt). Leer = überall der Unternehmens-Standardmodus.
+ * Optionale Überschreibungen je Transportart. Eine Transportart allein beweist
+ * keine Steuerbefreiung; Fahrzeugausstattung, Genehmigung und konkrete Leistung
+ * koennen entscheidend sein. Leer = der bewusst bestätigte Unternehmensmodus wird verwendet.
  */
 export const STEUER_OVERRIDE_TRANSPORTART: Partial<Record<Transportart, SteuerModus>> = {};
 
@@ -96,7 +96,11 @@ export const GEWST_FREIBETRAG = 24_500;
  * Nur eine grobe Orientierung — ersetzt keine steuerliche Beratung.
  */
 export function computeGewerbesteuer(gewinnJahr: number, hebesatzProzent: number): number {
-  const ertrag = Math.max(0, gewinnJahr - GEWST_FREIBETRAG);
+  // § 11 GewStG: Gewerbeertrag zuerst auf volle 100 EUR nach unten abrunden.
+  // Die Funktion bleibt eine Schaetzung, weil Hinzurechnungen/Kuerzungen des
+  // tatsaechlichen Gewerbeertrags hier nicht modelliert werden.
+  const abgerundet = Math.floor(Math.max(0, gewinnJahr) / 100) * 100;
+  const ertrag = Math.max(0, abgerundet - GEWST_FREIBETRAG);
   return Math.round(ertrag * GEWST_MESSZAHL * (hebesatzProzent / 100));
 }
 
@@ -113,9 +117,9 @@ export function computeGewinnNachSteuern(gewinnJahr: number, hebesatzProzent: nu
 export const EST_GRUNDFREIBETRAG_2026 = GRUNDFREIBETRAG.wert;
 
 /**
- * Schätzt die Einkommensteuer (Grundtarif) nach dem progressiven Tarif
- * (Formel angelehnt an den Einkommensteuertarif, mit Grundfreibetrag 2026).
- * Nur eine grobe Orientierung — ersetzt keine steuerliche Beratung.
+ * Tarifliche Einkommensteuer 2026 für ein bereits ermitteltes zu versteuerndes Einkommen.
+ * Die Tarifformel und Abrundung folgen § 32a EStG. Die Ermittlung des zvE selbst
+ * bleibt außerhalb dieser Funktion und kann persönliche Sonderregeln enthalten.
  */
 export function computeEinkommensteuer(
   zvE: number,
@@ -140,12 +144,25 @@ export function computeEinkommensteuer(
     est = 0.45 * x - 19_470.38;
   }
 
-  return Math.max(0, Math.round(est));
+  return Math.max(0, Math.floor(est));
 }
 
-/** Grober Solidaritätszuschlag (5,5 % auf ESt, Freigrenze berücksichtigt näherungsweise). */
-export function computeSoli(einkommensteuer: number): number {
-  // Freigrenze 2026 ca. 19.950 € ESt (Einzelveranlagung); darunter 0.
-  if (einkommensteuer <= 19_950) return 0;
-  return Math.round(einkommensteuer * 0.055);
+/** Splittingtarif nach § 32a Abs. 5 EStG für ein vorgegebenes gemeinsames zvE. */
+export function computeEinkommensteuerSplitting(zvEGemeinsam: number): number {
+  return 2 * computeEinkommensteuer(Math.floor(Math.max(0, zvEGemeinsam)) / 2);
+}
+
+/**
+ * Solidaritaetszuschlag 2026 auf die uebergebene ESt-Bemessungsgrundlage.
+ * Beruecksichtigt Freigrenze und Milderungszone nach §§ 3, 4 SolzG.
+ * Die tatsaechliche Bemessungsgrundlage kann z. B. wegen Kinderfreibetraegen
+ * von einer einfachen Einkommensteuer-Schaetzung abweichen.
+ */
+export function computeSoli(einkommensteuer: number, zusammenveranlagt = false): number {
+  const basis = Math.max(0, einkommensteuer);
+  const freigrenze = zusammenveranlagt ? 40_700 : 20_350;
+  if (basis <= freigrenze) return 0;
+  const regulaer = basis * 0.055;
+  const milderungszone = (basis - freigrenze) * 0.119;
+  return Math.floor(Math.min(regulaer, milderungszone) * 100) / 100;
 }

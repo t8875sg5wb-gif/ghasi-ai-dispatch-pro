@@ -74,6 +74,55 @@ export interface PlaceErgebnis {
   distanzMeter?: number;
 }
 
+interface GeocodeAddressComponent {
+  types?: string[];
+  long_name?: string;
+}
+
+interface GeocodeApiResult {
+  address_components?: GeocodeAddressComponent[];
+  geometry: { location: { lat: number; lng: number } };
+  formatted_address: string;
+}
+
+interface GeocodeApiResponse {
+  results?: GeocodeApiResult[];
+}
+
+interface RouteApiResult {
+  distanceMeters?: number;
+  duration?: string;
+  polyline?: { encodedPolyline?: string };
+  travelAdvisory?: {
+    tollInfo?: { estimatedPrice?: Array<{ units?: string | number; currencyCode?: string }> };
+  };
+  optimizedIntermediateWaypointIndex?: number[];
+}
+
+interface RoutesApiResponse {
+  routes?: RouteApiResult[];
+}
+
+interface PlaceApiResult {
+  id: string;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  location: { latitude: number; longitude: number };
+  rating?: number;
+  currentOpeningHours?: { openNow?: boolean };
+}
+
+interface PlacesApiResponse {
+  places?: PlaceApiResult[];
+}
+
+interface RouteMatrixApiEntry {
+  condition?: string;
+  originIndex?: number;
+  distanceMeters?: number;
+  duration?: string;
+}
+
 /* ------------------------------------------------------------------ *
  * Eingabe-Helfer
  * ------------------------------------------------------------------ */
@@ -103,20 +152,19 @@ function haversine(a: GeoPunkt, b: GeoPunkt): number {
 
 export const geocodeAddress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { address: string }) => z.object({ address: z.string().min(1) }).parse(d))
+  .validator((d: { address: string }) => z.object({ address: z.string().min(1) }).parse(d))
   .handler(async ({ data }): Promise<GeocodeErgebnis | null> => {
     const res = await fetch(
       `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(data.address)}&region=de&language=de`,
       { headers: gatewayHeaders() },
     );
     if (!res.ok) throw new Error(`Geocoding fehlgeschlagen (${res.status})`);
-    const json = (await res.json()) as any;
+    const json = (await res.json()) as GeocodeApiResponse;
     const r = json.results?.[0];
     if (!r) return null;
     const comp = (typ: string) =>
-      r.address_components?.find((c: any) => c.types?.includes(typ))?.long_name as
-        | string
-        | undefined;
+      r.address_components?.find((c: GeocodeAddressComponent) => c.types?.includes(typ))
+        ?.long_name as string | undefined;
     return {
       lat: r.geometry.location.lat,
       lng: r.geometry.location.lng,
@@ -129,20 +177,19 @@ export const geocodeAddress = createServerFn({ method: "GET" })
 
 export const reverseGeocode = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { lat: number; lng: number }) => punktSchema.parse(d))
+  .validator((d: { lat: number; lng: number }) => punktSchema.parse(d))
   .handler(async ({ data }): Promise<GeocodeErgebnis | null> => {
     const res = await fetch(
       `${GATEWAY_URL}/maps/api/geocode/json?latlng=${data.lat},${data.lng}&language=de`,
       { headers: gatewayHeaders() },
     );
     if (!res.ok) throw new Error(`Reverse-Geocoding fehlgeschlagen (${res.status})`);
-    const json = (await res.json()) as any;
+    const json = (await res.json()) as GeocodeApiResponse;
     const r = json.results?.[0];
     if (!r) return null;
     const comp = (typ: string) =>
-      r.address_components?.find((c: any) => c.types?.includes(typ))?.long_name as
-        | string
-        | undefined;
+      r.address_components?.find((c: GeocodeAddressComponent) => c.types?.includes(typ))
+        ?.long_name as string | undefined;
     return {
       lat: data.lat,
       lng: data.lng,
@@ -157,7 +204,10 @@ export const reverseGeocode = createServerFn({ method: "GET" })
  * Routen: Distanz, ETA, Maut, Verkehr
  * ------------------------------------------------------------------ */
 
-async function computeRoutesRaw(body: Record<string, unknown>, fieldMask: string): Promise<any> {
+async function computeRoutesRaw(
+  body: Record<string, unknown>,
+  fieldMask: string,
+): Promise<RoutesApiResponse> {
   const res = await fetch(`${GATEWAY_URL}/routes/directions/v2:computeRoutes`, {
     method: "POST",
     headers: gatewayHeaders({ "Content-Type": "application/json", "X-Goog-FieldMask": fieldMask }),
@@ -167,12 +217,12 @@ async function computeRoutesRaw(body: Record<string, unknown>, fieldMask: string
     const t = await res.text();
     throw new Error(`Routes API Fehler (${res.status}): ${t.slice(0, 200)}`);
   }
-  return res.json();
+  return (await res.json()) as RoutesApiResponse;
 }
 
 export const computeRoute = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (d: { origin: OrtEingabe; destination: OrtEingabe; verkehr?: boolean; ohneMaut?: boolean }) =>
       z
         .object({
@@ -222,7 +272,7 @@ export const computeRoute = createServerFn({ method: "POST" })
 
 export const optimizeRoute = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { origin: OrtEingabe; destination: OrtEingabe; stops: OrtEingabe[] }) =>
+  .validator((d: { origin: OrtEingabe; destination: OrtEingabe; stops: OrtEingabe[] }) =>
     z
       .object({
         origin: ortSchema,
@@ -271,7 +321,7 @@ export const optimizeRoute = createServerFn({ method: "POST" })
 
 export const searchPlaces = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (d: { kategorie?: PlaceKategorie; text?: string; lat: number; lng: number; radius?: number }) =>
       z
         .object({
@@ -339,8 +389,8 @@ export const searchPlaces = createServerFn({ method: "POST" })
       const t = await res.text();
       throw new Error(`Places API Fehler (${res.status}): ${t.slice(0, 200)}`);
     }
-    const json = (await res.json()) as any;
-    const places: any[] = json.places ?? [];
+    const json = (await res.json()) as PlacesApiResponse;
+    const places: PlaceApiResult[] = json.places ?? [];
     return places
       .map((p) => {
         const lat = p.location?.latitude;
@@ -369,7 +419,7 @@ export const searchPlaces = createServerFn({ method: "POST" })
 
 export const rankByDistance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { ziel: OrtEingabe; quellen: GeoPunkt[] }) =>
+  .validator((d: { ziel: OrtEingabe; quellen: GeoPunkt[] }) =>
     z.object({ ziel: ortSchema, quellen: z.array(punktSchema).min(1).max(25) }).parse(d),
   )
   .handler(
@@ -391,7 +441,7 @@ export const rankByDistance = createServerFn({ method: "POST" })
         const t = await res.text();
         throw new Error(`RouteMatrix Fehler (${res.status}): ${t.slice(0, 200)}`);
       }
-      const json = (await res.json()) as any[];
+      const json = (await res.json()) as RouteMatrixApiEntry[];
       return (Array.isArray(json) ? json : [])
         .filter((e) => e.condition === "ROUTE_EXISTS")
         .map((e) => ({

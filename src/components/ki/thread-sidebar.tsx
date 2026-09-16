@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, MessageSquare, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +30,15 @@ export function ThreadSidebar({
   const [toDelete, setToDelete] = useState<string | null>(null);
 
   const newThread = async () => {
-    const t = await create.mutateAsync(undefined);
-    navigate({ to: "/ki-assistent/$threadId", params: { threadId: t.id } });
-    onNavigate?.();
+    try {
+      const t = await create.mutateAsync(undefined);
+      navigate({ to: "/ki-assistent/$threadId", params: { threadId: t.id } });
+      onNavigate?.();
+    } catch (error) {
+      toast.error("Unterhaltung konnte nicht angelegt werden.", {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   const confirmDelete = async () => {

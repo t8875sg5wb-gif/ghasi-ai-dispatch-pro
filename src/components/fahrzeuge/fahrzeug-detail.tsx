@@ -55,9 +55,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import type { ZugeordneteFinanzperiode } from "@/lib/finance";
 
 interface FahrzeugDetailProps {
   fahrzeug: Fahrzeug | null;
+  finanzHeute?: ZugeordneteFinanzperiode;
+  finanzMonat?: ZugeordneteFinanzperiode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: FahrzeugStatus) => void;
@@ -148,6 +151,8 @@ function Metric({
 
 export function FahrzeugDetail({
   fahrzeug,
+  finanzHeute,
+  finanzMonat,
   open,
   onOpenChange,
   onStatusChange,
@@ -163,6 +168,8 @@ export function FahrzeugDetail({
   const tankTone =
     fahrzeug.tankstand <= 20 ? "destructive" : fahrzeug.tankstand <= 40 ? "warning" : "success";
   const aktion = AKTION_META[empf.aktion];
+  const basisLabel = (basis: ZugeordneteFinanzperiode["basis"] | undefined) =>
+    basis === "schaetzung" ? " (Sch.)" : basis === "gemischt" ? " (gem.)" : "";
 
   const empfToneCard = {
     success: "border-success/30 bg-success/5",
@@ -276,14 +283,14 @@ export function FahrzeugDetail({
             <div className="grid grid-cols-3 gap-2">
               <Metric
                 icon={Euro}
-                label="Umsatz heute"
-                value={formatEUR(fahrzeug.tagesumsatz)}
+                label={`Umsatz heute${basisLabel(finanzHeute?.basis)}`}
+                value={formatEUR(finanzHeute?.umsatz ?? 0)}
                 tone="success"
               />
               <Metric
                 icon={Gauge}
-                label="Gewinn heute"
-                value={formatEUR(fahrzeug.tagesgewinn)}
+                label="Gewinn heute (Sch.)"
+                value={formatEUR(finanzHeute?.gewinn ?? 0)}
                 tone="success"
               />
               <Metric
@@ -294,14 +301,14 @@ export function FahrzeugDetail({
               />
               <Metric
                 icon={Euro}
-                label="Umsatz Monat"
-                value={formatEUR(fahrzeug.monatsumsatz)}
+                label={`Umsatz Monat${basisLabel(finanzMonat?.basis)}`}
+                value={formatEUR(finanzMonat?.umsatz ?? 0)}
                 tone="success"
               />
               <Metric
                 icon={Gauge}
-                label="Gewinn Monat"
-                value={formatEUR(fahrzeug.monatsgewinn)}
+                label="Gewinn Monat (Sch.)"
+                value={formatEUR(finanzMonat?.gewinn ?? 0)}
                 tone="success"
               />
               <Metric

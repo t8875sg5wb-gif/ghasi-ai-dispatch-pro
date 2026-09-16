@@ -1,6 +1,7 @@
 // Client-safe mapping between the persisted `patients` table (snake_case) and
 // the in-app `Patient` domain type (camelCase).
 import type { Patient } from "@/lib/stammdaten";
+import { idOderNull } from "@/lib/id-helpers";
 
 export type PatientWrite = Omit<Patient, "id">;
 
@@ -34,7 +35,7 @@ export function rowToPatient(r: PatientRow): Patient {
     begleitperson: Boolean(r.begleitperson),
     medizinischeNotiz: r.medizinische_notiz ?? undefined,
     patientennotiz: r.patientennotiz ?? undefined,
-    kostentraegerId: r.kostentraeger_id ?? null,
+    kostentraegerId: idOderNull(r.kostentraeger_id),
     versichertennummer: r.versichertennummer ?? undefined,
     zuzahlungsbefreit: Boolean(r.zuzahlungsbefreit),
     zuzahlungsbefreitBis: r.zuzahlungsbefreit_bis ?? null,

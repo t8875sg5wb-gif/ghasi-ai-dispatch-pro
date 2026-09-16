@@ -9,6 +9,7 @@
 declare global {
   interface Window {
     __ghasiGmapsCb?: () => void;
+    gm_authFailure?: () => void;
     google?: typeof google;
   }
 }
@@ -35,6 +36,14 @@ export function loadGoogleMaps(): Promise<typeof google.maps> {
       reject(new Error("Kein Google-Maps-Browser-Key konfiguriert."));
       return;
     }
+    window.gm_authFailure = () => {
+      loaderPromise = null;
+      reject(
+        new Error(
+          "Google Maps Authentifizierung fehlgeschlagen. Browser-Key und erlaubten Referrer prÃ¼fen.",
+        ),
+      );
+    };
     window.__ghasiGmapsCb = () => {
       if (window.google?.maps) resolve(window.google.maps);
       else reject(new Error("Google Maps wurde nicht korrekt initialisiert."));

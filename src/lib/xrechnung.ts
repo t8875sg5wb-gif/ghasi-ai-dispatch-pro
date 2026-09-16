@@ -2,10 +2,11 @@
 // GHASI AI — XRechnung-Exportentwurf (EN 16931 / UBL-Syntax)
 // ------------------------------------------------------------
 // PFLICHT-HINWEIS (identisch im UI vor dem Download sichtbar):
-// Dieser Export ist NICHT gegen den offiziellen XRechnung-Validator
-// (KoSIT) geprüft. Vor jeglicher echten Nutzung — insbesondere Versand
-// an Behörden oder Kostenträger — muss die Datei mit dem offiziellen
-// Validator geprüft werden.
+// Der Generator wurde am 15.09.2026 mit KoSIT Validator 1.6.3 und der
+// XRechnung-3.0.2-Konfiguration 2026-08-31 an einem synthetischen
+// Referenzfall erfolgreich geprüft. Eine konkrete Produktivdatei wird jedoch
+// NICHT automatisch individuell durch KoSIT validiert; vor Versand muss die
+// tatsächlich erzeugte Datei weiterhin geprüft werden.
 //
 // Reine, seiteneffektfreie Funktion (testbar, keine DB-Zugriffe, kein
 // Versand). Es findet KEINE Übermittlung an Portale (PEPPOL, ZRE) statt —
@@ -19,13 +20,18 @@ import type { Rechnung } from "@/lib/finance";
 import { STEUER_HINWEIS, type SteuerModus } from "@/lib/steuer";
 
 export const XRECHNUNG_WARNUNG =
-  "Dieser Export ist NICHT gegen den offiziellen XRechnung-Validator (KoSIT) geprüft. " +
-  "Vor jeglicher echten Nutzung — insbesondere Versand an Behörden oder Kostenträger — " +
-  "muss die Datei mit dem offiziellen Validator geprüft werden.";
+  "Der GHASI-XRechnung-Generator wurde am 15.09.2026 mit KoSIT Validator 1.6.3 und der " +
+  "XRechnung-3.0.2-Konfiguration 2026-08-31 an einem synthetischen Referenzfall erfolgreich " +
+  "validiert. Die konkret erzeugte Produktivdatei wird nicht automatisch individuell durch KoSIT " +
+  "geprüft und muss vor dem Versand weiterhin validiert werden.";
 
 export const XRECHNUNG_LEITWEG_FEHLT_HINWEIS =
-  "Für diesen Kunden ist keine Leitweg-ID hinterlegt. Öffentlich-rechtliche Empfänger " +
-  "(z. B. Krankenkassen, Behörden) weisen Rechnungen ohne Leitweg-ID in der Regel zurück.";
+  "XRechnung-Export gesperrt: BuyerReference/Leitweg-ID (BT-10) fehlt. " +
+  "KoSIT-Regel BR-DE-15 verlangt dieses Feld; GHASI erfindet keinen Platzhalter.";
+
+export const XRECHNUNG_VERKAEUFER_ID_FEHLT =
+  "XRechnung-Export gesperrt: Verkäuferidentifikation fehlt. Bitte Steuernummer oder USt-ID " +
+  "in den bestätigten Firmendaten hinterlegen.";
 
 export const XRECHNUNG_FIRMA_UNBESTAETIGT =
   "XRechnung-Export gesperrt: Bitte zuerst die strukturierte Firmenadresse und die IBAN " +
@@ -114,7 +120,7 @@ export interface XrechnungEingabe {
 export interface XrechnungErgebnis {
   xml: string;
   dateiname: string;
-  /** Fehlt die Leitweg-ID? (UI warnt, blockiert aber nicht.) */
+  /** Rückwärtskompatibel; bei erfolgreichem Export immer false, weil BT-10 Pflicht ist. */
   leitwegFehlt: boolean;
 }
 
@@ -132,6 +138,9 @@ export function generateXRechnung(input: XrechnungEingabe): XrechnungErgebnis {
   }
   if (!adresseVollstaendig(verkaeufer.adresse) || !verkaeufer.iban.trim()) {
     throw new Error(XRECHNUNG_FIRMA_UNBESTAETIGT);
+  }
+  if (!verkaeufer.steuernummer.trim() && !verkaeufer.ustId.trim()) {
+    throw new Error(XRECHNUNG_VERKAEUFER_ID_FEHLT);
   }
   if (!adresseVollstaendig(kaeufer.adresse)) {
     throw new Error(
@@ -162,10 +171,10 @@ export function generateXRechnung(input: XrechnungEingabe): XrechnungErgebnis {
   const steuerKategorie = satz > 0 ? "S" : "E";
   const befreiungsgrund = STEUER_HINWEIS[steuerModus];
 
-  const leitwegFehlt = !(kaeufer.leitwegId ?? "").trim();
-  // BT-10 ist Pflichtfeld in XRechnung; ohne Leitweg-ID wird bewusst KEIN
-  // Platzhalter erfunden, sondern das Feld leer geliefert und im UI gewarnt.
   const buyerReference = (kaeufer.leitwegId ?? "").trim();
+  if (!buyerReference) throw new Error(XRECHNUNG_LEITWEG_FEHLT_HINWEIS);
+  // Rückwärtskompatibles Ergebnisfeld: erfolgreiche Exporte haben BT-10 immer gesetzt.
+  const leitwegFehlt = false;
 
   const lines = zeilen
     .map((z) =>
@@ -190,9 +199,9 @@ export function generateXRechnung(input: XrechnungEingabe): XrechnungErgebnis {
 
   const xml = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<!-- ENTWURF: NICHT gegen den offiziellen XRechnung-Validator (KoSIT) geprüft.`,
-    `     Vor jeglicher echten Nutzung (Versand an Behörden/Kostenträger) muss die`,
-    `     Datei mit dem offiziellen Validator geprüft werden. -->`,
+    `<!-- GHASI-Generator: synthetischer Referenzfall am 15.09.2026 mit KoSIT Validator 1.6.3`,
+    `     und XRechnung-Konfiguration 2026-08-31 erfolgreich validiert. Diese konkrete Datei`,
+    `     wird nicht automatisch individuell validiert; vor produktivem Versand erneut prüfen. -->`,
     `<ubl:Invoice xmlns:ubl="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"`,
     `             xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"`,
     `             xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">`,
@@ -216,6 +225,9 @@ export function generateXRechnung(input: XrechnungEingabe): XrechnungErgebnis {
     `  <cac:AccountingSupplierParty>`,
     `    <cac:Party>`,
     `      ${el("cbc:EndpointID", verkaeufer.email, 'schemeID="EM"')}`,
+    verkaeufer.steuernummer.trim()
+      ? `      <cac:PartyIdentification>${el("cbc:ID", verkaeufer.steuernummer.trim())}</cac:PartyIdentification>`
+      : "",
     adresseXml(verkaeufer.adresse, "      "),
     verkaeufer.ustId.trim()
       ? [

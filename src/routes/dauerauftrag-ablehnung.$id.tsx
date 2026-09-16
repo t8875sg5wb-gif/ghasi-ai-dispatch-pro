@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,8 @@ import {
 } from "@/lib/recurring-rejections.functions";
 import { feldLabel } from "@/lib/recurring-validation";
 import { regelErklaerung } from "@/lib/recurring-rejection-detail";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dauerauftrag-ablehnung/$id")({
   head: () => ({
@@ -54,11 +57,14 @@ function formatWert(wert: unknown): string {
 }
 
 function AblehnungDetailPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin";
   const { id } = Route.useParams();
   const laden = useServerFn(getRecurringRejection);
   const { data, isLoading, isError, error } = useQuery<DauerauftragAblehnungDetail>({
     queryKey: ["recurring_rejection", id],
     queryFn: () => laden({ data: { id } }),
+    enabled: berechtigt,
   });
 
   let eingaben: Record<string, unknown> = {};
@@ -71,6 +77,18 @@ function AblehnungDetailPage() {
   }
   const eintraege = Object.entries(eingaben);
   const fehlerPfade = new Set((data?.felder ?? []).map((f) => f.path.split(".")[0]));
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Ablehnung im Detail"
+        description="Nur für Administratoren sichtbar."
+        icon={ShieldAlert}
+        badge="Administration"
+        message="Diese Detailansicht ist ausschließlich Administratoren vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   MapPin,
   Navigation,
@@ -22,7 +22,6 @@ import { GoogleFleetMap } from "@/components/gps/google-fleet-map";
 import { GOOGLE_MAP_STILE, type GoogleMapStil } from "@/lib/google-maps";
 import {
   type FleetVehicle,
-  type LatLng,
   ALERT_SCHWERE_META,
   FLEET_FARBEN,
   buildFleet,
@@ -30,6 +29,9 @@ import {
 } from "@/lib/fleet-live";
 import { LIVE_PIPELINE, LIVE_STATUS_META } from "@/lib/dispatch";
 import { MOBILITAET_META, VERORDNUNG_META, effektiveVerordnung } from "@/lib/auftraege";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useOrders } from "@/lib/orders-store";
 
 export const Route = createFileRoute("/live-gps")({
   head: () => ({
@@ -51,40 +53,17 @@ export const Route = createFileRoute("/live-gps")({
   component: LiveGps,
 });
 
-/** Bewegt fahrende Fahrzeuge ein kleines Stück Richtung nächstes Routenziel. */
-function naechsterPunkt(v: FleetVehicle): LatLng | null {
-  if (v.farbe !== "fahrt") return null;
-  const ziel = v.routeRest[1] ?? v.routeRest[0] ?? v.assignment?.pickup ?? null;
-  if (!ziel) return null;
-  const dlat = ziel.lat - v.gps.lat;
-  const dlng = ziel.lng - v.gps.lng;
-  const dist = Math.hypot(dlat, dlng);
-  if (dist < 0.0008) return null;
-  const step = 0.12;
-  return {
-    lat: Number((v.gps.lat + dlat * step).toFixed(5)),
-    lng: Number((v.gps.lng + dlng * step).toFixed(5)),
-  };
-}
-
 function LiveGps() {
-  const [fleet, setFleet] = useState<FleetVehicle[]>(() => buildFleet());
+  const { data: fahrzeuge = [] } = useVehicles();
+  const { data: fahrer = [] } = useDrivers();
+  const { data: auftraege = [] } = useOrders();
+  const fleet = useMemo(
+    () => buildFleet({ fahrzeuge, fahrer, auftraege }),
+    [fahrzeuge, fahrer, auftraege],
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [suche, setSuche] = useState("");
   const [stil, setStil] = useState<GoogleMapStil>("roadmap");
-
-  // Live-Bewegung: fahrende Fahrzeuge alle 3s ein Stück weiterbewegen.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFleet((prev) =>
-        prev.map((v) => {
-          const next = naechsterPunkt(v);
-          return next ? { ...v, gps: next } : v;
-        }),
-      );
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const alerts = useMemo(() => computeFleetAlerts(fleet), [fleet]);
 

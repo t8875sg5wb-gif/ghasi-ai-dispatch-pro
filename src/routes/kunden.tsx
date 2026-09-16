@@ -25,10 +25,12 @@ import {
   useUpdateCustomer,
   useSeedCustomers,
 } from "@/lib/customers-store";
-import { INITIAL_RECHNUNGEN, RECHNUNG_STATUS_META, EUR } from "@/lib/finance";
-import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import { RECHNUNG_STATUS_META, EUR, type Rechnung } from "@/lib/finance";
+import { STATUS_META, formatTermin, type Auftrag } from "@/lib/auftraege";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
+import { useOrders } from "@/lib/orders-store";
+import { useInvoices } from "@/lib/invoices-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +82,8 @@ function KundenSeite() {
   const { name: akteur } = useAuth();
   const { id: initialId } = Route.useSearch();
   const { data: kunden = [] } = useCustomers();
+  const { data: auftraege = [] } = useOrders();
+  const { data: rechnungen = [] } = useInvoices();
   const createMut = useCreateCustomer();
   const updateMut = useUpdateCustomer();
   const seedMut = useSeedCustomers();
@@ -253,6 +257,8 @@ function KundenSeite() {
         {selektiert && (
           <KundeDetail
             kunde={selektiert}
+            auftraege={auftraege}
+            rechnungen={rechnungen}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
@@ -298,12 +304,22 @@ function buildHinweise(kunden: Kunde[]): string[] {
   return out.slice(0, 4);
 }
 
-function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
-  const rechnungen = INITIAL_RECHNUNGEN.filter(
+function KundeDetail({
+  kunde,
+  auftraege,
+  rechnungen,
+  onEdit,
+}: {
+  kunde: Kunde;
+  auftraege: Auftrag[];
+  rechnungen: Rechnung[];
+  onEdit: () => void;
+}) {
+  const kundenRechnungen = rechnungen.filter(
     (r) => r.kundeId === kunde.id || r.kunde === kunde.name,
   );
-  const transporte = INITIAL_AUFTRAEGE.filter((a) => a.kostentraeger === kunde.name);
-  const offenerBetrag = rechnungen
+  const transporte = auftraege.filter((a) => a.kostentraeger === kunde.name);
+  const offenerBetrag = kundenRechnungen
     .filter((r) => r.status !== "bezahlt")
     .reduce((s, r) => s + r.betrag, 0);
 
@@ -365,7 +381,7 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Receipt className="h-4 w-4" /> Rechnungen ({rechnungen.length})
+              <Receipt className="h-4 w-4" /> Rechnungen ({kundenRechnungen.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -374,10 +390,10 @@ function KundeDetail({ kunde, onEdit }: { kunde: Kunde; onEdit: () => void }) {
                 Offener Betrag: <strong>{EUR(offenerBetrag)}</strong>
               </p>
             )}
-            {rechnungen.length === 0 && (
+            {kundenRechnungen.length === 0 && (
               <p className="text-sm text-muted-foreground">Keine Rechnungen.</p>
             )}
-            {rechnungen.map((r) => {
+            {kundenRechnungen.map((r) => {
               const meta = RECHNUNG_STATUS_META[r.status];
               return (
                 <Link

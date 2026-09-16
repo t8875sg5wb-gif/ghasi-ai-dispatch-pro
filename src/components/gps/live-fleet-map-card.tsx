@@ -1,29 +1,17 @@
 // Wiederverwendbare Live-Flottenkarte (Google Maps) für Dashboard und
 // Dispatch. Kapselt Fleet-Aufbau, sanfte Live-Bewegung, Auswahl und
 // Stil-Umschalter. Client-only (Karte lädt erst im Browser).
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Layers, MapPin } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GoogleFleetMap } from "@/components/gps/google-fleet-map";
 import { GOOGLE_MAP_STILE, type GoogleMapStil } from "@/lib/google-maps";
-import { type FleetVehicle, type LatLng, FLEET_FARBEN, buildFleet } from "@/lib/fleet-live";
-
-function naechsterPunkt(v: FleetVehicle): LatLng | null {
-  if (v.farbe !== "fahrt") return null;
-  const ziel = v.routeRest[1] ?? v.routeRest[0] ?? v.assignment?.pickup ?? null;
-  if (!ziel) return null;
-  const dlat = ziel.lat - v.gps.lat;
-  const dlng = ziel.lng - v.gps.lng;
-  const dist = Math.hypot(dlat, dlng);
-  if (dist < 0.0008) return null;
-  const step = 0.12;
-  return {
-    lat: Number((v.gps.lat + dlat * step).toFixed(5)),
-    lng: Number((v.gps.lng + dlng * step).toFixed(5)),
-  };
-}
+import { FLEET_FARBEN, buildFleet } from "@/lib/fleet-live";
+import { useVehicles } from "@/lib/vehicles-store";
+import { useDrivers } from "@/lib/drivers-store";
+import { useOrders } from "@/lib/orders-store";
 
 export function LiveFleetMapCard({
   height = "h-[320px]",
@@ -32,21 +20,15 @@ export function LiveFleetMapCard({
   height?: string;
   className?: string;
 }) {
-  const [fleet, setFleet] = useState<FleetVehicle[]>(() => buildFleet());
+  const { data: fahrzeuge = [] } = useVehicles();
+  const { data: fahrer = [] } = useDrivers();
+  const { data: auftraege = [] } = useOrders();
+  const fleet = useMemo(
+    () => buildFleet({ fahrzeuge, fahrer, auftraege }),
+    [fahrzeuge, fahrer, auftraege],
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [stil, setStil] = useState<GoogleMapStil>("roadmap");
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFleet((prev) =>
-        prev.map((v) => {
-          const next = naechsterPunkt(v);
-          return next ? { ...v, gps: next } : v;
-        }),
-      );
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const zaehler = useMemo(() => {
     const z: Record<string, number> = { frei: 0, fahrt: 0, wartet: 0, offline: 0 };

@@ -16,10 +16,17 @@ import {
   X,
   Loader2,
   Download,
+  UploadCloud,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 
 import { exportAllData } from "@/lib/backup.functions";
 import { downloadBackupZip } from "@/lib/backup-zip";
+import { parseCompleteRestoreZip, type ParsedRestoreZip } from "@/lib/backup-restore-zip";
+import { cancelRestore, executeRestore, prepareRestore } from "@/lib/backup-restore.functions";
+import { uploadRestoreStagingFiles } from "@/lib/backup-restore-client";
+import { supabase } from "@/integrations/supabase/client";
 
 import { listeBenutzer, setzeRolle, type BenutzerEintrag } from "@/lib/admin.functions";
 import { ROLE_LABELS, ROLE_BESCHREIBUNG, ROLE_BEREICHE, type AppRole } from "@/lib/roles";
@@ -104,16 +111,44 @@ function AdministrationSeite() {
   );
 }
 
+type RestoreDryRun = {
+  planToken: string;
+  uploads: Array<{
+    finalPath: string;
+    stagingPath: string;
+    token: string;
+    size: number;
+    sha256: string;
+  }>;
+  alreadyPresent: number;
+  expiresAt: number;
+  snapshotId: string;
+  createdAt: string;
+  tableCount: number;
+  totalRows: number;
+  documentCount: number;
+};
+
 function Datensicherung() {
   const exportFn = useServerFn(exportAllData);
+  const prepareRestoreFn = useServerFn(prepareRestore);
+  const executeRestoreFn = useServerFn(executeRestore);
+  const cancelRestoreFn = useServerFn(cancelRestore);
   const [busy, setBusy] = useState(false);
+  const [restoreBusy, setRestoreBusy] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [parsedRestore, setParsedRestore] = useState<ParsedRestoreZip | null>(null);
+  const [dryRun, setDryRun] = useState<RestoreDryRun | null>(null);
+  const [confirmation, setConfirmation] = useState("");
+  const [progress, setProgress] = useState<string | null>(null);
+  const [restoreResult, setRestoreResult] = useState<string | null>(null);
 
   async function handleExport() {
     setBusy(true);
     try {
       const res = await exportFn();
       const data = JSON.parse(res.json) as Parameters<typeof downloadBackupZip>[0];
-      const { tables, rows } = await downloadBackupZip(data);
+      const { tables, rows } = await downloadBackupZip(data, res.snapshotId, res.documentSources);
       if (res.failedTables.length > 0) {
         toast.warning(
           `Backup unvollständig: ${res.failedTables.join(", ")} konnte(n) nicht gesichert werden. Erstellt: ${tables} Tabellen, ${rows} Datensätze.`,
@@ -129,22 +164,231 @@ function Datensicherung() {
     }
   }
 
+  async function handlePrepareRestore() {
+    if (!restoreFile) return toast.error("Bitte zuerst ein GHASI-Backup-ZIP auswählen.");
+    setRestoreBusy(true);
+    setRestoreResult(null);
+    try {
+      const parsed = await parseCompleteRestoreZip(restoreFile);
+      const prepared = (await prepareRestoreFn({
+        data: {
+          backupJson: JSON.stringify(parsed.backup),
+          documentManifest: parsed.documentManifest,
+        },
+      })) as RestoreDryRun;
+      setParsedRestore(parsed);
+      setDryRun(prepared);
+      setConfirmation("");
+      toast.success("Restore-Dry-Run erfolgreich. Noch wurden keine Daten verändert.");
+    } catch (e) {
+      setParsedRestore(null);
+      setDryRun(null);
+      toast.error(e instanceof Error ? e.message : "Restore-Prüfung fehlgeschlagen");
+    } finally {
+      setRestoreBusy(false);
+    }
+  }
+
+  async function handleCancelRestore() {
+    if (dryRun) {
+      try {
+        await cancelRestoreFn({ data: { planToken: dryRun.planToken } });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Restore-Plan konnte nicht bereinigt werden");
+        return;
+      }
+    }
+    setParsedRestore(null);
+    setDryRun(null);
+    setConfirmation("");
+    setProgress(null);
+  }
+
+  async function handleExecuteRestore() {
+    if (!parsedRestore || !dryRun) return;
+    if (confirmation.trim() !== "WIEDERHERSTELLEN") {
+      return toast.error("Bitte zur Bestätigung exakt „WIEDERHERSTELLEN“ eingeben.");
+    }
+    setRestoreBusy(true);
+    try {
+      await uploadRestoreStagingFiles(
+        parsedRestore.files,
+        dryRun.uploads,
+        supabase,
+        ({ completed, total, currentPath }) =>
+          setProgress(`Dokumente: ${completed}/${total} – ${currentPath}`),
+      );
+      setProgress("Dokumente geprüft. Datenbank wird atomar wiederhergestellt …");
+      const result = await executeRestoreFn({
+        data: {
+          backupJson: JSON.stringify(parsedRestore.backup),
+          documentManifest: parsedRestore.documentManifest,
+          planToken: dryRun.planToken,
+        },
+      });
+      const message = `${result.tableCount} Tabellen, ${result.totalRows} Datensätze, ${result.documentsRestored} neue Dokumentdateien wiederhergestellt.`;
+      setRestoreResult(message);
+      if (result.cleanupWarning) toast.warning(result.cleanupWarning, { duration: 8000 });
+      else toast.success(`Restore abgeschlossen: ${message}`);
+      setParsedRestore(null);
+      setDryRun(null);
+      setRestoreFile(null);
+      setConfirmation("");
+      setProgress(null);
+    } catch (e) {
+      try {
+        await cancelRestoreFn({ data: { planToken: dryRun.planToken } });
+      } catch {
+        // Der urspruengliche Restore-Fehler bleibt fuer den Admin sichtbar.
+      }
+      toast.error(e instanceof Error ? e.message : "Restore fehlgeschlagen", { duration: 10000 });
+    } finally {
+      setRestoreBusy(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Database className="h-4 w-4" /> Datensicherung
+          <Database className="h-4 w-4" /> Datensicherung & Wiederherstellung
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          Exportiert alle gespeicherten Daten (Aufträge, Kunden, Rechnungen u. v. m.) als ZIP-Archiv
-          mit einer CSV-Datei je Bereich.
-        </p>
-        <Button onClick={handleExport} disabled={busy} className="shrink-0">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-          Backup exportieren
-        </Button>
+      <CardContent className="space-y-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Exportiert die vollständige Datenbank und alle aktiven Dokumentdateien als geprüftes
+            ZIP-Archiv.
+          </p>
+          <Button onClick={handleExport} disabled={busy || restoreBusy} className="shrink-0">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Backup exportieren
+          </Button>
+        </div>
+
+        <div className="border-t pt-5">
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <p className="text-sm">
+              <span className="font-semibold">Restore ersetzt den aktuellen Datenbestand.</span>{" "}
+              Zuerst wird nur geprüft. Daten und Dokumente werden erst nach der zweiten,
+              ausdrücklichen Bestätigung verändert.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <label htmlFor="restore-backup" className="text-sm font-medium">
+                GHASI-Backup-ZIP
+              </label>
+              <Input
+                id="restore-backup"
+                type="file"
+                accept=".zip,application/zip"
+                disabled={restoreBusy || Boolean(dryRun)}
+                onChange={(e) => {
+                  setRestoreFile(e.target.files?.[0] ?? null);
+                  setRestoreResult(null);
+                }}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!restoreFile || restoreBusy || Boolean(dryRun)}
+              onClick={handlePrepareRestore}
+            >
+              {restoreBusy && !dryRun ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UploadCloud className="h-4 w-4" />
+              )}
+              Backup prüfen
+            </Button>
+          </div>
+
+          {dryRun && parsedRestore && (
+            <div className="mt-4 space-y-4 rounded-lg border p-4">
+              <div>
+                <p className="font-semibold">Dry-Run erfolgreich – noch nichts verändert</p>
+                <p className="text-xs text-muted-foreground">
+                  Snapshot {dryRun.snapshotId} · Backup vom{" "}
+                  {new Date(dryRun.createdAt).toLocaleString("de-DE")}
+                </p>
+              </div>
+              <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <span className="text-muted-foreground">Tabellen:</span> {dryRun.tableCount}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Datensätze:</span> {dryRun.totalRows}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Dokumente:</span> {dryRun.documentCount}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Neu hochzuladen:</span>{" "}
+                  {dryRun.uploads.length}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {dryRun.alreadyPresent} Dokumentdatei(en) existieren bereits hashgleich. Der
+                Restore-Plan läuft um {new Date(dryRun.expiresAt).toLocaleTimeString("de-DE")} ab.
+              </p>
+              <div className="space-y-1.5">
+                <label htmlFor="restore-confirmation" className="text-sm font-medium">
+                  Zur Bestätigung WIEDERHERSTELLEN eingeben
+                </label>
+                <Input
+                  id="restore-confirmation"
+                  value={confirmation}
+                  onChange={(e) => setConfirmation(e.target.value)}
+                  disabled={restoreBusy}
+                  autoComplete="off"
+                />
+              </div>
+              {progress && <p className="text-sm text-muted-foreground">{progress}</p>}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={restoreBusy || confirmation.trim() !== "WIEDERHERSTELLEN"}
+                  onClick={handleExecuteRestore}
+                >
+                  {restoreBusy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+                  Jetzt wiederherstellen
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={restoreBusy}
+                  onClick={handleCancelRestore}
+                >
+                  Prüfung verwerfen
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {restoreResult && (
+            <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
+              <p className="font-semibold">Restore erfolgreich abgeschlossen</p>
+              <p className="text-muted-foreground">{restoreResult}</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                onClick={() => window.location.reload()}
+              >
+                Ansicht neu laden
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

@@ -121,6 +121,40 @@ function zahlungsereignisse(r: Rechnung): Zahlungsereignis[] {
  * Berechnet die EÜR für ein Jahr aus bezahlten Rechnungen (Einnahmen) und
  * Ausgaben (Zahlungsdatum = Ausgabendatum).
  */
+export interface EuerDatenbasis {
+  vorhanden: boolean;
+  zahlungseingaenge: number;
+  ausgabenbelege: number;
+  hinweis: string;
+}
+
+export function euerDatenbasis(
+  jahr: number,
+  rechnungen: Rechnung[],
+  ausgaben: Ausgabe[],
+): EuerDatenbasis {
+  const zahlungseingaenge = rechnungen.reduce((summe, r) => {
+    const treffer = zahlungsereignisse(r).filter((ev) => {
+      const d = new Date(ev.datum);
+      return !Number.isNaN(d.getTime()) && d.getFullYear() === jahr;
+    }).length;
+    return summe + treffer;
+  }, 0);
+  const ausgabenbelege = ausgaben.filter((a) => {
+    const d = new Date(a.datum);
+    return !Number.isNaN(d.getTime()) && d.getFullYear() === jahr;
+  }).length;
+  const vorhanden = zahlungseingaenge > 0 || ausgabenbelege > 0;
+  return {
+    vorhanden,
+    zahlungseingaenge,
+    ausgabenbelege,
+    hinweis: vorhanden
+      ? `${zahlungseingaenge} Zahlungseingang/-eingänge und ${ausgabenbelege} Ausgabenbeleg(e) für ${jahr}.`
+      : `Für ${jahr} liegen keine Zahlungseingänge und keine Ausgabenbelege vor – 0 € ist daher kein bestätigter Jahreswert.`,
+  };
+}
+
 export function computeEuer(
   jahr: number,
   rechnungen: Rechnung[],

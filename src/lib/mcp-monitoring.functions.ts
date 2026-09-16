@@ -13,7 +13,7 @@ import { ladeMcpAufrufe, mcpFilterSchema } from "@/lib/mcp-monitoring.server";
 
 export const getMcpMonitoring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(mcpFilterSchema)
+  .validator(mcpFilterSchema)
   .handler(async ({ data, context }): Promise<McpMonitoring> => {
     // Einen Eintrag mehr laden als angezeigt: Erkennung, ob nachgeladen werden kann.
     const geladen = await ladeMcpAufrufe(context.supabase, context.userId, data.limit + 1);
@@ -28,7 +28,7 @@ const archivSchema = z.object({ limit: z.number().int().min(1).max(500).default(
 /** Archivbereich: Einträge, die die Aufbewahrungsdauer im aktiven Bereich überschritten haben. */
 export const getMcpArchiv = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => archivSchema.parse(data ?? {}))
+  .validator((data: unknown) => archivSchema.parse(data ?? {}))
   .handler(async ({ data, context }): Promise<McpArchiv> => {
     const { ladeMcpArchiv } = await import("@/lib/mcp-monitoring.server");
     return ladeMcpArchiv(context.supabase, context.userId, data.limit);

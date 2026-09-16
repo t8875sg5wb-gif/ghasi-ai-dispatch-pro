@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertFinanzRolle } from "@/lib/employment-security.server";
 import type { Rechnung } from "@/lib/finance";
 import type { Auftrag } from "@/lib/auftraege";
 import {
@@ -133,6 +134,7 @@ export const createInvoice = createServerFn({ method: "POST" })
     return parsed.data as unknown as InvoiceWrite;
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     // Auch die manuelle Einzelrechnung legt reale USt-Beträge fest.
     await requireBestaetigtenSteuerModus(context.supabase);
     const row = writeToInvoiceRow(data);
@@ -153,6 +155,7 @@ export const updateInvoice = createServerFn({ method: "POST" })
     return parsed.data as unknown as { id: string; values: Partial<InvoiceWrite> };
   })
   .handler(async ({ data, context }): Promise<Rechnung> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     // Load the previous state first so we can log a GoBD-oriented audit trail.
     const { data: before } = await context.supabase
       .from("invoices")
@@ -254,6 +257,7 @@ export const listInvoiceChanges = createServerFn({ method: "GET" })
     return parsed.data;
   })
   .handler(async ({ data, context }): Promise<InvoiceChangeEntry[]> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase
       .from("invoice_changes")
       .select("*")
@@ -288,6 +292,7 @@ export const deleteInvoice = createServerFn({ method: "POST" })
     return parsed.data;
   })
   .handler(async ({ data, context }) => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { error } = await context.supabase.from("invoices").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -300,6 +305,7 @@ export const deleteInvoice = createServerFn({ method: "POST" })
 export const seedInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ seeded: number }> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { count } = await context.supabase
       .from("invoices")
       .select("*", { count: "exact", head: true });
@@ -373,6 +379,7 @@ function abrechnungsartFuer(kostentraeger: string): "Krankenkasse" | "Patient" |
 export const billingReadyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ nummer: string; patient: string; betrag: number }[]> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const [orders, invoices] = await Promise.all([
       loadOrders(context.supabase),
       loadInvoices(context.supabase),
@@ -396,6 +403,7 @@ export const billingReadyOrders = createServerFn({ method: "GET" })
 export const generateBillingDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ created: number; nummern: string[] }> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     // Sperre: ohne bestätigten USt-Modus keine Rechnungsentwürfe.
     const company = await requireBestaetigtenSteuerModus(context.supabase);
     const [orders, invoices, contracts, insurers, patients] = await Promise.all([
@@ -478,6 +486,7 @@ export const generateBillingDrafts = createServerFn({ method: "POST" })
 export const detectInvoiceDuplicates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ a: string; b: string; betrag: number }[]> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const invoices = await loadInvoices(context.supabase);
     const out: { a: string; b: string; betrag: number }[] = [];
     for (let i = 0; i < invoices.length; i++) {
@@ -498,6 +507,7 @@ export const detectInvoiceDuplicates = createServerFn({ method: "GET" })
 export const detectMissingInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ nummer: string; patient: string }[]> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const [orders, invoices] = await Promise.all([
       loadOrders(context.supabase),
       loadInvoices(context.supabase),
@@ -538,7 +548,6 @@ export const exportInvoiceXRechnung = createServerFn({ method: "POST" })
       data,
       context,
     }): Promise<{ xml: string; dateiname: string; leitwegFehlt: boolean; warnung: string }> => {
-      const { assertFinanzRolle } = await import("@/lib/employment-security.server");
       await assertFinanzRolle(context.supabase, context.userId);
 
       const {

@@ -1,7 +1,7 @@
 // In-App-Benachrichtigungssystem für GHASI AI.
 //
 // Ein leichtgewichtiger, framework-unabhängiger Store mit Pub/Sub und
-// localStorage-Persistenz. Wird über `useNotifications()` in React konsumiert
+// flüchtigem In-Memory-Speicher. Wird über `useNotifications()` in React konsumiert
 // und über `syncOrderNotifications()` aus dem Auftrags-State gespeist.
 //
 // Push-Bereitschaft: `requestPushPermission()` / `isPushSupported()` sind als
@@ -36,7 +36,6 @@ export interface NotificationItem {
   gelesen: boolean;
 }
 
-const STORAGE_KEY = "ghasi.notifications.v1";
 const MAX = 100;
 
 let items: NotificationItem[] = [];
@@ -44,27 +43,11 @@ let geladen = false;
 const listeners = new Set<() => void>();
 
 function load() {
-  if (geladen || typeof window === "undefined") return;
+  if (geladen) return;
   geladen = true;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) items = JSON.parse(raw) as NotificationItem[];
-  } catch {
-    items = [];
-  }
-}
-
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX)));
-  } catch {
-    /* ignore quota */
-  }
 }
 
 function emit() {
-  persist();
   for (const l of listeners) l();
 }
 

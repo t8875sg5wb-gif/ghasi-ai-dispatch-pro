@@ -103,13 +103,17 @@ function CompliancePage() {
   const pflichten = useMemo(() => computePflichten(input), [input]);
   const luecken = useMemo(() => computeVollstaendigkeit(input), [input]);
 
-  const loehneMonat = useMemo(
+  const lohnErgebnisse = useMemo(
     () =>
-      (drivers ?? []).reduce(
-        (s, d) => s + computeLohn(d.beschaeftigungsart ?? "minijob", d.monatsbrutto ?? 0).agGesamt,
-        0,
+      (drivers ?? []).map((d) =>
+        computeLohn(d.beschaeftigungsart ?? "minijob", d.monatsbrutto ?? 0),
       ),
     [drivers],
+  );
+  const loehneUnvollstaendig = lohnErgebnisse.filter((e) => e.rechenstatus !== "ok").length;
+  const loehneMonat = useMemo(
+    () => lohnErgebnisse.filter((e) => e.rechenstatus === "ok").reduce((s, e) => s + e.agGesamt, 0),
+    [lohnErgebnisse],
   );
   const zahlungen = useMemo(
     () => computeZahlungsUebersicht(input, loehneMonat),
@@ -159,6 +163,13 @@ function CompliancePage() {
           tone="primary"
         />
       </section>
+
+      {loehneUnvollstaendig > 0 && (
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+          Lohnkosten sind unvollständig: {loehneUnvollstaendig} Datensatz/-sätze benötigen Prüfung
+          und wurden nicht geschätzt.
+        </div>
+      )}
 
       <section className="grid gap-4 lg:grid-cols-2">
         {kategorien.map(([kat, list]) => (

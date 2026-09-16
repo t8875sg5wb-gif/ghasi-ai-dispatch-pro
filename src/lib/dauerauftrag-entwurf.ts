@@ -12,8 +12,7 @@
  */
 
 import type { Dauerauftrag } from "@/lib/dauerauftraege";
-
-const PRAEFIX = "ghasi:dauerauftrag-entwurf:";
+import { DAUERAUFTRAG_ENTWURF_PREFIX } from "@/lib/browser-session-security";
 
 /** Entwürfe älter als 12 Stunden werden verworfen. */
 export const ENTWURF_MAX_ALTER_MS = 12 * 60 * 60 * 1000;
@@ -28,7 +27,7 @@ export interface GespeicherterEntwurf {
 
 /** Stabiler Schlüssel: pro bearbeiteter Serie bzw. einer für Neuanlagen. */
 export function entwurfSchluessel(id: string | null): string {
-  return `${PRAEFIX}${id ?? "neu"}`;
+  return `${DAUERAUFTRAG_ENTWURF_PREFIX}${id ?? "neu"}`;
 }
 
 type Speicher = Pick<Storage, "getItem" | "setItem" | "removeItem">;

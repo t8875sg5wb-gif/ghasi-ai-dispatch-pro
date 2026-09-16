@@ -695,9 +695,9 @@ function DetailAnsicht({
 
       <div className="space-y-4 text-sm">
         <div className="grid grid-cols-2 gap-3">
-          <Feld label="Pickup" wert={pickupZeilen.length ? pickupZeilen.join(" · ") : "—"} />
+          <Feld label="Abholort" wert={pickupZeilen.length ? pickupZeilen.join(" · ") : "—"} />
           <Feld
-            label="Destination"
+            label="Zielort"
             wert={destinationZeilen.length ? destinationZeilen.join(" · ") : "—"}
           />
           <Feld label="Uhrzeit Hinfahrt" wert={d.terminzeit} />
@@ -903,14 +903,12 @@ function DauerauftragForm({
   };
 
   // Live-Validierung: bei jeder Änderung neu berechnet.
-  const liveFehler = useMemo(() => validiere(f), [f]);
+  const liveFehler = validiere(f);
 
   // Prüfstatus des gesicherten Entwurfs (nach einem Reload noch nicht übernommen).
-  const entwurfFehlerAnzahl = useMemo(
-    () => (wiederherstellbar ? validiere(normalisiere(wiederherstellbar.werte)).length : 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wiederherstellbar],
-  );
+  const entwurfFehlerAnzahl = wiederherstellbar
+    ? validiere(normalisiere(wiederherstellbar.werte)).length
+    : 0;
 
   const istBeruehrt = (path: string) =>
     beruehrt.includes(path) || beruehrt.includes(path.split(".")[0] ?? path);
@@ -927,7 +925,7 @@ function DauerauftragForm({
     ...sichtbareLiveFehler,
     ...offeneServerFehler.filter((s) => !sichtbareLiveFehler.some((l) => l.path === s.path)),
   ];
-  const fehlerMap = useMemo(() => feldFehlerMap(fehler), [fehler]);
+  const fehlerMap = feldFehlerMap(fehler);
   // Dirty-Status: weicht das Formular vom letzten gesicherten Stand ab?
   const ungespeicherteAenderungen = entwurfGespeichertAm
     ? entwurfWeichtAb(f, gesichertRef.current)
@@ -981,7 +979,6 @@ function DauerauftragForm({
     // Nach einem Reload den letzten Speicherstand weiterhin anzeigen.
     setEntwurfOffen(offen !== null);
     if (offen) setEntwurfGespeichertAm(offen.gespeichertAm);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
   /**
@@ -1355,7 +1352,7 @@ function DauerauftragForm({
           <div className="sm:col-span-2" id="feld-pickup">
             <AddressFields
               idPrefix="dauer-pickup"
-              label="Pickup"
+              label="Abholort"
               required
               value={f.pickup ?? parseAdresse(f.abholort)}
               onChange={(value) => setAdresse("pickup", value)}
@@ -1366,7 +1363,7 @@ function DauerauftragForm({
           <div className="sm:col-span-2" id="feld-destination">
             <AddressFields
               idPrefix="dauer-destination"
-              label="Destination"
+              label="Zielort"
               required
               value={f.destination ?? parseAdresse(f.zielort)}
               onChange={(value) => setAdresse("destination", value)}

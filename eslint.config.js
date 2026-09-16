@@ -14,6 +14,11 @@ export default tseslint.config(
       "src/integrations/supabase/types.ts",
       "src/integrations/supabase/previewAuthStorage.ts",
       "src/lib/api/dauerauftraege-api.gen.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
+      "src/routes/**/invoke-tool/$tool.ts",
+      "src/routes/**/list-tools.ts",
+      "src/routes/**/oauth-protected-resource.ts",
+      "src/routes/mcp.ts",
     ],
   },
   {

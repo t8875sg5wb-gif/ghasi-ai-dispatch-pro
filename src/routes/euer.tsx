@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ScrollText, TrendingUp, TrendingDown, Euro, FileDown } from "lucide-react";
+import { AlertTriangle, ScrollText, TrendingUp, TrendingDown, Euro, FileDown } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,12 @@ import { useInvoices } from "@/lib/invoices-store";
 import { useExpenses } from "@/lib/expenses-store";
 import { useCompanySettings } from "@/lib/company-settings-store";
 import { EUR2 } from "@/lib/finance";
-import { computeEuer, verfuegbareJahre, MONATSNAMEN } from "@/lib/euer";
+import { computeEuer, euerDatenbasis, verfuegbareJahre, MONATSNAMEN } from "@/lib/euer";
 import { downloadEuerPdf } from "@/lib/euer-pdf";
 import { STEUER_DISCLAIMER } from "@/lib/steuer";
 import { logActivity } from "@/lib/protokoll";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/euer")({
   head: () => ({
@@ -43,19 +46,38 @@ export const Route = createFileRoute("/euer")({
 });
 
 function EuerPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: invoices } = useInvoices();
   const { data: expenses } = useExpenses();
   const { data: company } = useCompanySettings();
 
-  const rechnungen = invoices ?? [];
-  const ausgaben = expenses ?? [];
+  const rechnungen = useMemo(() => invoices ?? [], [invoices]);
+  const ausgaben = useMemo(() => expenses ?? [], [expenses]);
 
   const jahre = useMemo(() => verfuegbareJahre(rechnungen, ausgaben), [rechnungen, ausgaben]);
   const [jahr, setJahr] = useState(() => new Date().getFullYear());
 
   const euer = useMemo(() => computeEuer(jahr, rechnungen, ausgaben), [jahr, rechnungen, ausgaben]);
+  const datenGeladen = invoices !== undefined && expenses !== undefined;
+  const datenbasis = useMemo(
+    () =>
+      datenGeladen
+        ? euerDatenbasis(jahr, rechnungen, ausgaben)
+        : {
+            vorhanden: false,
+            zahlungseingaenge: 0,
+            ausgabenbelege: 0,
+            hinweis: "Daten werden noch geladen.",
+          },
+    [datenGeladen, jahr, rechnungen, ausgaben],
+  );
 
   function exportPdf() {
+    if (!datenbasis.vorhanden) {
+      toast.error("E?R nicht exportierbar", { description: datenbasis.hinweis });
+      return;
+    }
     downloadEuerPdf(euer, company);
     toast.success(`EÜR ${jahr} als PDF exportiert`);
     logActivity({
@@ -69,6 +91,18 @@ function EuerPage() {
     ...euer.einnahmen.map((z) => ({ ...z, art: "ein" as const })),
     ...euer.ausgaben.map((z) => ({ ...z, art: "aus" as const })),
   ];
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Einnahmen-Überschuss-Rechnung"
+        description="Vorbereitung für ELSTER – ausschließlich für Administration und Finanzen."
+        icon={ScrollText}
+        badge="Steuer"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -91,29 +125,43 @@ function EuerPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="secondary" onClick={exportPdf}>
+            <Button variant="secondary" onClick={exportPdf} disabled={!datenbasis.vorhanden}>
               <FileDown className="h-4 w-4" /> PDF
             </Button>
           </div>
         }
       />
 
+      {!datenbasis.vorhanden && (
+        <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-4 text-sm text-muted-foreground">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <div>
+            <p className="font-medium text-foreground">Keine best?tigte Datenbasis f?r {jahr}</p>
+            <p>{datenbasis.hinweis}</p>
+            <p className="mt-1 text-xs">
+              Kennzahlen und PDF-Export bleiben gesperrt, bis mindestens ein echter Zahlungs- oder
+              Ausgabenbeleg vorliegt.
+            </p>
+          </div>
+        </div>
+      )}
+
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Betriebseinnahmen"
-          value={EUR2(euer.einnahmenSumme)}
+          value={datenbasis.vorhanden ? EUR2(euer.einnahmenSumme) : "?"}
           icon={TrendingUp}
           tone="success"
         />
         <StatCard
           label="Betriebsausgaben"
-          value={EUR2(euer.ausgabenSumme)}
+          value={datenbasis.vorhanden ? EUR2(euer.ausgabenSumme) : "?"}
           icon={TrendingDown}
           tone="warning"
         />
         <StatCard
           label={euer.gewinn >= 0 ? "Gewinn" : "Verlust"}
-          value={EUR2(euer.gewinn)}
+          value={datenbasis.vorhanden ? EUR2(euer.gewinn) : "?"}
           icon={Euro}
           tone={euer.gewinn >= 0 ? "primary" : "warning"}
         />

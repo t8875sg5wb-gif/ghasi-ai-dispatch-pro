@@ -12,6 +12,7 @@ import {
   type DispatchTransport,
   type LiveStatus,
   LIVE_STATUS_META,
+  dispatchAusAuftraege,
   generateDispatchTransporte,
 } from "@/lib/dispatch";
 import {
@@ -23,6 +24,7 @@ import {
   fahrzeugPasstZuMobilitaet,
   verordnungFehlt,
   type Mobilitaet,
+  type Auftrag,
 } from "@/lib/auftraege";
 
 /* ------------------------------------------------------------------ *
@@ -306,11 +308,21 @@ function alertsFuer(
   return out;
 }
 
-/** Baut das vollständige Live-Flotten-Modell. */
-export function buildFleet(): FleetVehicle[] {
-  const transporte = generateDispatchTransporte();
+export interface FleetSources {
+  fahrzeuge?: readonly Fahrzeug[];
+  fahrer?: readonly Fahrer[];
+  auftraege?: readonly Auftrag[];
+}
 
-  return INITIAL_FAHRZEUGE.map((v) => {
+/** Baut das Live-Flotten-Modell. Browser-Aufrufer übergeben Live-Query-Daten explizit. */
+export function buildFleet(quellen: FleetSources = {}): FleetVehicle[] {
+  const fahrzeuge = quellen.fahrzeuge ?? INITIAL_FAHRZEUGE;
+  const fahrer = quellen.fahrer ?? INITIAL_FAHRER;
+  const transporte = quellen.auftraege
+    ? dispatchAusAuftraege([...quellen.auftraege])
+    : generateDispatchTransporte();
+
+  return fahrzeuge.map((v) => {
     const h = hashStr(v.kennzeichen);
     // Prefer a fresh (<5 min) real GPS position shared by the driver.
     const realFresh =
@@ -380,7 +392,7 @@ export function buildFleet(): FleetVehicle[] {
     const faehrt = farbe === "fahrt";
     const gpsVerloren = !offline && h % 17 === 0; // seltenes, deterministisches Signal-Aussetzen
     const geschwindigkeit = gpsVerloren ? 0 : faehrt ? 22 + (h % 38) : 0;
-    const fahrerObj = INITIAL_FAHRER.find((f) => f.name === v.fahrer) ?? null;
+    const fahrerObj = fahrer.find((f) => f.name === v.fahrer) ?? null;
 
     return {
       id: v.id,

@@ -2,7 +2,7 @@
 // Loader), damit kein SSR/Hydration-Problem entsteht. Unterstützt Zoom,
 // Pan, Vollbild, Kartenstil (Straße/Satellit/Dunkel), farbcodierte
 // Live-Marker, reichhaltige Info-Fenster und Routen (absolviert/Rest).
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type FleetVehicle, FLEET_FARBEN } from "@/lib/fleet-live";
 import { LIVE_STATUS_META } from "@/lib/dispatch";
@@ -96,13 +96,16 @@ export function GoogleFleetMap({
   const routeMarkersRef = useRef<google.maps.Marker[]>([]);
   const infoRef = useRef<google.maps.InfoWindow | null>(null);
   const onSelectRef = useRef(onSelect);
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
   onSelectRef.current = onSelect;
 
   // Karte initialisieren (einmalig, client-only)
   useEffect(() => {
     let abgebrochen = false;
+    const markers = markersRef.current;
     void (async () => {
       try {
+        setLadefehler(null);
         const maps = await loadGoogleMaps();
         if (abgebrochen || !containerRef.current || mapRef.current) return;
         mapsRef.current = maps;
@@ -117,12 +120,15 @@ export function GoogleFleetMap({
         infoRef.current = new maps.InfoWindow();
       } catch (e) {
         console.error("Google Maps Init fehlgeschlagen:", e);
+        setLadefehler(
+          "Google Maps ist im Browser noch nicht vollstÃ¤ndig freigeschaltet. Browser-Key und erlaubten Referrer (z. B. http://127.0.0.1:8080) prÃ¼fen.",
+        );
       }
     })();
     return () => {
       abgebrochen = true;
-      for (const m of markersRef.current.values()) m.setMap(null);
-      markersRef.current.clear();
+      for (const m of markers.values()) m.setMap(null);
+      markers.clear();
       mapRef.current = null;
     };
   }, []);
@@ -282,6 +288,14 @@ export function GoogleFleetMap({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {ladefehler && (
+        <div className="absolute inset-0 z-[4] flex items-center justify-center bg-background/90 p-6 text-center backdrop-blur-sm">
+          <div className="max-w-md rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+            <p className="font-semibold">Google Maps nicht verfÃ¼gbar</p>
+            <p className="mt-1 text-xs leading-relaxed">{ladefehler}</p>
+          </div>
+        </div>
+      )}
       <button
         type="button"
         onClick={handleFullscreen}

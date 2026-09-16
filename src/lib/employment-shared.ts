@@ -90,6 +90,8 @@ export interface BeschaeftigungsAudit {
   aktion: string;
   version: number | null;
   akteurUserId: string | null;
+  /** Aufgelöster Anzeigename, vom Server per `resolveActorNames()` ergänzt. */
+  akteurName: string | null;
   /** Vorher-/Nachher-Stand als JSON-Text (serialisierbar, nur zur Anzeige). */
   altWert: string | null;
   neuWert: string | null;
@@ -131,6 +133,7 @@ export function rowToAudit(r: EmploymentAuditRow): BeschaeftigungsAudit {
     aktion: r.aktion,
     version: r.version ?? null,
     akteurUserId: r.akteur_user_id ?? null,
+    akteurName: null,
     altWert: r.old_row == null ? null : JSON.stringify(r.old_row),
     neuWert: r.new_row == null ? null : JSON.stringify(r.new_row),
     createdAt: r.created_at,

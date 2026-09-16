@@ -12,6 +12,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { GlobalSearch, useGlobalSearchHotkey } from "@/components/global-search";
 import { UserMenu } from "@/components/layout/user-menu";
 import { NotificationCenter } from "@/components/notifications/notification-center";
+import { VoiceReaderDock } from "@/components/voice/voice-reader-dock";
 import { allNavItems } from "@/lib/navigation";
 import { useOrders } from "@/lib/orders-store";
 import { useRecurring } from "@/lib/recurring-store";
@@ -38,11 +39,11 @@ import { logActivity } from "@/lib/protokoll";
 function useHydrateStores() {
   const orders = useOrders();
   useRecurring();
-  useDrivers();
-  useInvoices();
-  useCustomers();
-  useVehicles();
-  usePatients();
+  const drivers = useDrivers();
+  const invoices = useInvoices();
+  const customers = useCustomers();
+  const vehicles = useVehicles();
+  const patients = usePatients();
   useFacilities();
   useInsurers();
   useInsurance();
@@ -50,9 +51,34 @@ function useHydrateStores() {
   useCalls();
   useKonversationen();
   const drafts = useEntwuerfe();
+  const draftQuellenBereit =
+    orders.data !== undefined &&
+    drivers.data !== undefined &&
+    invoices.data !== undefined &&
+    customers.data !== undefined &&
+    vehicles.data !== undefined &&
+    patients.data !== undefined;
+
   useEffect(() => {
-    ladeEntwuerfe();
-  }, [drafts.length]);
+    if (!draftQuellenBereit) return;
+    ladeEntwuerfe({
+      auftraege: orders.data!,
+      fahrer: drivers.data!,
+      fahrzeuge: vehicles.data!,
+      kunden: customers.data!,
+      patienten: patients.data!,
+      rechnungen: invoices.data!,
+    });
+  }, [
+    drafts.length,
+    draftQuellenBereit,
+    orders.data,
+    drivers.data,
+    vehicles.data,
+    customers.data,
+    patients.data,
+    invoices.data,
+  ]);
   return orders;
 }
 
@@ -81,6 +107,7 @@ function useOrderNotificationSync(auftraege: ReturnType<typeof useHydrateStores>
         entitaet: n.titel,
         aktion: "Warnung: Nicht zugewiesen",
         beschreibung: n.text,
+        metadaten: { dedupeKey: `order-warning:${n.id}`, notificationId: n.id, stufe: n.stufe },
       });
     }
   }, [auftraege, tick]);
@@ -149,6 +176,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </SidebarInset>
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+      <VoiceReaderDock pageKey={pathname} pageLabel={current.label} />
     </SidebarProvider>
   );
 }

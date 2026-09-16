@@ -26,6 +26,21 @@ export type McpScope =
   | "ghasi:invoices.read"
   | "ghasi:invoices.write";
 
+/**
+ * Bindende MCP-Aktionen bleiben fail-closed, bis GHASI ein serverseitig
+ * verifiziertes Freigabesignal aus einer menschlich bedienten UI besitzt.
+ * Tool-Input, Modelltext oder OAuth-Client allein gelten nie als Freigabe.
+ */
+export const BINDENDE_MCP_SCOPES: McpScope[] = [
+  "ghasi:orders.write",
+  "ghasi:orders.status",
+  "ghasi:invoices.write",
+];
+
+export function istBindenderMcpScope(scope: McpScope): boolean {
+  return BINDENDE_MCP_SCOPES.includes(scope);
+}
+
 export const ALLE_SCOPES: McpScope[] = [
   "ghasi:orders.read",
   "ghasi:orders.write",
@@ -136,6 +151,12 @@ export async function autorisiere(ctx: ToolContext, scope: McpScope): Promise<Au
   if (!rolleHatScope(role, scope)) {
     return ablehnen(
       `Die Rolle "${ROLE_LABELS[role]}" darf dieses Werkzeug nicht nutzen (${scope}).`,
+      role,
+    );
+  }
+  if (istBindenderMcpScope(scope)) {
+    return ablehnen(
+      "Bindende MCP-Schreibaktionen sind gesperrt, bis eine verifizierte menschliche Freigabe aus der GHASI-Oberflaeche vorliegt.",
       role,
     );
   }

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { adresseSchema } from "@/lib/orders.functions";
+import { isoToLocalInput } from "@/lib/local-datetime";
 import {
   assertDriverExists,
   assertInsurerExists,
@@ -223,8 +224,15 @@ export const generateRecurringTransports = createServerFn({ method: "POST" })
       .from("orders")
       .select("termin, patient, abholort, zielort, dauerauftrag_id")
       .eq("dauerauftrag_id", data.id);
-    const dedupKey = (termin: string, patient: string, pickupKey: string, destinationKey: string) =>
-      `${termin.slice(0, 10)}|${patient}|${pickupKey}|${destinationKey}`;
+    const dedupKey = (
+      termin: string,
+      patient: string,
+      pickupKey: string,
+      destinationKey: string,
+    ) => {
+      const lokalerTag = isoToLocalInput(termin).slice(0, 10);
+      return `${lokalerTag}|${patient}|${pickupKey}|${destinationKey}`;
+    };
     const bekannt = new Set(
       (vorhanden ?? []).map(
         (o: { termin: string; patient: string; abholort: string; zielort: string }) =>

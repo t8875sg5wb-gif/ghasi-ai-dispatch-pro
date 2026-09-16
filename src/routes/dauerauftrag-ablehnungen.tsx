@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,8 @@ import {
 import { toCsv, downloadCsv } from "@/lib/export-utils";
 import { generateAblehnungenPdf } from "@/lib/ablehnungen-pdf";
 import { listRecurringRejections } from "@/lib/recurring-rejections.functions";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dauerauftrag-ablehnungen")({
   head: () => ({
@@ -72,6 +75,8 @@ function formatZeit(iso: string): string {
 }
 
 function AblehnungenPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin";
   const [tage, setTage] = useState("30");
   const fetchAblehnungen = useServerFn(listRecurringRejections);
   const {
@@ -85,6 +90,7 @@ function AblehnungenPage() {
     queryKey: ["recurring_rejections", tage],
     queryFn: () => fetchAblehnungen({ data: { tage: Number(tage) } }),
     staleTime: 15_000,
+    enabled: berechtigt,
   });
 
   const [suche, setSuche] = useState("");
@@ -166,6 +172,18 @@ function AblehnungenPage() {
     doc.save(`dauerauftrag-ablehnungen-${tage}t-${new Date().toISOString().slice(0, 10)}.pdf`);
     toast.success("PDF-Export wurde heruntergeladen.");
   };
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Abgelehnte Daueraufträge"
+        description="Admin-Bericht über ungültige oder abgelehnte Dauerauftragsversuche."
+        icon={ShieldAlert}
+        badge="Administration"
+        message="Dieser Bericht ist ausschließlich Administratoren vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -75,6 +75,23 @@ function matchEnum<T extends string>(v: string | undefined, options: readonly T[
   return options.find((o) => o.toLowerCase() === s) ?? null;
 }
 
+/**
+ * ISO-Datum oder leer, wie `isoDatumOderLeer` in `vehicles.functions.ts`.
+ * Ein befuellter, aber nicht auf ein Datum abbildbarer Wert (z. B. "unbekannt")
+ * wuerde sonst unveraendert als String durchgereicht und erst am Server
+ * (mit verworfener Fehlermeldung, siehe datenimport.tsx) abgelehnt.
+ */
+function toISODateOrEmpty(v: string | undefined, label: string, errors: string[]): string {
+  const raw = trim(v);
+  if (!raw) return "";
+  const iso = toISODate(raw);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    errors.push(`${label} ungültig`);
+    return "";
+  }
+  return iso;
+}
+
 /* ------------------------------ entity configs ------------------------------ */
 
 export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
@@ -88,9 +105,19 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         required: true,
         aliases: ["name", "fahrer", "vorname nachname"],
       },
-      { key: "telefon", label: "Telefon", aliases: ["telefon", "tel", "handy", "mobil", "phone"] },
-      { key: "email", label: "E-Mail", aliases: ["email", "e-mail", "mail"] },
-      { key: "adresse", label: "Adresse", aliases: ["adresse", "anschrift", "address"] },
+      {
+        key: "telefon",
+        label: "Telefon",
+        required: true,
+        aliases: ["telefon", "tel", "handy", "mobil", "phone"],
+      },
+      { key: "email", label: "E-Mail", required: true, aliases: ["email", "e-mail", "mail"] },
+      {
+        key: "adresse",
+        label: "Adresse",
+        required: true,
+        aliases: ["adresse", "anschrift", "address"],
+      },
       {
         key: "vertragsart",
         label: "Vertragsart",
@@ -102,35 +129,60 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
       {
         key: "fuehrerscheinBis",
         label: "Führerschein gültig bis",
+        required: true,
         aliases: ["führerschein", "fuehrerschein", "fs bis", "führerschein bis"],
         hint: "Datum",
       },
       {
         key: "pScheinBis",
         label: "P-Schein gültig bis",
+        required: true,
         aliases: ["p-schein", "pschein", "personenbeförderung"],
         hint: "Datum",
       },
       {
         key: "ersteHilfeBis",
         label: "Erste-Hilfe gültig bis",
+        required: true,
         aliases: ["erste hilfe", "erste-hilfe", "ersthelfer"],
         hint: "Datum",
       },
     ],
     build: (m) => {
+      // Muss mit `driverFieldsSchema` in `drivers.functions.ts` übereinstimmen
+      // (telefon/email/adresse/alle drei Nachweis-Daten sind dort Pflicht,
+      // ohne .optional()). Ohne diese Prüfung meldet die Vorschau eine Zeile
+      // faelschlich als "gueltig", und der spaetere Server-Fehler wird beim
+      // Import ohnehin verworfen (siehe datenimport.tsx) — die Zeile scheitert
+      // dann unerklaert.
       const errors: string[] = [];
       const name = trim(m.name);
       if (!name) errors.push("Name fehlt");
+      const telefon = trim(m.telefon);
+      if (!telefon) errors.push("Telefon fehlt");
+      const email = trim(m.email);
+      if (!email) errors.push("E-Mail fehlt");
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("E-Mail ungültig");
+      const adresse = trim(m.adresse);
+      if (!adresse) errors.push("Adresse fehlt");
+      const fuehrerscheinBis = toISODate(m.fuehrerscheinBis);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fuehrerscheinBis))
+        errors.push("Führerschein gültig bis fehlt/ungültig");
+      const pScheinBis = toISODate(m.pScheinBis);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(pScheinBis))
+        errors.push("P-Schein gültig bis fehlt/ungültig");
+      const ersteHilfeBis = toISODate(m.ersteHilfeBis);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ersteHilfeBis))
+        errors.push("Erste-Hilfe gültig bis fehlt/ungültig");
       const record: DriverWrite = {
         name,
         foto: null,
-        telefon: trim(m.telefon),
-        email: trim(m.email),
-        adresse: trim(m.adresse),
-        fuehrerschein: { gueltigBis: toISODate(m.fuehrerscheinBis) },
-        pSchein: { gueltigBis: toISODate(m.pScheinBis) },
-        ersteHilfe: { gueltigBis: toISODate(m.ersteHilfeBis) },
+        telefon,
+        email,
+        adresse,
+        fuehrerschein: { gueltigBis: fuehrerscheinBis },
+        pSchein: { gueltigBis: pScheinBis },
+        ersteHilfe: { gueltigBis: ersteHilfeBis },
         vertragsart: matchEnum(m.vertragsart, VERTRAGSARTEN) ?? "Vollzeit",
         arbeitszeiten: trim(m.arbeitszeiten),
         urlaubstage: 30,
@@ -216,25 +268,38 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
       { key: "versicherung", label: "Versicherung", aliases: ["versicherung", "insurance"] },
     ],
     build: (m) => {
+      // Zahlen-/Datumsgrenzen muessen mit `vehicleFieldsSchema` in
+      // `vehicles.functions.ts` uebereinstimmen (baujahr 1990-2027,
+      // sitzplaetze 1-20, Datumsfelder ISO-oder-leer) — sonst meldet die
+      // Vorschau eine Zeile faelschlich als "gueltig".
       const errors: string[] = [];
       const kennzeichen = trim(m.kennzeichen);
       if (!kennzeichen) errors.push("Kennzeichen fehlt");
+      const baujahrRaw = trim(m.baujahr);
+      const baujahr = toNumber(m.baujahr, new Date().getFullYear());
+      if (baujahrRaw && (baujahr < 1990 || baujahr > 2027))
+        errors.push("Baujahr ungültig (1990–2027)");
+      const sitzplaetzeRaw = trim(m.sitzplaetze);
+      const sitzplaetze = toNumber(m.sitzplaetze, 1);
+      if (sitzplaetzeRaw && (sitzplaetze < 1 || sitzplaetze > 20))
+        errors.push("Sitzplätze ungültig (1–20)");
       const record: VehicleWrite = {
         kennzeichen,
         marke: trim(m.marke),
         modell: trim(m.modell),
-        baujahr: toNumber(m.baujahr, new Date().getFullYear()),
-        typ: (trim(m.typ) || "PKW") as VehicleWrite["typ"],
+        baujahr,
+        typ: matchEnum(m.typ, ["PKW", "Rollstuhlfahrzeug", "LMW"] as const) ?? "PKW",
         rollstuhlGeeignet: false,
         liegendGeeignet: false,
-        sitzplaetze: toNumber(m.sitzplaetze, 1),
+        sitzplaetze,
         status: "frei",
         fahrer: null,
         standort: trim(m.standort),
         gps: { lat: 52.29, lng: 8.9 },
         kilometerstand: toNumber(m.kilometerstand),
         tankstand: 100,
-        kraftstoff: (trim(m.kraftstoff) || "Diesel") as VehicleWrite["kraftstoff"],
+        kraftstoff:
+          matchEnum(m.kraftstoff, ["Diesel", "Benzin", "Elektro", "Hybrid"] as const) ?? "Diesel",
         verbrauch: 0,
         reichweite: 0,
         kostenProKm: 0,
@@ -242,15 +307,15 @@ export const ENTITY_CONFIGS: Record<ImportEntity, EntityConfig> = {
         tagesgewinn: 0,
         monatsumsatz: 0,
         monatsgewinn: 0,
-        tuevBis: toISODate(m.tuevBis),
+        tuevBis: toISODateOrEmpty(m.tuevBis, "TÜV bis", errors),
         oelwechselBei: 0,
-        naechsteWartung: toISODate(m.naechsteWartung),
+        naechsteWartung: toISODateOrEmpty(m.naechsteWartung, "Nächste Wartung", errors),
         reifenstatus: "gut",
         reparaturen: [],
         versicherung: trim(m.versicherung),
-        versicherungBis: toISODate(m.versicherungBis),
+        versicherungBis: toISODateOrEmpty(m.versicherungBis, "Versicherung bis", errors),
         leasingrate: 0,
-        leasingEnde: toISODate(m.leasingEnde),
+        leasingEnde: toISODateOrEmpty(m.leasingEnde, "Leasingende", errors),
         dokumente: [],
         fotos: [],
         notizen: "",

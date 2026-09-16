@@ -176,13 +176,20 @@ export function formatDatum(iso: string): string {
   });
 }
 
-/** Returns true when a document expires within the next 30 days (or is expired). */
+function fristFehlt(iso: string): boolean {
+  if (!iso) return true;
+  return Number.isNaN(new Date(iso).getTime());
+}
+
+/** Fail-closed: fehlt/ungültig, abgelaufen oder innerhalb der Frist. */
 export function laeuftAb(iso: string, tage = 30): boolean {
+  if (fristFehlt(iso)) return true;
   const ms = new Date(iso).getTime() - Date.now();
   return ms < tage * 24 * 60 * 60 * 1000;
 }
 
 export function istAbgelaufen(iso: string): boolean {
+  if (fristFehlt(iso)) return true;
   return new Date(iso).getTime() < Date.now();
 }
 
@@ -238,6 +245,11 @@ export function bewerteFahrer(fahrer: Fahrer): FahrerScore | null {
 
   // Complaints penalty
   score -= fahrer.beschwerden * 4;
+
+  if (istAbgelaufen(fahrer.fuehrerschein.gueltigBis) || istAbgelaufen(fahrer.pSchein.gueltigBis)) {
+    score -= 40;
+    gruende.unshift("Nachweis abgelaufen oder ungeklärt – Vorsicht");
+  }
 
   return { fahrer, score: Math.round(score), gruende: gruende.slice(0, 3) };
 }

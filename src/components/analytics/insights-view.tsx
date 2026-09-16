@@ -25,6 +25,9 @@ import {
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { usePatients } from "@/lib/patients-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const KAT_META: Record<InsightKategorie, { label: string; icon: LucideIcon; tone: string }> = {
   kosten: { label: "Kosten", icon: Coins, tone: "bg-warning/20 text-warning" },
@@ -92,10 +95,44 @@ function InsightCard({ insight }: { insight: Insight }) {
 }
 
 export function InsightsPage() {
-  useOrders();
-  useDrivers();
-  useInvoices();
-  const insights = computeInsights();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  const patientsQ = usePatients();
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined &&
+    patientsQ.data !== undefined;
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          icon={Lightbulb}
+          badge="Analyse"
+          title="Executive Insights"
+          description="GHASI AI pr?ft die aktuellen Betriebsdaten auf Optimierungschancen."
+        />
+        <Skeleton className="h-28 w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-56" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const insights = computeInsights({
+    auftraege: ordersQ.data,
+    fahrer: driversQ.data,
+    rechnungen: invoicesQ.data,
+    fahrzeuge: vehiclesQ.data,
+    patienten: patientsQ.data,
+  });
   const hoch = insights.filter((i) => i.wirkung === "hoch").length;
 
   return (

@@ -197,6 +197,7 @@ function LohnlaufSeitenInhalt() {
   }
 
   async function loeschen(id: string) {
+    if (!window.confirm("Diesen Lohnlauf wirklich dauerhaft löschen?")) return;
     try {
       await deleteMut.mutateAsync(id);
       toast.success("Lohnlauf gelöscht.");

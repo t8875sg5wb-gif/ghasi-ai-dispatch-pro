@@ -9,10 +9,12 @@ import {
   ForecastBarChart,
   ForecastLineChart,
 } from "@/components/enterprise/forecast-charts";
-import { computePrognosen, EUR } from "@/lib/ai-brain";
+import { computePrognosen, computeKpis, EUR } from "@/lib/ai-brain";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function ChartCard({
   title,
@@ -39,10 +41,50 @@ function ChartCard({
 }
 
 export function PrognosenPage() {
-  useOrders();
-  useDrivers();
-  useInvoices();
-  const p = computePrognosen();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  // Keine Berechnung vor vollst?ndiger Live-Datenbasis.
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
+
+  const kpis = computeKpis({
+    auftraege: ordersQ.data ?? [],
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
+  const p = computePrognosen(kpis, {
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+  });
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          icon={LineChart}
+          badge="Predictive AI"
+          title="Prognosen & Vorhersagen"
+          description="GHASI AI prognostiziert Umsatz, Auslastung, Personal-, Wartungs- und Kraftstoffbedarf sowie saisonale Nachfrage."
+        />
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+        <section className="grid gap-4 lg:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-52" />
+          ))}
+        </section>
+      </div>
+    );
+  }
 
   const stats = [
     {

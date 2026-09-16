@@ -5,6 +5,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { attemptChatSend } from "@/lib/chat-send";
+import {
+  resolveSpeechRecognitionConstructor,
+  transcriptFromSpeechResults,
+  VOICE_PRIVACY_NOTICE_KEY,
+  type SpeechRecognitionLike,
+  type SpeechRecognitionConstructor,
+} from "@/lib/voice-recognition";
 
 export interface Attachment {
   type: "file";
@@ -14,7 +22,7 @@ export interface Attachment {
 }
 
 interface ComposerProps {
-  onSend: (text: string, files: Attachment[]) => void;
+  onSend: (text: string, files: Attachment[]) => void | Promise<void>;
   busy: boolean;
 }
 
@@ -34,19 +42,24 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
   const [reading, setReading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     textRef.current?.focus();
   }, []);
 
-  const submit = () => {
+  const submit = async () => {
     const text = input.trim();
     if ((!text && files.length === 0) || busy) return;
-    onSend(text, files);
-    setInput("");
-    setFiles([]);
+    const result = await attemptChatSend(onSend, text, files);
+    if (result.ok) {
+      setInput("");
+      setFiles([]);
+    } else {
+      toast.error("Nachricht konnte nicht gesendet werden.", {
+        description: result.error ?? "Der Entwurf bleibt erhalten. Bitte erneut versuchen.",
+      });
+    }
     requestAnimationFrame(() => textRef.current?.focus());
   };
 
@@ -75,8 +88,11 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
   };
 
   const toggleVoice = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const source = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    const SR = resolveSpeechRecognitionConstructor(source);
     if (!SR) {
       toast.error("Spracheingabe wird von diesem Browser nicht unterstützt.");
       return;
@@ -85,21 +101,29 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
       recognitionRef.current?.stop();
       return;
     }
+    let privacyAccepted = false;
+    try {
+      privacyAccepted = window.sessionStorage.getItem(VOICE_PRIVACY_NOTICE_KEY) === "accepted";
+    } catch {
+      privacyAccepted = false;
+    }
+    if (!privacyAccepted) {
+      const accepted = window.confirm(
+        "Browser-Spracherkennung kann Audio beim Browser-Anbieter verarbeiten. Keine Patienten-, Gesundheits-, Bank- oder Zugangsdaten diktieren. Spracheingabe trotzdem starten?",
+      );
+      if (!accepted) return;
+      try {
+        window.sessionStorage.setItem(VOICE_PRIVACY_NOTICE_KEY, "accepted");
+      } catch {
+        // Sitzungsspeicher kann durch Browserrichtlinien blockiert sein.
+      }
+    }
     const rec = new SR();
     rec.lang = "de-DE";
     rec.interimResults = true;
     rec.continuous = false;
-    let finalText = "";
-    rec.onresult = (e: {
-      results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
-    }) => {
-      let interim = "";
-      for (let i = 0; i < e.results.length; i++) {
-        const r = e.results[i];
-        if (r.isFinal) finalText += r[0].transcript;
-        else interim += r[0].transcript;
-      }
-      setInput((finalText + interim).trim());
+    rec.onresult = (event) => {
+      setInput(transcriptFromSpeechResults(event.results));
     };
     rec.onend = () => setRecording(false);
     rec.onerror = () => {
@@ -183,7 +207,7 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              submit();
+              void submit();
             }
           }}
           placeholder={
@@ -195,7 +219,7 @@ export function ChatComposer({ onSend, busy }: ComposerProps) {
           className="max-h-36 min-h-11 flex-1 resize-none rounded-2xl"
         />
         <Button
-          onClick={submit}
+          onClick={() => void submit()}
           disabled={(!input.trim() && files.length === 0) || busy}
           size="icon"
           className="h-11 w-11 shrink-0 rounded-2xl"

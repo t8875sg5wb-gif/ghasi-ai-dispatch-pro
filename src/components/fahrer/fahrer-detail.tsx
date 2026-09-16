@@ -54,12 +54,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { INITIAL_AUFTRAEGE, effektiveVerordnung, verordnungFehlt } from "@/lib/auftraege";
+import { type Auftrag, effektiveVerordnung, verordnungFehlt } from "@/lib/auftraege";
+import type { ZugeordneteFinanzperiode } from "@/lib/finance";
+import { businessDateKey } from "@/lib/local-datetime";
 import { MedizinBadges, fahrzeugMismatch } from "@/components/auftraege/medizin-details";
 import { AlertTriangle } from "lucide-react";
 
 interface FahrerDetailProps {
   fahrer: Fahrer | null;
+  finanzHeute?: ZugeordneteFinanzperiode;
+  auftraege: readonly Auftrag[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: FahrerStatus) => void;
@@ -152,6 +156,8 @@ function Metric({
 
 export function FahrerDetail({
   fahrer,
+  finanzHeute,
+  auftraege,
   open,
   onOpenChange,
   onStatusChange,
@@ -160,6 +166,12 @@ export function FahrerDetail({
   if (!fahrer) return null;
 
   const status = FAHRER_STATUS_META[fahrer.status];
+  const umsatzLabel =
+    finanzHeute?.basis === "schaetzung"
+      ? "Umsatz (Sch.)"
+      : finanzHeute?.basis === "gemischt"
+        ? "Umsatz (gem.)"
+        : "Umsatz";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -230,20 +242,20 @@ export function FahrerDetail({
             <div className="grid grid-cols-3 gap-2">
               <Metric
                 icon={RouteIcon}
-                label="Kilometer"
-                value={`${fahrer.kmHeute} km`}
+                label="Kilometer (Sch.)"
+                value={`${finanzHeute?.km ?? 0} km`}
                 tone="info"
               />
               <Metric
                 icon={Euro}
-                label="Umsatz"
-                value={formatEUR(fahrer.umsatzHeute)}
+                label={umsatzLabel}
+                value={formatEUR(finanzHeute?.umsatz ?? 0)}
                 tone="success"
               />
               <Metric
                 icon={Gauge}
-                label="Gewinn"
-                value={formatEUR(fahrer.gewinnHeute)}
+                label="Gewinn (Sch.)"
+                value={formatEUR(finanzHeute?.gewinn ?? 0)}
                 tone="success"
               />
             </div>
@@ -276,8 +288,12 @@ export function FahrerDetail({
               Meine Touren (Fahrer-App)
             </p>
             {(() => {
-              const touren = INITIAL_AUFTRAEGE.filter(
-                (a) => a.fahrer === fahrer.name && a.status !== "storniert",
+              const heute = businessDateKey(new Date());
+              const touren = auftraege.filter(
+                (a) =>
+                  (a.fahrerId ? a.fahrerId === fahrer.id : a.fahrer === fahrer.name) &&
+                  a.status !== "storniert" &&
+                  businessDateKey(a.termin) === heute,
               );
               if (touren.length === 0) {
                 return (
@@ -371,11 +387,6 @@ export function FahrerDetail({
               icon={Heart}
               label="Erste-Hilfe-Nachweis"
               iso={fahrer.ersteHilfe.gueltigBis}
-            />
-            <NachweisRow
-              icon={ShieldCheck}
-              label="Personenbeförderungsschein (Compliance)"
-              iso={fahrer.pScheinGueltigBis ?? ""}
             />
             <NachweisRow
               icon={CreditCard}

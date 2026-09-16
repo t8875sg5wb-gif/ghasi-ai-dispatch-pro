@@ -26,10 +26,11 @@ import {
   useSeedFacilities,
 } from "@/lib/facilities-store";
 import type { FacilityWrite } from "@/lib/facilities-shared";
-import { INITIAL_AUFTRAEGE, STATUS_META, formatTermin } from "@/lib/auftraege";
+import { STATUS_META, formatTermin, type Auftrag } from "@/lib/auftraege";
 import { transporteFuerEinrichtung } from "@/lib/einrichtungen-transporte";
 import { logActivity } from "@/lib/protokoll";
 import { useAuth } from "@/hooks/use-auth";
+import { useOrders } from "@/lib/orders-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +63,7 @@ interface ModulConfig {
 export function EinrichtungModul({ config }: { config: ModulConfig }) {
   const { name: akteur } = useAuth();
   const { data: alle = [] } = useFacilities();
+  const { data: auftraege = [] } = useOrders();
   const createMut = useCreateFacility();
   const updateMut = useUpdateFacility();
   const seedMut = useSeedFacilities();
@@ -88,7 +90,10 @@ export function EinrichtungModul({ config }: { config: ModulConfig }) {
 
   const selektiert = items.find((e) => e.id === aktiv) ?? gefiltert[0] ?? null;
 
-  const hinweise = useMemo(() => buildHinweise(items, config), [items, config]);
+  const hinweise = useMemo(
+    () => buildHinweise(items, config, auftraege),
+    [items, config, auftraege],
+  );
 
   function speichern(values: Einrichtung) {
     const istNeu = !items.some((e) => e.id === values.id);
@@ -230,6 +235,7 @@ export function EinrichtungModul({ config }: { config: ModulConfig }) {
           <EinrichtungDetail
             einrichtung={selektiert}
             config={config}
+            auftraege={auftraege}
             onEdit={() => {
               setEditTarget(selektiert);
               setFormOpen(true);
@@ -253,35 +259,32 @@ export function EinrichtungModul({ config }: { config: ModulConfig }) {
   );
 }
 
-function buildHinweise(items: Einrichtung[], config: ModulConfig): string[] {
+function buildHinweise(items: Einrichtung[], config: ModulConfig, auftraege: Auftrag[]): string[] {
   const out: string[] = [];
   const inaktiv = items.filter((e) => e.aktiv === false).length;
   if (inaktiv > 0) out.push(`${inaktiv} Einrichtung(en) sind als inaktiv markiert.`);
   for (const e of items) {
-    const transporte = transporteFuer(e.id, e.name);
+    const transporte = transporteFuerEinrichtung(e.id, e.name, auftraege);
     if (transporte.length >= 3) {
       out.push(`„${e.name}“ ist mit ${transporte.length} Transporten ein wichtiger Partner.`);
     }
   }
-  if (out.length === 0)
-    out.push(`Alle ${config.titel.toLowerCase()} sind aktiv und vollständig erfasst.`);
+  if (out.length === 0) out.push(`Alle ${config.titel} sind aktiv und vollständig erfasst.`);
   return out.slice(0, 4);
-}
-
-function transporteFuer(einrichtungId: string, name: string) {
-  return transporteFuerEinrichtung(einrichtungId, name, INITIAL_AUFTRAEGE);
 }
 
 function EinrichtungDetail({
   einrichtung,
   config,
+  auftraege,
   onEdit,
 }: {
   einrichtung: Einrichtung;
   config: ModulConfig;
+  auftraege: Auftrag[];
   onEdit: () => void;
 }) {
-  const transporte = transporteFuer(einrichtung.id, einrichtung.name);
+  const transporte = transporteFuerEinrichtung(einrichtung.id, einrichtung.name, auftraege);
   return (
     <div className="space-y-6">
       <Card>

@@ -3,6 +3,7 @@
 // medizinische Freitextfelder — es werden nur die für die Kassenabrechnung
 // notwendigen Angaben gespeichert.
 import type { Transportart } from "@/lib/auftraege";
+import { idOderNull } from "@/lib/id-helpers";
 
 export interface Verordnung {
   id: string;
@@ -75,7 +76,7 @@ export function rowToVerordnung(r: VerordnungRow): Verordnung {
   if (!istTransportart(r.transportart)) throw new UngueltigeTransportartError(r.id);
   return {
     id: r.id,
-    patientId: r.patient_id ?? null,
+    patientId: idOderNull(r.patient_id),
     ausstellungsdatum: r.ausstellungsdatum,
     arztName: r.arzt_name ?? "",
     arztBsnr: r.arzt_bsnr ?? "",

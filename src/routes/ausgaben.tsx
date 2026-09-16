@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Receipt, Plus, Trash2, Loader2, Info, Paperclip } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -79,6 +91,8 @@ function formatDatum(iso: string): string {
 }
 
 function AusgabenPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: expenses = [], isLoading } = useExpenses();
   const { data: company } = useCompanySettings();
   const delMut = useDeleteExpense();
@@ -104,6 +118,18 @@ function AusgabenPage() {
       Notiz: e.notiz ?? "",
     }));
     downloadCsv(`ausgaben-${new Date().getFullYear()}.csv`, toCsv(rows));
+  }
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Ausgaben"
+        description="Betriebsausgaben mit Belegen – ausschließlich für Administration und Finanzen."
+        icon={Receipt}
+        badge="Finanzen"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
   }
 
   return (
@@ -219,19 +245,35 @@ function AusgabenPage() {
                         {EUR(enthalteneVorsteuer(e))}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            delMut.mutate(e.id, {
-                              onSuccess: () => toast.success("Ausgabe gelöscht"),
-                              onError: (err) => toast.error(String(err)),
-                            })
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Ausgabe endgültig löschen?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Der Beleg vom {formatDatum(e.datum)} über {EUR(e.betragBrutto)} wird
+                                unwiderruflich gelöscht.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() =>
+                                  delMut.mutate(e.id, {
+                                    onSuccess: () => toast.success("Ausgabe gelöscht"),
+                                    onError: (err) => toast.error(String(err)),
+                                  })
+                                }
+                              >
+                                Endgültig löschen
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -270,6 +312,13 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
     const betragNum = Number(betrag.replace(",", "."));
     if (!betragNum || betragNum <= 0) {
       toast.error("Bitte einen gültigen Bruttobetrag eingeben.");
+      return;
+    }
+    // `lieferant` ist im Server-Schema Pflicht (min. 1 Zeichen) — ohne diese
+    // Prüfung landet ein leeres Feld erst als vage "Ungültige
+    // Ausgabendaten."-Meldung vom Server, statt sofort am Feld selbst.
+    if (!lieferant.trim()) {
+      toast.error("Bitte einen Lieferanten eingeben.");
       return;
     }
     let belegDokumentId: string | null = null;
@@ -335,8 +384,10 @@ function AusgabeDialog({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Lieferant / Beschreibung</Label>
-            <Input value={lieferant} onChange={(e) => setLieferant(e.target.value)} />
+            <Label>
+              Lieferant / Beschreibung<span className="text-destructive"> *</span>
+            </Label>
+            <Input value={lieferant} onChange={(e) => setLieferant(e.target.value)} required />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">

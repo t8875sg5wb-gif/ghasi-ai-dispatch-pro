@@ -42,7 +42,7 @@ function findeSpalte(headers: string[], keys: string[]): string | null {
 /** Parse a German or ISO amount string into a number (EUR). */
 export function parseBetrag(raw: string): number {
   if (!raw) return NaN;
-  let s = raw.replace(/[^\d,.\-]/g, "").trim();
+  let s = raw.replace(/[^\d,.-]/g, "").trim();
   // German format: thousands "." and decimal "," → normalise.
   if (s.includes(",") && s.lastIndexOf(",") > s.lastIndexOf(".")) {
     s = s.replace(/\./g, "").replace(",", ".");
@@ -53,21 +53,38 @@ export function parseBetrag(raw: string): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-function parseDatum(raw: string): string {
-  if (!raw) return new Date().toISOString().slice(0, 10);
+function gueltigesIsoDatum(iso: string): boolean {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const [, y, mo, d] = m;
+  const date = new Date(`${iso}T00:00:00Z`);
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === Number(y) &&
+    date.getUTCMonth() + 1 === Number(mo) &&
+    date.getUTCDate() === Number(d)
+  );
+}
+
+function parseDatum(raw: string): string | null {
+  const wert = raw.trim();
+  if (!wert) return null;
+
   // dd.mm.yyyy or dd.mm.yy
-  const de = raw.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
+  const de = wert.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
   if (de) {
     const [, d, m, y] = de;
     const yr = y.length === 2 ? `20${y}` : y;
-    return `${yr}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    const iso = `${yr}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    return gueltigesIsoDatum(iso) ? iso : null;
   }
-  const iso = raw.match(/\d{4}-\d{2}-\d{2}/);
-  if (iso) return iso[0];
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime())
-    ? new Date().toISOString().slice(0, 10)
-    : parsed.toISOString().slice(0, 10);
+
+  const iso = wert.match(/^(\d{4}-\d{2}-\d{2})$/);
+  if (iso) return gueltigesIsoDatum(iso[1]) ? iso[1] : null;
+
+  const parsed = new Date(wert);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
 }
 
 /** Turn a parsed sheet into incoming bank movements (positive amounts only). */
@@ -76,12 +93,23 @@ export function bankBuchungen(sheet: ParsedSheet): BankBuchung[] {
   const betragCol = findeSpalte(sheet.headers, BETRAG_KEYS);
   const refCol = findeSpalte(sheet.headers, REF_KEYS);
 
+  if (!datumCol) throw new Error("Keine Datums-Spalte im Kontoauszug gefunden.");
+  if (!betragCol) throw new Error("Keine Betragsspalte im Kontoauszug gefunden.");
+
   const out: BankBuchung[] = [];
-  for (const row of sheet.rows) {
-    const betrag = betragCol ? parseBetrag(row[betragCol] ?? "") : NaN;
+  for (let index = 0; index < sheet.rows.length; index += 1) {
+    const row = sheet.rows[index];
+    const betragRaw = row[betragCol] ?? "";
+    const betrag = parseBetrag(betragRaw);
     if (!Number.isFinite(betrag) || betrag <= 0) continue; // only incoming payments
+
+    const datum = parseDatum(row[datumCol] ?? "");
+    if (!datum) {
+      throw new Error(`Ungültiges oder fehlendes Buchungsdatum in Zeile ${index + 2}.`);
+    }
+
     out.push({
-      datum: datumCol ? parseDatum(row[datumCol] ?? "") : new Date().toISOString().slice(0, 10),
+      datum,
       betrag: Math.round(betrag * 100) / 100,
       referenz: refCol ? (row[refCol] ?? "") : Object.values(row).join(" "),
     });

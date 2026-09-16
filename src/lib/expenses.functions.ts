@@ -5,6 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertFinanzRolle } from "@/lib/employment-security.server";
 import { assertDriverExists, assertVehicleExists } from "@/lib/identity-checks.server";
 import {
   rowToAusgabe,
@@ -57,6 +58,7 @@ const deleteExpenseSchema = z.object({ id: z.string().uuid() }).strict();
 export const listExpenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Ausgabe[]> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("expenses")
       .select("*")
@@ -73,6 +75,7 @@ export const createExpense = createServerFn({ method: "POST" })
     return parsed.data as unknown as AusgabeWrite;
   })
   .handler(async ({ data, context }): Promise<Ausgabe> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     if (data.fahrzeugId) await assertVehicleExists(context.supabase, data.fahrzeugId);
     if (data.fahrerId) await assertDriverExists(context.supabase, data.fahrerId);
     const { data: created, error } = await context.supabase
@@ -92,6 +95,7 @@ export const updateExpense = createServerFn({ method: "POST" })
     return parsed.data as unknown as { id: string; values: Partial<AusgabeWrite> };
   })
   .handler(async ({ data, context }): Promise<Ausgabe> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     if (data.values.fahrzeugId) await assertVehicleExists(context.supabase, data.values.fahrzeugId);
     if (data.values.fahrerId) await assertDriverExists(context.supabase, data.values.fahrerId);
     const { data: updated, error } = await context.supabase
@@ -112,6 +116,7 @@ export const deleteExpense = createServerFn({ method: "POST" })
     return parsed.data;
   })
   .handler(async ({ data, context }) => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { error } = await context.supabase.from("expenses").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true } as const;
@@ -121,6 +126,7 @@ export const deleteExpense = createServerFn({ method: "POST" })
 export const seedExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ seeded: number }> => {
+    await assertFinanzRolle(context.supabase, context.userId);
     const { count } = await context.supabase
       .from("expenses")
       .select("*", { count: "exact", head: true });

@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Auftrag } from "@/lib/auftraege";
+import { normalizeOrderInstant } from "@/lib/local-datetime";
 import {
   assertDriverExists,
   assertInsurerExists,
@@ -81,13 +82,7 @@ export const orderFieldsSchema = z
     destination: adresseSchema.optional(),
     pickupEinrichtungId: z.string().uuid().nullable().optional(),
     destinationEinrichtungId: z.string().uuid().nullable().optional(),
-    termin: z
-      .string()
-      .regex(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/,
-        "Termin muss ISO-Datum/Zeit sein (YYYY-MM-DDTHH:mm).",
-      )
-      .optional(),
+    termin: z.string().datetime({ offset: true }).optional(),
     fahrerId: z.string().uuid().nullable().optional(),
     fahrzeugId: z.string().uuid().nullable().optional(),
     fahrzeug: z.string().nullable().optional(),
@@ -160,11 +155,16 @@ export const listOrders = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => rowToAuftrag(r as unknown as OrderRow));
   });
 
+/** Erstes Zod-Fehlerdetail statt einer pauschalen "Ungültige Daten"-Meldung. */
+function ersterFehler(parsed: { error?: { issues?: { message?: string }[] } }): string {
+  return parsed.error?.issues?.[0]?.message ?? "Ungültige Auftragsdaten.";
+}
+
 export const createOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown): OrderWrite => {
     const parsed = createOrderSchema.safeParse(data);
-    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    if (!parsed.success) throw new Error(ersterFehler(parsed));
     return parsed.data as OrderWrite;
   })
   .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
@@ -191,6 +191,28 @@ export const createOrder = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const auftrag: AuftragMitWarnungen = rowToAuftrag(created as unknown as OrderRow);
 
+    // Audit trail: Auftragserstellung ist bisher gar nicht protokolliert
+    // worden (nur spätere Status-/Zuweisungsänderungen) – ein neu erstellter
+    // Auftrag tauchte deshalb nie im Aktivitätsprotokoll auf.
+    {
+      const { logActivitySafe } = await import("@/lib/activity-log.server");
+      await logActivitySafe(
+        {
+          bereich: "auftraege",
+          entitaet: auftrag.id,
+          aktion: "erstellt",
+          beschreibung: `Auftrag ${auftrag.nummer ?? auftrag.id} erstellt: ${auftrag.patient || "ohne Patientenname"}`,
+          metadaten: {
+            patient: auftrag.patient,
+            transportart: auftrag.transportart,
+            prioritaet: auftrag.prioritaet,
+            zeitpunkt: new Date().toISOString(),
+          },
+        },
+        context.userId,
+      );
+    }
+
     // Zuweisungskonflikte: warnen, nicht blockieren. Nur wenn tatsächlich
     // ein Fahrer oder Fahrzeug zugewiesen wurde.
     if (auftrag.fahrerId || auftrag.fahrzeugId || auftrag.fahrzeug) {
@@ -205,7 +227,7 @@ export const updateOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown): { id: string; values: Partial<OrderWrite> } => {
     const parsed = updateOrderSchema.safeParse(data);
-    if (!parsed.success) throw new Error("Ungültige Auftragsdaten.");
+    if (!parsed.success) throw new Error(ersterFehler(parsed));
     return parsed.data as { id: string; values: Partial<OrderWrite> };
   })
   .handler(async ({ data, context }): Promise<AuftragMitWarnungen> => {
@@ -329,7 +351,7 @@ export const seedOrders = createServerFn({ method: "POST" })
         status: a.status,
         abholort: a.abholort,
         zielort: a.zielort,
-        termin: a.termin,
+        termin: normalizeOrderInstant(a.termin),
         fahrzeug: a.fahrzeug,
         kostentraeger: a.kostentraeger,
         notiz: a.notiz,

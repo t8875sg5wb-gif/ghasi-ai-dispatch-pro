@@ -38,6 +38,36 @@ export async function resolveActor(userId: string): Promise<ServerActor> {
 }
 
 /**
+ * Löst Anzeigenamen für mehrere Nutzer-IDs in einem Rutsch auf (z. B. für
+ * Änderungsprotokolle/Audit-Listen) – ein Query statt `resolveActor()` pro Zeile.
+ *
+ * Bewusst fehlertolerant (wie `logActivitySafe`): die Namensauflösung ist eine
+ * Anreicherung, kein Kernbestandteil. Schlägt sie fehl (z. B. Admin-Client
+ * vorübergehend nicht erreichbar), gibt die Funktion eine leere Map zurück,
+ * statt die komplette Audit-Liste mitzureißen – die Aufrufer zeigen dann die
+ * rohe Nutzer-ID/"Unbekannt" statt des Namens, aber die Liste bleibt sichtbar.
+ */
+export async function resolveActorNames(userIds: string[]): Promise<Map<string, string>> {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  if (unique.length === 0) return new Map();
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, name, email")
+      .in("id", unique);
+    if (error) throw new Error(error.message);
+    const map = new Map<string, string>();
+    for (const row of data ?? []) {
+      map.set(row.id as string, (row.name as string) || (row.email as string) || "Unbekannt");
+    }
+    return map;
+  } catch (e) {
+    console.error("[resolveActorNames] Namensauflösung fehlgeschlagen:", e);
+    return new Map();
+  }
+}
+
+/**
  * Prüft serverseitig, ob ein Thread dem angegebenen Nutzer gehört.
  * Gibt bei fremden UND nicht existierenden Threads gleichermaßen false zurück,
  * damit die Existenz fremder Threads nicht preisgegeben wird.

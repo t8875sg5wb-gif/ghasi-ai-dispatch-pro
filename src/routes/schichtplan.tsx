@@ -283,6 +283,7 @@ function ZellenDialog({
   };
 
   const entfernen = (id: string) => {
+    if (!window.confirm("Diesen Schichtplan-Eintrag wirklich löschen?")) return;
     deleteMut.mutate(id, {
       onSuccess: () => toast.success("Eintrag entfernt"),
       onError: (e) => toast.error("Löschen fehlgeschlagen", { description: String(e) }),

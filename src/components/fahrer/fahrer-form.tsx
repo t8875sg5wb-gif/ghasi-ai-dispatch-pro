@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AddressFields } from "@/components/forms/address-fields";
-import { parseAdresse, formatAdresse, type AdresseStruktur } from "@/lib/address";
+import { parseAdresse, formatAdresse, adresseGefuellt, type AdresseStruktur } from "@/lib/address";
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type FahrerFormValues = Omit<Fahrer, "id" | "nummer">;
+export type FahrerFormValues = Omit<Fahrer, "id" | "nummer" | "pScheinGueltigBis">;
 
 interface FahrerFormProps {
   initial?: Fahrer;
@@ -55,7 +55,7 @@ function emptyValues(): FahrerFormValues {
     krankheitstage: 0,
     status: "verfuegbar",
     standort: "Betriebshof",
-    gps: { lat: 52.52, lng: 13.405 },
+    gps: { lat: 52.29, lng: 8.9 },
     fahrzeug: null,
     schicht: "06:00 – 14:00",
     bewertung: 4.5,
@@ -66,7 +66,6 @@ function emptyValues(): FahrerFormValues {
     kmHeute: 0,
     umsatzHeute: 0,
     gewinnHeute: 0,
-    pScheinGueltigBis: null,
     fuehrungszeugnisDatum: null,
     svAusweisVorhanden: false,
     steuerId: "",
@@ -94,7 +93,12 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
 
   useEffect(() => {
     if (initial) {
-      const { id: _id, nummer: _nummer, ...rest } = initial;
+      const {
+        id: _id,
+        nummer: _nummer,
+        pScheinGueltigBis: _legacyPScheinGueltigBis,
+        ...rest
+      } = initial;
       setValues(rest);
       setAdr(parseAdresse(initial.adresse));
     } else {
@@ -109,7 +113,21 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!values.name.trim()) return;
+    // Muss mit dem serverseitigen Schema in `drivers.functions.ts`
+    // übereinstimmen (dort sind diese Felder ohne `.optional()`) — sonst
+    // scheitert das Anlegen ohne erkennbaren Grund am Server, mit nur einer
+    // pauschalen "Fahrer konnte nicht gespeichert werden"-Meldung.
+    if (
+      !values.name.trim() ||
+      !values.telefon.trim() ||
+      !values.email.trim() ||
+      !adresseGefuellt(adr) ||
+      !values.fuehrerschein.gueltigBis ||
+      !values.pSchein.gueltigBis ||
+      !values.ersteHilfe.gueltigBis
+    ) {
+      return;
+    }
     onSubmit(values);
   }
 
@@ -128,22 +146,28 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="telefon">Telefonnummer</Label>
+          <Label htmlFor="telefon">
+            Telefonnummer<span className="text-destructive"> *</span>
+          </Label>
           <Input
             id="telefon"
             value={values.telefon}
             onChange={(e) => set("telefon", e.target.value)}
             placeholder="+49 …"
+            required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="email">E-Mail</Label>
+          <Label htmlFor="email">
+            E-Mail<span className="text-destructive"> *</span>
+          </Label>
           <Input
             id="email"
             type="email"
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
             placeholder="name@…"
+            required
           />
         </div>
       </div>
@@ -151,6 +175,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
       <AddressFields
         idPrefix="fahrer-adresse"
         label="Adresse"
+        required
         value={adr}
         onChange={(next) => {
           setAdr(next);
@@ -160,7 +185,9 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="fs">Führerschein bis</Label>
+          <Label htmlFor="fs">
+            Führerschein bis<span className="text-destructive"> *</span>
+          </Label>
           <Input
             id="fs"
             type="date"
@@ -168,19 +195,25 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
             onChange={(e) =>
               set("fuehrerschein", { ...values.fuehrerschein, gueltigBis: e.target.value })
             }
+            required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="ps">P-Schein bis</Label>
+          <Label htmlFor="ps">
+            P-Schein bis<span className="text-destructive"> *</span>
+          </Label>
           <Input
             id="ps"
             type="date"
             value={values.pSchein.gueltigBis}
             onChange={(e) => set("pSchein", { ...values.pSchein, gueltigBis: e.target.value })}
+            required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="eh">Erste-Hilfe bis</Label>
+          <Label htmlFor="eh">
+            Erste-Hilfe bis<span className="text-destructive"> *</span>
+          </Label>
           <Input
             id="eh"
             type="date"
@@ -188,6 +221,7 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
             onChange={(e) =>
               set("ersteHilfe", { ...values.ersteHilfe, gueltigBis: e.target.value })
             }
+            required
           />
         </div>
       </div>
@@ -195,15 +229,6 @@ export function FahrerForm({ initial, onSubmit, onCancel, submitLabel }: FahrerF
       <div className="rounded-xl border border-border/70 p-3">
         <p className="mb-3 text-sm font-medium">Compliance-Nachweise (Schiene A)</p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="pscheinbis">Personenbeförderungsschein gültig bis</Label>
-            <Input
-              id="pscheinbis"
-              type="date"
-              value={values.pScheinGueltigBis ?? ""}
-              onChange={(e) => set("pScheinGueltigBis", e.target.value || null)}
-            />
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="fz">Führungszeugnis vom</Label>
             <Input

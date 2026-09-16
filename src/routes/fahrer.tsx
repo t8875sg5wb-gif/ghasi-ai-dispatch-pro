@@ -17,7 +17,6 @@ import {
   type FahrerStatus,
   FAHRER_STATI,
   FAHRER_STATUS_META,
-  INITIAL_FAHRER,
   empfehleFahrer,
   formatEUR,
   initials,
@@ -31,6 +30,9 @@ import {
   useUpdateDriver,
   useSetDriverAccountLink,
 } from "@/lib/drivers-store";
+import { useOrders } from "@/lib/orders-store";
+import { useInvoices } from "@/lib/invoices-store";
+import { computeFahrerFinanzwerte } from "@/lib/finance";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,14 +71,22 @@ type StatusFilter = FahrerStatus | "alle";
 
 function FahrerPage() {
   const { data: dbFahrer } = useDrivers();
+  const ordersQ = useOrders();
+  const invoicesQ = useInvoices();
   const createMut = useCreateDriver();
   const updateMut = useUpdateDriver();
   const linkMut = useSetDriverAccountLink();
 
-  // Single source of truth: the live query result. No local mirror of driver
-  // rows — a local copy could diverge from the server after a save and make the
-  // edit dialog show stale values.
-  const fahrer: Fahrer[] = dbFahrer ?? INITIAL_FAHRER;
+  // Single source of truth: live persisted rows. Never fall back to seed/demo
+  // drivers while the query is loading.
+  const fahrer: Fahrer[] = useMemo(() => dbFahrer ?? [], [dbFahrer]);
+  const auftraege = useMemo(() => ordersQ.data ?? [], [ordersQ.data]);
+  const rechnungen = useMemo(() => invoicesQ.data ?? [], [invoicesQ.data]);
+  const fahrerFinanz = useMemo(
+    () =>
+      new Map(computeFahrerFinanzwerte(fahrer, auftraege, rechnungen).map((w) => [w.fahrerId, w])),
+    [fahrer, auftraege, rechnungen],
+  );
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("alle");
@@ -201,7 +211,8 @@ function FahrerPage() {
             setFormOpen(false);
             setEditId(null);
           },
-          onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
+          onError: (e) =>
+            toast.error("Fahrer konnte nicht gespeichert werden", { description: String(e) }),
         },
       );
       return;
@@ -215,7 +226,8 @@ function FahrerPage() {
         setFormOpen(false);
         setEditId(null);
       },
-      onError: () => toast.error("Fahrer konnte nicht gespeichert werden"),
+      onError: (e) =>
+        toast.error("Fahrer konnte nicht gespeichert werden", { description: String(e) }),
     });
   }
 
@@ -420,6 +432,7 @@ function FahrerPage() {
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((f) => {
             const sm = FAHRER_STATUS_META[f.status];
+            const heute = fahrerFinanz.get(f.id)?.heute;
             const hatWarnung =
               laeuftAb(f.fuehrerschein.gueltigBis) ||
               laeuftAb(f.pSchein.gueltigBis) ||
@@ -475,15 +488,19 @@ function FahrerPage() {
 
                 <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/60 pt-3 text-center">
                   <div>
-                    <p className="text-sm font-bold tabular-nums">{f.kmHeute}</p>
+                    <p className="text-sm font-bold tabular-nums">{heute?.km ?? 0}</p>
                     <p className="text-[11px] text-muted-foreground">km heute</p>
                   </div>
                   <div>
-                    <p className="text-sm font-bold tabular-nums">{formatEUR(f.umsatzHeute)}</p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatEUR(heute?.umsatz ?? 0)}
+                    </p>
                     <p className="text-[11px] text-muted-foreground">Umsatz</p>
                   </div>
                   <div>
-                    <p className="text-sm font-bold tabular-nums">{formatEUR(f.gewinnHeute)}</p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatEUR(heute?.gewinn ?? 0)}
+                    </p>
                     <p className="text-[11px] text-muted-foreground">Gewinn</p>
                   </div>
                 </div>
@@ -496,6 +513,8 @@ function FahrerPage() {
       {/* Detail */}
       <FahrerDetail
         fahrer={detailFahrer}
+        finanzHeute={detailFahrer ? fahrerFinanz.get(detailFahrer.id)?.heute : undefined}
+        auftraege={auftraege}
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onStatusChange={handleStatusChange}

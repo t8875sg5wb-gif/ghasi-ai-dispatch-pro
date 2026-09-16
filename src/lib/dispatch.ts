@@ -45,6 +45,7 @@ import {
   istAbgelaufen,
   laeuftAb,
 } from "@/lib/fahrzeuge";
+import { computeTagesFinanzKpis, type Rechnung } from "@/lib/finance";
 
 /* ------------------------------------------------------------------ *
  * Live-Status
@@ -482,15 +483,21 @@ export function erkenneKonflikte(
     (t) => t.liveStatus !== "abgeschlossen" && t.liveStatus !== "storniert",
   );
 
-  // Doppelbuchung: gleicher Fahrer, überlappende Zeitfenster
+  // Doppelbuchung: gleicher Fahrer, überlappende Zeitfenster.
+  // Gruppierung bewusst über `fahrerId` (stabile FK), nicht über den
+  // Anzeigenamen `fahrer` — zwei unterschiedliche Fahrer mit demselben
+  // Namen dürfen weder fälschlich als "doppelt gebucht" zusammengelegt
+  // werden, noch darf ein echter Namens-Tippfehler eine reale
+  // Doppelbuchung unentdeckt lassen.
   const proFahrer = new Map<string, DispatchTransport[]>();
   for (const t of offene) {
-    if (!t.fahrer) continue;
-    const list = proFahrer.get(t.fahrer) ?? [];
+    if (!t.fahrerId) continue;
+    const list = proFahrer.get(t.fahrerId) ?? [];
     list.push(t);
-    proFahrer.set(t.fahrer, list);
+    proFahrer.set(t.fahrerId, list);
   }
-  for (const [name, list] of proFahrer) {
+  for (const [, list] of proFahrer) {
+    const name = list[0]?.fahrer ?? "Fahrer";
     const sorted = [...list].sort((a, b) => zeitInMin(a.abholzeit) - zeitInMin(b.abholzeit));
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
@@ -518,8 +525,8 @@ export function erkenneKonflikte(
         transportId: t.id,
       });
     }
-    if (t.fahrer) {
-      const f = fahrer.find((x) => x.name === t.fahrer);
+    if (t.fahrerId) {
+      const f = fahrer.find((x) => x.id === t.fahrerId);
       if (f && !FAHRER_STATUS_META[f.status].einsetzbar) {
         konflikte.push({
           id: `fnv-${t.id}`,
@@ -685,6 +692,7 @@ export interface DispatchKpis {
   freieFahrzeuge: number;
   umsatzHeute: number;
   gewinnHeute: number;
+  umsatzHeuteBasis: "keine" | "rechnung" | "schaetzung" | "gemischt";
   leerKmGesamt: number;
   distanzGesamt: number;
   fahrzeugAuslastung: number;
@@ -697,6 +705,8 @@ export function berechneKpis(
   transporte: DispatchTransport[],
   fahrer: Fahrer[],
   fahrzeuge: Fahrzeug[],
+  rechnungen: Rechnung[] = [],
+  jetzt: Date = new Date(),
 ): DispatchKpis {
   const abgeschlossen = transporte.filter((t) => t.liveStatus === "abgeschlossen");
   const storniert = transporte.filter((t) => t.liveStatus === "storniert").length;
@@ -704,12 +714,11 @@ export function berechneKpis(
   const wartend = transporte.filter((t) => spalteVon(t) === "warten").length;
   const verspaetet = transporte.filter((t) => spalteVon(t) === "verspaetet").length;
 
-  const umsatzHeute = transporte
-    .filter((t) => t.liveStatus !== "storniert")
-    .reduce((s, t) => s + t.erloes, 0);
+  const tagesFin = computeTagesFinanzKpis(transporte, rechnungen, jetzt);
+  const umsatzHeute = tagesFin.umsatz;
   const leerKmGesamt = transporte.reduce((s, t) => s + t.leerKm, 0);
   const distanzGesamt = transporte.reduce((s, t) => s + t.distanzKm, 0);
-  const gewinnHeute = Math.round(umsatzHeute * 0.38);
+  const gewinnHeute = tagesFin.gewinn;
 
   const verspaetungen = transporte.filter((t) => t.verspaetungMin > 0);
   const schnittVerspaetung = verspaetungen.length
@@ -750,6 +759,7 @@ export function berechneKpis(
     freieFahrzeuge,
     umsatzHeute,
     gewinnHeute,
+    umsatzHeuteBasis: tagesFin.basis,
     leerKmGesamt,
     distanzGesamt,
     fahrzeugAuslastung,

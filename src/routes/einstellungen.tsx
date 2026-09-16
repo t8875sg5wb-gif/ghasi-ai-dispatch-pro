@@ -358,7 +358,9 @@ function EinstellungenSeite() {
               <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
                 <span className="font-semibold">Noch nicht bestätigt</span> — ohne Bestätigung
                 können keine Rechnungen erzeugt werden. Bitte den passenden Modus wählen und
-                speichern. Diese Entscheidung sollte mit dem Steuerberater abgestimmt sein.
+                speichern. Diese Entscheidung sollte mit dem Steuerberater abgestimmt sein. § 4 Nr.
+                17b UStG gilt nicht automatisch für jede Krankenfahrt, sondern setzt insbesondere
+                ein hierfür besonders eingerichtetes Fahrzeug voraus.
               </div>
             )}
             <Feld label="Umsatzsteuer-Modus">

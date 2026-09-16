@@ -21,6 +21,7 @@ import {
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,15 +74,13 @@ import { rechnungToWrite } from "@/lib/invoices-shared";
 import { downloadText } from "@/lib/export-utils";
 import { RechnungDetailDialog } from "@/components/rechnungen/rechnung-detail-dialog";
 import { exportInvoiceXRechnung } from "@/lib/invoices.functions";
-import {
-  XRECHNUNG_WARNUNG,
-  XRECHNUNG_LEITWEG_FEHLT_HINWEIS,
-  istExportierbar,
-} from "@/lib/xrechnung";
+import { XRECHNUNG_WARNUNG, istExportierbar } from "@/lib/xrechnung";
 import { useServerFn } from "@tanstack/react-start";
 import { BankImportDialog } from "@/components/rechnungen/bank-import-dialog";
 import { logActivity } from "@/lib/protokoll";
 import type { Rechnung, MahnEintrag } from "@/lib/finance";
+
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -110,6 +109,8 @@ function istMahnbar(r: Rechnung, mounted: boolean): boolean {
 }
 
 function RechnungenPage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<RechnungStatus | "alle">("alle");
   const [suche, setSuche] = useState("");
@@ -136,7 +137,6 @@ function RechnungenPage() {
     setXrLaeuft(true);
     try {
       const r = await exportXr({ data: { id: xrTarget.id } });
-      if (r.leitwegFehlt) toast.warning(XRECHNUNG_LEITWEG_FEHLT_HINWEIS);
       downloadText(r.dateiname, r.xml, "application/xml");
       toast.success(`${r.dateiname} erzeugt – bitte mit dem KoSIT-Validator prüfen.`);
       setXrTarget(null);
@@ -206,6 +206,18 @@ function RechnungenPage() {
   }, [alleRechnungen, filter, suche]);
 
   const istLeer = !isLoading && !isError && alleRechnungen.length === 0;
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Rechnungen & Mahnwesen"
+        description="Abrechnung, Mahnwesen und offene Posten – ausschließlich für Administration und Finanzen."
+        icon={FileText}
+        badge="Finanzen"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

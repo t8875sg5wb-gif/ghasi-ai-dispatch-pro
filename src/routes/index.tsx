@@ -29,10 +29,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { generateHinweise, type Hinweis, type HinweisStufe } from "@/lib/ghasi-hinweise";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
 import { useCalls } from "@/lib/calls-store";
 import { computeKpis, EUR } from "@/lib/ai-brain";
 import { computeFinanzKpis } from "@/lib/finance";
@@ -93,42 +95,74 @@ function istHeute(iso: string): boolean {
   );
 }
 
+// Stabile leere Fallback-Referenz: `= []` als Destrukturierungs-Default würde
+// bei jedem Render ein NEUES Array erzeugen, solange die Query noch lädt.
+// Das ließ den untenstehenden useEffect (Deps: auftraege/fahrer/…) bei jedem
+// Render erneut feuern → setHinweise → Re-Render → neues [] → Endlosschleife
+// ("Maximum update depth exceeded") auf einer wirklich kalten Cache-Ladung.
+const EMPTY: never[] = [];
+
 function Dashboard() {
   // Live-Hydration der geteilten Spiegel (Aufträge/Fahrer/Rechnungen/Anrufe),
   // damit alle deterministischen Kennzahlen auf den echten Daten laufen.
-  const { data: auftraege = [] } = useOrders();
-  useDrivers();
-  const { data: rechnungen = [] } = useInvoices();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  const auftraege = ordersQ.data ?? EMPTY;
+  const fahrer = driversQ.data ?? EMPTY;
+  const rechnungen = invoicesQ.data ?? EMPTY;
+  const fahrzeuge = vehiclesQ.data ?? EMPTY;
   const { data: anrufe = [] } = useCalls();
+  // Bis zur ersten Hydration stehen in den Legacy-Spiegeln (INITIAL_FAHRZEUGE
+  // etc.) feste Demo-Fuhrpark-Daten statt echter Werte. Ohne diese Sperre
+  // zeigt das Dashboard beim allerersten Laden für einen kurzen Moment einen
+  // erfundenen "Kritisch"-Health-Score mit negativem Cashflow und
+  // Millionen-Gewinnprognosen statt der echten, kleinen Zahlen.
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
 
   // Zeit-/datumsabhängige Hinweise erst nach Mount erzeugen (kein SSR-Mismatch).
   const [hinweise, setHinweise] = useState<Hinweis[]>([]);
-  useEffect(() => setHinweise(generateHinweise()), [auftraege, rechnungen]);
+  useEffect(
+    () => setHinweise(generateHinweise({ fahrzeuge, fahrer, rechnungen, auftraege })),
+    [auftraege, fahrer, rechnungen, fahrzeuge],
+  );
 
-  const kpis = computeKpis();
-  const fin = computeFinanzKpis();
-  const empty = computeEmptyMileage();
-  const cashflow = computeCashflowForecast(kpis);
-  const recs = computeCeoRecommendations();
+  const kpis = computeKpis({ auftraege, fahrer, fahrzeuge, rechnungen });
+  const fin = computeFinanzKpis(rechnungen, { fahrer, fahrzeuge, auftraege, rechnungen });
+  const empty = computeEmptyMileage([...fahrer]);
+  const cashflow = computeCashflowForecast(kpis, fin);
+  const recs = computeCeoRecommendations(auftraege, fahrzeuge, fahrer, rechnungen);
   const prognose7 = cashflow[0];
 
   const gesamtFahrer = kpis.aktiveFahrer + kpis.freieFahrer;
   const gesamtFahrzeuge = kpis.aktiveFahrzeuge + kpis.freieFahrzeuge;
+  const tagesBasisSuffix =
+    kpis.tagesumsatzBasis === "schaetzung"
+      ? " (Schätzung)"
+      : kpis.tagesumsatzBasis === "gemischt"
+        ? " (gemischt)"
+        : "";
+  const tagesMarge = kpis.margeHeuteProzent === null ? "–" : `${kpis.margeHeuteProzent} %`;
 
   const stats = [
     {
-      label: "Umsatz heute",
+      label: `Umsatz heute${tagesBasisSuffix}`,
       value: EUR(kpis.umsatzHeute),
       icon: Euro,
       tone: "primary" as const,
-      hint: `Monat ${EUR(kpis.umsatzMonat)}`,
+      hint: `Monat ${EUR(kpis.umsatzMonat)} · Rechnungsbasis`,
     },
     {
-      label: "Gewinn heute",
+      label: `Gewinn heute${tagesBasisSuffix}`,
       value: EUR(kpis.gewinnHeute),
       icon: TrendingUp,
       tone: "success" as const,
-      hint: `Marge ${kpis.margeProzent} %`,
+      hint: `Tagesmarge ${tagesMarge}`,
     },
     {
       label: "Offene Aufträge",
@@ -269,7 +303,7 @@ function Dashboard() {
       value: EUR(kpis.umsatzMonat),
       icon: Euro,
       tone: "success" as const,
-      hint: "grob geschätzt",
+      hint: "aus ausgestellten Rechnungen",
     },
     {
       label: "Offene Rechnungen",
@@ -279,6 +313,36 @@ function Dashboard() {
       hint: EUR(fin.offenePosten),
     },
   ];
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <section>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Krankentransport Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Hier ist die Echtzeit-Übersicht Ihres Unternehmens.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+        <Skeleton className="h-56" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

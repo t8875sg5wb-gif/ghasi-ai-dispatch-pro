@@ -102,7 +102,11 @@ function LeasingSeite() {
   }, [items, suche, nurAktiv]);
 
   const selektiert = items.find((l) => l.id === aktiv) ?? gefiltert[0] ?? null;
-  const monatsrate = items.reduce((s, l) => s + l.rateMonat, 0);
+  // Nur laufende Verträge zählen/summieren – beendete (siehe
+  // `abgeleiteterLeasingStatus`, dieselbe Prüfung wie beim Status-Badge je
+  // Zeile) sollen weder die "Verträge"-Kachel noch die Rate aufblähen.
+  const laufendeVertraege = items.filter((l) => abgeleiteterLeasingStatus(l) !== "beendet");
+  const monatsrate = laufendeVertraege.reduce((s, l) => s + l.rateMonat, 0);
   const { data: vehicles = [] } = useVehicles();
   const hinweise = useMemo(() => buildHinweise(items, vehicles), [items, vehicles]);
 
@@ -178,7 +182,7 @@ function LeasingSeite() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Kpi label="Verträge" value={String(items.length)} icon={FileText} />
+        <Kpi label="Verträge" value={String(laufendeVertraege.length)} icon={FileText} />
         <Kpi label="Rate / Monat" value={formatEUR(monatsrate)} icon={Euro} />
         <Kpi label="Rate / Jahr" value={formatEUR(monatsrate * 12)} icon={CalendarClock} />
       </div>
@@ -454,8 +458,11 @@ function LeasingFelder({
   const [notiz, setNotiz] = useState(target?.notiz ?? "");
 
   function submit() {
-    if (!leasinggeber.trim() || !vertragsnummer.trim() || !rateMonat.trim()) {
-      toast.error("Leasinggeber, Vertragsnummer und Rate sind erforderlich.");
+    // `fahrzeug` ist im Server-Schema ebenfalls Pflicht (min. 1 Zeichen) —
+    // ohne diese Prüfung landet ein nicht ausgewähltes Fahrzeug erst als
+    // vage "Ungültige Leasingdaten."-Meldung vom Server.
+    if (!leasinggeber.trim() || !vertragsnummer.trim() || !rateMonat.trim() || !fahrzeug.trim()) {
+      toast.error("Leasinggeber, Vertragsnummer, Fahrzeug und Rate sind erforderlich.");
       return;
     }
     onSave({
@@ -484,7 +491,7 @@ function LeasingFelder({
         <Feld label="Vertragsnummer *">
           <Input value={vertragsnummer} onChange={(e) => setVertragsnummer(e.target.value)} />
         </Feld>
-        <Feld label="Fahrzeug">
+        <Feld label="Fahrzeug *">
           <Select value={fahrzeug} onValueChange={setFahrzeug}>
             <SelectTrigger>
               <SelectValue />

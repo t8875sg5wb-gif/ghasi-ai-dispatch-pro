@@ -24,7 +24,7 @@ import {
   verordnungFehlt,
   empfohlenerFahrzeugtyp,
 } from "@/lib/auftraege";
-import { KUNDEN } from "@/lib/stammdaten";
+import { KUNDEN, PATIENTEN } from "@/lib/stammdaten";
 import {
   DAUERAUFTRAEGE,
   WOCHENTAGE,
@@ -48,6 +48,8 @@ import {
   INITIAL_RECHNUNGEN,
   RECHNUNG_STATUS_META,
   computeFinanzKpis,
+  computeFahrerFinanzwerte,
+  computeFahrzeugFinanzwerte,
   detectFinanzAnomalien,
   tageUeberfaellig,
   formatDatum as formatRgDatum,
@@ -206,6 +208,11 @@ export function buildBusinessTools(role: AppRole | null) {
         sortierung: z.enum(["ueberstunden", "puenktlichkeit", "bewertung", "umsatz"]).optional(),
       }),
       execute: async ({ name, status, sortierung }) => {
+        const finanz = new Map(
+          computeFahrerFinanzwerte(INITIAL_FAHRER, INITIAL_AUFTRAEGE, INITIAL_RECHNUNGEN).map(
+            (w) => [w.fahrerId, w.heute],
+          ),
+        );
         let liste = INITIAL_FAHRER.filter(
           (f) => enthaelt(f.name, name) && (!status || f.status === status),
         );
@@ -216,23 +223,29 @@ export function buildBusinessTools(role: AppRole | null) {
         if (sortierung === "bewertung")
           liste = [...liste].sort((a, b) => b.bewertung - a.bewertung);
         if (sortierung === "umsatz")
-          liste = [...liste].sort((a, b) => b.umsatzHeute - a.umsatzHeute);
+          liste = [...liste].sort(
+            (a, b) => (finanz.get(b.id)?.umsatz ?? 0) - (finanz.get(a.id)?.umsatz ?? 0),
+          );
         return {
           quelle: "Fahrer",
           anzahl: liste.length,
-          fahrer: liste.map((f) => ({
-            name: f.name,
-            nummer: f.nummer,
-            status: f.status,
-            ueberstunden: f.ueberstunden,
-            puenktlichkeit: `${f.puenktlichkeit} %`,
-            bewertung: `${f.bewertung}/5`,
-            kmHeute: f.kmHeute,
-            umsatzHeute: EUR(f.umsatzHeute),
-            beschwerden: f.beschwerden,
-            lob: f.lob,
-            fahrzeug: f.fahrzeug ?? "—",
-          })),
+          fahrer: liste.map((f) => {
+            const heute = finanz.get(f.id);
+            return {
+              name: f.name,
+              nummer: f.nummer,
+              status: f.status,
+              ueberstunden: f.ueberstunden,
+              puenktlichkeit: `${f.puenktlichkeit} %`,
+              bewertung: `${f.bewertung}/5`,
+              kmHeute: heute?.km ?? 0,
+              umsatzHeute: EUR(heute?.umsatz ?? 0),
+              umsatzBasis: heute?.basis ?? "keine",
+              beschwerden: f.beschwerden,
+              lob: f.lob,
+              fahrzeug: f.fahrzeug ?? "—",
+            };
+          }),
         };
       },
     });
@@ -249,6 +262,11 @@ export function buildBusinessTools(role: AppRole | null) {
         sortierung: z.enum(["verbrauch", "kilometerstand", "umsatz"]).optional(),
       }),
       execute: async ({ kennzeichen, status, wartungNoetig, sortierung }) => {
+        const finanz = new Map(
+          computeFahrzeugFinanzwerte(INITIAL_FAHRZEUGE, INITIAL_AUFTRAEGE, INITIAL_RECHNUNGEN).map(
+            (w) => [w.fahrzeugId, w.monat],
+          ),
+        );
         let liste = INITIAL_FAHRZEUGE.filter(
           (v) =>
             enthaelt(`${v.kennzeichen} ${v.marke} ${v.modell}`, kennzeichen) &&
@@ -260,12 +278,15 @@ export function buildBusinessTools(role: AppRole | null) {
         if (sortierung === "kilometerstand")
           liste = [...liste].sort((a, b) => b.kilometerstand - a.kilometerstand);
         if (sortierung === "umsatz")
-          liste = [...liste].sort((a, b) => b.monatsumsatz - a.monatsumsatz);
+          liste = [...liste].sort(
+            (a, b) => (finanz.get(b.id)?.umsatz ?? 0) - (finanz.get(a.id)?.umsatz ?? 0),
+          );
         return {
           quelle: "Flotte",
           anzahl: liste.length,
           fahrzeuge: liste.map((v) => {
             const w = fahrzeugWarnungen(v);
+            const monat = finanz.get(v.id);
             return {
               kennzeichen: v.kennzeichen,
               fahrzeug: `${v.marke} ${v.modell}`,
@@ -274,6 +295,8 @@ export function buildBusinessTools(role: AppRole | null) {
               tankstand: `${v.tankstand} %`,
               verbrauch: `${v.verbrauch} ${v.kraftstoff === "Elektro" ? "kWh" : "l"}/100km`,
               kilometerstand: v.kilometerstand,
+              umsatzMonat: EUR(monat?.umsatz ?? 0),
+              umsatzBasis: monat?.basis ?? "keine",
               naechsteWartung: v.naechsteWartung,
               tuevBis: v.tuevBis,
               warnungen: Object.entries(w)
@@ -492,7 +515,12 @@ export function buildBusinessTools(role: AppRole | null) {
           tageUeberfaellig: tageUeberfaellig(r),
           bezugAuftrag: r.bezugAuftrag ?? "—",
         }));
-        const k = computeFinanzKpis();
+        const k = computeFinanzKpis(INITIAL_RECHNUNGEN, {
+          fahrer: INITIAL_FAHRER,
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          auftraege: INITIAL_AUFTRAEGE,
+          rechnungen: INITIAL_RECHNUNGEN,
+        });
         return {
           quelle: "Buchhaltung · Rechnungen",
           anzahl: liste.length,
@@ -533,7 +561,12 @@ export function buildBusinessTools(role: AppRole | null) {
         "Liefert die Kostenaufstellung des Monats: Fahrzeug-, Kraftstoff-, Wartungs-, Fahrer- und Leasingkosten sowie Gesamtkosten. Beantwortet 'wo entstehen die Kosten / wo können Kosten gesenkt werden'.",
       inputSchema: z.object({}),
       execute: async () => {
-        const k = computeFinanzKpis();
+        const k = computeFinanzKpis(INITIAL_RECHNUNGEN, {
+          fahrer: INITIAL_FAHRER,
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          auftraege: INITIAL_AUFTRAEGE,
+          rechnungen: INITIAL_RECHNUNGEN,
+        });
         return {
           quelle: "Buchhaltung · Kostenstellen",
           fahrzeugkosten: EURf(k.kosten.fahrzeugkosten),
@@ -583,7 +616,14 @@ export function buildBusinessTools(role: AppRole | null) {
         ]),
       }),
       execute: async ({ typ }) => {
-        const b = buildBericht(typ as BerichtTyp);
+        const b = buildBericht(typ as BerichtTyp, {
+          rechnungen: INITIAL_RECHNUNGEN,
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          fahrer: INITIAL_FAHRER,
+          kunden: KUNDEN,
+          patienten: PATIENTEN,
+          auftraege: INITIAL_AUFTRAEGE,
+        });
         return {
           quelle: "Reporting-Engine",
           titel: b.titel,
@@ -624,7 +664,14 @@ export function buildBusinessTools(role: AppRole | null) {
         "Liefert KI-Optimierungspotenziale (Insights) mit Begründung, Empfehlung, Wirkung und geschätztem Potenzial. Beantwortet 'wo können wir optimieren / Leerkilometer senken / Touren zusammenlegen / warum sinkt der Gewinn'.",
       inputSchema: z.object({}),
       execute: async () => {
-        const list = computeInsights().slice(0, 8);
+        const liveDaten = {
+          fahrer: INITIAL_FAHRER,
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          auftraege: INITIAL_AUFTRAEGE,
+          rechnungen: INITIAL_RECHNUNGEN,
+          patienten: PATIENTEN,
+        };
+        const list = computeInsights(liveDaten).slice(0, 8);
         return {
           quelle: "AI Brain",
           anzahl: list.length,
@@ -644,7 +691,16 @@ export function buildBusinessTools(role: AppRole | null) {
         "Liefert Prognosen: erwarteter Wochenumsatz, Engpasstag, Fahrer-Lücke zur Spitze, Wartungen der nächsten 30 Tage sowie Umsatz-Wochenverlauf. Für Vorhersagen/Planungsfragen.",
       inputSchema: z.object({}),
       execute: async () => {
-        const p = computePrognosen();
+        const liveDaten = {
+          fahrer: INITIAL_FAHRER,
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          auftraege: INITIAL_AUFTRAEGE,
+          rechnungen: INITIAL_RECHNUNGEN,
+        };
+        const p = computePrognosen(computeKpis(liveDaten), {
+          fahrer: liveDaten.fahrer,
+          fahrzeuge: liveDaten.fahrzeuge,
+        });
         return {
           quelle: "Prognosen",
           erwarteterWochenumsatz: EUR(p.zusammenfassung.umsatzWocheGesamt),
@@ -661,7 +717,12 @@ export function buildBusinessTools(role: AppRole | null) {
         "Liefert aktuelle Warnungen/Alarme (kritisch/hoch/mittel) aus dem Alert-Center: ablaufende Dokumente, Wartungsfristen, Überstunden, Verspätungen.",
       inputSchema: z.object({}),
       execute: async () => {
-        const list = generateHinweise().slice(0, 12);
+        const list = generateHinweise({
+          fahrzeuge: INITIAL_FAHRZEUGE,
+          fahrer: INITIAL_FAHRER,
+          rechnungen: INITIAL_RECHNUNGEN,
+          auftraege: INITIAL_AUFTRAEGE,
+        }).slice(0, 12);
         return {
           quelle: "Alert-Center",
           anzahl: list.length,

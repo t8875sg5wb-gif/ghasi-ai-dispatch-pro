@@ -124,7 +124,12 @@ function StandorteSeite() {
       if (res.length === 0) setFehler("Keine Treffer im gewählten Umkreis.");
     } catch (e) {
       console.error(e);
-      setFehler("Suche momentan nicht verfügbar.");
+      const meldung = e instanceof Error ? e.message : String(e);
+      setFehler(
+        /Google-Maps-Connector|Places API Fehler|Google Maps/i.test(meldung)
+          ? "Google-Maps-Suche ist serverseitig noch nicht vollständig konfiguriert. Connector/API-Freigabe prüfen."
+          : "Suche momentan nicht verfügbar.",
+      );
       setErgebnisse([]);
     } finally {
       setLadend(false);

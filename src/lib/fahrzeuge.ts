@@ -385,11 +385,12 @@ export function flottenEmpfehlung(f: Fahrzeug): FlottenEmpfehlung {
     };
   }
 
-  // Otherwise: use it more
+  // Otherwise: operationally ready. Financial profitability is derived centrally
+  // from completed orders/invoices and must not come from legacy vehicle fields.
   return {
     fahrzeug: f,
     aktion: "einsetzen",
-    text: `Effizient (${formatEUR(f.monatsgewinn)} Monatsgewinn) – stärker einsetzen.`,
+    text: "Keine kritische Fahrzeugwarnung – regulär einsetzbar.",
     tone: "success",
   };
 }

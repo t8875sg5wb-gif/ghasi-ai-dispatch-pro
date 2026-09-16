@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Handshake, Plus, Trash2, CheckCircle2, AlertTriangle, Loader2, Info } from "lucide-react";
 
 import { PageHero } from "@/components/enterprise/page-hero";
+import { AccessDeniedPage } from "@/components/auth/access-denied-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ import {
 } from "@/lib/insurer-contracts-store";
 import { VERTRAG_EINHEITEN, type KassenvertragWrite } from "@/lib/insurer-contracts-shared";
 
+import { useAuth } from "@/hooks/use-auth";
+
 export const Route = createFileRoute("/kassenvertraege")({
   head: () => ({
     meta: [
@@ -57,6 +60,8 @@ export const Route = createFileRoute("/kassenvertraege")({
 });
 
 function KassenvertraegePage() {
+  const { role } = useAuth();
+  const berechtigt = role === "admin" || role === "finanz";
   const { data: kassen = [] } = useInsurers();
   const seedMut = useSeedInsurers();
   const { data: vertraege = [], isLoading } = useInsurerContracts();
@@ -73,11 +78,24 @@ function KassenvertraegePage() {
   }, [kassen, vertraege]);
 
   const onDelete = (id: string) => {
+    if (!window.confirm("Diesen Kassenvertrag wirklich dauerhaft löschen?")) return;
     deleteMut.mutate(id, {
       onSuccess: () => toast.success("Vertrag gelöscht"),
       onError: (e) => toast.error("Löschen fehlgeschlagen", { description: String(e) }),
     });
   };
+
+  if (!berechtigt) {
+    return (
+      <AccessDeniedPage
+        title="Kassenverträge"
+        description="Genehmigte Preise je Krankenkasse – ausschließlich für Administration und Finanzen."
+        icon={Handshake}
+        badge="Kostenträger"
+        message="Diese Daten sind Administration und Finanzen vorbehalten."
+      />
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -221,7 +239,10 @@ function VertragDialog({
   };
 
   const submit = () => {
-    if (!insurerId) return;
+    // `leistung` ist im Server-Schema Pflicht (min. 1 Zeichen) — ohne diese
+    // Prüfung landet ein leeres Feld erst als vage "Ungültige
+    // Kassenvertragsdaten."-Meldung vom Server, statt sofort am Feld selbst.
+    if (!insurerId || !leistung.trim()) return;
     const values: KassenvertragWrite = {
       insurerId,
       leistung,
@@ -252,11 +273,14 @@ function VertragDialog({
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Leistung / Transportart</Label>
+            <Label>
+              Leistung / Transportart<span className="text-destructive"> *</span>
+            </Label>
             <Input
               value={leistung}
               onChange={(e) => setLeistung(e.target.value)}
               placeholder="z. B. Liegendtransport"
+              required
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -316,7 +340,7 @@ function VertragDialog({
           <Button variant="outline" onClick={onClose}>
             Abbrechen
           </Button>
-          <Button onClick={submit} disabled={createMut.isPending || !insurerId}>
+          <Button onClick={submit} disabled={createMut.isPending || !insurerId || !leistung.trim()}>
             {createMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Speichern
           </Button>

@@ -43,36 +43,43 @@ export const generateExecutiveAnalysis = createServerFn({ method: "POST" })
 
     const { generateText } = await import("ai");
     const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const { buildBrainSnapshot, computeInsights, computePrognosen } =
-      await import("@/lib/ai-brain");
-    const { buildKnowledgeSnapshot } = await import("@/lib/ghasi-knowledge");
-    const { buildCeoSnapshot } = await import("@/lib/ceo-intelligence");
+    const { buildBrainSnapshot, computeKpis, computePrognosen } = await import("@/lib/ai-brain");
     const { hydrateServerMirrors } = await import("@/lib/server-mirror.server");
 
     // AI Brain: load real persisted data into the in-memory mirrors first so the
     // briefing is built from database data, never demo seeds.
     await hydrateServerMirrors();
+    const [
+      { INITIAL_FAHRER },
+      { INITIAL_FAHRZEUGE },
+      { INITIAL_AUFTRAEGE },
+      { INITIAL_RECHNUNGEN },
+    ] = await Promise.all([
+      import("@/lib/fahrer"),
+      import("@/lib/fahrzeuge"),
+      import("@/lib/auftraege"),
+      import("@/lib/finance"),
+    ]);
+    const liveDaten = {
+      fahrer: INITIAL_FAHRER,
+      fahrzeuge: INITIAL_FAHRZEUGE,
+      auftraege: INITIAL_AUFTRAEGE,
+      rechnungen: INITIAL_RECHNUNGEN,
+    };
+    const prognose = computePrognosen(computeKpis(liveDaten), {
+      fahrer: liveDaten.fahrer,
+      fahrzeuge: liveDaten.fahrzeuge,
+    });
 
-    const insights = computeInsights()
-      .slice(0, 8)
-      .map((i) => `- [${i.wirkung}] ${i.titel}: ${i.erklaerung}`)
-      .join("\n");
-    const prognose = computePrognosen();
+    // Externer Provider: ausschließlich aggregierter Unternehmenskontext.
+    // Keine Fahrer-/Patientennamen, Einzelaufträge, Dokumente oder Knowledge-Snapshots.
+    const kontext = `${buildBrainSnapshot(liveDaten)}
 
-    const kontext = `${buildBrainSnapshot()}
-
-## Erkannte Optimierungspotenziale (regelbasiert)
-${insights || "Keine."}
-
-## Prognose
+## Aggregierte Prognose
 Erwarteter Wochenumsatz: ${prognose.zusammenfassung.umsatzWocheGesamt} €.
 Erwarteter Engpasstag: ${prognose.zusammenfassung.erwarteterEngpassTag}.
 Fahrer-Lücke Spitze: ${prognose.zusammenfassung.fahrerLueckeSpitze}.
-Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.
-
-${buildCeoSnapshot()}
-
-${buildKnowledgeSnapshot("admin")}`;
+Wartungen nächste 30 Tage: ${prognose.zusammenfassung.wartungenNaechste30Tage}.`;
 
     const toStrings = (v: unknown): string[] =>
       Array.isArray(v)

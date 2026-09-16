@@ -61,6 +61,19 @@ describe("computeFinanzKpis", () => {
     const kpis = computeFinanzKpis([r]);
     expect(kpis.bezahltSumme).toBe(119);
   });
+
+  it("zaehlt beim Monatsumsatz nur Rechnungen des laufenden Monats", () => {
+    const september = rechnung({ id: "r-sep", datum: "2026-09-02" });
+    const august = rechnung({ id: "r-aug", datum: "2026-08-31", betrag: 900 });
+    const kpis = computeFinanzKpis([september, august], {
+      fahrer: [],
+      fahrzeuge: [],
+      auftraege: [],
+      rechnungen: [september, august],
+      jetzt: new Date("2026-09-16T12:00:00+02:00"),
+    });
+    expect(kpis.umsatzMonat).toBe(119);
+  });
 });
 
 describe("offenePostenJeKunde", () => {

@@ -16,7 +16,14 @@ export function useCompanySettings() {
   return useQuery({
     queryKey: COMPANY_SETTINGS_QUERY_KEY,
     queryFn: () => fetchSettings(),
+    // `initialData` ohne `initialDataUpdatedAt` gilt React Query als "gerade
+    // frisch geladen" – zusammen mit `staleTime` würde das echte Laden der
+    // gespeicherten Einstellungen bis zu `staleTime` lang unterbleiben, und
+    // die Seite zeigt bis dahin fälschlich die Code-Standardwerte an, als
+    // wären sie die echten, gespeicherten Firmeneinstellungen. `0` markiert
+    // die Default-Daten als von Anfang an veraltet, damit sofort echt geladen wird.
     initialData: DEFAULT_COMPANY_SETTINGS,
+    initialDataUpdatedAt: 0,
     staleTime: 60_000,
   });
 }

@@ -81,7 +81,7 @@ export function AddressFields({
             id={`${idPrefix}-plz`}
             value={value.postalCode}
             onChange={(e) => set("postalCode", e.target.value)}
-            placeholder="10969"
+            placeholder="32423"
             inputMode="numeric"
           />
         </div>

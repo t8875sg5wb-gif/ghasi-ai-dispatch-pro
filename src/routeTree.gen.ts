@@ -20,6 +20,7 @@ import { Route as StandorteRouteImport } from './routes/standorte'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SchichtplanRouteImport } from './routes/schichtplan'
 import { Route as RechnungenRouteImport } from './routes/rechnungen'
+import { Route as RechenpruefungRouteImport } from './routes/rechenpruefung'
 import { Route as PrognosenRouteImport } from './routes/prognosen'
 import { Route as PosteingangRouteImport } from './routes/posteingang'
 import { Route as PflegeheimeRouteImport } from './routes/pflegeheime'
@@ -126,6 +127,11 @@ const SchichtplanRoute = SchichtplanRouteImport.update({
 const RechnungenRoute = RechnungenRouteImport.update({
   id: '/rechnungen',
   path: '/rechnungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RechenpruefungRoute = RechenpruefungRouteImport.update({
+  id: '/rechenpruefung',
+  path: '/rechenpruefung',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrognosenRoute = PrognosenRouteImport.update({
@@ -437,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
+  '/rechenpruefung': typeof RechenpruefungRoute
   '/rechnungen': typeof RechnungenRoute
   '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -501,6 +508,7 @@ export interface FileRoutesByTo {
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
+  '/rechenpruefung': typeof RechenpruefungRoute
   '/rechnungen': typeof RechnungenRoute
   '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -567,6 +575,7 @@ export interface FileRoutesById {
   '/pflegeheime': typeof PflegeheimeRoute
   '/posteingang': typeof PosteingangRoute
   '/prognosen': typeof PrognosenRoute
+  '/rechenpruefung': typeof RechenpruefungRoute
   '/rechnungen': typeof RechnungenRoute
   '/schichtplan': typeof SchichtplanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -634,6 +643,7 @@ export interface FileRouteTypes {
     | '/pflegeheime'
     | '/posteingang'
     | '/prognosen'
+    | '/rechenpruefung'
     | '/rechnungen'
     | '/schichtplan'
     | '/sitemap.xml'
@@ -698,6 +708,7 @@ export interface FileRouteTypes {
     | '/pflegeheime'
     | '/posteingang'
     | '/prognosen'
+    | '/rechenpruefung'
     | '/rechnungen'
     | '/schichtplan'
     | '/sitemap.xml'
@@ -763,6 +774,7 @@ export interface FileRouteTypes {
     | '/pflegeheime'
     | '/posteingang'
     | '/prognosen'
+    | '/rechenpruefung'
     | '/rechnungen'
     | '/schichtplan'
     | '/sitemap.xml'
@@ -829,6 +841,7 @@ export interface RootRouteChildren {
   PflegeheimeRoute: typeof PflegeheimeRoute
   PosteingangRoute: typeof PosteingangRoute
   PrognosenRoute: typeof PrognosenRoute
+  RechenpruefungRoute: typeof RechenpruefungRoute
   RechnungenRoute: typeof RechnungenRoute
   SchichtplanRoute: typeof SchichtplanRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -926,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/rechnungen'
       fullPath: '/rechnungen'
       preLoaderRoute: typeof RechnungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rechenpruefung': {
+      id: '/rechenpruefung'
+      path: '/rechenpruefung'
+      fullPath: '/rechenpruefung'
+      preLoaderRoute: typeof RechenpruefungRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prognosen': {
@@ -1353,6 +1373,7 @@ const rootRouteChildren: RootRouteChildren = {
   PflegeheimeRoute: PflegeheimeRoute,
   PosteingangRoute: PosteingangRoute,
   PrognosenRoute: PrognosenRoute,
+  RechenpruefungRoute: RechenpruefungRoute,
   RechnungenRoute: RechnungenRoute,
   SchichtplanRoute: SchichtplanRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

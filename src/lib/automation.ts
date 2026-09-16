@@ -95,9 +95,9 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "aktiv",
     beschreibung: "Bündelt alle abgeschlossenen Kassenfahrten des Monats zu Sammelrechnungen.",
     naechsteAusfuehrung: "01. des Monats, 07:00",
-    letzteAusfuehrung: "01.06.2026",
-    vorschlag: "3 Sammelrechnungen (AOK, TK, Barmer) als Entwurf vorbereitet.",
-    offeneFreigaben: 3,
+    vorschlag:
+      "Prüft abgeschlossene Kassenfahrten und öffnet die Rechnungsansicht zur manuellen Vorbereitung.",
+    offeneFreigaben: 0,
     to: "/rechnungen",
   },
   {
@@ -108,9 +108,9 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "aktiv",
     beschreibung: "Erzeugt Serientermine für regelmäßige Dialysepatienten (3× pro Woche).",
     naechsteAusfuehrung: "So 18:00 (für Folgewoche)",
-    letzteAusfuehrung: "22.06.2026",
-    vorschlag: "12 Dialysefahrten für M. Hoffmann als Entwurf eingeplant.",
-    offeneFreigaben: 1,
+    vorschlag:
+      "Prüft wiederkehrende Fahrten und öffnet die Tourenplanung; es werden keine Fahrten automatisch angelegt.",
+    offeneFreigaben: 0,
     to: "/tourenplanung",
   },
   {
@@ -121,9 +121,8 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "aktiv",
     beschreibung: "Prüft anstehende Wartungen, TÜV und Versicherungsfristen der Flotte.",
     naechsteAusfuehrung: "Mo 06:00",
-    letzteAusfuehrung: "23.06.2026",
-    vorschlag: "Werkstatttermin für B-KT 204 (Reifen) vorschlagen.",
-    offeneFreigaben: 2,
+    vorschlag: "Prüft Wartungs- und Prüffristen; Termine werden nicht automatisch gebucht.",
+    offeneFreigaben: 0,
     to: "/wartung",
   },
   {
@@ -134,9 +133,9 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "aktiv",
     beschreibung: "Erstellt Mahnungs-Entwürfe für überfällige Rechnungen (kein Auto-Versand).",
     naechsteAusfuehrung: "Mi 09:00",
-    letzteAusfuehrung: "18.06.2026",
-    vorschlag: "2 Zahlungserinnerungen (Sonnenhof, AOK) als Entwurf.",
-    offeneFreigaben: 2,
+    vorschlag:
+      "Prüft überfällige Rechnungen und öffnet das Aktions-Center; Nachrichten werden nicht automatisch erzeugt oder versendet.",
+    offeneFreigaben: 0,
     to: "/aktions-center",
   },
   {
@@ -147,8 +146,8 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "aktiv",
     beschreibung: "Erstellt Umsatz-, Gewinn- und Auslastungsbericht für die Geschäftsführung.",
     naechsteAusfuehrung: "01. des Monats, 08:00",
-    letzteAusfuehrung: "01.06.2026",
-    vorschlag: "Executive-Monatsbericht Mai als PDF-Entwurf bereit.",
+    vorschlag:
+      "Öffnet die Berichtsansicht zur manuellen Erstellung eines aktuellen Geschäftsführungsberichts.",
     offeneFreigaben: 0,
     to: "/berichte",
   },
@@ -160,7 +159,8 @@ export const INITIAL_AUTOMATIONEN: Automation[] = [
     status: "pausiert",
     beschreibung: "Bereitet SMS/WhatsApp-Erinnerungen für Fahrten des Folgetags vor.",
     naechsteAusfuehrung: "Täglich 17:00",
-    vorschlag: "Erinnerungen für 6 Fahrten morgen als Entwurf.",
+    vorschlag:
+      "Öffnet das Aktions-Center für manuell zu prüfende Erinnerungsvorschläge; kein automatischer Versand.",
     offeneFreigaben: 0,
     to: "/aktions-center",
   },

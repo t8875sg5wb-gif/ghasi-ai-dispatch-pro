@@ -69,7 +69,7 @@ function LohnPage() {
   const now = new Date();
   const [monat, setMonat] = useState(`${MONATE[now.getMonth()]} ${now.getFullYear()}`);
 
-  const fahrer = drivers ?? [];
+  const fahrer = useMemo(() => drivers ?? [], [drivers]);
 
   const zeilen: LohnZeile[] = useMemo(
     () =>
@@ -83,6 +83,7 @@ function LohnPage() {
   const summe = useMemo(() => {
     return zeilen.reduce(
       (acc, z) => {
+        if (z.ergebnis.rechenstatus !== "ok") return acc;
         acc.netto += z.ergebnis.netto;
         acc.sv += z.ergebnis.anSozialversicherung;
         acc.steuer += z.ergebnis.anFinanzamt;
@@ -92,6 +93,10 @@ function LohnPage() {
       { netto: 0, sv: 0, steuer: 0, ag: 0 },
     );
   }, [zeilen]);
+  const unvollstaendig = useMemo(
+    () => zeilen.filter((z) => z.ergebnis.rechenstatus !== "ok"),
+    [zeilen],
+  );
 
   async function updateFahrer(f: Fahrer, patch: Partial<Fahrer>) {
     try {
@@ -110,6 +115,10 @@ function LohnPage() {
   function exportPdf() {
     if (zeilen.length === 0) {
       toast.error("Keine Fahrer vorhanden");
+      return;
+    }
+    if (unvollstaendig.length > 0) {
+      toast.error("PDF gesperrt: Mindestens ein Lohn-Datensatz muss zuerst geprüft werden.");
       return;
     }
     downloadLohnPdf(monat, zeilen, company);
@@ -185,6 +194,14 @@ function LohnPage() {
         <StatCard label="AG-Gesamtkosten" value={EUR2(summe.ag)} icon={Wallet} tone="primary" />
       </section>
 
+      {unvollstaendig.length > 0 && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <span className="font-semibold">Prüfung erforderlich:</span> {unvollstaendig.length}{" "}
+          Lohn-Datensatz/-sätze werden nicht in Summen oder PDF übernommen, bis die Stammdaten
+          gültig sind.
+        </div>
+      )}
+
       <Card className="border-border/70 shadow-card">
         <CardHeader>
           <CardTitle className="text-base">Fahrer &amp; Beschäftigung</CardTitle>
@@ -239,15 +256,23 @@ function LohnPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                  <span>
-                    Netto: <span className="font-semibold tabular-nums">{EUR2(e.netto)}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    SV: <span className="tabular-nums">{EUR2(e.anSozialversicherung)}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    AG-Kosten: <span className="tabular-nums">{EUR2(e.agGesamt)}</span>
-                  </span>
+                  {e.rechenstatus === "ok" ? (
+                    <>
+                      <span>
+                        Netto: <span className="font-semibold tabular-nums">{EUR2(e.netto)}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        SV: <span className="tabular-nums">{EUR2(e.anSozialversicherung)}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        AG-Kosten: <span className="tabular-nums">{EUR2(e.agGesamt)}</span>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-semibold text-destructive">
+                      Keine Berechnung – Prüfung erforderlich
+                    </span>
+                  )}
                   {e.warnung && (
                     <Badge
                       variant="outline"

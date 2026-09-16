@@ -11,16 +11,63 @@ import { computeFinanzKpis, EUR } from "@/lib/finance";
 import { useOrders } from "@/lib/orders-store";
 import { useDrivers } from "@/lib/drivers-store";
 import { useInvoices } from "@/lib/invoices-store";
+import { useVehicles } from "@/lib/vehicles-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function StatistikenPage() {
   // Live-Hydration, damit die Kennzahlen bei jeder Datenänderung neu berechnet werden.
-  useOrders();
-  useDrivers();
-  useInvoices();
+  const ordersQ = useOrders();
+  const driversQ = useDrivers();
+  const invoicesQ = useInvoices();
+  const vehiclesQ = useVehicles();
+  // Bis zur ersten Hydration stehen in den Legacy-Spiegeln Demo-Fuhrpark-Daten
+  // statt echter Werte – ohne Sperre zeigt die erste Sekunde falsche Zahlen
+  // (z. B. Umsatz 0 € statt 9.610 €, Flottenauslastung 25 % statt 0 %).
+  const bereit =
+    ordersQ.data !== undefined &&
+    driversQ.data !== undefined &&
+    invoicesQ.data !== undefined &&
+    vehiclesQ.data !== undefined;
 
-  const prognose = computePrognosen();
-  const kpis = computeKpis();
-  const finanz = computeFinanzKpis();
+  const kpis = computeKpis({
+    auftraege: ordersQ.data ?? [],
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
+  const prognose = computePrognosen(kpis, {
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+  });
+  const finanz = computeFinanzKpis(invoicesQ.data ?? [], {
+    fahrer: driversQ.data ?? [],
+    fahrzeuge: vehiclesQ.data ?? [],
+    auftraege: ordersQ.data ?? [],
+    rechnungen: invoicesQ.data ?? [],
+  });
+
+  if (!bereit) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <PageHero
+          title="Statistiken"
+          description="Kennzahlen, Trends und Analysen im Zeitverlauf – live aus Betrieb und Finanzen aggregiert."
+          icon={PieChart}
+          badge="Business Intelligence"
+        />
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </section>
+        <section className="grid gap-4 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-64" />
+          ))}
+        </section>
+      </div>
+    );
+  }
 
   const transportVerteilung: ForecastPoint[] = TRANSPORTARTEN.map((art) => ({
     label: art.replace("transport", "tr."),

@@ -7,6 +7,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { type AppRole, hoechsteRolle } from "@/lib/roles";
+import { leereAlle } from "@/lib/notifications";
+import { transitionSensitiveBrowserUser } from "@/lib/browser-session-security";
 
 interface AuthContextValue {
   session: Session | null;
@@ -32,6 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const sichereBenutzergrenze = useCallback(
+    (nextUserId: string | null) => {
+      const wechsel = transitionSensitiveBrowserUser(nextUserId);
+      if (wechsel.changed) {
+        leereAlle();
+        qc.clear();
+      }
+    },
+    [qc],
+  );
+
   const ladeProfil = useCallback(async (userId: string) => {
     const [{ data: rollenData }, { data: profil }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -45,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Synchroner Listener zuerst, dann initiale Session lesen.
     const { data: sub } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      sichereBenutzergrenze(nextSession?.user?.id ?? null);
       setSession(nextSession);
       if (nextSession?.user) {
         // Profil-/Rollenabfrage außerhalb des Callbacks (Deadlock vermeiden).
@@ -60,13 +74,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(({ data }) => {
+      sichereBenutzergrenze(data.session?.user?.id ?? null);
       setSession(data.session);
       if (data.session?.user) void ladeProfil(data.session.user.id);
       setLoading(false);
     });
 
     return () => sub.subscription.unsubscribe();
-  }, [ladeProfil, qc]);
+  }, [ladeProfil, qc, sichereBenutzergrenze]);
 
   const signInEmail = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -95,12 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await qc.cancelQueries();
-    await supabase.auth.signOut();
+    sichereBenutzergrenze(null);
+    leereAlle();
     qc.clear();
+    await supabase.auth.signOut();
     setSession(null);
     setRollen([]);
     setName("");
-  }, [qc]);
+  }, [qc, sichereBenutzergrenze]);
 
   const value: AuthContextValue = {
     session,

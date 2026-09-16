@@ -14,6 +14,7 @@ import {
   formatAdresse,
   normalisiereAdresse,
 } from "@/lib/address";
+import { idOderNull } from "@/lib/id-helpers";
 
 /** Shape the client sends when creating/updating a recurring order. */
 export interface RecurringWrite {
@@ -141,8 +142,8 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     id: r.id,
     kennung: r.kennung ?? "DA-—",
     patient: r.patient ?? "Unbekannter Patient",
-    patientId: r.patient_id ?? null,
-    insurerId: r.insurer_id ?? null,
+    patientId: idOderNull(r.patient_id),
+    insurerId: idOderNull(r.insurer_id),
     pickup,
     destination,
     abholort: formatAdresse(pickup) || (r.abholort ?? ""),
@@ -157,8 +158,8 @@ export function rowToDauerauftrag(r: RecurringRow): Dauerauftrag {
     krankenkasse: r.krankenkasse ?? "",
     bevorzugtesFahrzeug: r.bevorzugtes_fahrzeug,
     bevorzugterFahrer: r.bevorzugter_fahrer,
-    bevorzugterFahrerId: r.bevorzugter_fahrer_id ?? null,
-    bevorzugtesFahrzeugId: r.bevorzugtes_fahrzeug_id ?? null,
+    bevorzugterFahrerId: idOderNull(r.bevorzugter_fahrer_id),
+    bevorzugtesFahrzeugId: idOderNull(r.bevorzugtes_fahrzeug_id),
     notiz: r.notiz ?? "",
     medizinischeNotiz: r.medizinische_notiz ?? "",
     kategorie,

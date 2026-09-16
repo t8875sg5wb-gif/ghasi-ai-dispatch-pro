@@ -280,6 +280,14 @@ export const navGroups: NavGroup[] = [
       },
 
       {
+        label: "Rechenprüfung",
+        to: "/rechenpruefung",
+        icon: ShieldCheck,
+        description:
+          "Amtliche Quellen, Rechen-Agenten, Goldtests und Vergleichssysteme für alle Berechnungen.",
+      },
+
+      {
         label: "Versicherungen",
         to: "/versicherungen",
         icon: ShieldCheck,
