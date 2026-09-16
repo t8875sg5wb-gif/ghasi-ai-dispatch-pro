@@ -59,6 +59,7 @@ import {
   retryBestaetigungText,
   RETRY_BESTAETIGUNG_MS,
   retryVerzoegerung,
+  istAktuellerVersuch,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
