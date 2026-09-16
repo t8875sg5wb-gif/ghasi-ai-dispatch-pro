@@ -3,7 +3,10 @@ import { describe, expect, it } from "bun:test";
 
 import {
   ENTWURF_RETRY_MS,
+  RETRY_BESTAETIGUNG_MS,
   formatZeitmarke,
+  retryBestaetigungSichtbar,
+  retryBestaetigungText,
   retryVerzoegerung,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
