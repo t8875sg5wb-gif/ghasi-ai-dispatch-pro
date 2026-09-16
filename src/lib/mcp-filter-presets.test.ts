@@ -45,7 +45,12 @@ describe("MCP-Filter-Presets", () => {
 
   it("überschreibt Preset mit gleichem Namen und behält die ID", () => {
     const a = presetHinzufuegen([], "Nur Fehler", { ...MCP_FILTER_LEER, status: "fehler" }, "id-1");
-    const b = presetHinzufuegen(a, "nur fehler", { ...MCP_FILTER_LEER, status: "abgelehnt" }, "id-2");
+    const b = presetHinzufuegen(
+      a,
+      "nur fehler",
+      { ...MCP_FILTER_LEER, status: "abgelehnt" },
+      "id-2",
+    );
     expect(b).toHaveLength(1);
     expect(b[0]!.id).toBe("id-1");
     expect(b[0]!.filter.status).toBe("abgelehnt");
