@@ -8,6 +8,8 @@ import {
   retryBestaetigungSichtbar,
   retryBestaetigungText,
   retryVerzoegerung,
+  istAktuellerVersuch,
+  letzterSpeicherzeitpunkt,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
 } from "@/lib/dauerauftrag-entwurf";
@@ -170,5 +172,26 @@ describe("Footer-Bestätigung nach erfolgreichem Retry", () => {
     // Zeitpunkt in der Zukunft (Uhrenfehler) gilt nicht als sichtbar.
     const vorher = new Date(Date.parse(erfolgIso) - 1000);
     expect(retryBestaetigungSichtbar(erfolgIso, vorher)).toBe(false);
+  });
+});
+
+describe("Reihenfolge bei schnellen Neuversuchen", () => {
+  it("erkennt nur den jüngsten Versuch als maßgeblich", () => {
+    expect(istAktuellerVersuch(3, 3)).toBe(true);
+    expect(istAktuellerVersuch(2, 3)).toBe(false);
+  });
+
+  it("nimmt bei mehreren Ergebnissen den Zeitpunkt des letzten Versuchs", () => {
+    expect(
+      letzterSpeicherzeitpunkt([
+        { versuchId: 1, gespeichertAm: "2026-09-16T12:00:00.000Z" },
+        { versuchId: 3, gespeichertAm: "2026-09-16T12:00:02.000Z" },
+        { versuchId: 2, gespeichertAm: "2026-09-16T12:00:05.000Z" },
+      ]),
+    ).toBe("2026-09-16T12:00:02.000Z");
+  });
+
+  it("gibt ohne Ergebnisse null zurück", () => {
+    expect(letzterSpeicherzeitpunkt([])).toBeNull();
   });
 });

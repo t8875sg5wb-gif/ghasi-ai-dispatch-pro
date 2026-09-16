@@ -59,6 +59,7 @@ import {
   retryBestaetigungText,
   RETRY_BESTAETIGUNG_MS,
   retryVerzoegerung,
+  istAktuellerVersuch,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
@@ -870,6 +871,8 @@ function DauerauftragForm({
     technik: EntwurfTechnikInfo;
   } | null>(null);
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
+  // Laufende Nummer des aktuellen Speicherversuchs – nur dessen Ergebnis zählt.
+  const versuchIdRef = useRef(0);
   const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
@@ -976,8 +979,13 @@ function DauerauftragForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, istEdit]);
 
-  /** Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch. */
-  const verarbeiteSpeicherErfolg = (gespeichertAm: string) => {
+  /**
+   * Gemeinsame Erfolgsbehandlung nach Auto-Save oder Neuversuch.
+   * `versuchId` identifiziert den Versuch: nur das Ergebnis des jüngsten
+   * Versuchs darf Bestätigung und Zeitmarke setzen.
+   */
+  const verarbeiteSpeicherErfolg = (gespeichertAm: string, versuchId: number) => {
+    if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
     setEntwurfRetryAktiv(false);
     gesichertRef.current = f;
     setEntwurfGespeichertAm(gespeichertAm);
@@ -1001,13 +1009,16 @@ function DauerauftragForm({
     let versuch = 0;
     let timer = 0;
     const lauf = () => {
+      // Jeder Versuch erhält eine eigene Kennung; ältere Ergebnisse verfallen.
+      versuchIdRef.current += 1;
+      const versuchId = versuchIdRef.current;
       setEntwurfRetryAktiv(true);
       const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
       if (ergebnis.ok) {
-        setEntwurfRetryAktiv(false);
-        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
+        verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm, versuchId);
         return;
       }
+      if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
       const wartezeit = retryVerzoegerung(versuch, ergebnis.grund);
       letzterSpeicherFehlerRef.current = true;
       setEntwurfFehler({
@@ -1048,13 +1059,15 @@ function DauerauftragForm({
   /** Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft. */
   const entwurfErneutSpeichern = () => {
     if (entwurfRetryAktiv) return;
+    versuchIdRef.current += 1;
+    const versuchId = versuchIdRef.current;
     setEntwurfRetryAktiv(true);
     const ergebnis = versucheEntwurfZuSpeichern(entwurfKey, f);
     if (ergebnis.ok) {
-      setEntwurfRetryAktiv(false);
-      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm);
+      verarbeiteSpeicherErfolg(ergebnis.eintrag.gespeichertAm, versuchId);
       return;
     }
+    if (!istAktuellerVersuch(versuchId, versuchIdRef.current)) return;
     letzterSpeicherFehlerRef.current = true;
     setEntwurfFehler({
       meldung: ergebnis.meldung,
