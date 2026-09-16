@@ -1060,6 +1060,19 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [retryErfolgAm]);
 
+  // Jede Formularänderung ist eine erneute Aktion und schaltet Neuversuche frei.
+  useEffect(() => {
+    setRetryFreigegeben(true);
+  }, [f]);
+
+  // Endgültig fehlgeschlagen = kein automatischer Neuversuch mehr vorgesehen.
+  const retryEndgueltig = entwurfFehler ? istEndgueltigFehlgeschlagen(entwurfFehler) : false;
+  const retryMoeglich = retryWiederholbar({
+    endgueltig: retryEndgueltig,
+    freigegeben: retryFreigegeben,
+    laeuft: entwurfRetryAktiv,
+  });
+
   /**
    * Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft und
    * nach einem endgültigen Fehlschlag, bis er erneut freigeschaltet wurde.
