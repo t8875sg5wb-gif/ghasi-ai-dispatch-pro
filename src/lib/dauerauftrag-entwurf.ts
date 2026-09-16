@@ -236,6 +236,31 @@ export function retryBestaetigungSichtbar(
   return vergangen >= 0 && vergangen < RETRY_BESTAETIGUNG_MS;
 }
 
+/* --------------------- Reihenfolge schneller Neuversuche --------------------- */
+
+/**
+ * Bei mehreren schnell aufeinanderfolgenden Neuversuchen darf nur das Ergebnis
+ * des jüngsten Versuchs die Bestätigung und die „Zuletzt gesichert“-Zeitmarke
+ * setzen. Ergebnisse älterer Versuche (Nachläufer) werden verworfen.
+ */
+export function istAktuellerVersuch(versuchId: number, aktuelleVersuchId: number): boolean {
+  return versuchId === aktuelleVersuchId;
+}
+
+/**
+ * Ermittelt aus mehreren (auch verspätet eintreffenden) Erfolgsmeldungen den
+ * maßgeblichen Speicherzeitpunkt: den des höchsten Versuchs.
+ */
+export function letzterSpeicherzeitpunkt(
+  ergebnisse: { versuchId: number; gespeichertAm: string }[],
+): string | null {
+  let beste: { versuchId: number; gespeichertAm: string } | null = null;
+  for (const e of ergebnisse) {
+    if (!beste || e.versuchId > beste.versuchId) beste = e;
+  }
+  return beste?.gespeichertAm ?? null;
+}
+
 export function verwerfeEntwurf(schluessel: string, store: Speicher | null = speicher()): void {
   try {
     store?.removeItem(schluessel);
