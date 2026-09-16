@@ -1077,11 +1077,19 @@ function DauerauftragForm({
     setEntwurfFehler({
       meldung: ergebnis.meldung,
       wiederholt: false,
-      versuche: 1,
+      versuche: (entwurfFehler?.versuche ?? 0) + 1,
       zeitpunkt: new Date().toISOString(),
       grund: ergebnis.grund,
       technik: ergebnis.technik,
     });
+    setEntwurfRetryAktiv(false);
+    // Auch der manuelle Versuch ist endgültig gescheitert – wieder sperren.
+    setRetryFreigegeben(false);
+  };
+
+  /** Gibt den Neuversuch nach einem endgültigen Fehlschlag ausdrücklich frei. */
+  const retryFreischalten = () => {
+    setRetryFreigegeben(true);
     setEntwurfRetryZaehler((n) => n + 1);
   };
 
