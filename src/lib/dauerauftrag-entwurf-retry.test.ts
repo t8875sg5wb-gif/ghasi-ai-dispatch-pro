@@ -9,6 +9,9 @@ import {
   retryBestaetigungText,
   retryVerzoegerung,
   istAktuellerVersuch,
+  istEndgueltigFehlgeschlagen,
+  endgueltigFehlerHinweis,
+  retryWiederholbar,
   letzterSpeicherzeitpunkt,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
@@ -193,5 +196,35 @@ describe("Reihenfolge bei schnellen Neuversuchen", () => {
 
   it("gibt ohne Ergebnisse null zurück", () => {
     expect(letzterSpeicherzeitpunkt([])).toBeNull();
+  });
+});
+
+describe("Endgültig fehlgeschlagene Neuversuche", () => {
+  it("gilt nicht als endgültig, solange eine Wiederholung läuft", () => {
+    expect(istEndgueltigFehlgeschlagen({ wiederholt: true, grund: "voll", versuche: 2 })).toBe(
+      false,
+    );
+  });
+
+  it("gilt als endgültig ohne verfügbaren Speicher und nach verbrauchten Stufen", () => {
+    expect(
+      istEndgueltigFehlgeschlagen({ wiederholt: false, grund: "kein_speicher", versuche: 1 }),
+    ).toBe(true);
+    expect(istEndgueltigFehlgeschlagen({ wiederholt: false, grund: "voll", versuche: 4 })).toBe(
+      true,
+    );
+  });
+
+  it("liefert je Ursache einen verständlichen Hinweis", () => {
+    expect(endgueltigFehlerHinweis("kein_speicher")).toContain("nicht verfügbar");
+    expect(endgueltigFehlerHinweis("voll")).toContain("voll");
+    expect(endgueltigFehlerHinweis("fehler")).toContain("verbraucht");
+  });
+
+  it("erlaubt einen weiteren Neuversuch erst nach erneuter Aktion", () => {
+    expect(retryWiederholbar({ endgueltig: true, freigegeben: false, laeuft: false })).toBe(false);
+    expect(retryWiederholbar({ endgueltig: true, freigegeben: true, laeuft: false })).toBe(true);
+    expect(retryWiederholbar({ endgueltig: false, freigegeben: false, laeuft: false })).toBe(true);
+    expect(retryWiederholbar({ endgueltig: false, freigegeben: true, laeuft: true })).toBe(false);
   });
 });

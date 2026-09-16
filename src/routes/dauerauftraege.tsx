@@ -60,6 +60,9 @@ import {
   RETRY_BESTAETIGUNG_MS,
   retryVerzoegerung,
   istAktuellerVersuch,
+  istEndgueltigFehlgeschlagen,
+  endgueltigFehlerHinweis,
+  retryWiederholbar,
   verwerfeEntwurf,
   versucheEntwurfZuSpeichern,
   entwurfFehlerBericht,
@@ -873,6 +876,8 @@ function DauerauftragForm({
   const [entwurfRetryZaehler, setEntwurfRetryZaehler] = useState(0);
   // Laufende Nummer des aktuellen Speicherversuchs – nur dessen Ergebnis zählt.
   const versuchIdRef = useRef(0);
+  // Nach einem endgültigen Fehlschlag erst nach erneuter Aktion wieder erlaubt.
+  const [retryFreigegeben, setRetryFreigegeben] = useState(true);
   const [fehlerDetailsOffen, setFehlerDetailsOffen] = useState(false);
 
   const merkeBeruehrt = (...paths: string[]) =>
@@ -1031,6 +1036,8 @@ function DauerauftragForm({
       });
       if (wartezeit === null) {
         setEntwurfRetryAktiv(false);
+        // Endgültig fehlgeschlagen: weiterer Neuversuch erst nach erneuter Aktion.
+        setRetryFreigegeben(false);
         return;
       }
       versuch += 1;
@@ -1056,9 +1063,25 @@ function DauerauftragForm({
     return () => window.clearTimeout(timer);
   }, [retryErfolgAm]);
 
-  /** Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft. */
+  // Jede Formularänderung ist eine erneute Aktion und schaltet Neuversuche frei.
+  useEffect(() => {
+    setRetryFreigegeben(true);
+  }, [f]);
+
+  // Endgültig fehlgeschlagen = kein automatischer Neuversuch mehr vorgesehen.
+  const retryEndgueltig = entwurfFehler ? istEndgueltigFehlgeschlagen(entwurfFehler) : false;
+  const retryMoeglich = retryWiederholbar({
+    endgueltig: retryEndgueltig,
+    freigegeben: retryFreigegeben,
+    laeuft: entwurfRetryAktiv,
+  });
+
+  /**
+   * Manueller Neuversuch für den Auto-Save – gesperrt, solange einer läuft und
+   * nach einem endgültigen Fehlschlag, bis er erneut freigeschaltet wurde.
+   */
   const entwurfErneutSpeichern = () => {
-    if (entwurfRetryAktiv) return;
+    if (!retryMoeglich) return;
     versuchIdRef.current += 1;
     const versuchId = versuchIdRef.current;
     setEntwurfRetryAktiv(true);
@@ -1072,11 +1095,19 @@ function DauerauftragForm({
     setEntwurfFehler({
       meldung: ergebnis.meldung,
       wiederholt: false,
-      versuche: 1,
+      versuche: (entwurfFehler?.versuche ?? 0) + 1,
       zeitpunkt: new Date().toISOString(),
       grund: ergebnis.grund,
       technik: ergebnis.technik,
     });
+    setEntwurfRetryAktiv(false);
+    // Auch der manuelle Versuch ist endgültig gescheitert – wieder sperren.
+    setRetryFreigegeben(false);
+  };
+
+  /** Gibt den Neuversuch nach einem endgültigen Fehlschlag ausdrücklich frei. */
+  const retryFreischalten = () => {
+    setRetryFreigegeben(true);
     setEntwurfRetryZaehler((n) => n + 1);
   };
 
@@ -1723,7 +1754,10 @@ function DauerauftragForm({
           {entwurfFehler && (
             <span
               role="alert"
-              className="flex flex-wrap items-center gap-2 font-medium text-warning"
+              className={cn(
+                "flex flex-wrap items-center gap-2 font-medium",
+                retryEndgueltig ? "text-destructive" : "text-warning",
+              )}
             >
               <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
               <span>
@@ -1731,17 +1765,24 @@ function DauerauftragForm({
                 ·{" "}
                 {entwurfFehler.wiederholt
                   ? `Neuversuch ${entwurfFehler.versuche} läuft automatisch`
-                  : "kein automatischer Neuversuch mehr"}
+                  : `endgültig fehlgeschlagen nach ${entwurfFehler.versuche} ${entwurfFehler.versuche === 1 ? "Versuch" : "Versuchen"}`}
               </span>
               <Button
                 type="button"
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-xs text-warning"
-                onClick={entwurfErneutSpeichern}
+                className={cn(
+                  "h-auto p-0 text-xs",
+                  retryEndgueltig ? "text-destructive" : "text-warning",
+                )}
+                onClick={retryMoeglich ? entwurfErneutSpeichern : retryFreischalten}
                 disabled={entwurfRetryAktiv}
               >
-                {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
+                {entwurfRetryAktiv
+                  ? "Neuversuch läuft …"
+                  : retryMoeglich
+                    ? "Jetzt erneut speichern"
+                    : "Neuversuch freischalten"}
               </Button>
               <Button
                 type="button"
@@ -1759,12 +1800,53 @@ function DauerauftragForm({
           <Dialog open={fehlerDetailsOffen} onOpenChange={setFehlerDetailsOffen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Details zum fehlgeschlagenen Zwischenspeichern</DialogTitle>
+                <DialogTitle>
+                  {retryEndgueltig
+                    ? "Zwischenspeichern endgültig fehlgeschlagen"
+                    : "Details zum fehlgeschlagenen Zwischenspeichern"}
+                </DialogTitle>
                 <DialogDescription>
                   Vollständige technische Ausgabe inklusive Kontext- und Aufrufkette. Bitte beim
                   Melden eines Problems mitkopieren.
                 </DialogDescription>
               </DialogHeader>
+
+              {/* Eigene Ansicht für endgültig fehlgeschlagene Neuversuche. */}
+              {retryEndgueltig && entwurfFehler && (
+                <div
+                  role="alert"
+                  data-testid="entwurf-endgueltig-fehler"
+                  className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
+                >
+                  <p className="flex items-center gap-2 font-semibold text-destructive">
+                    <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+                    Alle automatischen Neuversuche sind beendet
+                  </p>
+                  <p className="text-muted-foreground">
+                    {endgueltigFehlerHinweis(entwurfFehler.grund)}
+                  </p>
+                  <ul className="list-inside list-disc text-xs text-muted-foreground">
+                    <li>Fehlgeschlagene Versuche: {entwurfFehler.versuche}</li>
+                    <li>Letzter Versuch: {formatZeitmarke(entwurfFehler.zeitpunkt)}</li>
+                    <li>
+                      {retryMoeglich
+                        ? "Ein weiterer Neuversuch ist jetzt freigeschaltet."
+                        : "Ein weiterer Neuversuch ist erst nach einer erneuten Aktion möglich: Formular ändern oder unten freischalten."}
+                    </li>
+                  </ul>
+                  {!retryMoeglich && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={retryFreischalten}
+                      disabled={entwurfRetryAktiv}
+                    >
+                      Neuversuch freischalten
+                    </Button>
+                  )}
+                </div>
+              )}
               <pre
                 data-testid="entwurf-fehlerbericht"
                 className="max-h-80 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap"
@@ -1777,9 +1859,13 @@ function DauerauftragForm({
                   variant="outline"
                   size="sm"
                   onClick={entwurfErneutSpeichern}
-                  disabled={!entwurfFehler || entwurfRetryAktiv}
+                  disabled={!entwurfFehler || !retryMoeglich}
                 >
-                  {entwurfRetryAktiv ? "Neuversuch läuft …" : "Jetzt erneut speichern"}
+                  {entwurfRetryAktiv
+                    ? "Neuversuch läuft …"
+                    : retryMoeglich
+                      ? "Jetzt erneut speichern"
+                      : "Neuversuch gesperrt"}
                 </Button>
                 <Button type="button" size="sm" onClick={berichtKopieren} disabled={!fehlerBericht}>
                   Fehlerbericht kopieren
